@@ -89,7 +89,7 @@ export function AuthFrame({ title, subtitle, children, backTo, compact = false }
       <div className={`mx-auto w-full ${compact ? "max-w-5xl" : "max-w-6xl"}`}>
         {compact ? (
           <div className="w-full rounded-[30px] border border-slate-200 bg-white px-4 py-5 shadow-soft md:px-6">
-            <div className="mb-6 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+            <div className="mb-6 flex items-center justify-between">
               <BrandMark compact={compact} />
               {backTo ? (
                 <Link to={backTo} className="inline-flex items-center gap-2 text-sm font-semibold text-brand">
@@ -98,7 +98,7 @@ export function AuthFrame({ title, subtitle, children, backTo, compact = false }
                 </Link>
               ) : null}
             </div>
-            <div className="mb-6 text-center sm:text-left">
+            <div className="mb-6 text-center">
               <Title level={2} className="display-font !mb-2 !text-4xl">
                 {title}
               </Title>

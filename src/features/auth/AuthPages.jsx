@@ -454,7 +454,15 @@ export function OtpVerifyPage() {
 
   return (
     <AuthFrame title="Verify OTP" subtitle={`Enter the 4-digit code sent to ${identifier}.`} backTo="/login" compact>
-      <Space direction="vertical" size="large" className="!w-full">
+      <div className="text-center mb-6">
+        <Title level={3} className="display-font !mb-2">
+          Continue Your Journey
+        </Title>
+        <Paragraph className="!mb-0 !text-muted">
+          Use OTP or coupon to continue.
+        </Paragraph>
+      </div>
+      <Space direction="vertical" size="large" className="!w-full flex flex-col items-center justify-center">
         <Input.OTP length={4} value={otp} onChange={setOtp} />
         <Button
           type="primary"
