@@ -1,0 +1,173 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  --brand: #9a2119;
+  --brand-deep: #6c160f;
+  --paper: #fcf7f4;
+  --surface: rgba(255, 255, 255, 0.88);
+  --line: #e7d8d2;
+  --ink: #241c1a;
+  --muted: #6f6663;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(154, 33, 25, 0.14), transparent 20%),
+    radial-gradient(circle at 88% 16%, rgba(203, 156, 72, 0.16), transparent 18%),
+    radial-gradient(circle at 74% 82%, rgba(55, 116, 216, 0.08), transparent 18%),
+    linear-gradient(180deg, #fffdfc 0%, #f9f0eb 100%);
+  color: var(--ink);
+}
+
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(154, 33, 25, 0.08), transparent 20%),
+    radial-gradient(circle at 92% 12%, rgba(55, 116, 216, 0.08), transparent 18%),
+    radial-gradient(circle at 78% 90%, rgba(203, 156, 72, 0.1), transparent 18%),
+    linear-gradient(180deg, #fffdfc 0%, #f8f0ec 100%);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+}
+
+.brand-gradient {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 24%),
+    linear-gradient(135deg, #7f1913 0%, #9a2119 34%, #c44a3c 68%, #6c160f 100%);
+}
+
+.muted-scroll {
+  scrollbar-width: thin;
+}
+
+.muted-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.muted-scroll::-webkit-scrollbar-thumb {
+  background: rgba(154, 33, 25, 0.24);
+  border-radius: 999px;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(20px);
+  opacity: 0.68;
+}
+
+.display-font {
+  font-family: "Space Grotesk", "Manrope", sans-serif;
+}
+
+.website-panel {
+  border: 1px solid rgba(154, 33, 25, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 248, 245, 0.92) 100%);
+  box-shadow: 0 26px 80px rgba(63, 26, 18, 0.08);
+}
+
+.website-grid {
+  background-image:
+    linear-gradient(rgba(154, 33, 25, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(154, 33, 25, 0.04) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+.ant-layout,
+.ant-menu,
+.ant-card,
+.ant-drawer-content,
+.ant-modal-content,
+.ant-collapse,
+.ant-table,
+.ant-input,
+.ant-select-selector,
+.ant-picker,
+.ant-tabs-content-holder {
+  border-radius: 18px;
+}
+
+.ant-btn-primary {
+  box-shadow: none;
+}
+
+.ant-card .ant-card-head-title,
+.ant-typography h1,
+.ant-typography h2,
+.ant-typography h3,
+.ant-typography h4 {
+  font-family: "Space Grotesk", "Manrope", sans-serif;
+}
+
+.ant-menu-item-selected {
+  font-weight: 800;
+}
+
+.website-top-menu.ant-menu-horizontal {
+  line-height: 1;
+}
+
+.website-top-menu.ant-menu-horizontal > .ant-menu-item,
+.website-top-menu.ant-menu-horizontal > .ant-menu-submenu {
+  padding-inline: 14px !important;
+  height: auto !important;
+  line-height: 1.1 !important;
+  border-bottom: 0 !important;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.website-top-menu.ant-menu-horizontal > .ant-menu-item-selected,
+.website-top-menu.ant-menu-horizontal > .ant-menu-item-active,
+.website-top-menu.ant-menu-horizontal > .ant-menu-submenu-selected,
+.website-top-menu.ant-menu-horizontal > .ant-menu-submenu-active {
+  color: var(--brand) !important;
+}
+
+.website-top-menu.ant-menu-horizontal::after {
+  border-bottom: none !important;
+}
+
+.website-footer-pattern {
+  background:
+    linear-gradient(60deg, rgba(255,255,255,0.03) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.03) 75%, transparent 75%, transparent),
+    linear-gradient(120deg, rgba(255,255,255,0.02) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.02) 75%, transparent 75%, transparent);
+  background-size: 220px 220px, 260px 260px;
+}
+
+.website-footer-link {
+  position: relative;
+  padding-left: 18px;
+}
+
+.website-footer-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  background: #ffc12b;
+}
