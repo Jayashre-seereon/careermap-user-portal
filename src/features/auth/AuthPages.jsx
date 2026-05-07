@@ -27,6 +27,7 @@ import { existingUsers, onboardingOptions } from "../../data/careermapData";
 import { useAppState } from "../../state/AppStateContext";
 import { AuthFrame, BrandMark } from "../../components/ui";
 import Logo from "../../asset/logo_white.png";
+import Bee from "../../asset/bee.png";
 
 const { Paragraph, Title, Text } = Typography;
 
@@ -41,7 +42,7 @@ export function SplashPage() {
   return (
     <div className="brand-gradient flex min-h-screen items-center justify-center p-6 text-white">
       <div className="text-center">
-        <img src={Logo} alt="Career Map" className="mx-auto mb-6 h-24 w-auto object-contain" />
+        <img src={Bee} alt="Career Map" className="mx-auto mb-6 h-24 w-auto object-contain" />
         <Title className="!mb-2 !text-white">Career Map</Title>
         <Paragraph className="!mb-6 !text-white/75">Discover Your Future</Paragraph>
         <div className="mx-auto h-2 w-48 overflow-hidden rounded-full bg-white/20">
@@ -246,12 +247,24 @@ export function OnboardingPage() {
         ) : null}
         {step === 1 ? (
           <Result
-            icon={<BrandMark compact />}
-            title={form.userType === "parent" ? "Welcome, Parent!" : "Hi! I'm your Career Guide"}
+            icon={
+              <div className="flex justify-center w-full">
+                <img src={Bee} alt="Bee" className="h-24 w-24 object-contain" />
+              </div>
+            }
+            title={
+              form.userType === "parent"
+                ? "Welcome, Parent!"
+                : form.userType === "student"
+                  ? "Hi! I'm your Career Guide"
+                  : "Hello! Let's personalize your experience"
+            }
             subTitle={
               form.userType === "parent"
                 ? "We'll help you explore career options for your child's future."
-                : "We'll help you discover the best career path and portal modules for your goals."
+                : form.userType === "student"
+                  ? "We'll help you discover the best career path and portal modules for your goals."
+                  : "Tell us a little about yourself so we can personalize your portal experience."
             }
           />
         ) : null}
@@ -280,7 +293,11 @@ export function OnboardingPage() {
         {step === 9 ? (
           <Result
             status="success"
-            icon={<CheckCircleOutlined />}
+            icon={
+              <div className="flex justify-center w-full">
+                <img src={Bee} alt="Bee" className="h-24 w-24 object-contain" />
+              </div>
+            }
             title="Great! We've personalized your experience"
             subTitle="Your career journey is ready. Let's sign you in to get started."
           />
