@@ -209,13 +209,12 @@ export function OnboardingPage() {
               <div key={label} className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm font-black ${
-                      status === "active"
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm font-black ${status === "active"
                         ? "border-brand bg-brand text-white"
                         : status === "done"
-                        ? "border-slate-300 bg-slate-100 text-slate-600"
-                        : "border-[#e5e7eb] bg-white text-slate-400"
-                    }`}
+                          ? "border-slate-300 bg-slate-100 text-slate-600"
+                          : "border-[#e5e7eb] bg-white text-slate-400"
+                      }`}
                   >
                     {index + 1}
                   </div>

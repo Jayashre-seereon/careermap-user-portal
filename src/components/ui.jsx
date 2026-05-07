@@ -154,19 +154,19 @@ export function AuthFrame({ title, subtitle, children, backTo, compact = false }
 export function PageHero({ eyebrow, title, description, action }) {
   return (
     <div className="brand-gradient relative overflow-hidden rounded-[28px] p-8 text-white shadow-soft md:p-10">
-        <div className="hero-orb left-[-2rem] top-[-2rem] h-28 w-28 bg-white/20" />
-        <div className="hero-orb bottom-[-2rem] right-[-2rem] h-36 w-36 bg-white/15" />
-        <div className="website-grid absolute inset-0 opacity-20" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            {eyebrow ? <div className="mb-3 text-xs font-bold uppercase tracking-[0.32em] text-[#ffd8c7]">{eyebrow}</div> : null}
-            <Title level={2} className="display-font !mb-3 !text-white">
-              {title}
-            </Title>
-            <Paragraph className="!mb-0 !max-w-2xl !text-base !leading-7 !text-white/80">{description}</Paragraph>
-          </div>
-          {action ? <div>{action}</div> : null}
+      <div className="hero-orb left-[-2rem] top-[-2rem] h-28 w-28 bg-white/20" />
+      <div className="hero-orb bottom-[-2rem] right-[-2rem] h-36 w-36 bg-white/15" />
+      <div className="website-grid absolute inset-0 opacity-20" />
+      <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-3xl">
+          {eyebrow ? <div className="mb-3 text-xs font-bold uppercase tracking-[0.32em] text-[#ffd8c7]">{eyebrow}</div> : null}
+          <Title level={2} className="display-font !mb-3 !text-white">
+            {title}
+          </Title>
+          <Paragraph className="!mb-0 !max-w-2xl !text-base !leading-7 !text-white/80">{description}</Paragraph>
         </div>
+        {action ? <div>{action}</div> : null}
+      </div>
     </div>
   );
 }
