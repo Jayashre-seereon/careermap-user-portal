@@ -67,7 +67,7 @@ export function AppProviders({ children }) {
 
 export function BrandMark({ compact = false }) {
   if (compact) {
-    return <img src={Logo} alt="Career Map" className="w-full h-16 object-contain" />;
+    return <img src={Logo} alt="Career Map" className="h-16 w-auto object-contain" />;
   }
 
   return (
