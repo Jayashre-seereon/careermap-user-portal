@@ -98,6 +98,8 @@ export function OnboardingPage() {
     childName: "",
     selectedClass: "",
     selectedStream: "",
+    otherClass: "",
+    otherStream: "",
     selectedInterests: [],
     selectedClarity: "",
     selectedStrengths: [],
@@ -131,12 +133,12 @@ export function OnboardingPage() {
   function canContinue() {
     if (step === 0) return Boolean(form.userType);
     if (step === 2) return Boolean(form.name.trim());
-    if (step === 3 && form.userType === "student") return Boolean(form.selectedClass);
+    if (step === 3 && form.userType === "student") return Boolean(form.selectedClass) && (form.selectedClass !== "Other" || Boolean(form.otherClass.trim()));
     if (step === 3 && form.userType === "parent") return Boolean(form.childName.trim());
-    if (step === 4 && form.userType === "student") return Boolean(form.selectedStream);
-    if (step === 4 && form.userType === "parent") return Boolean(form.selectedClass);
+    if (step === 4 && form.userType === "student") return Boolean(form.selectedStream) && (form.selectedStream !== "Other" || Boolean(form.otherStream.trim()));
+    if (step === 4 && form.userType === "parent") return Boolean(form.selectedClass) && (form.selectedClass !== "Other" || Boolean(form.otherClass.trim()));
     if (step === 5 && form.userType === "student") return form.selectedInterests.length > 0;
-    if (step === 5 && form.userType === "parent") return Boolean(form.selectedStream);
+    if (step === 5 && form.userType === "parent") return Boolean(form.selectedStream) && (form.selectedStream !== "Other" || Boolean(form.otherStream.trim()));
     if (step === 6) return Boolean(form.selectedClarity);
     if (step === 7) return form.selectedStrengths.length > 0;
     if (step === 8) return form.selectedPriorities.length > 0;
@@ -275,7 +277,18 @@ export function OnboardingPage() {
             </Form.Item>
           </Form>
         ) : null}
-        {step === 3 && form.userType === "student" ? <div>{singleGrid(onboardingOptions.studentClassOptions, "selectedClass")}</div> : null}
+        {step === 3 && form.userType === "student" ? (
+          <div>
+            <div>{singleGrid(onboardingOptions.studentClassOptions, "selectedClass")}</div>
+            {form.selectedClass === "Other" ? (
+              <Form layout="vertical" className="mt-4">
+                <Form.Item label="Please specify your class">
+                  <Input value={form.otherClass} onChange={(event) => update("otherClass", event.target.value)} />
+                </Form.Item>
+              </Form>
+            ) : null}
+          </div>
+        ) : null}
         {step === 3 && form.userType === "parent" ? (
           <Form layout="vertical">
             <Form.Item label="Child's Name">
@@ -283,10 +296,43 @@ export function OnboardingPage() {
             </Form.Item>
           </Form>
         ) : null}
-        {step === 4 && form.userType === "student" ? <div>{singleGrid(onboardingOptions.streamOptions, "selectedStream")}</div> : null}
-        {step === 4 && form.userType === "parent" ? <div>{singleGrid(onboardingOptions.studentClassOptions, "selectedClass")}</div> : null}
+        {step === 4 && form.userType === "student" ? (
+          <div>
+            <div>{singleGrid(onboardingOptions.streamOptions, "selectedStream")}</div>
+            {form.selectedStream === "Other" ? (
+              <Form layout="vertical" className="mt-4">
+                <Form.Item label="Please specify your stream">
+                  <Input value={form.otherStream} onChange={(event) => update("otherStream", event.target.value)} />
+                </Form.Item>
+              </Form>
+            ) : null}
+          </div>
+        ) : null}
+        {step === 4 && form.userType === "parent" ? (
+          <div>
+            <div>{singleGrid(onboardingOptions.studentClassOptions, "selectedClass")}</div>
+            {form.selectedClass === "Other" ? (
+              <Form layout="vertical" className="mt-4">
+                <Form.Item label="Please specify your child's class">
+                  <Input value={form.otherClass} onChange={(event) => update("otherClass", event.target.value)} />
+                </Form.Item>
+              </Form>
+            ) : null}
+          </div>
+        ) : null}
         {step === 5 && form.userType === "student" ? <div>{multiGrid(onboardingOptions.interestOptions, "selectedInterests")}</div> : null}
-        {step === 5 && form.userType === "parent" ? <div>{singleGrid(onboardingOptions.streamOptions, "selectedStream")}</div> : null}
+        {step === 5 && form.userType === "parent" ? (
+          <div>
+            <div>{singleGrid(onboardingOptions.streamOptions, "selectedStream")}</div>
+            {form.selectedStream === "Other" ? (
+              <Form layout="vertical" className="mt-4">
+                <Form.Item label="Please specify your stream">
+                  <Input value={form.otherStream} onChange={(event) => update("otherStream", event.target.value)} />
+                </Form.Item>
+              </Form>
+            ) : null}
+          </div>
+        ) : null}
         {step === 6 ? <div>{singleGrid(onboardingOptions.clarityOptions, "selectedClarity")}</div> : null}
         {step === 7 ? <div>{multiGrid(onboardingOptions.strengthOptions, "selectedStrengths")}</div> : null}
         {step === 8 ? <div>{multiGrid(onboardingOptions.priorityOptions, "selectedPriorities")}</div> : null}
