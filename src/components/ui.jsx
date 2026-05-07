@@ -35,6 +35,7 @@ import {
 } from "antd";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import Logo from "../asset/logo_white.png";
 import { palette } from "../data/careermapData";
 import { useAppState } from "../state/AppStateContext";
 
@@ -65,55 +66,39 @@ export function AppProviders({ children }) {
 }
 
 export function BrandMark({ compact = false }) {
+  if (compact) {
+    return <img src={Logo} alt="Career Map" className="w-full h-16 object-contain" />;
+  }
+
   return (
     <div className="flex items-center gap-3">
-      <div className="brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-black text-white shadow-soft">
-        CM
+      <div className="brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl shadow-soft">
+        <img src={Logo} alt="Career Map" className="h-7 w-7 object-contain" />
       </div>
-      {!compact ? (
-        <div>
-          <div className="text-base font-black text-ink">Career Map</div>
-          <div className="text-xs text-muted">Discover Your Future</div>
-        </div>
-      ) : null}
+      <div>
+        <div className="text-base font-black text-ink">Career Map</div>
+        <div className="text-xs text-muted">Discover Your Future</div>
+      </div>
     </div>
   );
 }
 
-export function AuthFrame({ title, subtitle, children, backTo }) {
+export function AuthFrame({ title, subtitle, children, backTo, compact = false }) {
   return (
     <div className="app-shell min-h-screen px-4 py-6 md:px-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex items-center justify-between rounded-[24px] border border-[#eedad4] bg-white/80 px-5 py-4 shadow-soft backdrop-blur">
-          <BrandMark />
-          {backTo ? (
-            <Link to={backTo} className="inline-flex items-center gap-2 text-sm font-semibold text-brand">
-              <ArrowLeftOutlined />
-              Back
-            </Link>
-          ) : null}
-        </div>
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="brand-gradient rounded-[30px] px-7 py-8 text-white shadow-soft">
-            <div className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.32em]">
-              Career Website
+      <div className={`mx-auto w-full ${compact ? "max-w-5xl" : "max-w-6xl"}`}>
+        {compact ? (
+          <div className="w-full rounded-[30px] border border-slate-200 bg-white px-4 py-5 shadow-soft md:px-6">
+            <div className="mb-6 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+              <BrandMark compact={compact} />
+              {backTo ? (
+                <Link to={backTo} className="inline-flex items-center gap-2 text-sm font-semibold text-brand">
+                  <ArrowLeftOutlined />
+                  Back
+                </Link>
+              ) : null}
             </div>
-            <h1 className="display-font max-w-xl text-4xl font-bold leading-tight md:text-5xl">
-              Clean website flow for students and parents.
-            </h1>
-            <p className="mt-4 max-w-lg text-base leading-7 text-white/80">
-              Login, onboarding, profile setup, tests, mentors, scholarships, institutes, study abroad, and subscriptions all stay connected in one simple website experience.
-            </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {["Start Test", "Explore Modules", "Continue Journey"].map((item) => (
-                <div key={item} className="rounded-[20px] border border-white/15 bg-white/10 px-4 py-4 text-sm font-semibold text-white/90">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-[30px] border border-[#eedad4] bg-white px-5 py-6 shadow-soft md:px-8">
-            <div className="mb-8">
+            <div className="mb-6 text-center sm:text-left">
               <Title level={2} className="display-font !mb-2 !text-4xl">
                 {title}
               </Title>
@@ -121,7 +106,46 @@ export function AuthFrame({ title, subtitle, children, backTo }) {
             </div>
             {children}
           </div>
-        </div>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="brand-gradient rounded-[30px] px-7 py-8 text-white shadow-soft">
+              <div className="mb-3 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.32em]">
+                Career Website
+              </div>
+              <h1 className="display-font max-w-xl text-4xl font-bold leading-tight md:text-5xl">
+                Clean website flow for students and parents.
+              </h1>
+              <p className="mt-4 max-w-lg text-base leading-7 text-white/80">
+                Login, onboarding, profile setup, tests, mentors, scholarships, institutes, study abroad, and subscriptions all stay connected in one simple website experience.
+              </p>
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                {["Start Test", "Explore Modules", "Continue Journey"].map((item) => (
+                  <div key={item} className="rounded-[20px] border border-white/15 bg-white/10 px-4 py-4 text-sm font-semibold text-white/90">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-[30px] border border-slate-200 bg-white px-5 py-6 shadow-soft md:px-8">
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <BrandMark compact={compact} />
+                {backTo ? (
+                  <Link to={backTo} className="inline-flex items-center gap-2 text-sm font-semibold text-brand">
+                    <ArrowLeftOutlined />
+                    Back
+                  </Link>
+                ) : null}
+              </div>
+              <div className="mb-8">
+                <Title level={2} className="display-font !mb-2 !text-4xl">
+                  {title}
+                </Title>
+                <Paragraph className="!mb-0 !text-base !text-muted">{subtitle}</Paragraph>
+              </div>
+              {children}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

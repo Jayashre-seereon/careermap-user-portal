@@ -19,7 +19,6 @@ import {
   Result,
   Row,
   Space,
-  Steps,
   Typography,
 } from "antd";
 import { useEffect, useMemo, useState } from "react";
@@ -27,6 +26,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { existingUsers, onboardingOptions } from "../../data/careermapData";
 import { useAppState } from "../../state/AppStateContext";
 import { AuthFrame, BrandMark } from "../../components/ui";
+import Logo from "../../asset/logo_white.png";
 
 const { Paragraph, Title, Text } = Typography;
 
@@ -41,9 +41,7 @@ export function SplashPage() {
   return (
     <div className="brand-gradient flex min-h-screen items-center justify-center p-6 text-white">
       <div className="text-center">
-        <div className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-[32px] bg-white text-3xl font-black text-brand shadow-soft">
-          CM
-        </div>
+        <img src={Logo} alt="Career Map" className="mx-auto mb-6 h-24 w-auto object-contain" />
         <Title className="!mb-2 !text-white">Career Map</Title>
         <Paragraph className="!mb-6 !text-white/75">Discover Your Future</Paragraph>
         <div className="mx-auto h-2 w-48 overflow-hidden rounded-full bg-white/20">
@@ -56,10 +54,10 @@ export function SplashPage() {
 
 export function AuthEntryPage() {
   return (
-    <AuthFrame title="Welcome to Career Map" subtitle="Choose how you want to continue into the user portal.">
-      <div className="grid gap-4">
+    <AuthFrame title="Welcome to Career Map" subtitle="Choose how you want to continue into the user portal." compact>
+      <div className="grid gap-3">
         <Link to="/onboarding">
-          <div className="rounded-[20px] border border-[#edd9d2] px-5 py-5 transition hover:border-brand hover:bg-[#fff8f6]">
+          <div className="rounded-[20px] border border-slate-200 px-4 py-4 transition hover:border-brand hover:bg-slate-50">
             <Space size={18} align="start">
               <div className="brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white">
                 <UserOutlined />
@@ -72,7 +70,7 @@ export function AuthEntryPage() {
           </div>
         </Link>
         <Link to="/login?userType=existing">
-          <div className="rounded-[20px] border border-[#edd9d2] px-5 py-5 transition hover:border-brand hover:bg-[#fff8f6]">
+          <div className="rounded-[20px] border border-slate-200 px-4 py-4 transition hover:border-brand hover:bg-slate-50">
             <Space size={18} align="start">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f7ece8] text-brand">
                 <LockOutlined />
@@ -192,9 +190,44 @@ export function OnboardingPage() {
   );
 
   return (
-    <AuthFrame title="Choose Your Roadmap" subtitle="Tell us a little about yourself so we can personalize the full portal experience." backTo="/auth-entry">
-      <Steps current={step > 0 && step < 9 ? step - 1 : 0} items={steps.slice(1, 9).map((label) => ({ title: label }))} className="!mb-8" />
-      <div className="rounded-[22px] border border-[#edd9d2] px-5 py-5">
+    <AuthFrame title="Choose Your Roadmap" subtitle="Tell us a little about yourself so we can personalize the full portal experience." backTo="/auth-entry" compact>
+      <div className="mb-6 overflow-x-auto">
+        <div className="flex min-w-full items-center gap-2">
+          {[
+            "Role",
+            "Name",
+            "Class",
+            "Stream",
+            "Interests",
+            "Clarity",
+            "Strengths",
+            "Priorities",
+          ].map((label, index) => {
+            const visibleStepIndex = Math.max(0, Math.min(step === 1 ? 1 : step === 9 ? 7 : step - 1, 7));
+            const status = index < visibleStepIndex ? "done" : index === visibleStepIndex ? "active" : "pending";
+            return (
+              <div key={label} className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm font-black ${
+                      status === "active"
+                        ? "border-brand bg-brand text-white"
+                        : status === "done"
+                        ? "border-slate-300 bg-slate-100 text-slate-600"
+                        : "border-[#e5e7eb] bg-white text-slate-400"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <div className="text-sm font-semibold text-slate-600">{label}</div>
+                </div>
+                {index < 7 ? <div className="h-px flex-1 bg-slate-200" /> : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="space-y-6">
         {step === 0 ? (
           <Space direction="vertical" size="large" className="!w-full">
             <Title level={3}>Who are you exploring for?</Title>
@@ -326,7 +359,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthFrame title={isExistingUser ? "Welcome Back" : "Continue Your Journey"} subtitle={isExistingUser ? "Choose how you'd like to log in." : "Use OTP or coupon to continue."} backTo="/auth-entry">
+    <AuthFrame title={isExistingUser ? "Welcome Back" : "Continue Your Journey"} subtitle={isExistingUser ? "Choose how you'd like to log in." : "Use OTP or coupon to continue."} backTo="/auth-entry" compact>
       <Space direction="vertical" size="large" className="!w-full">
         {isExistingUser ? (
           <Alert
@@ -395,7 +428,7 @@ export function LoginPage() {
 
 export function SignupPage() {
   return (
-    <AuthFrame title="Create Account" subtitle="Join Career Map today." backTo="/auth-entry">
+    <AuthFrame title="Create Account" subtitle="Join Career Map today." backTo="/auth-entry" compact>
       <Form layout="vertical" className="grid gap-2">
         {["Full Name", "Email Address", "Mobile Number", "Password", "Confirm Password", "City", "State"].map((label) => (
           <Form.Item key={label} label={label}>
@@ -421,7 +454,7 @@ export function OtpVerifyPage() {
   const identifier = params.get("identifier") || "your phone";
 
   return (
-    <AuthFrame title="Verify OTP" subtitle={`Enter the 4-digit code sent to ${identifier}.`} backTo="/login">
+    <AuthFrame title="Verify OTP" subtitle={`Enter the 4-digit code sent to ${identifier}.`} backTo="/login" compact>
       <Space direction="vertical" size="large" className="!w-full">
         <Input.OTP length={4} value={otp} onChange={setOtp} />
         <Button
@@ -463,55 +496,53 @@ export function ProfileSetupPage() {
   }
 
   return (
-    <AuthFrame title="Complete Your Profile" subtitle="Help us serve you better." backTo="/login">
-      <div className="rounded-[22px] border border-[#edd9d2] px-5 py-5">
-        <Form layout="vertical">
-          <Row gutter={16}>
-            {[
-              ["name", onboarding.userType === "parent" ? "Parent Name" : "Full Name"],
-              ["email", "Email Address"],
-              ["mobile", "Mobile Number"],
-              ["password", "Password"],
-              ["address", "Address"],
-              ["city", "City"],
-              ["stateName", "State"],
-              ["dob", "Date of Birth"],
-            ].map(([key, label]) => (
-              <Col xs={24} md={12} key={key}>
-                <Form.Item label={label}>
-                  {key === "password" ? (
-                    <Input.Password value={values[key]} onChange={(event) => update(key, event.target.value)} />
-                  ) : (
-                    <Input value={values[key]} onChange={(event) => update(key, event.target.value)} />
-                  )}
-                </Form.Item>
-              </Col>
-            ))}
-            <Col xs={24}>
-              <Form.Item label="Gender">
-                <Radio.Group value={values.gender} onChange={(event) => update("gender", event.target.value)}>
-                  <Radio.Button value="Male">Male</Radio.Button>
-                  <Radio.Button value="Female">Female</Radio.Button>
-                  <Radio.Button value="Other">Other</Radio.Button>
-                </Radio.Group>
+    <AuthFrame title="Complete Your Profile" subtitle="Help us serve you better." backTo="/login" compact>
+      <Form layout="vertical">
+        <Row gutter={16}>
+          {[
+            ["name", onboarding.userType === "parent" ? "Parent Name" : "Full Name"],
+            ["email", "Email Address"],
+            ["mobile", "Mobile Number"],
+            ["password", "Password"],
+            ["address", "Address"],
+            ["city", "City"],
+            ["stateName", "State"],
+            ["dob", "Date of Birth"],
+          ].map(([key, label]) => (
+            <Col xs={24} md={12} key={key}>
+              <Form.Item label={label}>
+                {key === "password" ? (
+                  <Input.Password value={values[key]} onChange={(event) => update(key, event.target.value)} />
+                ) : (
+                  <Input value={values[key]} onChange={(event) => update(key, event.target.value)} />
+                )}
               </Form.Item>
             </Col>
-          </Row>
-          <Button
-            type="primary"
-            size="large"
-            onClick={() => {
-              saveOnboarding({ ...onboarding, name: values.name });
-              saveUserProfile({ ...userProfile, ...values, childName: onboarding.childName });
-              showPromoMessage("Profile created successfully.");
-              authenticate();
-              navigate("/promo");
-            }}
-          >
-            Complete Profile
-          </Button>
-        </Form>
-      </div>
+          ))}
+          <Col xs={24}>
+            <Form.Item label="Gender">
+              <Radio.Group value={values.gender} onChange={(event) => update("gender", event.target.value)}>
+                <Radio.Button value="Male">Male</Radio.Button>
+                <Radio.Button value="Female">Female</Radio.Button>
+                <Radio.Button value="Other">Other</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Button
+          type="primary"
+          size="large"
+          onClick={() => {
+            saveOnboarding({ ...onboarding, name: values.name });
+            saveUserProfile({ ...userProfile, ...values, childName: onboarding.childName });
+            showPromoMessage("Profile created successfully.");
+            authenticate();
+            navigate("/promo");
+          }}
+        >
+          Complete Profile
+        </Button>
+      </Form>
     </AuthFrame>
   );
 }
@@ -521,7 +552,7 @@ export function PromoPage() {
   const { clearPromoMessage, promoMessage } = useAppState();
 
   return (
-    <AuthFrame title="What You Can Explore" subtitle="Everything you need for career guidance." backTo="/profile-setup">
+    <AuthFrame title="What You Can Explore" subtitle="Everything you need for career guidance." backTo="/profile-setup" compact>
       <Space direction="vertical" size="large" className="!w-full">
         {promoMessage ? <Alert type="success" message={promoMessage} afterClose={clearPromoMessage} closable /> : null}
         <div className="grid gap-4">
@@ -532,7 +563,7 @@ export function PromoPage() {
             ["Scholarships & Exams", "Stay updated on opportunities."],
             ["Study Abroad", "Explore international education paths."],
           ].map(([title, desc]) => (
-            <div key={title} className="rounded-[18px] border border-[#edd9d2] px-4 py-4">
+            <div key={title} className="rounded-[18px] border border-slate-200 px-4 py-4">
               <div className="text-lg font-black text-ink">{title}</div>
               <div className="mt-1 text-sm text-muted">{desc}</div>
             </div>
@@ -574,7 +605,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthFrame title={step === "email" ? "Forgot Password" : "Enter Reset Code"} subtitle={step === "email" ? "Enter your email to receive a reset code." : "Enter the 4-digit code to continue."} backTo="/login">
+    <AuthFrame title={step === "email" ? "Forgot Password" : "Enter Reset Code"} subtitle={step === "email" ? "Enter your email to receive a reset code." : "Enter the 4-digit code to continue."} backTo="/login" compact>
       <Space direction="vertical" size="large" className="!w-full">
         {step === "email" ? (
           <>
