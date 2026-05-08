@@ -11,7 +11,7 @@ export default function WebsiteFooter() {
   return (
     <footer className="mt-10 overflow-hidden bg-[linear-gradient(135deg,#a92e23_0%,#b53c31_45%,#9f2c24_100%)] text-white">
       <div className="website-footer-pattern px-6 py-10 md:px-10">
-        <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[1.2fr_1fr_1fr]">
+        <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[1fr_1fr_1.2fr]">
           <div>
             <div className="display-font max-w-[320px] text-[20px] font-medium leading-10 text-[#ffd3c8]">
               Career Map - shaping futures, one step at a time.
@@ -25,7 +25,7 @@ export default function WebsiteFooter() {
             </div>
           </div>
 
-        
+          <div></div>
 
           <div>
             <div className="display-font mb-4 text-[22px] font-bold">Reach Us</div>
@@ -33,8 +33,7 @@ export default function WebsiteFooter() {
               <div>Student & parent career guidance portal</div>
               <div>support@careermap.local</div>
               <div>+91 97768 08179, +91 94372 08179</div>
-              <div>Career guidance modules, assessments, mentoring, scholarships, and study abroad support.</div>
-            </div>
+                 </div>
           </div>
         </div>
       </div>
