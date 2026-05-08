@@ -6,7 +6,7 @@ import {
   LockOutlined,
   MoonOutlined,
   PlayCircleOutlined,
-  RightOutlined,
+  ArrowRightOutlined,
   SearchOutlined,
   StarFilled,
   SunOutlined,
@@ -174,9 +174,9 @@ const moduleArtPresets = {
       encodeURIComponent(`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
           <rect width="600" height="320" rx="36" fill="#f8f1ec"/>
-          <circle cx="214" cy="126" r="54" fill="#73584a"/>
+          <circle cx="214" cy="126" r="54" fill="#9a2119"/>
           <circle cx="214" cy="126" r="34" fill="#e8cdbd"/>
-          <rect x="154" y="186" width="120" height="64" rx="28" fill="#73584a"/>
+          <rect x="154" y="186" width="120" height="64" rx="28" fill="#c59f8b"/>
           <rect x="318" y="86" width="166" height="112" rx="24" fill="#ffffff"/>
           <rect x="342" y="114" width="116" height="12" rx="6" fill="#dcc6ba"/>
           <rect x="342" y="144" width="90" height="12" rx="6" fill="#ede0d8"/>
@@ -338,7 +338,7 @@ export function DashboardPage() {
         <SectionCard title="Next Step">
           <Space direction="vertical">
             <Text>Take the deeper assessment to unlock a richer career report with stronger recommendations.</Text>
-            <Button type="primary" onClick={() => navigate("/app/assessment")}>
+            <Button  type="primary" onClick={() => navigate("/app/assessment")}>
               Take Full Psychometric Test
             </Button>
           </Space>
@@ -366,7 +366,7 @@ export function DashboardPage() {
 
      
 
-      <div className="rounded-[24px] border border-[#eedad4] bg-white px-5 py-5 shadow-soft">
+      <div >
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <div className="display-font text-2xl font-bold text-ink">Explore Modules</div>
@@ -422,7 +422,7 @@ export function DashboardPage() {
                         className="flex h-11 w-11 items-center justify-center rounded-full text-white transition group-hover:translate-x-1"
                         style={{ backgroundColor: art.accent }}
                       >
-                        <RightOutlined />
+                        <ArrowRightOutlined />
                       </div>
                     </div>
                   </div>

@@ -25,22 +25,11 @@ export default function WebsiteFooter() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-            <div>
-              <div className="display-font mb-4 text-[22px] font-bold">Important Links</div>
-              <div className="grid gap-3 text-[15px] text-white/95">
-                <Link to="/app/dashboard" className="website-footer-link">My Dashboard</Link>
-                <Link to="/app/library" className="website-footer-link">Career Library</Link>
-                <Link to="/app/assessment" className="website-footer-link">Psychometric Test</Link>
-                <Link to="/app/learn" className="website-footer-link">Master Class</Link>
-                <Link to="/app/entrance-exam" className="website-footer-link">Entrance Exam</Link>
-              </div>
-            </div>
-          </div>
+        
 
           <div>
             <div className="display-font mb-4 text-[22px] font-bold">Reach Us</div>
-            <div className="grid gap-4 text-[15px] leading-8 text-white/95">
+            <div className="grid gap-6 text-[15px] leading-8 text-white/95">
               <div>Student & parent career guidance portal</div>
               <div>support@careermap.local</div>
               <div>+91 97768 08179, +91 94372 08179</div>
