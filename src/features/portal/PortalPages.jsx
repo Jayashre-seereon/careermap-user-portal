@@ -338,7 +338,7 @@ export function DashboardPage() {
         <SectionCard title="Next Step">
           <Space direction="vertical">
             <Text>Take the deeper assessment to unlock a richer career report with stronger recommendations.</Text>
-            <Button  type="primary" onClick={() => navigate("/app/assessment")}>
+            <Button type="primary" onClick={() => navigate("/app/assessment")}>
               Take Full Psychometric Test
             </Button>
           </Space>
@@ -364,7 +364,7 @@ export function DashboardPage() {
         }
       />
 
-     
+
 
       <div >
         <div className="mb-4 flex items-center justify-between gap-3">
