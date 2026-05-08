@@ -6,6 +6,7 @@ import {
   LockOutlined,
   MoonOutlined,
   PlayCircleOutlined,
+  RightOutlined,
   SearchOutlined,
   StarFilled,
   SunOutlined,
@@ -66,6 +67,172 @@ import { PageHero, SectionCard, SoftTag, StatTile, Text, Title } from "../../com
 import { useAppState } from "../../state/AppStateContext";
 
 const { Paragraph } = Typography;
+
+const moduleArtPresets = {
+  "Career Library": {
+    background: "linear-gradient(135deg, #d8ecff 0%, #89b4ff 100%)",
+    accent: "#2f6fe4",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#eaf4ff"/>
+              <stop offset="100%" stop-color="#90b9ff"/>
+            </linearGradient>
+          </defs>
+          <rect width="600" height="320" rx="36" fill="url(#bg)"/>
+          <circle cx="470" cy="90" r="58" fill="#ffffff" fill-opacity="0.35"/>
+          <rect x="62" y="82" width="162" height="126" rx="18" fill="#284f8f"/>
+          <rect x="238" y="82" width="162" height="126" rx="18" fill="#3d6cc1"/>
+          <rect x="150" y="120" width="162" height="126" rx="18" fill="#ffffff"/>
+          <rect x="176" y="144" width="108" height="10" rx="5" fill="#9db7e7"/>
+          <rect x="176" y="166" width="85" height="10" rx="5" fill="#c0d1ee"/>
+          <rect x="176" y="188" width="96" height="10" rx="5" fill="#d6e1f6"/>
+        </svg>`),
+  },
+  Assessment: {
+    background: "linear-gradient(135deg, #efe3ff 0%, #b894ff 100%)",
+    accent: "#7b4bd3",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f6ecff"/>
+              <stop offset="100%" stop-color="#b08cff"/>
+            </linearGradient>
+          </defs>
+          <rect width="600" height="320" rx="36" fill="url(#bg)"/>
+          <circle cx="165" cy="95" r="54" fill="#ffffff" fill-opacity="0.3"/>
+          <rect x="110" y="66" width="210" height="188" rx="28" fill="#ffffff"/>
+          <rect x="144" y="104" width="142" height="14" rx="7" fill="#d9c9ff"/>
+          <rect x="144" y="138" width="112" height="14" rx="7" fill="#c5afff"/>
+          <rect x="144" y="172" width="132" height="14" rx="7" fill="#eadfff"/>
+          <path d="M378 216c32-72 74-108 126-108 17 0 35 5 52 15-10 63-46 111-108 142-24 12-52 22-86 28 0-32 5-58 16-77z" fill="#6f43cb"/>
+          <circle cx="468" cy="120" r="18" fill="#ffffff"/>
+        </svg>`),
+  },
+  "Master Class": {
+    background: "linear-gradient(135deg, #ffe7cf 0%, #ffb05c 100%)",
+    accent: "#d97a15",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#ffd7b0"/>
+          <rect x="88" y="58" width="424" height="204" rx="28" fill="#3f2c24"/>
+          <rect x="112" y="82" width="376" height="156" rx="18" fill="#1f1f26"/>
+          <circle cx="196" cy="160" r="42" fill="#ffb260"/>
+          <path d="M184 137l36 23-36 23z" fill="#ffffff"/>
+          <rect x="274" y="126" width="146" height="12" rx="6" fill="#8a6d5c"/>
+          <rect x="274" y="154" width="118" height="12" rx="6" fill="#715749"/>
+          <rect x="274" y="182" width="134" height="12" rx="6" fill="#8a6d5c"/>
+        </svg>`),
+  },
+  "Entrance Exam": {
+    background: "linear-gradient(135deg, #d7f7ef 0%, #68d1b5 100%)",
+    accent: "#218f78",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#dffaf2"/>
+          <rect x="98" y="54" width="404" height="216" rx="28" fill="#ffffff"/>
+          <rect x="134" y="94" width="182" height="18" rx="9" fill="#9be2d0"/>
+          <rect x="134" y="132" width="128" height="18" rx="9" fill="#c2efe3"/>
+          <rect x="134" y="170" width="164" height="18" rx="9" fill="#d7f6ee"/>
+          <circle cx="412" cy="120" r="32" fill="#2da48d"/>
+          <path d="M397 121l11 11 22-28" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="368" y="172" width="88" height="54" rx="16" fill="#6bd0b6"/>
+        </svg>`),
+  },
+  Institutes: {
+    background: "linear-gradient(135deg, #ffe2ef 0%, #f59fc3 100%)",
+    accent: "#d4568d",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#ffe6f0"/>
+          <path d="M96 228h408" stroke="#f1aac8" stroke-width="8" stroke-linecap="round"/>
+          <path d="M122 228V140l86-46 86 46v88M294 228V110l88-52 88 52v118" fill="#ffffff"/>
+          <path d="M122 140l86-46 86 46M294 110l88-52 88 52" fill="none" stroke="#d86598" stroke-width="10" stroke-linejoin="round"/>
+          <rect x="176" y="162" width="30" height="66" rx="10" fill="#f4c0d5"/>
+          <rect x="228" y="162" width="30" height="66" rx="10" fill="#f4c0d5"/>
+          <rect x="348" y="142" width="34" height="86" rx="10" fill="#f4c0d5"/>
+          <rect x="404" y="142" width="34" height="86" rx="10" fill="#f4c0d5"/>
+        </svg>`),
+  },
+  "Book Mentor": {
+    background: "linear-gradient(135deg, #fff0cf 0%, #f4d17e 100%)",
+    accent: "#b88c2f",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#fff5db"/>
+          <circle cx="214" cy="126" r="54" fill="#7d5d2f"/>
+          <circle cx="214" cy="126" r="34" fill="#f6d9a1"/>
+          <rect x="154" y="186" width="120" height="64" rx="28" fill="#7d5d2f"/>
+          <rect x="318" y="86" width="166" height="112" rx="24" fill="#ffffff"/>
+          <rect x="342" y="114" width="116" height="12" rx="6" fill="#e8d4a6"/>
+          <rect x="342" y="144" width="90" height="12" rx="6" fill="#f1e5c7"/>
+          <rect x="342" y="174" width="104" height="12" rx="6" fill="#e8d4a6"/>
+          <path d="M326 232c26-20 52-30 78-30s52 10 78 30" fill="none" stroke="#d4aa4a" stroke-width="18" stroke-linecap="round"/>
+        </svg>`),
+  },
+  Scholarships: {
+    background: "linear-gradient(135deg, #e1f8df 0%, #8cd68b 100%)",
+    accent: "#3e9d52",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#eafbe8"/>
+          <circle cx="182" cy="106" r="42" fill="#93d98e"/>
+          <path d="M182 74l10 21 24 3-17 16 4 23-21-11-21 11 4-23-17-16 24-3z" fill="#ffffff"/>
+          <rect x="122" y="174" width="120" height="64" rx="18" fill="#4ea95d"/>
+          <rect x="288" y="82" width="184" height="144" rx="28" fill="#ffffff"/>
+          <rect x="320" y="118" width="118" height="12" rx="6" fill="#bceabc"/>
+          <rect x="320" y="150" width="92" height="12" rx="6" fill="#d9f3d6"/>
+          <rect x="320" y="182" width="132" height="12" rx="6" fill="#bceabc"/>
+        </svg>`),
+  },
+  Quiz: {
+    background: "linear-gradient(135deg, #dcecff 0%, #84b8ff 100%)",
+    accent: "#3976d7",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#e7f1ff"/>
+          <circle cx="172" cy="160" r="68" fill="#3b71d6"/>
+          <text x="172" y="176" text-anchor="middle" font-size="72" font-family="Arial, sans-serif" font-weight="700" fill="#ffffff">?</text>
+          <rect x="286" y="88" width="194" height="144" rx="28" fill="#ffffff"/>
+          <rect x="320" y="120" width="126" height="12" rx="6" fill="#c1d7fb"/>
+          <rect x="320" y="152" width="102" height="12" rx="6" fill="#d9e7fd"/>
+          <rect x="320" y="184" width="138" height="12" rx="6" fill="#c1d7fb"/>
+        </svg>`),
+  },
+  "Study Abroad": {
+    background: "linear-gradient(135deg, #ece4ff 0%, #aa8cff 100%)",
+    accent: "#7250d0",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#f1ebff"/>
+          <circle cx="188" cy="154" r="80" fill="#7c58dd"/>
+          <path d="M188 94c22 0 42 9 56 23-18 8-36 12-56 12s-38-4-56-12c14-14 34-23 56-23zm-74 44c16 9 34 15 52 18-3 12-4 25-4 38s1 26 4 38c-18 3-36 9-52 18-12-17-18-36-18-56s6-39 18-56zm148 0c12 17 18 36 18 56s-6 39-18 56c-16-9-34-15-52-18 3-12 4-25 4-38s-1-26-4-38c18-3 36-9 52-18z" fill="#ffffff" fill-opacity="0.9"/>
+          <path d="M318 214l54-92 54 92" fill="#ffbf66"/>
+          <path d="M430 214l40-68 40 68" fill="#ffd79a"/>
+          <path d="M340 214h170" stroke="#cbbcff" stroke-width="10" stroke-linecap="round"/>
+        </svg>`),
+  },
+};
 
 function usePortalNavigation() {
   const navigate = useNavigate();
@@ -215,20 +382,49 @@ export function DashboardPage() {
               (card.title === "Book Mentor" && !isUnlocked("book-mentor")) ||
               (card.title === "Scholarships" && !isUnlocked("scholarship")) ||
               (card.title === "Study Abroad" && !isUnlocked("abroad-consultancy"));
+            const art = moduleArtPresets[card.title] || {
+              background: `linear-gradient(135deg, ${card.tone}22 0%, ${card.tone} 100%)`,
+              accent: card.tone,
+              image: null,
+            };
 
             return (
               <Col xs={24} sm={12} lg={8} key={card.title}>
                 <button
                   type="button"
-                  className="h-full w-full rounded-[20px] border border-[#eedad4] bg-[#fffaf8] px-4 py-4 text-left transition hover:border-brand hover:bg-white"
+                  className="group h-full w-full overflow-hidden rounded-[24px] border border-[#eedad4] bg-white text-left shadow-[0_16px_36px_rgba(38,33,38,0.08)] transition hover:-translate-y-1 hover:border-brand hover:shadow-[0_22px_46px_rgba(38,33,38,0.14)]"
                   onClick={() => navigate(card.route)}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="display-font text-lg font-bold text-ink">{card.title}</div>
-                      <div className="mt-2 text-sm text-muted">{card.subtitle}</div>
+                  <div
+                    className="relative h-44 overflow-hidden"
+                    style={{ background: art.background }}
+                  >
+                    {art.image ? <img src={art.image} alt={card.title} className="h-full w-full object-cover" /> : null}
+                    <div className="absolute left-4 top-4 rounded-full bg-white/88 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-ink/70">
+                      MODULE
                     </div>
-                    {showLock ? <LockOutlined className="mt-1 text-brand" /> : null}
+                    {showLock ? (
+                      <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/92 text-brand shadow-sm">
+                        <LockOutlined />
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="flex min-h-[170px] flex-col px-5 pb-5 pt-4">
+                    <div className="pr-8">
+                      <div className="display-font text-[22px] font-bold leading-tight text-ink">{card.title}</div>
+                      <div className="mt-2 text-sm leading-6 text-muted">{card.subtitle}</div>
+                    </div>
+                    <div className="mt-auto flex items-end justify-between gap-3 pt-5">
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: art.accent }}>
+                        Open now
+                      </div>
+                      <div
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-white transition group-hover:translate-x-1"
+                        style={{ backgroundColor: art.accent }}
+                      >
+                        <RightOutlined />
+                      </div>
+                    </div>
                   </div>
                 </button>
               </Col>
