@@ -197,13 +197,7 @@ export function DashboardPage() {
         }
       />
 
-      <Row gutter={[16, 16]}>
-        {heroStats.map((item) => (
-          <Col xs={24} md={8} key={item.label}>
-            <StatTile {...item} />
-          </Col>
-        ))}
-      </Row>
+     
 
       <div className="rounded-[24px] border border-[#eedad4] bg-white px-5 py-5 shadow-soft">
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -243,56 +237,6 @@ export function DashboardPage() {
         </Row>
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={8}>
-          <div className="rounded-[22px] border border-[#eedad4] bg-white px-5 py-5 shadow-soft">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="display-font text-xl font-bold text-ink">Mentors</div>
-              <Button type="link" onClick={() => navigate("/app/book-mentor")}>See all</Button>
-            </div>
-            <div className="space-y-4">
-              {featuredMentors.map((mentor) => (
-                <div key={mentor.name} className="border-b border-[#f1e2dc] pb-3 last:border-b-0 last:pb-0">
-                  <div className="font-bold text-ink">{mentor.name}</div>
-                  <div className="text-sm text-muted">{mentor.specialty} • {mentor.rating} • {mentor.experience}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Col>
-        <Col xs={24} lg={8}>
-          <div className="rounded-[22px] border border-[#eedad4] bg-white px-5 py-5 shadow-soft">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="display-font text-xl font-bold text-ink">Scholarships</div>
-              <Button type="link" onClick={() => navigate("/app/scholarships")}>See all</Button>
-            </div>
-            <div className="space-y-4">
-              {featuredScholarships.map((item) => (
-                <div key={item.name} className="border-b border-[#f1e2dc] pb-3 last:border-b-0 last:pb-0">
-                  <div className="font-bold text-ink">{item.name}</div>
-                  <div className="text-sm text-muted">{item.amount} • {item.deadline}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Col>
-        <Col xs={24} lg={8}>
-          <div className="rounded-[22px] border border-[#eedad4] bg-white px-5 py-5 shadow-soft">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="display-font text-xl font-bold text-ink">Institutes</div>
-              <Button type="link" onClick={() => navigate("/app/institutes")}>See all</Button>
-            </div>
-            <div className="space-y-4">
-              {featuredInstitutes.map((item) => (
-                <div key={item.name} className="border-b border-[#f1e2dc] pb-3 last:border-b-0 last:pb-0">
-                  <div className="font-bold text-ink">{item.name}</div>
-                  <div className="text-sm text-muted">{item.location} • {item.type}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Col>
-      </Row>
     </div>
   );
 }
