@@ -102,6 +102,22 @@ function PremiumGate({ title, description, returnTo }) {
   );
 }
 
+function UnlockRedirectModal({ open, title, itemLabel, description, onCancel, onConfirm }) {
+  return (
+    <Modal open={open} onCancel={onCancel} footer={null} centered title={title}>
+      <Space direction="vertical" size="large" className="!w-full">
+        <Paragraph className="!mb-0">
+          {description} {itemLabel ? <strong>{itemLabel}</strong> : null}
+        </Paragraph>
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button onClick={onConfirm}>View Plans</Button>
+          <Button type="primary" onClick={onConfirm}>Unlock Now</Button>
+        </div>
+      </Space>
+    </Modal>
+  );
+}
+
 export function DashboardPage() {
   const { isUnlocked, unreadNotificationsCount } = useAppState();
   const { navigate } = usePortalNavigation();
@@ -576,18 +592,43 @@ export function NotificationsPage() {
 
 export function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate } = usePortalNavigation();
+  const { navigate, location } = usePortalNavigation();
+  const [params] = useSearchParams();
   const [activeStatus, setActiveStatus] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
   const unlocked = isUnlocked("scholarship");
   const filtered = scholarships.filter((item) => activeStatus === "All" || item.status === activeStatus);
+
+  function buildScholarshipReturnTo(itemName = selectedItem?.name) {
+    const nextParams = new URLSearchParams();
+    if (activeStatus !== "All") nextParams.set("status", activeStatus);
+    if (itemName) nextParams.set("item", itemName);
+    const query = nextParams.toString();
+    return query ? `${location.pathname}?${query}` : location.pathname;
+  }
+
+  function openScholarship(item) {
+    registerFreeDetailAccess("scholarship", item.name);
+    setSelectedItem(item);
+  }
+
+  useEffect(() => {
+    const status = params.get("status");
+    const itemName = params.get("item");
+    if (status) setActiveStatus(status);
+    if (itemName) {
+      const matched = scholarships.find((item) => item.name === itemName);
+      if (matched) setSelectedItem(matched);
+    }
+  }, [params]);
 
   if (selectedItem) {
     const detailUnlocked = unlocked || canAccessFreeDetail("scholarship", selectedItem.name);
     return (
       <div className="space-y-6">
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
-        {!unlocked && !detailUnlocked ? <PremiumGate title="Unlock Scholarships" description="Subscribe to more scholarship details, requirements, and application links." returnTo="/app/scholarships" /> : null}
+        {!unlocked && !detailUnlocked ? <PremiumGate title="Unlock Scholarships" description="Subscribe to more scholarship details, requirements, and application links." returnTo={buildScholarshipReturnTo()} /> : null}
         <SectionCard title="Overview">
           <Space direction="vertical">
             <SoftTag color={selectedItem.status === "Active" ? "green" : "default"}>{selectedItem.status}</SoftTag>
@@ -613,20 +654,28 @@ export function ScholarshipPage() {
       <Tabs activeKey={activeStatus} onChange={setActiveStatus} items={["All", "Active", "Expired"].map((key) => ({ key, label: key }))} />
       <List
         grid={{ gutter: 16, xs: 1, lg: 2 }}
-        dataSource={unlocked ? filtered : filtered.slice(0, 6)}
+        dataSource={filtered}
         renderItem={(item) => (
           <List.Item>
+            {(() => {
+              const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
+              return (
             <Card
               hoverable
-              className="!h-full !border-[#eedad4]"
+              className="!relative !h-full !border-[#eedad4]"
               onClick={() => {
-                if (!unlocked && !canAccessFreeDetail("scholarship", item.name)) {
+                if (!unlocked && !itemFree) {
+                  setUnlockModalItem(item.name);
                   return;
                 }
-                registerFreeDetailAccess("scholarship", item.name);
-                setSelectedItem(item);
+                openScholarship(item);
               }}
             >
+              {!unlocked ? (
+                <div className="absolute right-4 top-4 z-10">
+                  <SoftTag color={itemFree ? "green" : "default"}>{itemFree ? "FREE" : "LOCK"}</SoftTag>
+                </div>
+              ) : null}
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -642,10 +691,24 @@ export function ScholarshipPage() {
                 </div>
               </div>
             </Card>
+              );
+            })()}
           </List.Item>
         )}
       />
-      {!unlocked ? <PremiumGate title="Unlock Scholarships" description="Subscribe to more scholarship details, requirements, and application links." returnTo="/app/scholarships" /> : null}
+      {!unlocked ? <PremiumGate title="Unlock Scholarships" description="Subscribe to more scholarship details, requirements, and application links." returnTo={buildScholarshipReturnTo()} /> : null}
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Scholarships"
+        itemLabel={unlockModalItem}
+        description="Your free scholarship access has been used. Subscribe to unlock"
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => {
+          const returnTo = buildScholarshipReturnTo(unlockModalItem);
+          setUnlockModalItem(null);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+        }}
+      />
     </div>
   );
 }
@@ -757,11 +820,13 @@ export function EntranceExamPage() {
 
 export function LearnPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate } = usePortalNavigation();
+  const { navigate, location } = usePortalNavigation();
+  const [params] = useSearchParams();
   const unlocked = isUnlocked("master-class");
   const [videoType, setVideoType] = useState("All");
   const [career, setCareer] = useState("All");
   const [sortBy, setSortBy] = useState("popular");
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
   const filtered = [...masterClasses]
     .filter((item) => videoType === "All" || item.videoType === videoType)
     .filter((item) => career === "All" || item.career === career)
@@ -770,6 +835,25 @@ export function LearnPage() {
       if (sortBy === "za") return b.title.localeCompare(a.title);
       return b.views - a.views;
     });
+
+  function buildLearnReturnTo(itemTitle = "") {
+    const nextParams = new URLSearchParams();
+    if (videoType !== "All") nextParams.set("videoType", videoType);
+    if (career !== "All") nextParams.set("career", career);
+    if (sortBy !== "popular") nextParams.set("sortBy", sortBy);
+    if (itemTitle) nextParams.set("video", itemTitle);
+    const query = nextParams.toString();
+    return query ? `${location.pathname}?${query}` : location.pathname;
+  }
+
+  useEffect(() => {
+    const nextVideoType = params.get("videoType");
+    const nextCareer = params.get("career");
+    const nextSortBy = params.get("sortBy");
+    if (nextVideoType) setVideoType(nextVideoType);
+    if (nextCareer) setCareer(nextCareer);
+    if (nextSortBy) setSortBy(nextSortBy);
+  }, [params]);
 
   return (
     <div className="space-y-6">
@@ -783,34 +867,42 @@ export function LearnPage() {
         grid={{ gutter: 16, xs: 1, lg: 2 }}
         dataSource={filtered}
         renderItem={(item) => {
-          const detailUnlocked = !item.locked || unlocked || canAccessFreeDetail("master-class", item.title);
+          const detailUnlocked = unlocked || canAccessFreeDetail("master-class", item.title);
           return (
             <List.Item>
-              <Card className="!h-full !border-[#eedad4]">
+              <Card className="!relative !h-full !border-[#eedad4]">
+                {!unlocked ? (
+                  <div className="absolute right-4 top-4 z-10">
+                    <SoftTag color={detailUnlocked ? "green" : "default"}>{detailUnlocked ? "FREE" : "LOCK"}</SoftTag>
+                  </div>
+                ) : null}
                 <Space direction="vertical" size="middle" className="!w-full">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-lg font-black text-ink">{item.title}</div>
                       <div className="mt-1 text-sm text-muted">{item.mentor}</div>
                     </div>
-                    {item.locked && !unlocked ? <LockOutlined className="text-brand" /> : <PlayCircleOutlined className="text-brand" />}
+                    {!unlocked && !detailUnlocked ? <LockOutlined className="text-brand" /> : <PlayCircleOutlined className="text-brand" />}
                   </div>
                   <Space wrap>
                     <SoftTag color="red">{item.career}</SoftTag>
                     <SoftTag color="blue">{item.duration}</SoftTag>
                     <SoftTag color="gold">{(item.views / 1000).toFixed(1)}k views</SoftTag>
                   </Space>
-                  {!unlocked && item.locked && !detailUnlocked ? <Text>Your free master class preview has already been used.</Text> : null}
+                  {!unlocked && !detailUnlocked ? <Text>Your free master class preview has already been used.</Text> : null}
                   <Button
                     type="primary"
-                    ghost={item.locked && !unlocked}
+                    ghost={!unlocked && !detailUnlocked}
                     onClick={() => {
-                      if (item.locked && !unlocked && !detailUnlocked) return;
-                      if (item.locked) registerFreeDetailAccess("master-class", item.title);
+                      if (!unlocked && !detailUnlocked) {
+                        setUnlockModalItem(item.title);
+                        return;
+                      }
+                      registerFreeDetailAccess("master-class", item.title);
                       window.open(item.url, "_blank", "noopener,noreferrer");
                     }}
                   >
-                    {item.locked && !unlocked ? (detailUnlocked ? "Watch 1 Free Class" : "Unlock More Classes") : "Watch Video"}
+                    {!unlocked ? (detailUnlocked ? "Watch 1 Free Class" : "Unlock More Classes") : "Watch Video"}
                   </Button>
                 </Space>
               </Card>
@@ -818,22 +910,50 @@ export function LearnPage() {
           );
         }}
       />
-      {!unlocked ? <PremiumGate title="Unlock Master Class" description="Subscribe to more classes and keep learning without limits." returnTo="/app/learn" /> : null}
+      {!unlocked ? <PremiumGate title="Unlock Master Class" description="Subscribe to more classes and keep learning without limits." returnTo={buildLearnReturnTo()} /> : null}
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Master Class"
+        itemLabel={unlockModalItem}
+        description="Your free master class access has been used. Subscribe to unlock"
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => {
+          const returnTo = buildLearnReturnTo(unlockModalItem);
+          setUnlockModalItem(null);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+        }}
+      />
     </div>
   );
 }
 
 export function BookMentorPage() {
   const { addBooking, canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate } = usePortalNavigation();
+  const { navigate, location } = usePortalNavigation();
+  const [params] = useSearchParams();
   const unlocked = isUnlocked("book-mentor");
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [booked, setBooked] = useState(false);
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [paymentValues, setPaymentValues] = useState({ upiId: "", cardName: "", cardNumber: "", cardExpiry: "", cardCvv: "", bank: "" });
+
+  function buildMentorReturnTo(mentorName = selectedMentor?.name) {
+    const nextParams = new URLSearchParams();
+    if (mentorName) nextParams.set("mentor", mentorName);
+    const query = nextParams.toString();
+    return query ? `${location.pathname}?${query}` : location.pathname;
+  }
+
+  useEffect(() => {
+    const mentorName = params.get("mentor");
+    if (!mentorName) return;
+    const mentor = mentors.find((item) => item.name === mentorName);
+    if (mentor) setSelectedMentor(mentor);
+  }, [params]);
 
   const canPay =
     paymentMethod === "upi"
@@ -861,15 +981,26 @@ export function BookMentorPage() {
         dataSource={mentors}
         renderItem={(mentor) => (
           <List.Item>
+            {(() => {
+              const mentorFree = unlocked || canAccessFreeDetail("book-mentor", mentor.name);
+              return (
             <Card
               hoverable
-              className="!h-full !border-[#eedad4]"
+              className="!relative !h-full !border-[#eedad4]"
               onClick={() => {
-                if (!unlocked && !canAccessFreeDetail("book-mentor", mentor.name)) return;
+                if (!unlocked && !mentorFree) {
+                  setUnlockModalItem(mentor.name);
+                  return;
+                }
                 registerFreeDetailAccess("book-mentor", mentor.name);
                 setSelectedMentor(mentor);
               }}
             >
+              {!unlocked ? (
+                <div className="absolute right-4 top-4 z-10">
+                  <SoftTag color={mentorFree ? "green" : "default"}>{mentorFree ? "FREE" : "LOCK"}</SoftTag>
+                </div>
+              ) : null}
               <Space direction="vertical" size="middle" className="!w-full">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -884,10 +1015,24 @@ export function BookMentorPage() {
                 </Space>
               </Space>
             </Card>
+              );
+            })()}
           </List.Item>
         )}
       />
-      {!unlocked ? <PremiumGate title="Unlock Mentor Access" description="Subscribe to more mentor profiles and booking access." returnTo="/app/book-mentor" /> : null}
+      {!unlocked ? <PremiumGate title="Unlock Mentor Access" description="Subscribe to more mentor profiles and booking access." returnTo={buildMentorReturnTo()} /> : null}
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Mentor Access"
+        itemLabel={unlockModalItem}
+        description="Your free mentor access has been used. Subscribe to unlock"
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => {
+          const returnTo = buildMentorReturnTo(unlockModalItem);
+          setUnlockModalItem(null);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+        }}
+      />
 
       <Modal open={Boolean(selectedMentor)} footer={null} onCancel={() => setSelectedMentor(null)} width={860}>
         {selectedMentor ? (
@@ -961,12 +1106,28 @@ export function BookMentorPage() {
 
 export function AbroadPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate } = usePortalNavigation();
+  const { navigate, location } = usePortalNavigation();
+  const [params] = useSearchParams();
   const unlocked = isUnlocked("abroad-consultancy");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [values, setValues] = useState({ preferredCountry: "", courseInterest: "", budgetRange: "", preferredIntake: "" });
+
+  function buildAbroadReturnTo(countryName = selectedCountry?.name) {
+    const nextParams = new URLSearchParams();
+    if (countryName) nextParams.set("country", countryName);
+    const query = nextParams.toString();
+    return query ? `${location.pathname}?${query}` : location.pathname;
+  }
+
+  useEffect(() => {
+    const countryName = params.get("country");
+    if (!countryName) return;
+    const country = studyAbroadCountries.find((item) => item.name === countryName);
+    if (country) setSelectedCountry(country);
+  }, [params]);
 
   if (submitted) {
     return <Result status="success" title="Our team will contact you shortly" subTitle="Your study abroad consultation request has been recorded." extra={<Button type="primary" onClick={() => { setSubmitted(false); setFormOpen(false); }}>Done</Button>} />;
@@ -980,25 +1141,48 @@ export function AbroadPage() {
         dataSource={studyAbroadCountries}
         renderItem={(country) => (
           <List.Item>
+            {(() => {
+              const countryFree = unlocked || canAccessFreeDetail("abroad-consultancy", country.name);
+              return (
             <Card
               hoverable
               className="!h-full !border-[#eedad4]"
               onClick={() => {
-                if (!unlocked && !canAccessFreeDetail("abroad-consultancy", country.name)) return;
+                if (!unlocked && !countryFree) {
+                  setUnlockModalItem(country.name);
+                  return;
+                }
                 registerFreeDetailAccess("abroad-consultancy", country.name);
                 setSelectedCountry(country);
               }}
             >
-              <Space direction="vertical">
-                <div className="text-lg font-black text-ink">{country.name}</div>
+              <Space direction="vertical" className="!w-full">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-lg font-black text-ink">{country.name}</div>
+                  {!unlocked ? <SoftTag color={countryFree ? "green" : "default"}>{countryFree ? "FREE" : "LOCK"}</SoftTag> : null}
+                </div>
                 <Text>{country.description}</Text>
                 <Text className="!text-brand">{country.tuition}</Text>
               </Space>
             </Card>
+              );
+            })()}
           </List.Item>
         )}
       />
-      {!unlocked ? <PremiumGate title="Unlock Study Abroad" description="Subscribe to more country details, scholarships, visa guidance, and counselling access." returnTo="/app/abroad" /> : null}
+      {!unlocked ? <PremiumGate title="Unlock Study Abroad" description="Subscribe to more country details, scholarships, visa guidance, and counselling access." returnTo={buildAbroadReturnTo()} /> : null}
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Study Abroad"
+        itemLabel={unlockModalItem}
+        description="Your free study abroad access has been used. Subscribe to unlock"
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => {
+          const returnTo = buildAbroadReturnTo(unlockModalItem);
+          setUnlockModalItem(null);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+        }}
+      />
       <Modal open={Boolean(selectedCountry)} footer={null} onCancel={() => setSelectedCountry(null)} width={900}>
         {selectedCountry ? (
           <div className="space-y-6">
