@@ -111,7 +111,7 @@ export function DashboardPage() {
   const [complete, setComplete] = useState(false);
 
   const personalityResult = useMemo(() => {
-    const counts = [0, 0, 0, 0];
+    const counts = [0, 0, 0, 0, 0];
     answers.forEach((answer) => {
       if (answer !== null) counts[answer] += 1;
     });
@@ -1033,13 +1033,15 @@ export function AbroadPage() {
 
 export function LibraryPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess, savedCareers, toggleSavedCareer } = useAppState();
-  const { navigate } = usePortalNavigation();
+  const { navigate, location } = usePortalNavigation();
+  const [params] = useSearchParams();
   const unlocked = isUnlocked("career-library");
   const [level, setLevel] = useState("streams");
   const [selectedStream, setSelectedStream] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [selectedDetail, setSelectedDetail] = useState(null);
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
 
   const detail = careerLibrary.details[selectedDetail] || {
     title: selectedDetail,
@@ -1061,6 +1063,73 @@ export function LibraryPage() {
     Vocational: <ToolOutlined />,
     Neutral: <BranchesOutlined />,
   };
+
+  function buildLibraryReturnTo(detailName = selectedDetail) {
+    const nextParams = new URLSearchParams();
+
+    if (selectedStream) nextParams.set("stream", selectedStream);
+    if (selectedCategory) nextParams.set("category", selectedCategory);
+    if (selectedProgram) nextParams.set("program", selectedProgram);
+    if (detailName) nextParams.set("detail", detailName);
+    if (detailName) nextParams.set("level", "details");
+
+    const query = nextParams.toString();
+    return query ? `${location.pathname}?${query}` : location.pathname;
+  }
+
+  function openCareerDetail(item) {
+    registerFreeDetailAccess("career-library", item);
+    setSelectedProgram(item);
+    setSelectedDetail(item);
+    setLevel("details");
+  }
+
+  function handleLockedCareerClick(item) {
+    if (!unlocked && !canAccessFreeDetail("career-library", item)) {
+      setUnlockModalItem(item);
+      return;
+    }
+    openCareerDetail(item);
+  }
+
+  function handleGoToPlans() {
+    const returnTo = buildLibraryReturnTo(unlockModalItem);
+    setUnlockModalItem(null);
+    navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+  }
+
+  useEffect(() => {
+    const stream = params.get("stream");
+    const category = params.get("category");
+    const program = params.get("program");
+    const detailName = params.get("detail");
+    const requestedLevel = params.get("level");
+
+    if (!stream && !category && !program && !detailName) {
+      return;
+    }
+
+    if (stream) {
+      setSelectedStream(stream);
+    }
+    if (category) {
+      setSelectedCategory(category);
+    }
+    if (program) {
+      setSelectedProgram(program);
+    }
+    if (detailName) {
+      setSelectedDetail(detailName);
+    }
+
+    if (requestedLevel === "details" && detailName) {
+      setLevel("details");
+    } else if (program || category) {
+      setLevel("programs");
+    } else if (stream) {
+      setLevel("categories");
+    }
+  }, [params]);
 
   function renderLibraryCardHeading(title, icon) {
     return (
@@ -1124,13 +1193,7 @@ export function LibraryPage() {
                 <Card
                   hoverable
                   className="!w-full !border-[#eedad4]"
-                  onClick={() => {
-                    if (!unlocked && !unlockedItem) return;
-                    registerFreeDetailAccess("career-library", item);
-                    setSelectedProgram(item);
-                    setSelectedDetail(item);
-                    setLevel("details");
-                  }}
+                  onClick={() => handleLockedCareerClick(item)}
                 >
                   <div className="flex items-center justify-between gap-3">
                     {renderLibraryCardHeading(item, <BookOutlined />)}
@@ -1144,7 +1207,7 @@ export function LibraryPage() {
       ) : null}
       {level === "details" ? (
         <div className="space-y-6">
-          {!detailUnlocked ? <PremiumGate title="Unlock Career Library" description="Subscribe to more careers, salary insights, education paths, and institute details." returnTo="/app/library" /> : null}
+          {!detailUnlocked ? <PremiumGate title="Unlock Career Library" description="Subscribe to more careers, salary insights, education paths, and institute details." returnTo={buildLibraryReturnTo()} /> : null}
           <SectionCard title={detail.title} extra={<Button onClick={() => toggleSavedCareer(detail.title)}>{isSaved ? "Saved to Wishlist" : "Save to Wishlist"}</Button>}>
             <Paragraph>{detail.overview}</Paragraph>
           </SectionCard>
@@ -1156,6 +1219,27 @@ export function LibraryPage() {
           <SectionCard title="Top Institutes"><List dataSource={detail.institutes} renderItem={(item) => <List.Item>{item}</List.Item>} /></SectionCard>
         </div>
       ) : null}
+      <Modal
+        open={Boolean(unlockModalItem)}
+        onCancel={() => setUnlockModalItem(null)}
+        footer={null}
+        centered
+        title="Unlock Career Library"
+      >
+        <Space direction="vertical" size="large" className="!w-full">
+          <Paragraph className="!mb-0">
+            Your free Career Library access has already been used. Subscribe to unlock <strong>{unlockModalItem}</strong> and continue this flow without losing your place.
+          </Paragraph>
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button onClick={handleGoToPlans}>
+              View Plans
+            </Button>
+            <Button type="primary" onClick={handleGoToPlans}>
+              Unlock Now
+            </Button>
+          </div>
+        </Space>
+      </Modal>
     </div>
   );
 }
