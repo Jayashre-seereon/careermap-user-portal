@@ -8,6 +8,7 @@ import {
   FundProjectionScreenOutlined,
   GlobalOutlined,
   HomeOutlined,
+  LogoutOutlined,
   MenuOutlined,
   QuestionCircleOutlined,
   ReadOutlined,
@@ -16,11 +17,14 @@ import {
   TrophyOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Avatar, Badge, Button, Drawer, Dropdown, Menu } from "antd";
+import { Avatar, Badge, Button, Divider, Drawer, Dropdown, Menu, Popover, Space, Typography } from "antd";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { notifications } from "../../data/careermapData";
 import { useAppState } from "../../state/AppStateContext";
 import BrandMark from "../branding/BrandMark";
+
+const previewNotifications = notifications.slice(0, 3);
 
 const moduleItems = [
   { key: "/app/library", icon: <BookOutlined />, label: "Career Library" },
@@ -39,7 +43,8 @@ export default function WebsiteNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { unreadNotificationsCount, userProfile } = useAppState();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const { unreadNotificationsCount, userProfile, logout } = useAppState();
 
   const mobileMenu = (
     <Menu
@@ -69,9 +74,49 @@ export default function WebsiteNavbar() {
 
   const profileMenuItems = [
     { key: "profile", icon: <UserOutlined />, label: "Profile" },
-    { key: "notifications", icon: <BellOutlined />, label: "Notifications" },
     { key: "settings", icon: <SettingOutlined />, label: "Settings" },
+    { key: "logout", icon: <LogoutOutlined />, label: "Logout", danger: true },
   ];
+
+  const notificationOverlay = (
+    <div className="w-[300px]">
+      <div className="mb-3 flex items-center justify-between">
+        <Typography.Text className="!text-[15px] !font-semibold !text-ink">Notifications</Typography.Text>
+        <Badge count={unreadNotificationsCount} size="small" />
+      </div>
+
+      <Space direction="vertical" size={10} className="!w-full">
+        {previewNotifications.map((item) => (
+          <div
+            key={item.id}
+            className={`rounded-2xl border px-3 py-2 ${item.unread ? "border-[#f2d1c7] bg-[#fff7f4]" : "border-[#efe3de] bg-white"}`}
+          >
+            <div className="mb-1 flex items-start justify-between gap-3">
+              <Typography.Text className="!text-[13px] !font-semibold !text-ink">{item.title}</Typography.Text>
+              {item.unread ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#9a2119]" /> : null}
+            </div>
+            <Typography.Paragraph className="!mb-1 !text-[12px] !leading-5 !text-[#6f6570]">
+              {item.message}
+            </Typography.Paragraph>
+            <Typography.Text className="!text-[11px] !text-[#9b8f97]">{item.time}</Typography.Text>
+          </div>
+        ))}
+      </Space>
+
+      <Divider className="!my-3" />
+
+      <Button
+        type="link"
+        className="!h-auto !p-0 !font-semibold !text-brand"
+        onClick={() => {
+          setNotificationsOpen(false);
+          navigate("/app/notifications");
+        }}
+      >
+        View all
+      </Button>
+    </div>
+  );
 
   return (
     <>
@@ -118,20 +163,30 @@ export default function WebsiteNavbar() {
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
-              <Badge count={unreadNotificationsCount} size="small">
-                <Button
-                  className="!flex !h-10 !w-10 !items-center !justify-center !rounded-full !border-[#e7d8d2] !bg-[#fbf4f1] !text-brand hover:!border-[#d8b4ad] hover:!text-[#7f1913]"
-                  icon={<BellOutlined />}
-                  onClick={() => navigate("/app/notifications")}
-                />
-              </Badge>
+              <Popover
+                trigger="click"
+                placement="bottomRight"
+                open={notificationsOpen}
+                onOpenChange={setNotificationsOpen}
+                content={notificationOverlay}
+              >
+                <Badge count={unreadNotificationsCount} size="small">
+                  <Button
+                    className="!flex !h-10 !w-10 !items-center !justify-center !rounded-full !border-[#e7d8d2] !bg-[#fbf4f1] !text-brand hover:!border-[#d8b4ad] hover:!text-[#7f1913]"
+                    icon={<BellOutlined />}
+                  />
+                </Badge>
+              </Popover>
               <Dropdown
                 menu={{
                   items: profileMenuItems,
                   onClick: ({ key }) => {
                     if (key === "profile") navigate("/app/profile");
-                    if (key === "notifications") navigate("/app/notifications");
                     if (key === "settings") navigate("/app/settings");
+                    if (key === "logout") {
+                      logout();
+                      navigate("/auth-entry");
+                    }
                   },
                 }}
                 trigger={["click"]}
