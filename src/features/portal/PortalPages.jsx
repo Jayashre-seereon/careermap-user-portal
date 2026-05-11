@@ -676,7 +676,7 @@ export function ScholarshipPage() {
                   <SoftTag color={itemFree ? "green" : "default"}>{itemFree ? "FREE" : "LOCK"}</SoftTag>
                 </div>
               ) : null}
-              <div className="space-y-3">
+              <div className="space-y-3 pr-24">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-lg font-black text-ink">{item.name}</div>
@@ -876,7 +876,7 @@ export function LearnPage() {
                     <SoftTag color={detailUnlocked ? "green" : "default"}>{detailUnlocked ? "FREE" : "LOCK"}</SoftTag>
                   </div>
                 ) : null}
-                <Space direction="vertical" size="middle" className="!w-full">
+                <Space direction="vertical" size="middle" className="!w-full !pr-24">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-lg font-black text-ink">{item.title}</div>
@@ -1001,7 +1001,7 @@ export function BookMentorPage() {
                   <SoftTag color={mentorFree ? "green" : "default"}>{mentorFree ? "FREE" : "LOCK"}</SoftTag>
                 </div>
               ) : null}
-              <Space direction="vertical" size="middle" className="!w-full">
+              <Space direction="vertical" size="middle" className="!w-full !pr-24">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-lg font-black text-ink">{mentor.name}</div>
@@ -1156,7 +1156,7 @@ export function AbroadPage() {
                 setSelectedCountry(country);
               }}
             >
-              <Space direction="vertical" className="!w-full">
+              <Space direction="vertical" className="!w-full !pr-24">
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-lg font-black text-ink">{country.name}</div>
                   {!unlocked ? <SoftTag color={countryFree ? "green" : "default"}>{countryFree ? "FREE" : "LOCK"}</SoftTag> : null}

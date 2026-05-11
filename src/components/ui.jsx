@@ -154,7 +154,7 @@ export function AuthFrame({ title, subtitle, children, backTo, compact = false }
 export function PageHero({ eyebrow, title, description, action, backOnly = false, onBack }) {
   if (backOnly) {
     return (
-      <div className="flex items-center">
+      <div className="flex items-center justify-end">
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
