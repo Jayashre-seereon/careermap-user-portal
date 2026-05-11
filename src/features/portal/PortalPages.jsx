@@ -1,13 +1,18 @@
 import {
+  BookOutlined,
   BellOutlined,
+  BranchesOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
   CreditCardOutlined,
+  ExperimentOutlined,
+  FolderOpenOutlined,
   LockOutlined,
   PlayCircleOutlined,
   ArrowRightOutlined,
   SearchOutlined,
   StarFilled,
+  ToolOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
 import {
@@ -1049,6 +1054,24 @@ export function LibraryPage() {
 
   const isSaved = detail.title && savedCareers.includes(detail.title);
   const detailUnlocked = !selectedDetail || unlocked || canAccessFreeDetail("career-library", selectedDetail);
+  const streamIcons = {
+    Science: <ExperimentOutlined />,
+    Commerce: <CreditCardOutlined />,
+    "Arts & Humanities": <BookOutlined />,
+    Vocational: <ToolOutlined />,
+    Neutral: <BranchesOutlined />,
+  };
+
+  function renderLibraryCardHeading(title, icon) {
+    return (
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f7ebe6] text-lg text-[#9a2119]">
+          {icon}
+        </span>
+        <span className="text-lg font-black text-ink">{title}</span>
+      </div>
+    );
+  }
 
   function back() {
     if (level === "details") {
@@ -1072,7 +1095,7 @@ export function LibraryPage() {
             <Col xs={24} md={12} lg={8} key={stream.name}>
               <Card hoverable className="!border-[#eedad4]" onClick={() => { setSelectedStream(stream.name); setLevel("categories"); }}>
                 <div className="space-y-2">
-                  <div className="text-xl font-black text-ink">{stream.name}</div>
+                  {renderLibraryCardHeading(stream.name, streamIcons[stream.name] || <BookOutlined />)}
                   <Text>{stream.desc}</Text>
                 </div>
               </Card>
@@ -1085,7 +1108,7 @@ export function LibraryPage() {
           {(careerLibrary.categories[selectedStream] || []).map((category) => (
             <Col xs={24} md={12} key={category}>
               <Card hoverable className="!border-[#eedad4]" onClick={() => { setSelectedCategory(category); setLevel("programs"); }}>
-                <div className="text-lg font-black text-ink">{category}</div>
+                {renderLibraryCardHeading(category, <FolderOpenOutlined />)}
               </Card>
             </Col>
           ))}
@@ -1110,7 +1133,7 @@ export function LibraryPage() {
                   }}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-lg font-black text-ink">{item}</div>
+                    {renderLibraryCardHeading(item, <BookOutlined />)}
                     {!unlocked ? <SoftTag color={unlockedItem ? "green" : "default"}>{unlockedItem ? "FREE" : "LOCK"}</SoftTag> : null}
                   </div>
                 </Card>
