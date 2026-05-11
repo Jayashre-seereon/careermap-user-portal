@@ -4,12 +4,10 @@ import {
   CheckCircleOutlined,
   CreditCardOutlined,
   LockOutlined,
-  MoonOutlined,
   PlayCircleOutlined,
   ArrowRightOutlined,
   SearchOutlined,
   StarFilled,
-  SunOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
 import {
@@ -161,7 +159,7 @@ export function AssessmentPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Career Assessment" title="Full Psychometric Test" description="A comprehensive assessment to understand aptitude, personality traits, and the right-fit career direction." action={testUnlocked ? <Button type="primary" size="large" onClick={() => navigate("/app/psychometric-test")}>Start Full Test</Button> : null} />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
           <SectionCard title="Test Features">
@@ -221,7 +219,7 @@ export function PsychometricTestPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Assessment Flow" title={`Question ${current + 1} of ${quickPsychometricQuestions.length}`} description={currentQuestion.q} />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <SectionCard title="Choose One Answer">
         <div className="grid gap-3">
           {currentQuestion.options.map((option) => (
@@ -278,7 +276,7 @@ export function SubscriptionPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Plans" title="Subscription Plans" description="Choose a plan that matches your student journey and unlock the same feature gating from the mobile app." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Row gutter={[16, 16]}>
         {subscriptions.map((plan) => (
           <Col xs={24} lg={12} key={plan.id}>
@@ -341,7 +339,7 @@ export function CheckoutPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-      <PageHero eyebrow="Payment" title={processing ? "Processing Payment" : "Payment"} description={processing ? "We are confirming your payment." : "Choose a payment method to unlock premium access."} />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       {processing ? (
         <Result status="info" title="Processing payment" subTitle={`Please wait while we verify your ${method} payment.`} />
       ) : (
@@ -437,9 +435,11 @@ export function PaymentSuccessPage() {
 }
 
 export function NotificationsPage() {
+  const { navigate } = usePortalNavigation();
+
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Updates" title="Notifications" description="Recent updates from mentors, scholarships, and learning content." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <List
         grid={{ gutter: 16, xs: 1, md: 2 }}
         dataSource={notifications}
@@ -464,6 +464,7 @@ export function NotificationsPage() {
 
 export function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { navigate } = usePortalNavigation();
   const [activeStatus, setActiveStatus] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
   const unlocked = isUnlocked("scholarship");
@@ -473,7 +474,7 @@ export function ScholarshipPage() {
     const detailUnlocked = unlocked || canAccessFreeDetail("scholarship", selectedItem.name);
     return (
       <div className="space-y-6">
-        <PageHero eyebrow="Scholarship Detail" title={selectedItem.name} description={`by ${selectedItem.provider}`} action={<Button onClick={() => setSelectedItem(null)}>Back</Button>} />
+        <PageHero backOnly onBack={() => setSelectedItem(null)} />
         {!unlocked && !detailUnlocked ? <PremiumGate title="Unlock Scholarships" description="Subscribe to more scholarship details, requirements, and application links." returnTo="/app/scholarships" /> : null}
         <SectionCard title="Overview">
           <Space direction="vertical">
@@ -496,7 +497,7 @@ export function ScholarshipPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Funding" title="Scholarships" description="Scholarship directory with filters and drill-down cards adapted from the mobile app." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Tabs activeKey={activeStatus} onChange={setActiveStatus} items={["All", "Active", "Expired"].map((key) => ({ key, label: key }))} />
       <List
         grid={{ gutter: 16, xs: 1, lg: 2 }}
@@ -538,11 +539,12 @@ export function ScholarshipPage() {
 }
 
 export function InstitutePage() {
+  const { navigate } = usePortalNavigation();
   const [selected, setSelected] = useState(null);
   if (selected) {
     return (
       <div className="space-y-6">
-        <PageHero eyebrow="Institute Detail" title={selected.name} description={selected.location} action={<Button onClick={() => setSelected(null)}>Back</Button>} />
+        <PageHero backOnly onBack={() => setSelected(null)} />
         <SectionCard title="About"><Text>{selected.about}</Text></SectionCard>
         <SectionCard title="Courses Offered"><Space wrap>{selected.courses.map((course) => <SoftTag key={course} color="blue">{course}</SoftTag>)}</Space></SectionCard>
         <Button type="primary" href={selected.website} target="_blank">Visit Official Website</Button>
@@ -551,7 +553,7 @@ export function InstitutePage() {
   }
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Institutions" title="Institutes" description="Institute directory with filters and detail cards based on the reference prototype." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <List
         grid={{ gutter: 16, xs: 1, md: 2 }}
         dataSource={institutes}
@@ -575,6 +577,7 @@ export function InstitutePage() {
 }
 
 export function EntranceExamPage() {
+  const { navigate } = usePortalNavigation();
   const [selected, setSelected] = useState(null);
   const [typeFilter, setTypeFilter] = useState("All");
   const [catFilter, setCatFilter] = useState("All");
@@ -583,7 +586,7 @@ export function EntranceExamPage() {
   if (selected) {
     return (
       <div className="space-y-6">
-        <PageHero eyebrow="Exam Detail" title={selected.name} description={selected.about} action={<Button onClick={() => setSelected(null)}>Back</Button>} />
+        <PageHero backOnly onBack={() => setSelected(null)} />
         <SectionCard title="Exam Snapshot">
           <List
             dataSource={[
@@ -612,7 +615,7 @@ export function EntranceExamPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Preparation" title="Entrance Exams" description="Practice tests and exam preparation guides." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={12}><Select value={typeFilter} onChange={setTypeFilter} style={{ width: "100%" }} options={["All", "Central", "State", "Private"].map((item) => ({ label: item, value: item }))} /></Col>
         <Col xs={24} md={12}><Select value={catFilter} onChange={setCatFilter} style={{ width: "100%" }} options={["All", "Engineering", "Medical", "Business", "Law", "Design", "General"].map((item) => ({ label: item, value: item }))} /></Col>
@@ -642,6 +645,7 @@ export function EntranceExamPage() {
 
 export function LearnPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { navigate } = usePortalNavigation();
   const unlocked = isUnlocked("master-class");
   const [videoType, setVideoType] = useState("All");
   const [career, setCareer] = useState("All");
@@ -657,7 +661,7 @@ export function LearnPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Learning" title="Master Class" description="Learning videos and sorting adapted closely from the mobile app's master class screen." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}><Select value={videoType} onChange={setVideoType} style={{ width: "100%" }} options={["All", "Expert Videos", "Career Videos"].map((item) => ({ label: item, value: item }))} /></Col>
         <Col xs={24} md={8}><Select value={career} onChange={setCareer} style={{ width: "100%" }} options={["All", ...Array.from(new Set(masterClasses.map((item) => item.career)))].map((item) => ({ label: item, value: item }))} /></Col>
@@ -709,6 +713,7 @@ export function LearnPage() {
 
 export function BookMentorPage() {
   const { addBooking, canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { navigate } = usePortalNavigation();
   const unlocked = isUnlocked("book-mentor");
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -738,7 +743,7 @@ export function BookMentorPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Mentorship" title="Book Mentor" description="Explore counsellors across engineering, design, and career planning, then reserve a one-on-one slot." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <List
         grid={{ gutter: 16, xs: 1, md: 2 }}
         dataSource={mentors}
@@ -844,6 +849,7 @@ export function BookMentorPage() {
 
 export function AbroadPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { navigate } = usePortalNavigation();
   const unlocked = isUnlocked("abroad-consultancy");
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -856,7 +862,7 @@ export function AbroadPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="International Education" title="Study Abroad" description="Explore top destinations, compare tuition and living cost, and request counselling from the same flow as the mobile app." action={<Button type="primary" onClick={() => setFormOpen(true)}>Consult Now</Button>} />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <List
         grid={{ gutter: 16, xs: 1, md: 2 }}
         dataSource={studyAbroadCountries}
@@ -915,6 +921,7 @@ export function AbroadPage() {
 
 export function LibraryPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess, savedCareers, toggleSavedCareer } = useAppState();
+  const { navigate } = usePortalNavigation();
   const unlocked = isUnlocked("career-library");
   const [level, setLevel] = useState("streams");
   const [selectedStream, setSelectedStream] = useState(null);
@@ -951,7 +958,7 @@ export function LibraryPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Discovery" title="Career Library" description="Explore streams, programs, specializations, salary insights, education paths, and top institutes." action={level !== "streams" ? <Button onClick={back}>Back</Button> : null} />
+      <PageHero backOnly onBack={level !== "streams" ? back : () => navigate(-1)} />
       {level === "streams" ? (
         <Row gutter={[16, 16]}>
           {careerLibrary.streams.map((stream) => (
@@ -1024,6 +1031,7 @@ export function LibraryPage() {
 }
 
 export function QuizPage() {
+  const { navigate } = usePortalNavigation();
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState(Array(sampleQuizQuestions.length).fill(null));
@@ -1038,7 +1046,7 @@ export function QuizPage() {
     const question = sampleQuizQuestions[current];
     return (
       <div className="space-y-6">
-        <PageHero eyebrow="Quiz Flow" title={quizCatalog[activeQuiz].title} description={`Question ${current + 1} of ${sampleQuizQuestions.length}`} action={<Button onClick={() => setActiveQuiz(null)}>Back</Button>} />
+        <PageHero backOnly onBack={() => setActiveQuiz(null)} />
         <SectionCard title={question.q}>
           <div className="grid gap-3">
             {question.options.map((option, index) => (
@@ -1067,7 +1075,7 @@ export function QuizPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Practice" title="Quizzes" description="Quick category quizzes from the same product family." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Row gutter={[16, 16]}>
         {quizCatalog.map((quiz, index) => (
           <Col xs={24} md={12} key={quiz.title}>
@@ -1098,12 +1106,7 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <PageHero
-        eyebrow="My Account"
-        title={userProfile.name}
-        description={`${userProfile.email} • ${userProfile.mobile}`}
-        action={<Button icon={toggleDarkMode ? <MoonOutlined /> : <SunOutlined />} onClick={toggleDarkMode}>Toggle Theme</Button>}
-      />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <Row gutter={[16, 16]}>
         <Col xs={24} xl={8}>
           <SectionCard title="Saved Careers"><List dataSource={savedCareers} renderItem={(item) => <List.Item>{item}</List.Item>} /></SectionCard>
@@ -1189,7 +1192,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="Preferences" title="Settings" description="Edit profile, change password, theme preference, and help support." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       {feedback ? <Alert type="success" message={feedback} /> : null}
       <Collapse
         items={[
@@ -1207,9 +1210,11 @@ export function SettingsPage() {
 }
 
 export function AboutPage() {
+  const { navigate } = usePortalNavigation();
+
   return (
     <div className="space-y-6">
-      <PageHero eyebrow="About" title="About CareerMap" description="This web portal brings the React Native user flows across into a responsive React experience." />
+      <PageHero backOnly onBack={() => navigate(-1)} />
       <SectionCard title="What's included">
         <Paragraph>
           This portal now reflects the mobile app's information architecture: dashboard-first navigation, career discovery, student profile details, notifications, subscriptions, settings, psychometric flows, mentor booking, scholarships, institutes, entrance exams, study abroad, and quizzes.

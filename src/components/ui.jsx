@@ -151,7 +151,20 @@ export function AuthFrame({ title, subtitle, children, backTo, compact = false }
   );
 }
 
-export function PageHero({ eyebrow, title, description, action }) {
+export function PageHero({ eyebrow, title, description, action, backOnly = false, onBack }) {
+  if (backOnly) {
+    return (
+      <div className="flex items-center">
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={onBack}
+          className="!h-10 !w-10 !rounded-full !border !border-[#eedad4] !bg-white !text-brand shadow-soft hover:!border-[#d8b4ad] hover:!bg-[#fbf4f1]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="brand-gradient relative overflow-hidden rounded-[28px] p-8 text-white shadow-soft md:p-10">
       <div className="hero-orb left-[-2rem] top-[-2rem] h-28 w-28 bg-white/20" />

@@ -1,5 +1,4 @@
 import { Button, Space } from "antd";
-import { useNavigate } from "react-router-dom";
 import { PageHero, SectionCard, SoftTag, Text } from "../../../components/ui";
 import { personalityQuestions, personalityTypes } from "../../../data/careermapData";
 
@@ -15,11 +14,7 @@ export function PersonalityQuizQuestion({
 
     return (
         <div className="space-y-6">
-            <PageHero
-                eyebrow="Quick Test"
-                title="Know Your Personality"
-                description="Answer a few quick questions to discover your personality type and ideal direction."
-            />
+            <PageHero backOnly onBack={() => setShowPersonality(false)} />
             <SectionCard title={`Question ${personalityStep + 1} of ${personalityQuestions.length}`}>
                 <div className="space-y-5">
                     <div className="text-xl font-black text-ink">{currentQuestion.q}</div>
@@ -66,11 +61,7 @@ export function PersonalityQuizQuestion({
 export function PersonalityQuizResults({ personalityResult, setShowPersonality, navigate }) {
     return (
         <div className="space-y-6">
-            <PageHero
-                eyebrow="Result"
-                title={personalityResult.type}
-                description={personalityResult.desc}
-            />
+            <PageHero backOnly onBack={() => setShowPersonality(false)} />
             <SectionCard title="Recommended Careers">
                 <Space wrap>
                     {personalityResult.careers.map((career) => (
