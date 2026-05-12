@@ -10,23 +10,27 @@ import {
     GiftOutlined,
     GlobalOutlined,
     BulbOutlined,
+    CreditCardOutlined,
+    BankOutlined,
+    FileDoneOutlined,
+    QuestionCircleOutlined,
 } from "@ant-design/icons";
 
 const dashboardModuleVisuals = {
     "Career Library": {
-        icon: <ReadOutlined style={{ color: "#2c70c9" }} />,
-        background: "linear-gradient(180deg, #dcecff 0%, #eef5ff 100%)",
-        actionBg: "#2c70c9",
+        icon: <ReadOutlined style={{ color: "#c64f7a" }} />,
+         background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)",
+         actionBg: "#c64f7a",
     },
     "Master Class": {
-        icon: <TrophyOutlined style={{ color: "#5d8f26" }} />,
-        background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)",
-        actionBg: "#5d8f26",
+        icon: <TrophyOutlined style={{ color: "#4c45aa" }} />,
+        background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)",
+        actionBg: "#4c45aa",
     },
     "Book Mentor": {
-        icon: <TeamOutlined style={{ color: "#b63728" }} />,
-        background: "linear-gradient(180deg, #fdf0eb 0%, #fff8f4 100%)",
-        actionBg: "#b63728",
+        icon: <TeamOutlined style={{ color: "#157f69" }} />,
+               background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)",
+        actionBg: "#157f69",
     },
     Scholarships: {
         icon: <GiftOutlined style={{ color: "#b77718" }} />,
@@ -39,9 +43,29 @@ const dashboardModuleVisuals = {
         actionBg: "#4c45aa",
     },
     Assessment: {
-        icon: <BulbOutlined style={{ color: "#157f69" }} />,
-        background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)",
-        actionBg: "#157f69",
+        icon: <BulbOutlined style={{ color: "#5d8f26" }} />,
+        background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)",
+   actionBg: "#5d8f26",
+    },
+    "Entrance Exam": {
+        icon: <FileDoneOutlined style={{ color: "#0f8a7c" }} />,
+        background: "linear-gradient(180deg, #def6f2 0%, #f0fbf9 100%)",
+        actionBg: "#0f8a7c",
+    },
+    Institutes: {
+        icon: <BankOutlined style={{ color: "#c64f7a" }} />,
+        background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)",
+        actionBg: "#c64f7a",
+    },
+    Quiz: {
+        icon: <QuestionCircleOutlined style={{ color: "#2c70c9" }} />,
+        background: "linear-gradient(180deg, #e4efff 0%, #f3f8ff 100%)",
+        actionBg: "#2c70c9",
+    },
+    Subscriptions: {
+        icon: <CreditCardOutlined style={{ color: "#8c5a18" }} />,
+        background: "linear-gradient(180deg, #fff1dd 0%, #fff9f0 100%)",
+        actionBg: "#8c5a18",
     },
 };
 
@@ -50,14 +74,25 @@ export function ExploreModulesSection() {
     const { isUnlocked } = useAppState();
     const priorityOrder = [
         "Career Library",
+         "Assessment",
         "Master Class",
         "Book Mentor",
+         "Quiz",
+        "Entrance Exam",
+        "Institutes",
         "Scholarships",
         "Study Abroad",
-        "Assessment",
+        "Subscriptions",
     ];
+    const subscriptionsCard = {
+        title: "Subscriptions",
+        subtitle: "View subscription options and unlock premium modules.",
+        route: "/app/subscription",
+    };
+    const sourceCards = [...moduleCards, subscriptionsCard];
     const curatedCards = priorityOrder
         .map((title) => moduleCards.find((card) => card.title === title))
+        .map((card, index) => card || sourceCards.find((item) => item.title === priorityOrder[index]))
         .filter(Boolean);
 
     return (
@@ -68,7 +103,7 @@ export function ExploreModulesSection() {
                     <div className="mt-1 text-sm text-muted">Open any module and continue the exact flow from there.</div>
                 </div>
             </div>
-            <Row gutter={[18, 18]}>
+            <Row gutter={[14, 14]}>
                 {curatedCards.map((card) => {
                     const showLock =
                         (card.title === "Career Library" && !isUnlocked("career-library")) ||
@@ -83,18 +118,18 @@ export function ExploreModulesSection() {
                             : card.subtitle;
 
                     return (
-                        <Col xs={24} sm={12} lg={8} key={card.title}>
+                        <Col xs={24} sm={12} lg={8} xl={6} key={card.title}>
                             <button
                                 type="button"
                                 className="dashboard-module-card group h-full w-full overflow-hidden rounded-[24px] border border-[#e8dbd6] bg-white text-left"
                                 onClick={() => navFunc(card.route)}
                             >
                                 <div
-                                    className="dashboard-module-media relative h-40 overflow-hidden"
+                                    className="dashboard-module-media relative h-28 overflow-hidden"
                                     style={{ background: art.background }}
                                 >
                                     <div className="flex h-full items-center justify-center">
-                                        <div className="dashboard-module-icon text-[48px] transition duration-300 group-hover:scale-110">
+                                        <div className="dashboard-module-icon text-[36px] transition duration-300 group-hover:scale-110">
                                             {art.icon}
                                         </div>
                                     </div>
@@ -105,26 +140,26 @@ export function ExploreModulesSection() {
                                         </div>
                                     ) : null}
                                 </div>
-                                <div className="flex min-h-[188px] flex-col px-5 pb-5 pt-4">
-                                    <div className="pr-8">
-                                        <div className="display-font text-[22px] font-bold leading-tight text-ink">{card.title}</div>
-                                        <div className="mt-2 text-sm leading-6 text-muted">{description}</div>
+                                <div className="flex min-h-[148px] flex-col px-4 pb-4 pt-3.5">
+                                    <div className="pr-4">
+                                        <div className="display-font text-[19px] font-bold leading-tight text-ink">{card.title}</div>
+                                        <div className="mt-1.5 text-[13px] leading-5 text-muted">{description}</div>
                                     </div>
-                                   <div
-  className="mt-auto flex items-center justify-between gap-3 cursor-pointer group"
-  style={{ color: art.actionBg }}
->
-  <span className="text-xs font-semibold uppercase tracking-[0.2em]">
-    Explore now
-  </span>
+                                    <div
+                                        className="mt-auto flex items-center justify-between gap-3 pt-4"
+                                        style={{ color: art.actionBg }}
+                                    >
+                                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+                                            Explore now
+                                        </span>
 
-  <span
-    className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all duration-200"
-    style={{ backgroundColor: art.actionBg }}
-  >
-    <ArrowRightOutlined className="transition-transform duration-200 group-hover:translate-x-1" />
-  </span>
-</div>
+                                        <span
+                                            className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all duration-200"
+                                            style={{ backgroundColor: art.actionBg }}
+                                        >
+                                            <ArrowRightOutlined className="transition-transform duration-200 group-hover:translate-x-1" />
+                                        </span>
+                                    </div>
                                 </div>
                             </button>
                         </Col>
