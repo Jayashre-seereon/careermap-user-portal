@@ -94,6 +94,116 @@ body {
   background-size: 34px 34px;
 }
 
+.dashboard-hero-panel {
+  border: 1px solid #9a2119;
+background: linear-gradient(135deg, #5c0f0c 0%, #9a2119 50%, #c13a2f 100%);  
+transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.dashboard-hero-panel:hover {
+  transform: translateY(-4px);
+  border-color: rgba(128, 77, 62, 0.92);
+  box-shadow: 0 28px 62px rgba(53, 26, 20, 0.28);
+}
+
+.dashboard-hero-orb {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(181, 99, 58, 0.2);
+  pointer-events: none;
+}
+
+.dashboard-hero-orb-top {
+  right: -4.5rem;
+  top: -3.5rem;
+  height: 11rem;
+  width: 11rem;
+  background: radial-gradient(circle, rgba(157, 79, 45, 0.34) 0%, rgba(157, 79, 45, 0.18) 68%, rgba(157, 79, 45, 0) 69%);
+}
+
+.dashboard-hero-orb-bottom {
+  left: 10rem;
+  bottom: -5.5rem;
+  height: 10rem;
+  width: 10rem;
+  background: radial-gradient(circle, rgba(134, 74, 48, 0.24) 0%, rgba(134, 74, 48, 0.14) 68%, rgba(134, 74, 48, 0) 69%);
+}
+
+.dashboard-hero-noise {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+.dashboard-hero-menu {
+  box-shadow: 0 10px 24px rgba(30, 18, 15, 0.18);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.dashboard-hero-menu:hover {
+  transform: translateY(-1px);
+  background: #fff5ef;
+  box-shadow: 0 14px 28px rgba(30, 18, 15, 0.24);
+}
+
+.dashboard-hero-button {
+  box-shadow: 0 12px 24px rgba(24, 15, 12, 0.2);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.dashboard-hero-button:hover {
+  transform: translateY(-2px);
+  background: #fff3ec !important;
+  box-shadow: 0 16px 34px rgba(24, 15, 12, 0.26);
+}
+
+.dashboard-module-card {
+  box-shadow: 0 16px 36px rgba(38, 33, 38, 0.08);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.dashboard-module-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(154, 33, 25, 0.26);
+  box-shadow: 0 26px 54px rgba(53, 27, 22, 0.14);
+}
+
+.dashboard-module-media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 52px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.16) 100%);
+}
+
+.dashboard-module-icon {
+  filter: drop-shadow(0 10px 20px rgba(36, 28, 26, 0.12));
+}
+
+.dashboard-module-arrow {
+  box-shadow: 0 12px 24px rgba(154, 33, 25, 0.18);
+}
+
+.dashboard-module-card:hover .dashboard-module-arrow {
+  transform: translateX(4px);
+  box-shadow: 0 16px 28px rgba(154, 33, 25, 0.26);
+}
+
 .ant-layout,
 .ant-menu,
 .ant-card,

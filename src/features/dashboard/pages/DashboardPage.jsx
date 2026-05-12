@@ -7,7 +7,7 @@ import { ExploreModulesSection } from "../../portal/components/ExploreModulesSec
 import { PersonalityQuizQuestion, PersonalityQuizResults } from "../../portal/components/PersonalityQuizSections";
 
 export default function DashboardPage() {
-  const { isUnlocked, unreadNotificationsCount } = useAppState();
+  const { isUnlocked } = useAppState();
   const { navigate } = usePortalNavigation();
   const [showPersonality, setShowPersonality] = useState(false);
   const [personalityStep, setPersonalityStep] = useState(0);
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <DashboardHeroSection onTestClick={handleTestClick} />
-      <ExploreModulesSection unreadNotificationsCount={unreadNotificationsCount} />
+      <ExploreModulesSection />
     </div>
   );
 }
