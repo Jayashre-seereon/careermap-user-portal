@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { LockOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { LockOutlined, PlayCircleOutlined, ControlOutlined } from "@ant-design/icons";
 import { Button, Card, Col, List, Row, Select, Space } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { masterClasses } from "../../../data/careermapData";
@@ -12,10 +12,12 @@ export default function LearnPage() {
   const { navigate, location } = usePortalNavigation();
   const [params] = useSearchParams();
   const unlocked = isUnlocked("master-class");
+  
   const [videoType, setVideoType] = useState("All");
   const [career, setCareer] = useState("All");
   const [sortBy, setSortBy] = useState("popular");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
+
   const filtered = [...masterClasses]
     .filter((item) => videoType === "All" || item.videoType === videoType)
     .filter((item) => career === "All" || item.career === career)
@@ -45,43 +47,93 @@ export default function LearnPage() {
   }, [params]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto p-4">
       <PageHero backOnly onBack={() => navigate(-1)} />
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}><Select value={videoType} onChange={setVideoType} style={{ width: "100%" }} options={["All", "Expert Videos", "Career Videos"].map((item) => ({ label: item, value: item }))} /></Col>
-        <Col xs={24} md={8}><Select value={career} onChange={setCareer} style={{ width: "100%" }} options={["All", ...Array.from(new Set(masterClasses.map((item) => item.career)))].map((item) => ({ label: item, value: item }))} /></Col>
-        <Col xs={24} md={8}><Select value={sortBy} onChange={setSortBy} style={{ width: "100%" }} options={[{ label: "Most Popular", value: "popular" }, { label: "A-Z", value: "az" }, { label: "Z-A", value: "za" }]} /></Col>
-      </Row>
+
+      {/* COMPACT TOP FILTER TOOLBAR */}
+      <div className="bg-white p-4 rounded-xl border border-[#eedad4] shadow-sm">
+        <Row gutter={[16, 16]} align="middle" justify="space-between">
+          <Col xs={24} lg={16}>
+            <Space wrap size="middle">
+              <div className="flex items-center gap-2 mr-2">
+                <ControlOutlined className="text-brand" />
+                <span className="font-bold text-ink uppercase text-[10px] tracking-widest">Filter By</span>
+              </div>
+              <Select 
+                value={videoType} 
+                onChange={setVideoType} 
+                size="small"
+                style={{ width: 140 }} 
+                options={["All", "Expert Videos", "Career Videos"].map((item) => ({ label: item, value: item }))} 
+              />
+              <Select 
+                value={career} 
+                onChange={setCareer} 
+                size="small"
+                style={{ width: 160 }} 
+                options={["All", ...Array.from(new Set(masterClasses.map((item) => item.career)))].map((item) => ({ label: item, value: item }))} 
+              />
+            </Space>
+          </Col>
+          
+          <Col xs={24} lg={8} className="flex lg:justify-end items-center gap-3">
+             <span className="text-[10px] text-muted uppercase font-bold tracking-widest">Sort:</span>
+             <Select 
+                value={sortBy} 
+                onChange={setSortBy} 
+                size="small"
+                style={{ width: 130 }} 
+                options={[
+                    { label: "Most Popular", value: "popular" }, 
+                    { label: "A-Z", value: "az" }, 
+                    { label: "Z-A", value: "za" }
+                ]} 
+              />
+          </Col>
+        </Row>
+      </div>
+
+      {/* CARDS GRID */}
       <List
-        grid={{ gutter: 16, xs: 1, lg: 2 }}
+        grid={{ gutter: 16, xs: 1, sm: 2, lg: 2, xl: 2 }}
         dataSource={filtered}
         renderItem={(item) => {
           const detailUnlocked = unlocked || canAccessFreeDetail("master-class", item.title);
           return (
-            <List.Item>
-              <Card className="!relative !h-full !border-[#eedad4]">
+            <List.Item className="h-full">
+              <Card className="!relative !h-full !border-[#eedad4] !rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 {!unlocked ? (
                   <div className="absolute right-4 top-4 z-10">
-                    <SoftTag color={detailUnlocked ? "green" : "default"}>{detailUnlocked ? "FREE" : "LOCK"}</SoftTag>
+                    <SoftTag color={detailUnlocked ? "green" : "default"}>
+                        {detailUnlocked ? "FREE" : "LOCK"}
+                    </SoftTag>
                   </div>
                 ) : null}
-                <Space direction="vertical" size="middle" className="!w-full !pr-24">
+                
+                <Space direction="vertical" size="middle" className="!w-full !pr-16">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-lg font-black text-ink">{item.title}</div>
-                      <div className="mt-1 text-sm text-muted">{item.mentor}</div>
+                      <div className="text-lg font-black text-ink leading-tight">{item.title}</div>
+                      <div className="mt-1 text-sm text-muted font-medium">{item.mentor}</div>
                     </div>
-                    {!unlocked && !detailUnlocked ? <LockOutlined className="text-brand" /> : <PlayCircleOutlined className="text-brand" />}
+                    {!unlocked && !detailUnlocked ? (
+                      <LockOutlined className="text-brand text-lg" />
+                    ) : (
+                      <PlayCircleOutlined className="text-brand text-lg" />
+                    )}
                   </div>
+
                   <Space wrap>
                     <SoftTag color="red">{item.career}</SoftTag>
                     <SoftTag color="blue">{item.duration}</SoftTag>
                     <SoftTag color="gold">{(item.views / 1000).toFixed(1)}k views</SoftTag>
                   </Space>
-                  {!unlocked && !detailUnlocked ? <Text>Your free master class preview has already been used.</Text> : null}
+
                   <Button
                     type="primary"
+                    block
                     ghost={!unlocked && !detailUnlocked}
+                    className="!rounded-lg font-bold mt-2"
                     onClick={() => {
                       if (!unlocked && !detailUnlocked) {
                         setUnlockModalItem(item.title);
@@ -99,19 +151,8 @@ export default function LearnPage() {
           );
         }}
       />
-      {!unlocked ? <PremiumGate title="Unlock Master Class" description="Subscribe to more classes and keep learning without limits." returnTo={buildLearnReturnTo()} /> : null}
-      <UnlockRedirectModal
-        open={Boolean(unlockModalItem)}
-        title="Unlock Master Class"
-        itemLabel={unlockModalItem}
-        description="Your free master class access has been used. Subscribe to unlock"
-        onCancel={() => setUnlockModalItem(null)}
-        onConfirm={() => {
-          const returnTo = buildLearnReturnTo(unlockModalItem);
-          setUnlockModalItem(null);
-          navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
-        }}
-      />
+
+    
     </div>
   );
 }
