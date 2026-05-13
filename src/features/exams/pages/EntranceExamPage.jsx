@@ -13,7 +13,7 @@ import {
   ArrowRightOutlined
 } from "@ant-design/icons";
 import { entranceExams } from "../../../data/careermapData";
-import { PageHero, SectionCard, SoftTag, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero, SectionCard, SoftTag, Text } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 const PRIMARY_COLOR = "#9a2119";
@@ -32,7 +32,7 @@ export default function EntranceExamPage() {
 
   if (selected) {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <ModuleScreen className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <PageHero backOnly onBack={() => setSelected(null)} />
         
         {/* Profile Header */}
@@ -124,13 +124,13 @@ export default function EntranceExamPage() {
             </div>
           </Card>
         </div>
-      </div>
+      </ModuleScreen>
     );
   }
 
   // --- Main List View Remains Clean ---
   return (
-    <div className="space-y-6">
+    <ModuleScreen className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <PageHero backOnly onBack={() => navigate(-1)} className="!p-0" />
         <Space className="bg-white p-1 rounded-full shadow-sm border border-gray-100 px-4">
@@ -150,6 +150,11 @@ export default function EntranceExamPage() {
             options={["All", "Engineering", "Medical", "Business", "Law", "Design"].map(v => ({label: v, value: v}))} 
           />
         </Space>
+      </div>
+
+      <div>
+        <h1>Entrance Exams</h1>
+        <p className="mt-1">{filtered.length} exams available across streams and authorities.</p>
       </div>
 
       <List
@@ -180,6 +185,6 @@ export default function EntranceExamPage() {
           </List.Item>
         )}
       />
-    </div>
+    </ModuleScreen>
   );
 }

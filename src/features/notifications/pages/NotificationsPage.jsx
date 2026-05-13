@@ -1,15 +1,19 @@
 import { Card, List, Space } from "antd";
 import { BellOutlined } from "@ant-design/icons";
 import { notifications } from "../../../data/careermapData";
-import { PageHero, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero, Text } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function NotificationsPage() {
   const { navigate } = usePortalNavigation();
 
   return (
-    <div className="space-y-6">
+    <ModuleScreen className="space-y-6">
       <PageHero backOnly onBack={() => navigate(-1)} />
+      <div>
+        <h1>Notifications</h1>
+        <p className="mt-1">Stay updated with alerts, reminders, and activity from your portal.</p>
+      </div>
       <List
         grid={{ gutter: 16, xs: 1, md: 2 }}
         dataSource={notifications}
@@ -28,6 +32,6 @@ export default function NotificationsPage() {
           </List.Item>
         )}
       />
-    </div>
+    </ModuleScreen>
   );
 }

@@ -152,16 +152,7 @@ export default function InstitutePage() {
           </span>
         </div>
 
-        {/* SEARCH */}
-        <div className="relative">
-          <SearchOutlined className="absolute left-3 top-3 text-gray-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="w-full pl-10 pr-3 py-2 border rounded-lg"
-          />
-        </div>
+       
 
         {/* GRID */}
         <div className="grid md:grid-cols-2 gap-4">

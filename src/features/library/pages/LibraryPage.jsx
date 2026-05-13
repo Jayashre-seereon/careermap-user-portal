@@ -44,14 +44,8 @@ const C = {
   white: "#ffffff",
 };
 
-const fontImport = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
-`;
-
 const globalStyles = `
-  ${fontImport}
-
-  .lib-root { font-family: 'DM Sans', sans-serif; background: ${C.cream}; min-height: 100vh; }
+  .lib-root { font-family: inherit; background: ${C.cream}; min-height: 100vh; }
 
   /* ── Stream cards ── */
   .lib-stream-card {
@@ -128,7 +122,7 @@ const globalStyles = `
 
   /* ── Card heading text ── */
   .lib-card-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 19px;
     font-weight: 700;
     color: ${C.ink};
@@ -177,7 +171,7 @@ const globalStyles = `
     padding: 16px 24px !important;
   }
   .lib-section-card .ant-card-head-title {
-    font-family: 'Cormorant Garamond', serif !important;
+    font-family: inherit !important;
     font-size: 20px !important;
     font-weight: 700 !important;
     color: ${C.ink} !important;
@@ -189,7 +183,7 @@ const globalStyles = `
 
   /* ── Statistic ── */
   .lib-root .ant-statistic-content-value {
-    font-family: 'Cormorant Garamond', serif !important;
+    font-family: inherit !important;
     font-size: 28px !important;
     color: ${C.crimson} !important;
     font-weight: 700 !important;
@@ -222,7 +216,7 @@ const globalStyles = `
     background: ${C.cardBg} !important;
   }
   .lib-modal .ant-modal-title {
-    font-family: 'Cormorant Garamond', serif !important;
+    font-family: inherit !important;
     font-size: 22px !important;
     font-weight: 700 !important;
     color: ${C.ink} !important;
@@ -262,7 +256,7 @@ const globalStyles = `
 
   /* ── Section heading band ── */
   .lib-level-heading {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: inherit;
     font-size: 32px;
     font-weight: 700;
     color: ${C.ink};

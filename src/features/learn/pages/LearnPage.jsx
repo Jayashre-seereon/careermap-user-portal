@@ -50,6 +50,11 @@ export default function LearnPage() {
     <ModuleScreen className="space-y-6">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
+      <div>
+        <h1>Master Classes</h1>
+        <p className="mt-1">Explore expert sessions, career videos, and guided learning content.</p>
+      </div>
+
       {/* COMPACT TOP FILTER TOOLBAR */}
       <div className="bg-white p-4 rounded-xl border border-[#eedad4] shadow-sm">
         <Row gutter={[16, 16]} align="middle" justify="space-between">

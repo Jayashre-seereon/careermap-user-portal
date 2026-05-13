@@ -12,7 +12,7 @@ import {
 import { Button } from "antd";
 import { useAppState } from "../../../state/AppStateContext";
 import { PremiumGate, usePortalNavigation } from "../../portal/components/portalPageShared";
-import { PageHero } from "../../../components/ui";
+import { ModuleScreen, PageHero } from "../../../components/ui";
 import { assessmentFeatures, assessmentPolicies } from "../../../data/careermapData";
 
 const css = `
@@ -237,9 +237,14 @@ export default function AssessmentPage() {
   const testUnlocked = isUnlocked("psychometric-test");
 
   return (
-    <div className="assess-wrap space-y-3">
+    <ModuleScreen className="assess-wrap space-y-6">
       <style>{css}</style>
       <PageHero backOnly onBack={() => navigate(-1)} />
+
+      <div>
+        <h1>Assessment</h1>
+        <p className="mt-1">Take your psychometric assessment and review your test access details.</p>
+      </div>
 
       <div className="assess-summary">
         <div className="assess-summary-main">
@@ -310,6 +315,6 @@ export default function AssessmentPage() {
           </div>
         </div>
       </div>
-    </div>
+    </ModuleScreen>
   );
 }

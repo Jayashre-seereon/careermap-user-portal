@@ -55,6 +55,7 @@ export function AppProviders({ children }) {
       theme={{
         algorithm: preferences.darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
+          fontFamily: `"Manrope", "Segoe UI", sans-serif`,
           colorPrimary: palette.primary,
           colorLink: palette.primary,
           borderRadius: 18,
@@ -189,7 +190,7 @@ export function PageHero({ eyebrow, title, description, action, backOnly = false
 }
 
 export function ModuleScreen({ children, className, maxWidthClass = "max-w-7xl" }) {
-  return <div className={joinClasses("mx-auto w-full", maxWidthClass, className)}>{children}</div>;
+  return <div className={joinClasses("module-screen mx-auto w-full", maxWidthClass, className)}>{children}</div>;
 }
 
 export function SectionCard({ title, extra, children }) {
