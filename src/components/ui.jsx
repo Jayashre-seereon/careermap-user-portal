@@ -155,22 +155,22 @@ export function AuthFrame({ title, subtitle, children, backTo, compact = false }
   );
 }
 
-export function PageHero({ eyebrow, title, description, action, backOnly = false, onBack }) {
+export function PageHero({ eyebrow, title, description, action, backOnly = false, onBack, className }) {
   if (backOnly) {
     return (
-      <div className="flex items-center justify-end">
+      <div className={joinClasses("inline-flex items-center", className)}>
         <Button
           type="text"
           icon={<ArrowLeftOutlined />}
           onClick={onBack}
-          className="!h-10 !w-10 !rounded-full !border !border-[#eedad4] !bg-white !text-brand shadow-soft hover:!border-[#d8b4ad] hover:!bg-[#fbf4f1]"
+          className="!flex !h-9 !w-9 !items-center !justify-center !rounded-full !border !border-[#eedad4] !bg-white !p-0 !text-brand shadow-soft hover:!border-[#d8b4ad] hover:!bg-[#fbf4f1]"
         />
       </div>
     );
   }
 
   return (
-    <div className="brand-gradient relative overflow-hidden rounded-[28px] p-8 text-white shadow-soft md:p-10">
+    <div className={joinClasses("brand-gradient relative overflow-hidden rounded-[28px] p-8 text-white shadow-soft md:p-10", className)}>
       <div className="hero-orb left-[-2rem] top-[-2rem] h-28 w-28 bg-white/20" />
       <div className="hero-orb bottom-[-2rem] right-[-2rem] h-36 w-36 bg-white/15" />
       <div className="website-grid absolute inset-0 opacity-20" />

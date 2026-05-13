@@ -5,11 +5,10 @@ import {
   CreditCardOutlined, 
   ThunderboltOutlined, 
   BankOutlined, 
-  SafetyCertificateFilled,
-  ArrowLeftOutlined 
+  SafetyCertificateFilled
 } from "@ant-design/icons";
 import { subscriptions } from "../../../data/careermapData";
-import { ModuleScreen } from "../../../components/ui";
+import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function CheckoutPage() {
@@ -43,14 +42,7 @@ export default function CheckoutPage() {
     <ModuleScreen maxWidthClass="max-w-4xl" className="space-y-6 lg:mt-6">
       {/* Mini Header */}
       <div className="flex items-center justify-between">
-        <Button 
-          type="text" 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate(-1)}
-          className="!text-muted hover:!text-brand"
-        >
-          Back to Plans
-        </Button>
+        <PageHero backOnly onBack={() => navigate(-1)} />
         <div className="flex items-center gap-2 text-green-600 text-[10px] font-bold uppercase tracking-widest">
           <SafetyCertificateFilled /> Secure Checkout
         </div>
