@@ -9,6 +9,7 @@ import {
   ArrowLeftOutlined 
 } from "@ant-design/icons";
 import { subscriptions } from "../../../data/careermapData";
+import { ModuleScreen } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function CheckoutPage() {
@@ -39,9 +40,9 @@ export default function CheckoutPage() {
   }, [navigate, plan.id, processing, returnTo]);
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 lg:mt-6">
+    <ModuleScreen maxWidthClass="max-w-4xl" className="space-y-6 lg:mt-6">
       {/* Mini Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <Button 
           type="text" 
           icon={<ArrowLeftOutlined />} 
@@ -190,6 +191,6 @@ export default function CheckoutPage() {
           </Col>
         </Row>
       )}
-    </div>
+    </ModuleScreen>
   );
 }

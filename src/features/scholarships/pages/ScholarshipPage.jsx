@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button, List, Tabs } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { scholarships } from "../../../data/careermapData";
-import { PageHero, SoftTag, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero, SoftTag, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -42,7 +42,7 @@ export default function ScholarshipPage() {
   if (selectedItem) {
     const detailUnlocked = unlocked || canAccessFreeDetail("scholarship", selectedItem.name);
     return (
-      <div className="min-h-screen bg-[#fdf9f8] space-y-4 p-4">
+      <ModuleScreen className="space-y-4">
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
 
         {!unlocked && !detailUnlocked ? (
@@ -109,12 +109,12 @@ export default function ScholarshipPage() {
         >
           Apply Now →
         </Button>
-      </div>
+      </ModuleScreen>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fdf9f8] space-y-4 p-4">
+    <ModuleScreen className="space-y-4">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       <div>
@@ -177,6 +177,6 @@ export default function ScholarshipPage() {
         }}
       />
 
-    </div>
+    </ModuleScreen>
   );
 }

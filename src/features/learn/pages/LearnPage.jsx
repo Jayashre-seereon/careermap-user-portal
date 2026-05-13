@@ -3,7 +3,7 @@ import { LockOutlined, PlayCircleOutlined, ControlOutlined } from "@ant-design/i
 import { Button, Card, Col, List, Row, Select, Space } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { masterClasses } from "../../../data/careermapData";
-import { PageHero, SoftTag, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero, SoftTag, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -47,7 +47,7 @@ export default function LearnPage() {
   }, [params]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4">
+    <ModuleScreen className="space-y-6">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       {/* COMPACT TOP FILTER TOOLBAR */}
@@ -153,6 +153,6 @@ export default function LearnPage() {
       />
 
     
-    </div>
+    </ModuleScreen>
   );
 }

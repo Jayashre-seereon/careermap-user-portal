@@ -3,6 +3,7 @@ import { Button, List, Result, Typography, Divider } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircleFilled, ArrowRightOutlined, DownloadOutlined } from "@ant-design/icons";
 import { subscriptions } from "../../../data/careermapData";
+import { ModuleScreen } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -28,8 +29,8 @@ export default function PaymentSuccessPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <ModuleScreen maxWidthClass="max-w-md" className="flex min-h-[80vh] items-center justify-center">
+      <div className="w-full">
         {/* Main Success Card */}
         <div className="bg-white rounded-3xl shadow-soft border border-gray-100 overflow-hidden">
           <div className="pt-10 pb-6 text-center">
@@ -100,6 +101,6 @@ export default function PaymentSuccessPage() {
           Need help? <span className="text-brand font-bold cursor-pointer">Contact Support</span>
         </p>
       </div>
-    </div>
+    </ModuleScreen>
   );
 }

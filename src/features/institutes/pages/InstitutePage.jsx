@@ -12,7 +12,7 @@ import {
 } from "@ant-design/icons";
 
 import { institutes } from "../../../data/careermapData";
-import { PageHero } from "../../../components/ui";
+import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 /* -------- HELPERS -------- */
@@ -54,13 +54,13 @@ export default function InstitutePage() {
     const initials = getInitials(selected.name);
 
     return (
-      <div className="min-h-screen bg-[#fdf9f8]">
-        <div className="p-4 pb-0">
+      <ModuleScreen className="space-y-4">
+        <div>
           <PageHero backOnly onBack={() => setSelected(null)} />
         </div>
 
         {/* HERO */}
-        <div className="mx-4 mt-3 bg-white rounded-2xl border overflow-hidden shadow">
+        <div className="bg-white rounded-2xl border overflow-hidden shadow">
           <div className="flex">
 
             {/* LEFT */}
@@ -96,7 +96,7 @@ export default function InstitutePage() {
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="space-y-4">
 
           {/* STATS */}
           <div className="grid grid-cols-3 gap-3">
@@ -135,14 +135,13 @@ export default function InstitutePage() {
             Visit Website
           </Button>
         </div>
-      </div>
+      </ModuleScreen>
     );
   }
 
   /* ================= LIST VIEW ================= */
   return (
-    <div className="min-h-screen bg-[#fdf9f8]">
-      <div className="p-4 space-y-5">
+    <ModuleScreen className="space-y-5">
         <PageHero backOnly onBack={() => navigate(-1)} />
 
         {/* HEADER */}
@@ -215,8 +214,7 @@ export default function InstitutePage() {
             No results found
           </div>
         )}
-      </div>
-    </div>
+    </ModuleScreen>
   );
 }
 

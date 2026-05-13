@@ -43,6 +43,10 @@ const { Header, Sider, Content } = Layout;
 const { Title, Paragraph, Text } = Typography;
 const { useBreakpoint } = Grid;
 
+function joinClasses(...values) {
+  return values.filter(Boolean).join(" ");
+}
+
 export function AppProviders({ children }) {
   const { preferences } = useAppState();
 
@@ -182,6 +186,10 @@ export function PageHero({ eyebrow, title, description, action, backOnly = false
       </div>
     </div>
   );
+}
+
+export function ModuleScreen({ children, className, maxWidthClass = "max-w-7xl" }) {
+  return <div className={joinClasses("mx-auto w-full", maxWidthClass, className)}>{children}</div>;
 }
 
 export function SectionCard({ title, extra, children }) {

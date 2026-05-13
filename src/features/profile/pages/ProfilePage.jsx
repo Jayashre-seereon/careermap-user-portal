@@ -9,7 +9,7 @@ import {
   EditOutlined,
   SettingOutlined 
 } from "@ant-design/icons";
-import { PageHero, SectionCard } from "../../../components/ui";
+import { ModuleScreen, PageHero, SectionCard } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -39,7 +39,7 @@ export default function ProfilePage() {
   const scrollableCardClass = "h-[320px] overflow-y-auto scrollbar-hide";
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
+    <ModuleScreen className="space-y-8">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       {/* 1. Header Profile Section */}
@@ -174,6 +174,6 @@ export default function ProfilePage() {
           <Button type="primary" size="large" block htmlType="submit" className="!h-12 !rounded-xl font-bold mt-4 shadow-lg shadow-brand/20">Save Profile Changes</Button>
         </Form>
       </Modal>
-    </div>
+    </ModuleScreen>
   );
 }

@@ -3,7 +3,7 @@ import { Button, Card, Col, List, Row, Space } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
 import { subscriptions } from "../../../data/careermapData";
-import { PageHero, SoftTag } from "../../../components/ui";
+import { ModuleScreen, PageHero, SoftTag } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -14,7 +14,7 @@ export default function SubscriptionPage() {
   const returnTo = params.get("returnTo");
 
   return (
-    <div className="w-full px-4 py-8 space-y-10">
+    <ModuleScreen className="space-y-10">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       <div className="text-center">
@@ -88,6 +88,6 @@ export default function SubscriptionPage() {
           );
         })}
       </Row>
-    </div>
+    </ModuleScreen>
   );
 }

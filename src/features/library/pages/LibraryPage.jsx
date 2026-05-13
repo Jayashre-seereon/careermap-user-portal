@@ -21,7 +21,7 @@ import {
 } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { careerLibrary } from "../../../data/careermapData";
-import { PageHero, SectionCard, SoftTag, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero, SectionCard, SoftTag, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import {
   PremiumGate,
@@ -453,12 +453,12 @@ export default function LibraryPage() {
   const meta = levelMeta[level];
 
   return (
-    <div  >
+    <ModuleScreen className="space-y-6">
       <LibraryStyles />
 
       <PageHero backOnly onBack={level !== "streams" ? back : () => navigate(-1)} />
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 20px" }}>
+      <div className="space-y-6">
         {/* Breadcrumb */}
         <LibraryBreadcrumb
           stream={selectedStream}
@@ -655,6 +655,6 @@ export default function LibraryPage() {
           </div>
         </Space>
       </Modal>
-    </div>
+    </ModuleScreen>
   );
 }
