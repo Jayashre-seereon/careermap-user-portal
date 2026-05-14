@@ -6,331 +6,67 @@ import {
   ExperimentOutlined,
   FolderOpenOutlined,
   ToolOutlined,
+  LockOutlined,
+  UnlockOutlined,
+  RightOutlined,
+  HeartOutlined,
+  HeartFilled,
+  TrophyOutlined,
+  BankOutlined,
+  DollarOutlined,
+  RocketOutlined,
+  ReadOutlined,
+  SolutionOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
-import {
-  Button,
-  Card,
-  Col,
-  List,
-  Modal,
-  Row,
-  Space,
-  Statistic,
-  Timeline,
-  Typography,
-} from "antd";
+import { Button, Modal, Space, Timeline, Typography } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { careerLibrary } from "../../../data/careermapData";
-import { ModuleScreen, PageHero, SectionCard, SoftTag, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero, SectionCard, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
-import {
-  PremiumGate,
-  usePortalNavigation,
-} from "../../portal/components/portalPageShared";
+import { PremiumGate, usePortalNavigation } from "../../portal/components/portalPageShared";
 
 const { Paragraph } = Typography;
 
-/* ─── Design tokens ─────────────────────────────────────── */
-const C = {
-  crimson: "#9a2119",
-  crimsonDark: "#6e160f",
-  crimsonLight: "#f7ebe6",
-  crimsonMid: "#c94030",
-  cream: "#fdf6f0",
-  ink: "#1a0a08",
-  muted: "#7a5c56",
-  border: "#eedad4",
-  cardBg: "#fffaf7",
-  white: "#ffffff",
+const streamIcons = {
+  Science: <ExperimentOutlined />,
+  Commerce: <CreditCardOutlined />,
+  "Arts & Humanities": <BookOutlined />,
+  Vocational: <ToolOutlined />,
+  Neutral: <BranchesOutlined />,
 };
 
-const globalStyles = `
-  .lib-root { font-family: inherit; background: ${C.cream}; min-height: 100vh; }
-
-  /* ── Stream cards ── */
-  .lib-stream-card {
-    background: ${C.cardBg} !important;
-    border: 1.5px solid ${C.border} !important;
-    border-radius: 16px !important;
-    transition: all 0.25s ease !important;
-    overflow: hidden !important;
-    position: relative;
-  }
-  .lib-stream-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: ${C.crimson};
-    transform: scaleY(0);
-    transform-origin: bottom;
-    transition: transform 0.25s ease;
-  }
-  .lib-stream-card:hover::before { transform: scaleY(1); }
-  .lib-stream-card:hover {
-    box-shadow: 0 8px 32px rgba(154,33,25,0.12) !important;
-    transform: translateY(-3px) !important;
-    border-color: ${C.crimsonLight} !important;
-  }
-
-  /* ── Category / program cards ── */
-  .lib-cat-card {
-    background: ${C.cardBg} !important;
-    border: 1.5px solid ${C.border} !important;
-    border-radius: 14px !important;
-    transition: all 0.22s ease !important;
-  }
-  .lib-cat-card:hover {
-    box-shadow: 0 6px 24px rgba(154,33,25,0.10) !important;
-    border-color: ${C.crimson} !important;
-    transform: translateY(-2px) !important;
-  }
-
-  /* ── Program list cards ── */
-  .lib-program-item .ant-list-item { border: none !important; padding: 6px 0 !important; }
-  .lib-program-card {
-    background: ${C.cardBg} !important;
-    border: 1.5px solid ${C.border} !important;
-    border-radius: 12px !important;
-    transition: all 0.2s ease !important;
-  }
-  .lib-program-card:hover {
-    box-shadow: 0 4px 20px rgba(154,33,25,0.10) !important;
-    border-color: ${C.crimsonMid} !important;
-    background: ${C.white} !important;
-  }
-
-  /* ── Icon badge ── */
-  .lib-icon-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px; height: 42px;
-    border-radius: 12px;
-    background: ${C.crimsonLight};
-    color: ${C.crimson};
-    font-size: 18px;
-    flex-shrink: 0;
-    transition: background 0.2s, color 0.2s;
-  }
-  .lib-stream-card:hover .lib-icon-badge,
-  .lib-cat-card:hover .lib-icon-badge,
-  .lib-program-card:hover .lib-icon-badge {
-    background: ${C.crimson};
-    color: ${C.white};
-  }
-
-  /* ── Card heading text ── */
-  .lib-card-title {
-    font-family: inherit;
-    font-size: 19px;
-    font-weight: 700;
-    color: ${C.ink};
-    line-height: 1.25;
-    letter-spacing: -0.01em;
-  }
-
-  /* ── Card desc ── */
-  .lib-card-desc {
-    font-size: 13.5px;
-    color: ${C.muted};
-    line-height: 1.6;
-    margin-top: 6px;
-  }
-
-  /* ── Tag overrides ── */
-  .lib-tag-free {
-    background: #e6f9f0 !important;
-    border-color: #a3e0c2 !important;
-    color: #1a7a4a !important;
-    border-radius: 20px !important;
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em !important;
-    padding: 1px 10px !important;
-  }
-  .lib-tag-lock {
-    background: #f5f5f5 !important;
-    border-color: #e0e0e0 !important;
-    color: #888 !important;
-    border-radius: 20px !important;
-    font-size: 10.5px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em !important;
-    padding: 1px 10px !important;
-  }
-
-  /* ── Section card / detail overrides ── */
-  .lib-section-card .ant-card {
-    border: 1.5px solid ${C.border} !important;
-    border-radius: 14px !important;
-    background: ${C.cardBg} !important;
-  }
-  .lib-section-card .ant-card-head {
-    border-bottom: 1px solid ${C.border} !important;
-    padding: 16px 24px !important;
-  }
-  .lib-section-card .ant-card-head-title {
-    font-family: inherit !important;
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    color: ${C.ink} !important;
-  }
-
-  /* ── Timeline dot color ── */
-  .lib-root .ant-timeline-item-head { border-color: ${C.crimson} !important; }
-  .lib-root .ant-timeline-item-tail { border-color: ${C.border} !important; }
-
-  /* ── Statistic ── */
-  .lib-root .ant-statistic-content-value {
-    font-family: inherit !important;
-    font-size: 28px !important;
-    color: ${C.crimson} !important;
-    font-weight: 700 !important;
-  }
-
-  /* ── Wishlist button ── */
-  .lib-wishlist-btn {
-    border-color: ${C.border} !important;
-    color: ${C.crimson} !important;
-    background: transparent !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    transition: all 0.2s !important;
-  }
-  .lib-wishlist-btn:hover {
-    background: ${C.crimsonLight} !important;
-    border-color: ${C.crimson} !important;
-  }
-
-  /* ── Modal ── */
-  .lib-modal .ant-modal-content {
-    border-radius: 18px !important;
-    padding: 0 !important;
-    overflow: hidden;
-  }
-  .lib-modal .ant-modal-header {
-    padding: 22px 28px 0 !important;
-    border-bottom: none !important;
-    background: ${C.cardBg} !important;
-  }
-  .lib-modal .ant-modal-title {
-    font-family: inherit !important;
-    font-size: 22px !important;
-    font-weight: 700 !important;
-    color: ${C.ink} !important;
-  }
-  .lib-modal .ant-modal-body {
-    padding: 16px 28px 28px !important;
-    background: ${C.cardBg} !important;
-  }
-
-  /* ── Primary button ── */
-  .lib-btn-primary {
-    background: ${C.crimson} !important;
-    border-color: ${C.crimson} !important;
-    border-radius: 9px !important;
-    font-weight: 500 !important;
-    font-size: 13.5px !important;
-    height: 38px !important;
-    padding: 0 20px !important;
-    transition: background 0.2s !important;
-  }
-  .lib-btn-primary:hover {
-    background: ${C.crimsonDark} !important;
-    border-color: ${C.crimsonDark} !important;
-  }
-  .lib-btn-outline {
-    border-color: ${C.border} !important;
-    color: ${C.muted} !important;
-    border-radius: 9px !important;
-    font-size: 13.5px !important;
-    height: 38px !important;
-    padding: 0 20px !important;
-  }
-  .lib-btn-outline:hover {
-    border-color: ${C.crimson} !important;
-    color: ${C.crimson} !important;
-  }
-
-  /* ── Section heading band ── */
-  .lib-level-heading {
-    font-family: inherit;
-    font-size: 32px;
-    font-weight: 700;
-    color: ${C.ink};
-    letter-spacing: -0.02em;
-    margin-bottom: 4px;
-  }
-  .lib-level-sub {
-    font-size: 13.5px;
-    color: ${C.muted};
-    margin-bottom: 24px;
-  }
-
-  /* ── Breadcrumb strip ── */
-  .lib-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12.5px;
-    color: ${C.muted};
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .lib-breadcrumb-sep { opacity: 0.4; }
-  .lib-breadcrumb-active { color: ${C.crimson}; font-weight: 600; }
-
-  /* ── List item rule ── */
-  .lib-root .ant-list-item {
-    border-bottom: 1px solid ${C.border} !important;
-    padding: 10px 0 !important;
-    font-size: 14px !important;
-    color: ${C.ink} !important;
-  }
-
-  /* ── Fade-in animation ── */
-  @keyframes libFadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .lib-fade { animation: libFadeUp 0.35s ease both; }
-  .lib-fade-d1 { animation-delay: 0.05s; }
-  .lib-fade-d2 { animation-delay: 0.10s; }
-  .lib-fade-d3 { animation-delay: 0.15s; }
-  .lib-fade-d4 { animation-delay: 0.20s; }
-  .lib-fade-d5 { animation-delay: 0.25s; }
-`;
-
-/* ─── Inject styles once ─────────────────────────────────── */
-function LibraryStyles() {
-  return <style>{globalStyles}</style>;
-}
-
-/* ─── Breadcrumb helper ──────────────────────────────────── */
+/* ── Breadcrumb ── */
 function LibraryBreadcrumb({ stream, category, program, level }) {
   const parts = [];
-  if (stream)   parts.push({ label: stream });
-  if (category) parts.push({ label: category });
-  if (program && level === "details") parts.push({ label: program });
-
+  if (stream)   parts.push(stream);
+  if (category) parts.push(category);
+  if (program && level === "details") parts.push(program);
   if (!parts.length) return null;
 
   return (
-    <div className="lib-breadcrumb">
+    <div className="flex items-center flex-wrap gap-1.5 text-xs text-gray-400 mb-2">
       <span>Career Library</span>
       {parts.map((p, i) => (
-        <span key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span className="lib-breadcrumb-sep">›</span>
-          <span className={i === parts.length - 1 ? "lib-breadcrumb-active" : ""}>{p.label}</span>
+        <span key={i} className="flex items-center gap-1.5">
+          <RightOutlined className="text-[10px] opacity-40" />
+          <span className={i === parts.length - 1 ? "text-[#9a2119] font-semibold" : ""}>{p}</span>
         </span>
       ))}
     </div>
   );
 }
 
-/* ─── Main component ─────────────────────────────────────── */
+/* ── Section header inside detail cards ── */
+function SectionHeader({ icon, title }) {
+  return (
+    <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
+      <span className="text-[#9a2119] text-sm">{icon}</span>
+      <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">{title}</span>
+    </div>
+  );
+}
+
 export default function LibraryPage() {
   const {
     canAccessFreeDetail,
@@ -364,18 +100,9 @@ export default function LibraryPage() {
   const detailUnlocked =
     !selectedDetail || unlocked || canAccessFreeDetail("career-library", selectedDetail);
 
-  const streamIcons = {
-    Science: <ExperimentOutlined />,
-    Commerce: <CreditCardOutlined />,
-    "Arts & Humanities": <BookOutlined />,
-    Vocational: <ToolOutlined />,
-    Neutral: <BranchesOutlined />,
-  };
-
-  /* ── Unchanged helper functions ── */
   function buildLibraryReturnTo(detailName = selectedDetail) {
     const nextParams = new URLSearchParams();
-    if (selectedStream)  nextParams.set("stream", selectedStream);
+    if (selectedStream)   nextParams.set("stream", selectedStream);
     if (selectedCategory) nextParams.set("category", selectedCategory);
     if (selectedProgram)  nextParams.set("program", selectedProgram);
     if (detailName)       nextParams.set("detail", detailName);
@@ -406,223 +133,265 @@ export default function LibraryPage() {
   }
 
   useEffect(() => {
-    const stream      = params.get("stream");
-    const category    = params.get("category");
-    const program     = params.get("program");
-    const detailName  = params.get("detail");
+    const stream         = params.get("stream");
+    const category       = params.get("category");
+    const program        = params.get("program");
+    const detailName     = params.get("detail");
     const requestedLevel = params.get("level");
     if (!stream && !category && !program && !detailName) return;
-    if (stream)    setSelectedStream(stream);
-    if (category)  setSelectedCategory(category);
-    if (program)   setSelectedProgram(program);
-    if (detailName) setSelectedDetail(detailName);
+    if (stream)      setSelectedStream(stream);
+    if (category)    setSelectedCategory(category);
+    if (program)     setSelectedProgram(program);
+    if (detailName)  setSelectedDetail(detailName);
     if (requestedLevel === "details" && detailName) setLevel("details");
     else if (program || category) setLevel("programs");
     else if (stream) setLevel("categories");
   }, [params]);
 
   function back() {
-    if (level === "details")    { setLevel("programs");    setSelectedDetail(null); }
-    else if (level === "programs")   { setLevel("categories"); setSelectedProgram(null); }
-    else if (level === "categories") { setLevel("streams");    setSelectedCategory(null); }
+    if (level === "details")     { setLevel("programs");    setSelectedDetail(null); }
+    else if (level === "programs")    { setLevel("categories"); setSelectedProgram(null); }
+    else if (level === "categories")  { setLevel("streams");    setSelectedCategory(null); }
   }
 
-  /* ── Card heading (restyled) ── */
-  function renderLibraryCardHeading(title, icon) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-        <span className="lib-icon-badge">{icon}</span>
-        <span className="lib-card-title">{title}</span>
-      </div>
-    );
-  }
-
-  /* ── Level copy map ── */
   const levelMeta = {
-    streams:    { heading: "Career Library",            sub: "Choose a stream to begin exploring career paths." },
-    categories: { heading: selectedStream || "",        sub: "Select a category within this stream." },
-    programs:   { heading: selectedCategory || "",      sub: "Choose a career to view full details." },
-    details:    { heading: detail.title || "",          sub: null },
+    streams:    { heading: "Career Library",        sub: "Choose a stream to begin exploring career paths." },
+    categories: { heading: selectedStream || "",    sub: "Select a category within this stream." },
+    programs:   { heading: selectedCategory || "",  sub: "Choose a career to view full details." },
+    details:    { heading: detail.title || "",      sub: null },
   };
   const meta = levelMeta[level];
 
   return (
-    <ModuleScreen className="space-y-6">
-      <LibraryStyles />
-
+    <ModuleScreen className="space-y-5">
       <PageHero backOnly onBack={level !== "streams" ? back : () => navigate(-1)} />
 
-      <div className="space-y-6">
-        {/* Breadcrumb */}
-        <LibraryBreadcrumb
-          stream={selectedStream}
-          category={selectedCategory}
-          program={selectedProgram}
-          level={level}
-        />
+      {/* Breadcrumb */}
+      <LibraryBreadcrumb
+        stream={selectedStream}
+        category={selectedCategory}
+        program={selectedProgram}
+        level={level}
+      />
 
-        {/* Level heading */}
-        {meta.heading && (
-          <div className="lib-fade" style={{ marginBottom: 24 }}>
-            <div className="lib-level-heading">{meta.heading}</div>
-            {meta.sub && <div className="lib-level-sub">{meta.sub}</div>}
-            <div style={{ width: 40, height: 3, background: C.crimson, borderRadius: 2 }} />
-          </div>
-        )}
+      {/* Level heading */}
+      {meta.heading && (
+        <div className="mb-2">
+          <h1 className="text-2xl font-black text-[#1a0a09] m-0 leading-snug">{meta.heading}</h1>
+          {meta.sub && <p className="text-xs text-[#b8837e] mt-1 mb-0">{meta.sub}</p>}
+          <div className="w-8 h-[3px] bg-[#9a2119] rounded-full mt-2" />
+        </div>
+      )}
 
-        {/* ── STREAMS ── */}
-        {level === "streams" && (
-          <Row gutter={[18, 18]}>
-            {careerLibrary.streams.map((stream, idx) => (
-              <Col xs={24} md={12} lg={8} key={stream.name}>
-                <Card
-                  hoverable
-                  className={`lib-stream-card lib-fade lib-fade-d${Math.min(idx + 1, 5)}`}
-                  bodyStyle={{ padding: "22px 24px" }}
-                  onClick={() => { setSelectedStream(stream.name); setLevel("categories"); }}
-                >
-                  <div style={{ marginBottom: 12 }}>
-                    {renderLibraryCardHeading(stream.name, streamIcons[stream.name] || <BookOutlined />)}
-                  </div>
-                  <div className="lib-card-desc">{stream.desc}</div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
+      {/* ── STREAMS ── */}
+      {level === "streams" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {careerLibrary.streams.map((stream) => (
+            <div
+              key={stream.name}
+              onClick={() => { setSelectedStream(stream.name); setLevel("categories"); }}
+              className="group bg-white rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] p-5 cursor-pointer flex flex-col gap-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
+            >
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-xl bg-[#fdf0ee] text-[#9a2119] flex items-center justify-center text-lg shrink-0 group-hover:bg-[#9a2119] group-hover:text-white transition-colors">
+                  {streamIcons[stream.name] || <BookOutlined />}
+                </span>
+                <p className="text-base font-bold text-[#1a0a09] m-0 leading-snug group-hover:text-[#9a2119] transition-colors">
+                  {stream.name}
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 leading-relaxed m-0 flex-1">{stream.desc}</p>
+              <div className="flex items-center gap-1 text-[#9a2119] text-xs font-semibold mt-auto">
+                Explore <ArrowRightOutlined className="text-[10px]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* ── CATEGORIES ── */}
-        {level === "categories" && (
-          <Row gutter={[18, 18]}>
-            {(careerLibrary.categories[selectedStream] || []).map((category, idx) => (
-              <Col xs={24} md={12} key={category}>
-                <Card
-                  hoverable
-                  className={`lib-cat-card lib-fade lib-fade-d${Math.min(idx + 1, 5)}`}
-                  bodyStyle={{ padding: "20px 24px" }}
-                  onClick={() => { setSelectedCategory(category); setLevel("programs"); }}
-                >
-                  {renderLibraryCardHeading(category, <FolderOpenOutlined />)}
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
+      {/* ── CATEGORIES ── */}
+      {level === "categories" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {(careerLibrary.categories[selectedStream] || []).map((category) => (
+            <div
+              key={category}
+              onClick={() => { setSelectedCategory(category); setLevel("programs"); }}
+              className="group bg-white rounded-2xl border border-[#f0e4e2] p-5 cursor-pointer flex items-center gap-3 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10 hover:border-[#9a2119]"
+            >
+              <span className="w-10 h-10 rounded-xl bg-[#fdf0ee] text-[#9a2119] flex items-center justify-center text-lg shrink-0 group-hover:bg-[#9a2119] group-hover:text-white transition-colors">
+                <FolderOpenOutlined />
+              </span>
+              <p className="text-sm font-bold text-[#1a0a09] m-0 flex-1 group-hover:text-[#9a2119] transition-colors">
+                {category}
+              </p>
+              <ArrowRightOutlined className="text-[#9a2119] opacity-30 group-hover:opacity-100 transition-opacity text-xs" />
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* ── PROGRAMS ── */}
-        {level === "programs" && (
-          <div className="lib-program-item">
-            <List
-              dataSource={
-                careerLibrary.specializations[selectedProgram] ||
-                careerLibrary.programs[selectedCategory] ||
-                []
-              }
-              renderItem={(item, idx) => {
-                const unlockedItem = unlocked || canAccessFreeDetail("career-library", item);
-                return (
-                  <List.Item style={{ border: "none", padding: "6px 0" }}>
-                    <Card
-                      hoverable
-                      className={`lib-program-card lib-fade lib-fade-d${Math.min(idx + 1, 5)}`}
-                      bodyStyle={{ padding: "16px 20px", width: "100%" }}
-                      style={{ width: "100%" }}
-                      onClick={() => handleLockedCareerClick(item)}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                        {renderLibraryCardHeading(item, <BookOutlined />)}
-                        {!unlocked && (
-                          <span className={unlockedItem ? "lib-tag-free" : "lib-tag-lock"}>
-                            {unlockedItem ? "FREE" : "LOCK"}
-                          </span>
-                        )}
-                      </div>
-                    </Card>
-                  </List.Item>
-                );
-              }}
-            />
-          </div>
-        )}
-
-        {/* ── DETAILS ── */}
-        {level === "details" && (
-          <div className="space-y-6 lib-fade">
-            {!detailUnlocked && (
-              <PremiumGate
-                title="Unlock Career Library"
-                description="Subscribe to more careers, salary insights, education paths, and institute details."
-                returnTo={buildLibraryReturnTo()}
-              />
-            )}
-
-            <div className="lib-section-card">
-              <SectionCard
-                title={detail.title}
-                extra={
-                  <Button
-                    className="lib-wishlist-btn"
-                    onClick={() => toggleSavedCareer(detail.title)}
-                  >
-                    {isSaved ? "✦ Saved" : "Save to Wishlist"}
-                  </Button>
-                }
+      {/* ── PROGRAMS ── */}
+      {level === "programs" && (
+        <div className="flex flex-col gap-2">
+          {(
+            careerLibrary.specializations[selectedProgram] ||
+            careerLibrary.programs[selectedCategory] ||
+            []
+          ).map((item) => {
+            const unlockedItem = unlocked || canAccessFreeDetail("career-library", item);
+            return (
+              <div
+                key={item}
+                onClick={() => handleLockedCareerClick(item)}
+                className="group bg-white rounded-2xl border border-[#f0e4e2] p-4 cursor-pointer flex items-center gap-3 transition-all duration-200 hover:border-[#9a2119] hover:shadow-md hover:shadow-[#9a2119]/10"
               >
-                <Paragraph
-                  style={{ color: C.muted, fontSize: 14.5, lineHeight: 1.75, marginBottom: 0 }}
-                >
-                  {detail.overview}
-                </Paragraph>
-              </SectionCard>
-            </div>
+                <span className="w-9 h-9 rounded-xl bg-[#fdf0ee] text-[#9a2119] flex items-center justify-center text-base shrink-0 group-hover:bg-[#9a2119] group-hover:text-white transition-colors">
+                  <BookOutlined />
+                </span>
+                <p className="text-sm font-semibold text-[#1a0a09] m-0 flex-1 group-hover:text-[#9a2119] transition-colors">
+                  {item}
+                </p>
+                {!unlocked && (
+                  <span
+                    className={`inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-2.5 py-0.5 shrink-0 ${
+                      unlockedItem
+                        ? "bg-green-100 text-green-700"
+                        : "bg-[#fdf0ee] text-[#9a2119]"
+                    }`}
+                  >
+                    {unlockedItem ? <UnlockOutlined /> : <LockOutlined />}
+                    {unlockedItem ? "Free" : "Locked"}
+                  </span>
+                )}
+                <ArrowRightOutlined className="text-[#9a2119] opacity-30 group-hover:opacity-100 transition-opacity text-xs shrink-0" />
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-            <div className="lib-section-card">
-              <SectionCard title="Career Path">
-                <Timeline items={detail.path.map((item) => ({ children: item }))} />
-              </SectionCard>
-            </div>
+      {/* ── DETAILS ── */}
+      {level === "details" && (
+        <div className="space-y-3">
+          {!detailUnlocked && (
+            <PremiumGate
+              title="Unlock Career Library"
+              description="Subscribe to more careers, salary insights, education paths, and institute details."
+              returnTo={buildLibraryReturnTo()}
+            />
+          )}
 
-            <div className="lib-section-card">
-              <SectionCard title="Education">
-                <Text>{detail.education}</Text>
-              </SectionCard>
+          {/* Overview */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[#f0e4e2]">
+              <div className="flex items-center gap-2">
+                <ReadOutlined className="text-[#9a2119] text-sm" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
+                  {detail.title}
+                </span>
+              </div>
+              <button
+                onClick={() => toggleSavedCareer(detail.title)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9a2119] bg-[#fdf0ee] border border-[#f0e4e2] rounded-lg px-3 py-1.5 hover:bg-[#9a2119] hover:text-white transition-colors"
+              >
+                {isSaved ? <HeartFilled /> : <HeartOutlined />}
+                {isSaved ? "Saved" : "Save"}
+              </button>
             </div>
-
-            <div className="lib-section-card">
-              <SectionCard title="Entrance Exams">
-                <List
-                  dataSource={detail.exams}
-                  renderItem={(item) => <List.Item>{item}</List.Item>}
-                />
-              </SectionCard>
-            </div>
-
-            <div className="lib-section-card">
-              <SectionCard title="Job Opportunities">
-                <List
-                  dataSource={detail.jobs}
-                  renderItem={(item) => <List.Item>{item}</List.Item>}
-                />
-              </SectionCard>
-            </div>
-
-            <div className="lib-section-card">
-              <SectionCard title="Salary Range">
-                <Statistic value={detail.salary} />
-              </SectionCard>
-            </div>
-
-            <div className="lib-section-card">
-              <SectionCard title="Top Institutes">
-                <List
-                  dataSource={detail.institutes}
-                  renderItem={(item) => <List.Item>{item}</List.Item>}
-                />
-              </SectionCard>
+            <div className="p-5">
+              <p className="text-sm text-gray-500 leading-relaxed m-0">{detail.overview}</p>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Career Path */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <SectionHeader icon={<RocketOutlined />} title="Career Path" />
+            <div className="p-5">
+              <div className="flex flex-col gap-0">
+                {detail.path.map((step, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="flex flex-col items-center shrink-0">
+                      <span className="w-6 h-6 rounded-full bg-[#fdf0ee] text-[#9a2119] flex items-center justify-center text-[10px] font-bold border border-[#f0e4e2]">
+                        {i + 1}
+                      </span>
+                      {i < detail.path.length - 1 && (
+                        <span className="w-px h-6 bg-[#f0e4e2]" />
+                      )}
+                    </div>
+                    <p className={`text-sm m-0 pb-3 ${i === detail.path.length - 1 ? "font-bold text-[#9a2119]" : "text-gray-600"}`}>
+                      {step}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Education */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <SectionHeader icon={<BookOutlined />} title="Education" />
+            <div className="p-5">
+              <p className="text-sm text-gray-600 leading-relaxed m-0">{detail.education}</p>
+            </div>
+          </div>
+
+          {/* Entrance Exams */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <SectionHeader icon={<SolutionOutlined />} title="Entrance Exams" />
+            <div className="px-5 py-2">
+              {detail.exams.map((item, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-2.5 py-2.5 ${i < detail.exams.length - 1 ? "border-b border-[#fdf0ee]" : ""}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] shrink-0" />
+                  <span className="text-sm text-gray-600">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Job Opportunities */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <SectionHeader icon={<BankOutlined />} title="Job Opportunities" />
+            <div className="px-5 py-2">
+              {detail.jobs.map((item, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-2.5 py-2.5 ${i < detail.jobs.length - 1 ? "border-b border-[#fdf0ee]" : ""}`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] shrink-0" />
+                  <span className="text-sm text-gray-600">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Salary */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <SectionHeader icon={<DollarOutlined />} title="Salary Range" />
+            <div className="p-5">
+              <p className="text-3xl font-black text-[#9a2119] m-0">{detail.salary}</p>
+            </div>
+          </div>
+
+          {/* Top Institutes */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <SectionHeader icon={<TrophyOutlined />} title="Top Institutes" />
+            <div className="p-5 flex flex-wrap gap-2">
+              {detail.institutes.map((inst, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1a0a09] bg-[#fdf9f9] border border-[#f0e4e2] rounded-lg px-3 py-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] shrink-0" />
+                  {inst}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Unlock modal ── */}
       <Modal
@@ -630,24 +399,33 @@ export default function LibraryPage() {
         onCancel={() => setUnlockModalItem(null)}
         footer={null}
         centered
-        title="Unlock Career Library"
-        className="lib-modal"
-      >
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          <Paragraph style={{ marginBottom: 0, color: C.muted, fontSize: 14, lineHeight: 1.7 }}>
-            Your free Career Library access has already been used. Subscribe to unlock{" "}
-            <strong style={{ color: C.ink }}>{unlockModalItem}</strong> and continue without
-            losing your place.
-          </Paragraph>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 10 }}>
-            <Button className="lib-btn-outline" onClick={handleGoToPlans}>
-              View Plans
-            </Button>
-            <Button type="primary" className="lib-btn-primary" onClick={handleGoToPlans}>
-              Unlock Now
-            </Button>
+        title={
+          <div className="flex items-center gap-2 text-[#1a0a09] font-black text-lg">
+            <LockOutlined className="text-[#9a2119]" />
+            Unlock Career Library
           </div>
-        </Space>
+        }
+        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!overflow-hidden [&_.ant-modal-header]:!border-b [&_.ant-modal-header]:!border-[#f0e4e2] [&_.ant-modal-header]:!pb-4"
+      >
+        <p className="text-sm text-gray-500 leading-relaxed mt-3 mb-5">
+          Your free Career Library access has already been used. Subscribe to unlock{" "}
+          <strong className="text-[#1a0a09]">{unlockModalItem}</strong> and continue without losing your place.
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => setUnlockModalItem(null)}
+            className="!rounded-xl !border-[#f0e4e2] !text-gray-500 hover:!border-[#9a2119] hover:!text-[#9a2119]"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleGoToPlans}
+            className="!rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold hover:!bg-[#7a1a13]"
+          >
+            Unlock Now
+          </Button>
+        </div>
       </Modal>
     </ModuleScreen>
   );
