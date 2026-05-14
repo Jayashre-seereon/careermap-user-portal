@@ -71,103 +71,100 @@ export default function ScholarshipPage() {
     return (
       <ModuleScreen className="space-y-4">
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
+        <div className="content-stagger">
+          {!unlocked && !detailUnlocked ? (
+            <PremiumGate
+              title="Unlock Scholarships"
+              description="Subscribe to more scholarship details, requirements, and application links."
+              returnTo={buildScholarshipReturnTo()}
+            />
+          ) : null}
 
-        {!unlocked && !detailUnlocked ? (
-          <PremiumGate
-            title="Unlock Scholarships"
-            description="Subscribe to more scholarship details, requirements, and application links."
-            returnTo={buildScholarshipReturnTo()}
-          />
-        ) : null}
-
-        {/* Overview card */}
-        <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
-          <div className={`h-1 ${isActive ? "bg-[#9a2119]" : "bg-gray-200"}`} />
-          <div className="p-5 space-y-4">
-
-            {/* header */}
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-black text-[#1a0a09] leading-snug m-0">
-                  {selectedItem.name}
-                </h2>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-1 mb-0">
-                  {selectedItem.provider}
-                </p>
+          {/* Overview card */}
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <div className={`h-1 ${isActive ? "bg-[#9a2119]" : "bg-gray-200"}`} />
+            <div className="p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-[#1a0a09] leading-snug m-0">
+                    {selectedItem.name}
+                  </h2>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-1 mb-0">
+                    {selectedItem.provider}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 ${
+                    isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
+                  }`}
+                >
+                  {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
+                  {selectedItem.status}
+                </span>
               </div>
-              <span
-                className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 ${
-                  isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
-                }`}
-              >
-                {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
-                {selectedItem.status}
-              </span>
-            </div>
 
-            <div className="h-px bg-[#f0e4e2]" />
+              <div className="h-px bg-[#f0e4e2]" />
 
-            <p className="text-sm text-gray-500 leading-relaxed m-0">
-              {selectedItem.description}
-            </p>
+              <p className="text-sm text-gray-500 leading-relaxed m-0">
+                {selectedItem.description}
+              </p>
 
-            {/* meta grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
-                  <DollarOutlined className="text-[#9a2119]" /> Amount
-                </p>
-                <p className="text-2xl font-black text-[#9a2119] m-0">{selectedItem.amount}</p>
-              </div>
-              <div>
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
-                  <CalendarOutlined className="text-[#9a2119]" /> Deadline
-                </p>
-                <p className="text-sm font-semibold text-[#1a0a09] m-0">{selectedItem.deadline}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
-                  <TeamOutlined className="text-[#9a2119]" /> Eligibility
-                </p>
-                <p className="text-sm font-medium text-[#1a0a09] m-0">{selectedItem.eligibility}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                    <DollarOutlined className="text-[#9a2119]" /> Amount
+                  </p>
+                  <p className="text-2xl font-black text-[#9a2119] m-0">{selectedItem.amount}</p>
+                </div>
+                <div>
+                  <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                    <CalendarOutlined className="text-[#9a2119]" /> Deadline
+                  </p>
+                  <p className="text-sm font-semibold text-[#1a0a09] m-0">{selectedItem.deadline}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                    <TeamOutlined className="text-[#9a2119]" /> Eligibility
+                  </p>
+                  <p className="text-sm font-medium text-[#1a0a09] m-0">{selectedItem.eligibility}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Requirements */}
-        <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
-            <FileTextOutlined className="text-[#9a2119] text-sm" />
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09] m-0">
-              Requirements
-            </h3>
+          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
+              <FileTextOutlined className="text-[#9a2119] text-sm" />
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09] m-0">
+                Requirements
+              </h3>
+            </div>
+            <div className="px-5 py-2">
+              {selectedItem.requirements.map((req, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-3 py-2.5 ${
+                    i < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] mt-2 shrink-0" />
+                  <p className="text-sm text-gray-600 leading-relaxed m-0">{req}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="px-5 py-2">
-            {selectedItem.requirements.map((req, i) => (
-              <div
-                key={i}
-                className={`flex items-start gap-3 py-2.5 ${
-                  i < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
-                }`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] mt-2 shrink-0" />
-                <p className="text-sm text-gray-600 leading-relaxed m-0">{req}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <Button
-          type="primary"
-          href={selectedItem.link}
-          target="_blank"
-          block
-          icon={<ArrowRightOutlined />}
-          className="!h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
-        >
-          Apply Now
-        </Button>
+          <Button
+            type="primary"
+            href={selectedItem.link}
+            target="_blank"
+            block
+            icon={<ArrowRightOutlined />}
+            className="!h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
+          >
+            Apply Now
+          </Button>
+        </div>
       </ModuleScreen>
     );
   }
@@ -190,7 +187,7 @@ export default function ScholarshipPage() {
       />
 
       {/* Equal-size card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map((item) => {
           const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
           const isActive = item.status === "Active";

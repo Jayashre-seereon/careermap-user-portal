@@ -190,7 +190,7 @@ export function PageHero({ eyebrow, title, description, action, backOnly = false
 }
 
 export function ModuleScreen({ children, className, maxWidthClass = "max-w-7xl" }) {
-  return <div className={joinClasses("module-screen mx-auto w-full", maxWidthClass, className)}>{children}</div>;
+  return <div className={joinClasses("module-screen motion-stack mx-auto w-full", maxWidthClass, className)}>{children}</div>;
 }
 
 export function SectionCard({ title, extra, children }) {
@@ -198,7 +198,7 @@ export function SectionCard({ title, extra, children }) {
     <Card
       title={<span className="text-lg font-black text-ink">{title}</span>}
       extra={extra}
-      className="!border-[#eedad4] !shadow-soft"
+      className="motion-item !border-[#eedad4] !shadow-soft"
     >
       {children}
     </Card>

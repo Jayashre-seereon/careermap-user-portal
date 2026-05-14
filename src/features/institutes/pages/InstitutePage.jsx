@@ -60,7 +60,7 @@ export default function InstitutePage() {
         </div>
 
         {/* HERO */}
-        <div className="bg-white rounded-2xl border overflow-hidden shadow">
+        <div className="motion-item bg-white rounded-2xl border overflow-hidden shadow">
           <div className="flex">
 
             {/* LEFT */}
@@ -96,7 +96,7 @@ export default function InstitutePage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="content-stagger space-y-4">
 
           {/* STATS */}
           <div className="grid grid-cols-3 gap-3">
@@ -130,7 +130,7 @@ export default function InstitutePage() {
             href={selected.website}
             target="_blank"
             block
-            className="!h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119]"
+            className="motion-item !h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119]"
           >
             Visit Website
           </Button>
@@ -155,7 +155,7 @@ export default function InstitutePage() {
        
 
         {/* GRID */}
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="content-stagger grid md:grid-cols-2 gap-4">
           {filtered.map((item) => {
             const accent = getAccent(item.name);
             const initials = getInitials(item.name);
@@ -213,7 +213,7 @@ export default function InstitutePage() {
 
 function Card({ title, children }) {
   return (
-    <div className="bg-white border rounded-xl p-4">
+    <div className="motion-item bg-white border rounded-xl p-4">
       <h3 className="font-semibold mb-2">{title}</h3>
       {children}
     </div>
@@ -232,7 +232,7 @@ function Chip({ icon, text, green }) {
 
 function Stat({ icon, label, value }) {
   return (
-    <div className="bg-white border rounded-lg p-3 text-center">
+    <div className="motion-item bg-white border rounded-lg p-3 text-center">
       <div className="text-[#9a2119] mb-1">{icon}</div>
       <p className="font-bold text-[#9a2119]">{value}</p>
       <p className="text-[10px] text-gray-400">{label}</p>

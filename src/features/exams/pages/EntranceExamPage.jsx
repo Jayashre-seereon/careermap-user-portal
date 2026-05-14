@@ -35,7 +35,7 @@ export default function EntranceExamPage() {
         <PageHero backOnly onBack={() => setSelected(null)} />
 
         {/* Profile header */}
-        <div className="bg-white rounded-r-2xl border border-[#f0e4e2] border-l-4 border-l-[#9a2119] p-5">
+        <div className="motion-item bg-white rounded-r-2xl border border-[#f0e4e2] border-l-4 border-l-[#9a2119] p-5">
           <div className="flex flex-wrap justify-between items-start gap-4">
             <div>
               <h1 className="text-2xl font-black text-[#1a0a09] leading-snug m-0">
@@ -68,7 +68,7 @@ export default function EntranceExamPage() {
         </div>
 
         {/* Snapshot */}
-        <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+        <div className="motion-item bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
           <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
             <TrophyOutlined className="text-[#9a2119] text-sm" />
             <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
@@ -98,10 +98,10 @@ export default function EntranceExamPage() {
         </div>
 
         {/* Exam Pattern + Top Colleges — equal height */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
+        <div className="content-stagger grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
 
           {/* Exam Pattern */}
-          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden flex flex-col">
+          <div className="motion-item bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden flex flex-col">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
               <FileTextOutlined className="text-[#9a2119] text-sm" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
@@ -124,7 +124,7 @@ export default function EntranceExamPage() {
           </div>
 
           {/* Top Colleges */}
-          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden flex flex-col">
+          <div className="motion-item bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden flex flex-col">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
               <BankOutlined className="text-[#9a2119] text-sm" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
@@ -183,7 +183,7 @@ export default function EntranceExamPage() {
       </div>
 
       {/* Equal-size card grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map((item) => (
           <div
             key={item.name}

@@ -18,7 +18,7 @@ export default function AbroadPage() {
     return (
       <ModuleScreen className="space-y-6">
         <PageHero backOnly onBack={() => setSubmitted(false)} />
-        <div className="rounded-2xl border bg-white p-8 text-center shadow-sm">
+        <div className="motion-item rounded-2xl border bg-white p-8 text-center shadow-sm">
           <h2 className="text-xl font-bold text-[#9a2119]">Request Submitted</h2>
           <p className="mt-2 text-gray-600">Our team will contact you shortly.</p>
           <button
@@ -40,19 +40,19 @@ export default function AbroadPage() {
       <ModuleScreen className="space-y-6 pb-24">
         <PageHero backOnly onBack={() => setSelectedCountry(null)} />
 
-        <div className="rounded-2xl border bg-white">
+        <div className="motion-item rounded-2xl border bg-white">
           <div className="space-y-3 p-6">
             <h1 className="text-3xl font-extrabold text-[#9a2119]">Study in {selectedCountry.name}</h1>
             <p className="max-w-2xl text-gray-600">{selectedCountry.detail}</p>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="content-stagger grid gap-4 md:grid-cols-2">
           <InfoCard title="Tuition Fees" value={selectedCountry.tuition} />
           <InfoCard title="Living Cost" value={selectedCountry.living} />
         </div>
 
-        <div className="space-y-6">
+        <div className="content-stagger space-y-6">
           <SectionCard title="Popular Courses">
             <div className="flex flex-wrap gap-2">
               {selectedCountry.popularCourses.map((course) => (
@@ -142,7 +142,7 @@ export default function AbroadPage() {
         <h1 className="text-2xl font-bold text-[#9a2119]">Study Abroad</h1>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="content-stagger grid gap-4 md:grid-cols-2">
         {studyAbroadCountries.map((country) => {
           const countryFree = unlocked || canAccessFreeDetail("abroad-consultancy", country.name);
 
@@ -205,7 +205,7 @@ export default function AbroadPage() {
 
 function InfoCard({ title, value }) {
   return (
-    <div className="rounded-2xl border bg-white p-5 shadow-sm">
+    <div className="motion-item rounded-2xl border bg-white p-5 shadow-sm">
       <p className="text-sm text-gray-500">{title}</p>
       <p className="mt-1 text-xl font-bold text-[#9a2119]">{value}</p>
     </div>
@@ -214,7 +214,7 @@ function InfoCard({ title, value }) {
 
 function SectionCard({ title, children }) {
   return (
-    <div className="rounded-2xl border bg-white p-5 shadow-sm">
+    <div className="motion-item rounded-2xl border bg-white p-5 shadow-sm">
       <h2 className="mb-3 text-lg font-semibold text-gray-800">{title}</h2>
       {children}
     </div>

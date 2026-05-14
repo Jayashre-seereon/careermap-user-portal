@@ -185,7 +185,7 @@ export default function LibraryPage() {
 
       {/* ── STREAMS ── */}
       {level === "streams" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {careerLibrary.streams.map((stream) => (
             <div
               key={stream.name}
@@ -211,7 +211,7 @@ export default function LibraryPage() {
 
       {/* ── CATEGORIES ── */}
       {level === "categories" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 gap-3">
           {(careerLibrary.categories[selectedStream] || []).map((category) => (
             <div
               key={category}
@@ -232,7 +232,7 @@ export default function LibraryPage() {
 
       {/* ── PROGRAMS ── */}
       {level === "programs" && (
-        <div className="flex flex-col gap-2">
+        <div className="content-stagger flex flex-col gap-2">
           {(
             careerLibrary.specializations[selectedProgram] ||
             careerLibrary.programs[selectedCategory] ||
@@ -272,7 +272,7 @@ export default function LibraryPage() {
 
       {/* ── DETAILS ── */}
       {level === "details" && (
-        <div className="space-y-3">
+        <div className="content-stagger space-y-3">
           {!detailUnlocked && (
             <PremiumGate
               title="Unlock Career Library"

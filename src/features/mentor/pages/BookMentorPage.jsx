@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { DatePicker, Select, Modal } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { mentors } from "../../../data/careermapData";
-import { PageHero } from "../../../components/ui";
+import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -65,7 +65,7 @@ const MentorCard = ({ mentor, isFree, onClick }) => (
   <div
     onClick={onClick}
     className="
-      group bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer relative overflow-hidden
+      motion-item group bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer relative overflow-hidden
       hover:-translate-y-0.5 hover:border-red-300 hover:shadow-lg hover:shadow-red-900/8
       transition-all duration-200
     "
@@ -174,6 +174,7 @@ export default function BookMentorPage() {
   /* ── Success screen ── */
   if (booked && selectedMentor) {
     return (
+      <ModuleScreen className="space-y-6">
       <div className="flex flex-col items-center justify-center text-center px-4 py-16">
         <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-800 text-2xl mb-4">
           ✓
@@ -191,16 +192,17 @@ export default function BookMentorPage() {
           ← Back to Mentors
         </Btn>
       </div>
+      </ModuleScreen>
     );
   }
 
   /* ── Main layout ── */
   return (
-    <div className="pb-12">
+    <ModuleScreen className="space-y-6 pb-12">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       {/* Hero */}
-      <div className="px-5 pt-6 pb-1">
+      <div className="motion-item px-5 pt-6 pb-1">
         <h1 className="text-3xl font-bold text-gray-900 leading-tight">Book a Mentor</h1>
         <p className="text-gray-400 mt-1.5 text-base font-light">
           Connect with experienced professionals for guided career sessions.
@@ -208,7 +210,7 @@ export default function BookMentorPage() {
       </div>
 
       {/* Mentor list */}
-      <div className="flex flex-col gap-3 px-5 py-5">
+      <div className="content-stagger flex flex-col gap-3 px-5 py-5">
         {mentors.map((mentor) => {
           const mentorFree = unlocked || canAccessFreeDetail("book-mentor", mentor.name);
           return (
@@ -397,6 +399,6 @@ export default function BookMentorPage() {
           </div>
         )}
       </Modal>
-    </div>
+    </ModuleScreen>
   );
 }
