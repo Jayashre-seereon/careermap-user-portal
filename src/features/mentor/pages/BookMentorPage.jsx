@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ArrowRightOutlined } from "@ant-design/icons";
 import { DatePicker, Select, Modal } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { mentors } from "../../../data/careermapData";
@@ -65,35 +66,38 @@ const MentorCard = ({ mentor, isFree, onClick }) => (
   <div
     onClick={onClick}
     className="
-      motion-item group bg-white border border-gray-200 rounded-2xl p-5 cursor-pointer relative overflow-hidden
-      hover:-translate-y-0.5 hover:border-red-300 hover:shadow-lg hover:shadow-red-900/8
+      motion-item group cursor-pointer relative overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white p-5
+      transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10
       transition-all duration-200
     "
   >
-    {/* Left accent bar */}
-    <div className="absolute top-0 left-0 w-1 h-full bg-gray-200 group-hover:bg-red-800 transition-colors duration-200 rounded-l-2xl" />
+    <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors duration-200 group-hover:bg-[#9a2119]" />
 
-    {/* Header row */}
-    <div className="flex items-start justify-between gap-4 mb-3 pl-2">
+    <div className="mb-3 flex items-start justify-between gap-4 pt-2">
       <div className="flex gap-3 items-start">
         <Avatar name={mentor.name} />
         <div>
-          <p className="text-base font-semibold text-gray-900">{mentor.name}</p>
-          <p className="text-sm text-red-700 mt-0.5">{mentor.specialty}</p>
+          <p className="m-0 text-base font-black text-[#1a0a09]">{mentor.name}</p>
+          <p className="mt-1 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">{mentor.specialty}</p>
         </div>
       </div>
       <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <span className="text-sm font-semibold text-red-800 whitespace-nowrap">{mentor.price}</span>
+        <span className="text-sm font-black whitespace-nowrap text-[#9a2119]">{mentor.price}</span>
         <Tag variant={isFree ? "free" : "lock"}>{isFree ? "FREE" : "LOCKED"}</Tag>
       </div>
     </div>
 
-    {/* Bio */}
-    <p className="text-sm text-gray-500 leading-relaxed mb-3 pl-2 font-light">{mentor.bio}</p>
+    <p className="mb-4 text-sm leading-relaxed text-gray-500">{mentor.bio}</p>
 
-    {/* Tags */}
-    <div className="flex flex-wrap gap-1.5 pl-2">
+    <div className="mb-4 flex flex-wrap gap-1.5">
       {mentor.tags.map((t) => <Tag key={t}>{t}</Tag>)}
+    </div>
+
+    <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
+      <span className="text-xs font-semibold text-[#8c6c67]">Tap to view mentor</span>
+      <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
+        Explore <ArrowRightOutlined />
+      </span>
     </div>
   </div>
 );
@@ -201,16 +205,14 @@ export default function BookMentorPage() {
     <ModuleScreen className="space-y-6 pb-12">
       <PageHero backOnly onBack={goToDashboard} />
 
-      {/* Hero */}
-      <div className="motion-item px-5 pt-6 pb-1">
-        <h1 className="text-3xl font-bold text-gray-900 leading-tight">Book a Mentor</h1>
-        <p className="text-gray-400 mt-1.5 text-base font-light">
+      <div className="motion-item">
+        <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
+        <p className="mt-1 mb-0 text-xs text-[#b8837e]">
           Connect with experienced professionals for guided career sessions.
         </p>
       </div>
 
-      {/* Mentor list */}
-      <div className="content-stagger flex flex-col gap-3 px-5 py-5">
+      <div className="content-stagger grid grid-cols-1 gap-4 lg:grid-cols-2">
         {mentors.map((mentor) => {
           const mentorFree = unlocked || canAccessFreeDetail("book-mentor", mentor.name);
           return (
@@ -227,8 +229,6 @@ export default function BookMentorPage() {
           );
         })}
       </div>
-
-    
 
       {/* Unlock modal */}
       <UnlockRedirectModal

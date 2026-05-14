@@ -95,83 +95,85 @@ export default function QuizPage() {
     const isLast = current === totalQ - 1;
 
     return (
-      <ModuleScreen maxWidthClass="max-w-xl" className="space-y-6">
+      <ModuleScreen maxWidthClass="max-w-3xl" className="space-y-5">
         <div className="flex items-center justify-between">
           <PageHero backOnly onBack={() => setActiveQuiz(null)} />
-          <span className="text-xs font-semibold text-gray-400">
+          <span className="text-xs font-semibold text-[#b8837e]">
             {current + 1} / {totalQ}
           </span>
         </div>
 
-        <div className="mb-8 h-[3px] overflow-hidden rounded-full bg-gray-100">
+        <div className="h-[3px] overflow-hidden rounded-full bg-gray-100">
           <div
             className="h-full rounded-full transition-all duration-300"
             style={{ width: `${progress}%`, background: "#9a2119" }}
           />
         </div>
 
-        <p className="mb-2 text-[11px] font-bold uppercase tracking-[.1em]" style={{ color: "#9a2119" }}>
-          {quizCatalog[activeQuiz]?.title || "Quiz"}
-        </p>
+        <div className="rounded-[24px] border border-[#f0e4e2] bg-white p-5 shadow-sm md:p-6">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-[#9a2119]">
+            {quizCatalog[activeQuiz]?.title || "Quiz"}
+          </p>
 
-        <h2 className="mb-7 text-xl font-bold leading-snug tracking-tight text-gray-900">
-          {question.q}
-        </h2>
+          <h2 className="mb-6 text-xl font-black leading-snug text-[#1a0a09] md:text-2xl">
+            {question.q}
+          </h2>
 
-        <div className="mb-7 flex flex-col gap-2.5">
-          {question.options.map((option, index) => {
-            const selected = answers[current] === index;
-            return (
-              <button
-                key={option}
-                onClick={() => {
-                  const next = [...answers];
-                  next[current] = index;
-                  setAnswers(next);
-                }}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-sm transition-all"
-                style={{
-                  border: `1.5px solid ${selected ? "#9a2119" : "#ede8e5"}`,
-                  background: selected ? "#fdf0ef" : "#fff",
-                  color: selected ? "#9a2119" : "#1a1512",
-                  fontWeight: selected ? 600 : 400,
-                }}
-              >
-                <span
-                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-[11px] font-bold"
+          <div className="mb-6 flex flex-col gap-3">
+            {question.options.map((option, index) => {
+              const selected = answers[current] === index;
+              return (
+                <button
+                  key={option}
+                  onClick={() => {
+                    const next = [...answers];
+                    next[current] = index;
+                    setAnswers(next);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left text-sm transition-all"
                   style={{
-                    background: selected ? "#9a2119" : "#f3eeec",
-                    color: selected ? "#fff" : "#7a6e68",
+                    border: `1.5px solid ${selected ? "#9a2119" : "#ede8e5"}`,
+                    background: selected ? "#fdf0ef" : "#fff",
+                    color: selected ? "#9a2119" : "#1a1512",
+                    fontWeight: selected ? 600 : 400,
                   }}
                 >
-                  {String.fromCharCode(65 + index)}
-                </span>
-                {option}
-              </button>
-            );
-          })}
-        </div>
+                  <span
+                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-[11px] font-bold"
+                    style={{
+                      background: selected ? "#9a2119" : "#f3eeec",
+                      color: selected ? "#fff" : "#7a6e68",
+                    }}
+                  >
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  {option}
+                </button>
+              );
+            })}
+          </div>
 
-        <button
-          onClick={() => (isLast ? setCompleted(true) : setCurrent((value) => value + 1))}
-          disabled={answers[current] === null}
-          className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-30"
-          style={{ background: "#9a2119" }}
-        >
-          {isLast ? "Finish quiz" : "Next question"}
-          <ArrowRightOutlined />
-        </button>
+          <button
+            onClick={() => (isLast ? setCompleted(true) : setCurrent((value) => value + 1))}
+            disabled={answers[current] === null}
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-30"
+            style={{ background: "#9a2119" }}
+          >
+            {isLast ? "Finish quiz" : "Next question"}
+            <ArrowRightOutlined />
+          </button>
+        </div>
       </ModuleScreen>
     );
   }
 
   return (
-    <ModuleScreen className="space-y-7">
+    <ModuleScreen className="space-y-5">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Choose your quiz</h1>
-        <p className="mt-1 text-sm text-gray-400">
+        <h1 className="m-0 text-2xl font-black tracking-tight text-[#1a0a09]">Choose your quiz</h1>
+        <p className="mt-1 mb-0 text-xs text-[#b8837e]">
           Test your knowledge and identify where to grow next.
         </p>
       </div>
@@ -219,7 +221,7 @@ export default function QuizPage() {
               {quiz.description}
             </p>
 
-            <div className="relative flex items-center justify-between">
+            <div className="relative flex items-center justify-between border-t border-[#f0e4e2] pt-3">
               <span
                 className="rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide"
                 style={{
@@ -233,24 +235,9 @@ export default function QuizPage() {
 
               <button
                 onClick={() => setActiveQuiz(index)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-sm transition-all duration-300 hover:scale-110"
-                style={{
-                  background: "#fdf0ef",
-                  color: "#9a2119",
-                  border: "1.5px solid #f5cdc9",
-                }}
-                onMouseEnter={(event) => {
-                  event.currentTarget.style.color = "#fff";
-                  event.currentTarget.style.background = "#9a2119";
-                  event.currentTarget.style.borderColor = "#9a2119";
-                }}
-                onMouseLeave={(event) => {
-                  event.currentTarget.style.color = "#9a2119";
-                  event.currentTarget.style.background = "#fdf0ef";
-                  event.currentTarget.style.borderColor = "#f5cdc9";
-                }}
+                className="flex items-center gap-1 text-sm font-bold text-[#9a2119] transition-colors hover:text-[#7a1a13]"
               >
-                <ArrowRightOutlined />
+                Explore <ArrowRightOutlined />
               </button>
             </div>
           </div>
