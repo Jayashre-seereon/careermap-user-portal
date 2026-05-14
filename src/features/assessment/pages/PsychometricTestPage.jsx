@@ -61,14 +61,14 @@ export default function PsychometricTestPage() {
 
   function handleBack() {
     if (stage === "result") {
-      navigate("/app/assessment");
+      navigate("/app/assessment", { replace: true });
       return;
     }
     if (current > 0) {
       setCurrent((value) => value - 1);
       return;
     }
-    navigate("/app/assessment");
+    navigate("/app/assessment", { replace: true });
   }
 
   function handleRetake() {
@@ -134,7 +134,7 @@ export default function PsychometricTestPage() {
           <div className="flex gap-2 px-[18px] py-[14px]">
             <button
               className="flex-1 rounded-[10px] border border-[#9a2119] bg-[#9a2119] px-4 py-2.5 text-[13px] font-medium text-white"
-              onClick={() => navigate("/app/dashboard")}
+              onClick={() => navigate("/app/dashboard", { replace: true })}
             >
               Dashboard
             </button>
