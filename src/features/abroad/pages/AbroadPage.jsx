@@ -206,15 +206,6 @@ export default function AbroadPage() {
               className="group relative cursor-pointer overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:border-[#d9b5ad] hover:shadow-lg hover:shadow-[#9a2119]/10"
             >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#7f1913] via-[#9a2119] to-[#d56547]" />
-              {!unlocked && (
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                    countryFree ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {countryFree ? "FREE" : "LOCK"}
-                </span>
-              )}
 
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-3">

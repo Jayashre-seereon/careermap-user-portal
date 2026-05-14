@@ -209,13 +209,19 @@ export default function EntranceExamPage() {
               {item.date}
             </div>
 
-            {/* tags */}
-            <div className="flex gap-1.5 mt-auto pt-1 border-t border-[#f0e4e2]">
+            <div className="flex gap-1.5 pt-1">
               <span className="text-[10px] font-bold rounded-md px-2 py-0.5 bg-gray-100 text-gray-500">
                 {item.type}
               </span>
               <span className="text-[10px] font-bold rounded-md px-2 py-0.5 bg-[#fdf0ee] text-[#9a2119]">
                 {item.category}
+              </span>
+            </div>
+
+            <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
+              <span className="text-xs font-semibold text-[#8c6c67]">Tap to explore details</span>
+              <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
+                Explore <ArrowRightOutlined />
               </span>
             </div>
           </div>

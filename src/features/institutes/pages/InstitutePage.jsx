@@ -186,13 +186,13 @@ export default function InstitutePage() {
                   </span>
                 </div>
 
-                <div className="flex justify-between mt-3 text-xs">
+                <div className="mt-3 flex items-center justify-between border-t border-[#f0e4e2] pt-3 text-xs">
                   <span className="bg-[#fdf0ee] text-[#9a2119] px-2 py-1 rounded">
                     {item.type}
                   </span>
 
-                  <span className="flex items-center gap-1 text-[#9a2119]">
-                    View <RightOutlined />
+                  <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
+                    Explore <RightOutlined />
                   </span>
                 </div>
               </div>

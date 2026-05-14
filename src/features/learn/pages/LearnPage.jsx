@@ -115,7 +115,7 @@ export default function LearnPage() {
                   </div>
                 ) : null}
                 
-                <Space direction="vertical" size="middle" className="!w-full !pr-16">
+                <div className="flex h-full w-full flex-col gap-4 pr-16">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-lg font-black text-ink leading-tight">{item.title}</div>
@@ -134,23 +134,25 @@ export default function LearnPage() {
                     <SoftTag color="gold">{(item.views / 1000).toFixed(1)}k views</SoftTag>
                   </Space>
 
-                  <Button
-                    type="primary"
-                    block
-                    ghost={!unlocked && !detailUnlocked}
-                    className="!rounded-lg font-bold mt-2"
-                    onClick={() => {
-                      if (!unlocked && !detailUnlocked) {
-                        setUnlockModalItem(item.title);
-                        return;
-                      }
-                      registerFreeDetailAccess("master-class", item.title);
-                      window.open(item.url, "_blank", "noopener,noreferrer");
-                    }}
-                  >
-                    {!unlocked ? (detailUnlocked ? "Watch 1 Free Class" : "Unlock More Classes") : "Watch Video"}
-                  </Button>
-                </Space>
+                  <div className="mt-auto flex w-full justify-end pt-2">
+                    <Button
+                      type="primary"
+                      ghost={!unlocked && !detailUnlocked}
+                      size="middle"
+                      className="!h-9 !rounded-lg !px-4 !font-bold"
+                      onClick={() => {
+                        if (!unlocked && !detailUnlocked) {
+                          setUnlockModalItem(item.title);
+                          return;
+                        }
+                        registerFreeDetailAccess("master-class", item.title);
+                        window.open(item.url, "_blank", "noopener,noreferrer");
+                      }}
+                    >
+                      {!unlocked ? (detailUnlocked ? "Watch 1 Free Class" : "Unlock More Classes") : "Watch Video"}
+                    </Button>
+                  </div>
+                </div>
               </Card>
             </List.Item>
           );
