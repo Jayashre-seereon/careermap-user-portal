@@ -14,10 +14,10 @@ export default function SubscriptionPage() {
   const returnTo = params.get("returnTo");
 
   return (
-    <ModuleScreen className="space-y-10">
+    <ModuleScreen className="space-y-6">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
-      <div className="text-center">
+      <div className="text-left">
         <h2 className="text-2xl font-black text-ink">Choose Your Plan</h2>
         <p className="text-muted text-sm mt-1">Four options tailored to your growth</p>
       </div>
