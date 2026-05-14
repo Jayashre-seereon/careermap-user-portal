@@ -187,7 +187,7 @@ export default function ScholarshipPage() {
       />
 
       {/* Equal-size card grid */}
-      <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {
           const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
           const isActive = item.status === "Active";
@@ -199,27 +199,28 @@ export default function ScholarshipPage() {
                 if (!unlocked && !itemFree) { setUnlockModalItem(item.name); return; }
                 openScholarship(item);
               }}
-              className={`group bg-white rounded-2xl border cursor-pointer flex flex-col gap-2.5 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10 ${
+              className={`group overflow-hidden rounded-[24px] border bg-white cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10 ${
                 isActive ? "border-[#f0e4e2] hover:border-[#9a2119]" : "border-gray-100 hover:border-[#9a2119]"
               }`}
             >
-              {/* top accent bar */}
               <div className={`h-[3px] w-full ${isActive ? "bg-[#9a2119]" : "bg-gray-200 group-hover:bg-[#9a2119]"} transition-colors`} />
 
-              <div className="px-4 pb-4 flex flex-col gap-2.5 flex-1">
-                {/* header row */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-bold text-[#1a0a09] leading-snug m-0 group-hover:text-[#9a2119] transition-colors line-clamp-2">
+              <div className="flex h-full flex-col gap-4 px-5 pb-5 pt-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fdf0ee] text-lg text-[#9a2119] transition-colors group-hover:bg-[#9a2119] group-hover:text-white">
+                      <DollarOutlined />
+                    </div>
+                    <p className="m-0 text-[16px] font-black leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119] line-clamp-2">
                       {item.name}
                     </p>
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-0.5 mb-0">
+                    <p className="mt-2 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">
                       {item.provider}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
+                  <div className="flex shrink-0 flex-col items-end gap-2">
                     <span
-                      className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-2.5 py-0.5 ${
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
                         isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
                       }`}
                     >
@@ -228,7 +229,7 @@ export default function ScholarshipPage() {
                     </span>
                     {!unlocked && (
                       <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-2.5 py-0.5 ${
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
                           itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"
                         }`}
                       >
@@ -239,18 +240,23 @@ export default function ScholarshipPage() {
                   </div>
                 </div>
 
-                {/* eligibility */}
-                <p className="text-xs text-gray-500 leading-relaxed m-0 line-clamp-2 flex-1">
-                  {item.eligibility}
-                </p>
-
-                {/* footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-[#f0e4e2] mt-auto">
-                  <span className="text-lg font-black text-[#9a2119]">{item.amount}</span>
-                  <span className="flex items-center gap-1 text-xs text-[#b8837e] font-medium">
-                    <ClockCircleOutlined className="text-xs" />
-                    {item.deadline}
-                  </span>
+                <div className="mt-auto space-y-3 border-t border-[#f0e4e2] pt-3">
+                  <div className="flex items-center gap-2 text-sm font-black text-[#9a2119]">
+                    <DollarOutlined />
+                    <span>{item.amount}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#8c6c67]">
+                    <CalendarOutlined className="text-[#9a2119]" />
+                    <span>{item.deadline}</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-semibold text-[#8c6c67]">
+                      Tap to view details
+                    </span>
+                    <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
+                      Explore <ArrowRightOutlined />
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
