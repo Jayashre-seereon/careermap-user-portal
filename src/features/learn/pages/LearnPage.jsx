@@ -115,8 +115,8 @@ export default function LearnPage() {
                   </div>
                 ) : null}
                 
-                <div className="flex h-full w-full flex-col gap-4 pr-16">
-                  <div className="flex items-start justify-between gap-3">
+                <div className="flex h-full w-full flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3 pr-16">
                     <div>
                       <div className="text-lg font-black text-ink leading-tight">{item.title}</div>
                       <div className="mt-1 text-sm text-muted font-medium">{item.mentor}</div>
