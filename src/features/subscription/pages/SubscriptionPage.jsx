@@ -92,13 +92,14 @@ export default function SubscriptionPage() {
                   <Button
                     block
                     type={isSelected ? "default" : "primary"}
+                    disabled={isSelected}
                     size="large"
                     className={`!h-11 !rounded-xl !text-sm !font-bold transition-transform active:scale-95 ${
                       isSelected ? "!bg-gray-100 !text-gray-400 !border-transparent" : "shadow-md"
                     }`}
                     onClick={() => navigate(`/checkout?planId=${plan.id}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`)}
                   >
-                    {isSelected ? "Active" : "Select"}
+                    {isSelected ? "Subscribed" : "Select"}
                   </Button>
                 </div>
               </Card>
