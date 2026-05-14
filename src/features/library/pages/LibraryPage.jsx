@@ -19,12 +19,12 @@ import {
   SolutionOutlined,
   ArrowRightOutlined,
 } from "@ant-design/icons";
-import { Button, Modal, Space, Timeline, Typography } from "antd";
+import { Button, Space, Timeline, Typography } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { careerLibrary } from "../../../data/careermapData";
 import { ModuleScreen, PageHero, SectionCard, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
-import { PremiumGate, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 
 const { Paragraph } = Typography;
 
@@ -394,39 +394,14 @@ export default function LibraryPage() {
       )}
 
       {/* ── Unlock modal ── */}
-      <Modal
+      <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
+        title="Unlock Career Library"
+        itemLabel={unlockModalItem}
+        description="Your free Career Library access has already been used. Subscribe to unlock"
         onCancel={() => setUnlockModalItem(null)}
-        footer={null}
-        centered
-        title={
-          <div className="flex items-center gap-2 text-[#1a0a09] font-black text-lg">
-            <LockOutlined className="text-[#9a2119]" />
-            Unlock Career Library
-          </div>
-        }
-        className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!overflow-hidden [&_.ant-modal-header]:!border-b [&_.ant-modal-header]:!border-[#f0e4e2] [&_.ant-modal-header]:!pb-4"
-      >
-        <p className="text-sm text-gray-500 leading-relaxed mt-3 mb-5">
-          Your free Career Library access has already been used. Subscribe to unlock{" "}
-          <strong className="text-[#1a0a09]">{unlockModalItem}</strong> and continue without losing your place.
-        </p>
-        <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => setUnlockModalItem(null)}
-            className="!rounded-xl !border-[#f0e4e2] !text-gray-500 hover:!border-[#9a2119] hover:!text-[#9a2119]"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="primary"
-            onClick={handleGoToPlans}
-            className="!rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold hover:!bg-[#7a1a13]"
-          >
-            Unlock Now
-          </Button>
-        </div>
-      </Modal>
+        onConfirm={handleGoToPlans}
+      />
     </ModuleScreen>
   );
 }

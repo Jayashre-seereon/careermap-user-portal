@@ -71,7 +71,7 @@ export default function ScholarshipPage() {
     return (
       <ModuleScreen className="space-y-4">
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
-        <div className="content-stagger">
+        <div className="content-stagger space-y-4">
           {!unlocked && !detailUnlocked ? (
             <PremiumGate
               title="Unlock Scholarships"
@@ -81,11 +81,11 @@ export default function ScholarshipPage() {
           ) : null}
 
           {/* Overview card */}
-          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+          <div className="bg-white rounded-[26px] border border-[#f0e4e2] overflow-hidden shadow-sm">
             <div className={`h-1 ${isActive ? "bg-[#9a2119]" : "bg-gray-200"}`} />
-            <div className="p-5 space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
+            <div className="p-6 space-y-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-1.5">
                   <h2 className="text-xl font-black text-[#1a0a09] leading-snug m-0">
                     {selectedItem.name}
                   </h2>
@@ -105,50 +105,50 @@ export default function ScholarshipPage() {
 
               <div className="h-px bg-[#f0e4e2]" />
 
-              <p className="text-sm text-gray-500 leading-relaxed m-0">
+              <p className="text-sm text-gray-500 leading-7 m-0">
                 {selectedItem.description}
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#f5e4df] bg-[#fff8f6] px-4 py-4">
                   <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
                     <DollarOutlined className="text-[#9a2119]" /> Amount
                   </p>
                   <p className="text-2xl font-black text-[#9a2119] m-0">{selectedItem.amount}</p>
                 </div>
-                <div>
+                <div className="rounded-2xl border border-[#f5e4df] bg-[#fff8f6] px-4 py-4">
                   <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
                     <CalendarOutlined className="text-[#9a2119]" /> Deadline
                   </p>
                   <p className="text-sm font-semibold text-[#1a0a09] m-0">{selectedItem.deadline}</p>
                 </div>
-                <div className="col-span-2">
+                <div className="rounded-2xl border border-[#f5e4df] bg-[#fff8f6] px-4 py-4 sm:col-span-2">
                   <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
                     <TeamOutlined className="text-[#9a2119]" /> Eligibility
                   </p>
-                  <p className="text-sm font-medium text-[#1a0a09] m-0">{selectedItem.eligibility}</p>
+                  <p className="text-sm font-medium leading-7 text-[#1a0a09] m-0">{selectedItem.eligibility}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+          <div className="bg-white rounded-[26px] border border-[#f0e4e2] overflow-hidden shadow-sm">
             <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
               <FileTextOutlined className="text-[#9a2119] text-sm" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09] m-0">
                 Requirements
               </h3>
             </div>
-            <div className="px-5 py-2">
+            <div className="px-5 py-3">
               {selectedItem.requirements.map((req, i) => (
                 <div
                   key={i}
-                  className={`flex items-start gap-3 py-2.5 ${
+                  className={`flex items-start gap-3 py-3 ${
                     i < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
                   }`}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] mt-2 shrink-0" />
-                  <p className="text-sm text-gray-600 leading-relaxed m-0">{req}</p>
+                  <p className="text-sm text-gray-600 leading-7 m-0">{req}</p>
                 </div>
               ))}
             </div>
@@ -160,7 +160,7 @@ export default function ScholarshipPage() {
             target="_blank"
             block
             icon={<ArrowRightOutlined />}
-            className="!h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
+            className="!mt-1 !h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
           >
             Apply Now
           </Button>

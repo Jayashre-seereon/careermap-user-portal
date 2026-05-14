@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   ArrowRightOutlined,
   CheckCircleOutlined,
@@ -13,7 +14,7 @@ import { Button } from "antd";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { assessmentFeatures, assessmentPolicies } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
-import { PremiumGate, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 
 const featureIcons = [
   <SolutionOutlined key="domains" />,
@@ -57,6 +58,7 @@ export default function AssessmentPage() {
   const { activePlanId, isUnlocked } = useAppState();
   const { navigate, location } = usePortalNavigation();
   const testUnlocked = isUnlocked("psychometric-test");
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
   return (
     <ModuleScreen className="space-y-6">
@@ -85,7 +87,7 @@ export default function AssessmentPage() {
             {testUnlocked ? <UnlockOutlined /> : <LockOutlined />}
             {testUnlocked ? "Unlocked" : "Locked"}
           </div>
-          {testUnlocked && (
+          {testUnlocked ? (
             <Button
               type="primary"
               size="large"
@@ -94,6 +96,15 @@ export default function AssessmentPage() {
               onClick={() => navigate("/app/psychometric-test")}
             >
               Continue to full test <ArrowRightOutlined />
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              size="large"
+              className="!h-11 !rounded-xl !border-0 !bg-[#b12d1f] !px-5 !font-semibold hover:!bg-[#922316]"
+              onClick={() => setUnlockModalOpen(true)}
+            >
+              Unlock Test <ArrowRightOutlined />
             </Button>
           )}
         </div>
@@ -115,11 +126,28 @@ export default function AssessmentPage() {
       </div>
 
       {!testUnlocked && (
-        <PremiumGate
-          title="Unlock test"
-          description="Subscribe to the Psychometric Test plan to take the full assessment and unlock the report flow."
-          returnTo={location.pathname}
-        />
+        <div className="rounded-[28px] border border-[#f0e4e2] bg-white px-5 py-5 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#b12d1f]">
+                <LockOutlined />
+              </div>
+              <div>
+                <div className="text-base font-black text-[#231815]">Unlock Assessment</div>
+                <p className="m-0 mt-1 text-sm leading-7 text-[#65544f]">
+                  Subscribe to the Psychometric Test plan to take the full assessment and unlock the report flow.
+                </p>
+              </div>
+            </div>
+            <Button
+              type="primary"
+              className="!h-11 !rounded-xl !bg-[#b12d1f] !border-[#b12d1f] !px-5 !font-semibold"
+              onClick={() => setUnlockModalOpen(true)}
+            >
+              Unlock Now
+            </Button>
+          </div>
+        </div>
       )}
 
       <div className="rounded-3xl border border-[rgba(120,74,62,0.16)] bg-white px-5 pb-[18px] pt-4 shadow-[0_8px_24px_rgba(53,26,20,0.05)]">
@@ -137,6 +165,18 @@ export default function AssessmentPage() {
           </div>
         </div>
       </div>
+
+      <UnlockRedirectModal
+        open={unlockModalOpen}
+        title="Unlock Assessment"
+        itemLabel="Psychometric Test"
+        description="Your current access does not include this module. Subscribe to unlock"
+        onCancel={() => setUnlockModalOpen(false)}
+        onConfirm={() => {
+          setUnlockModalOpen(false);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(location.pathname)}`);
+        }}
+      />
     </ModuleScreen>
   );
 }

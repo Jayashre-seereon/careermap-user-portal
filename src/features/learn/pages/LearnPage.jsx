@@ -157,7 +157,18 @@ export default function LearnPage() {
         }}
       />
 
-    
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Master Classes"
+        itemLabel={unlockModalItem}
+        description="Your free master class access has already been used. Subscribe to unlock"
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => {
+          const returnTo = buildLearnReturnTo(unlockModalItem);
+          setUnlockModalItem(null);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+        }}
+      />
     </ModuleScreen>
   );
 }

@@ -22,9 +22,21 @@ export default function PaymentSuccessPage() {
     activatePlan(plan.id);
   }, [activatePlan, plan.id]);
 
+  function resolveReturnPath(path) {
+    if (!path) {
+      return "/app/dashboard";
+    }
+
+    try {
+      const decoded = decodeURIComponent(path);
+      return decoded || "/app/dashboard";
+    } catch {
+      return path;
+    }
+  }
+
   const handleContinue = () => {
-    // If returnTo exists, decode and navigate there; otherwise go to dashboard
-    const destination = returnTo ? decodeURIComponent(returnTo) : "/app/dashboard";
+    const destination = resolveReturnPath(returnTo);
     navigate(destination);
   };
 
@@ -87,7 +99,7 @@ export default function PaymentSuccessPage() {
                 onClick={handleContinue}
                 className="!h-14 !rounded-2xl !text-base !font-bold shadow-lg shadow-brand/20"
               >
-                Continue to Dashboard
+                Continue
               </Button>
               
              
