@@ -1,9 +1,9 @@
 import React from "react";
-import { Button, Card, Col, List, Row, Space } from "antd";
+import { Button, Card, Col, List, Row } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
 import { subscriptions } from "../../../data/careermapData";
-import { ModuleScreen, PageHero, SoftTag } from "../../../components/ui";
+import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
@@ -26,6 +26,10 @@ export default function SubscriptionPage() {
       <Row gutter={[16, 16]} justify="center">
         {subscriptions.map((plan) => {
           const isSelected = activePlanIds.includes(plan.id);
+          const ribbonLabel = plan.highestseller ? "Best Seller" : plan.recommended ? "Recommended" : null;
+          const ribbonClass = plan.highestseller
+            ? "bg-[#d4a63a] text-[#fffaf0]"
+            : "bg-[#9a2119] text-white";
 
           return (
             <Col xs={24} sm={12} lg={6} key={plan.id}>
@@ -35,15 +39,28 @@ export default function SubscriptionPage() {
                 }`}
                 bodyStyle={{ padding: "0", display: "flex", flexDirection: "column", flex: 1 }}
               >
+               {ribbonLabel ? (
+  <div className="pointer-events-none absolute right-0 top-0 z-10 h-[200px] w-[200px] overflow-hidden">
+    {/* First ribbon */}
+    <div
+      className={`absolute right-[-48px] top-[8px] w-[200px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm ${ribbonClass}`}
+    >
+      {ribbonLabel}
+    </div>
+    {/* Second ribbon (only if both flags true) */}
+    {plan.highestseller && plan.recommended && (
+      <div className="absolute right-[-48px] top-[38px] w-[200px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm bg-[#9a2119] text-white">
+        Recommended
+      </div>
+    )}
+  </div>
+) : null}
+
                 {/* Header Area */}
                 <div className={`p-5 ${isSelected ? "bg-brand/5" : "bg-gray-50/50"}`}>
                   <div className="flex flex-col gap-2 mb-3">
                     <div className="text-sm font-bold text-ink/40 uppercase tracking-widest">
                       {plan.name}
-                    </div>
-                    <div className="flex gap-1">
-                      {plan.recommended && <SoftTag color="red" className="!text-[9px]">Recommended</SoftTag>}
-                      {plan.highestseller && <SoftTag color="gold" className="!text-[9px]">Best Seller</SoftTag>}
                     </div>
                   </div>
                   
