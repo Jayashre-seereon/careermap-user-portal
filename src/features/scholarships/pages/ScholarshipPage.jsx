@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
-import { Button, List, Tabs } from "antd";
+import { Button, Tabs } from "antd";
+import {
+  ClockCircleOutlined,
+  LockOutlined,
+  UnlockOutlined,
+  CheckCircleOutlined,
+  MinusCircleOutlined,
+  ArrowRightOutlined,
+  FileTextOutlined,
+  DollarOutlined,
+  CalendarOutlined,
+  TeamOutlined,
+} from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
 import { scholarships } from "../../../data/careermapData";
-import { ModuleScreen, PageHero, SoftTag, Text } from "../../../components/ui";
+import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
-import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+import {
+  PremiumGate,
+  UnlockRedirectModal,
+  usePortalNavigation,
+} from "../../portal/components/portalPageShared";
 
 export default function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
@@ -14,7 +30,9 @@ export default function ScholarshipPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const unlocked = isUnlocked("scholarship");
-  const filtered = scholarships.filter((item) => activeStatus === "All" || item.status === activeStatus);
+  const filtered = scholarships.filter(
+    (item) => activeStatus === "All" || item.status === activeStatus
+  );
 
   function buildScholarshipReturnTo(itemName = selectedItem?.name) {
     const nextParams = new URLSearchParams();
@@ -29,6 +47,12 @@ export default function ScholarshipPage() {
     setSelectedItem(item);
   }
 
+  function handleGoToPlans(itemName = unlockModalItem) {
+    const returnTo = buildScholarshipReturnTo(itemName);
+    setUnlockModalItem(null);
+    navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+  }
+
   useEffect(() => {
     const status = params.get("status");
     const itemName = params.get("item");
@@ -39,8 +63,11 @@ export default function ScholarshipPage() {
     }
   }, [params]);
 
+  /* ── DETAIL VIEW ── */
   if (selectedItem) {
     const detailUnlocked = unlocked || canAccessFreeDetail("scholarship", selectedItem.name);
+    const isActive = selectedItem.status === "Active";
+
     return (
       <ModuleScreen className="space-y-4">
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
@@ -53,48 +80,79 @@ export default function ScholarshipPage() {
           />
         ) : null}
 
-        {/* Overview */}
+        {/* Overview card */}
         <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-[#9a2119] to-rose-400" />
+          <div className={`h-1 ${isActive ? "bg-[#9a2119]" : "bg-gray-200"}`} />
           <div className="p-5 space-y-4">
+
+            {/* header */}
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold text-[#1a0a09] leading-snug">{selectedItem.name}</h2>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-1">{selectedItem.provider}</p>
+                <h2 className="text-xl font-black text-[#1a0a09] leading-snug m-0">
+                  {selectedItem.name}
+                </h2>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-1 mb-0">
+                  {selectedItem.provider}
+                </p>
               </div>
-              <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 ${selectedItem.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
+              <span
+                className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 ${
+                  isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
+                }`}
+              >
+                {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
                 {selectedItem.status}
               </span>
             </div>
 
             <div className="h-px bg-[#f0e4e2]" />
-            <p className="text-sm text-gray-500 leading-relaxed">{selectedItem.description}</p>
 
+            <p className="text-sm text-gray-500 leading-relaxed m-0">
+              {selectedItem.description}
+            </p>
+
+            {/* meta grid */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">Amount</p>
-                <p className="text-2xl font-black text-[#9a2119]">{selectedItem.amount}</p>
+                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                  <DollarOutlined className="text-[#9a2119]" /> Amount
+                </p>
+                <p className="text-2xl font-black text-[#9a2119] m-0">{selectedItem.amount}</p>
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">Deadline</p>
-                <p className="text-sm font-semibold text-[#1a0a09]">{selectedItem.deadline}</p>
+                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                  <CalendarOutlined className="text-[#9a2119]" /> Deadline
+                </p>
+                <p className="text-sm font-semibold text-[#1a0a09] m-0">{selectedItem.deadline}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">Eligibility</p>
-                <p className="text-sm font-medium text-[#1a0a09]">{selectedItem.eligibility}</p>
+                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                  <TeamOutlined className="text-[#9a2119]" /> Eligibility
+                </p>
+                <p className="text-sm font-medium text-[#1a0a09] m-0">{selectedItem.eligibility}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Requirements */}
-        <div className="bg-white rounded-2xl border border-[#f0e4e2] p-5">
-          <h3 className="text-base font-bold text-[#1a0a09] mb-3">Requirements</h3>
-          <div className="divide-y divide-[#fdf0ee]">
+        <div className="bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
+            <FileTextOutlined className="text-[#9a2119] text-sm" />
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09] m-0">
+              Requirements
+            </h3>
+          </div>
+          <div className="px-5 py-2">
             {selectedItem.requirements.map((req, i) => (
-              <div key={i} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                <div className="w-2 h-2 rounded-full bg-[#9a2119] mt-1.5 shrink-0" />
-                <p className="text-sm text-gray-600 leading-relaxed">{req}</p>
+              <div
+                key={i}
+                className={`flex items-start gap-3 py-2.5 ${
+                  i < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] mt-2 shrink-0" />
+                <p className="text-sm text-gray-600 leading-relaxed m-0">{req}</p>
               </div>
             ))}
           </div>
@@ -105,20 +163,22 @@ export default function ScholarshipPage() {
           href={selectedItem.link}
           target="_blank"
           block
-          className="!h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13] hover:!border-[#7a1a13]"
+          icon={<ArrowRightOutlined />}
+          className="!h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
         >
-          Apply Now →
+          Apply Now
         </Button>
       </ModuleScreen>
     );
   }
 
+  /* ── LIST VIEW ── */
   return (
     <ModuleScreen className="space-y-4">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
       <div>
-        <h1 className="text-2xl font-black text-[#1a0a09]">Scholarships</h1>
+        <h1 className="text-2xl font-black text-[#1a0a09] m-0">Scholarships</h1>
         <p className="text-xs text-[#b8837e] mt-1">{filtered.length} opportunities found</p>
       </div>
 
@@ -129,54 +189,86 @@ export default function ScholarshipPage() {
         className="[&_.ant-tabs-tab]:font-semibold [&_.ant-tabs-tab]:text-xs [&_.ant-tabs-tab]:uppercase [&_.ant-tabs-tab]:tracking-widest [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-[#9a2119] [&_.ant-tabs-ink-bar]:!bg-[#9a2119] [&_.ant-tabs-nav::before]:!border-[#f0e4e2]"
       />
 
-      <List
-        grid={{ gutter: 16, xs: 1, lg: 2 }}
-        dataSource={filtered}
-        renderItem={(item) => {
+      {/* Equal-size card grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {filtered.map((item) => {
           const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
+          const isActive = item.status === "Active";
+
           return (
-            <List.Item className="!h-full">
-              <div
-                className="group bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden cursor-pointer h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#9a2119]/10 hover:border-[#9a2119]"
-                onClick={() => {
-                  if (!unlocked && !itemFree) { setUnlockModalItem(item.name); return; }
-                  openScholarship(item);
-                }}
-              >
-                <div className={`h-1 transition-all ${item.status === "Active" ? "bg-gradient-to-r from-[#9a2119] to-rose-400" : "bg-gray-200 group-hover:bg-gradient-to-r group-hover:from-[#9a2119] group-hover:to-rose-400"}`} />
-                <div className="p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-base font-bold text-[#1a0a09] leading-snug">{item.name}</p>
-                      <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-0.5">{item.provider}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <span className={`text-[10px] font-bold uppercase tracking-wide rounded-full px-2.5 py-0.5 ${item.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
-                        {item.status}
-                      </span>
-                      {!unlocked && (
-                        <span className={`text-[10px] font-bold rounded-full px-2.5 py-0.5 ${itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"}`}>
-                          {itemFree ? "FREE" : "🔒 LOCK"}
-                        </span>
-                      )}
-                    </div>
+            <div
+              key={item.name}
+              onClick={() => {
+                if (!unlocked && !itemFree) { setUnlockModalItem(item.name); return; }
+                openScholarship(item);
+              }}
+              className={`group bg-white rounded-2xl border cursor-pointer flex flex-col gap-2.5 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10 ${
+                isActive ? "border-[#f0e4e2] hover:border-[#9a2119]" : "border-gray-100 hover:border-[#9a2119]"
+              }`}
+            >
+              {/* top accent bar */}
+              <div className={`h-[3px] w-full ${isActive ? "bg-[#9a2119]" : "bg-gray-200 group-hover:bg-[#9a2119]"} transition-colors`} />
+
+              <div className="px-4 pb-4 flex flex-col gap-2.5 flex-1">
+                {/* header row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-[#1a0a09] leading-snug m-0 group-hover:text-[#9a2119] transition-colors line-clamp-2">
+                      {item.name}
+                    </p>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-0.5 mb-0">
+                      {item.provider}
+                    </p>
                   </div>
-
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{item.eligibility}</p>
-
-                  <div className="h-px bg-[#f0e4e2]" />
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-black text-[#9a2119]">{item.amount}</span>
-                    <span className="text-xs text-[#b8837e] font-medium">⏰ {item.deadline}</span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span
+                      className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-2.5 py-0.5 ${
+                        isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
+                      {item.status}
+                    </span>
+                    {!unlocked && (
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold rounded-full px-2.5 py-0.5 ${
+                          itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"
+                        }`}
+                      >
+                        {itemFree ? <UnlockOutlined /> : <LockOutlined />}
+                        {itemFree ? "Free" : "Locked"}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>
-            </List.Item>
-          );
-        }}
-      />
 
+                {/* eligibility */}
+                <p className="text-xs text-gray-500 leading-relaxed m-0 line-clamp-2 flex-1">
+                  {item.eligibility}
+                </p>
+
+                {/* footer */}
+                <div className="flex items-center justify-between pt-2 border-t border-[#f0e4e2] mt-auto">
+                  <span className="text-lg font-black text-[#9a2119]">{item.amount}</span>
+                  <span className="flex items-center gap-1 text-xs text-[#b8837e] font-medium">
+                    <ClockCircleOutlined className="text-xs" />
+                    {item.deadline}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Scholarships"
+        itemLabel={unlockModalItem}
+        description="Your free scholarship access has already been used. Subscribe to unlock"
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => handleGoToPlans()}
+      />
     </ModuleScreen>
   );
 }
