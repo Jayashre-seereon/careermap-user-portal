@@ -10,7 +10,7 @@ import { usePortalNavigation } from "../../portal/components/portalPageShared";
 const { Text } = Typography;
 
 export default function PaymentSuccessPage() {
-  const { activatePlan } = useAppState();
+  const { activatePlan, activePlanId } = useAppState();
   const { navigate } = usePortalNavigation();
   const [params] = useSearchParams();
   const planId = params.get("planId");
@@ -19,8 +19,10 @@ export default function PaymentSuccessPage() {
   const plan = subscriptions.find((item) => item.id === planId) || subscriptions[0];
 
   useEffect(() => {
-    activatePlan(plan.id);
-  }, [activatePlan, plan.id]);
+    if (activePlanId !== plan.id) {
+      activatePlan(plan.id);
+    }
+  }, [activePlanId, activatePlan, plan.id]);
 
   function resolveReturnPath(path) {
     if (!path) {
@@ -28,7 +30,14 @@ export default function PaymentSuccessPage() {
     }
 
     try {
-      const decoded = decodeURIComponent(path);
+      let decoded = path;
+      while (decoded.includes("%")) {
+        const next = decodeURIComponent(decoded);
+        if (next === decoded) {
+          break;
+        }
+        decoded = next;
+      }
       return decoded || "/app/dashboard";
     } catch {
       return path;

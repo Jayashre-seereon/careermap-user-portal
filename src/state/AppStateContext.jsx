@@ -104,7 +104,13 @@ export function AppStateProvider({ children }) {
         return planFeatures[activePlanId]?.includes(feature);
       },
       activatePlan(planId) {
-        setState((current) => ({ ...current, activePlanId: planId }));
+        setState((current) => {
+          if (current.activePlanId === planId) {
+            return current;
+          }
+
+          return { ...current, activePlanId: planId };
+        });
       },
       authenticate() {
         setState((current) => ({ ...current, authenticated: true }));
