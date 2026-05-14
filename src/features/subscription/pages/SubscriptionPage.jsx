@@ -42,17 +42,18 @@ export default function SubscriptionPage() {
                {ribbonLabel ? (
   <div className="pointer-events-none absolute right-0 top-0 z-10 h-[200px] w-[200px] overflow-hidden">
     {/* First ribbon */}
-    <div
-      className={`absolute right-[-48px] top-[8px] w-[200px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm ${ribbonClass}`}
-    >
-      {ribbonLabel}
-    </div>
-    {/* Second ribbon (only if both flags true) */}
-    {plan.highestseller && plan.recommended && (
-      <div className="absolute right-[-48px] top-[38px] w-[200px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm bg-[#9a2119] text-white">
-        Recommended
-      </div>
-    )}
+    {/* First ribbon */}
+<div
+  className={`absolute right-[-40px] top-[22px] w-[170px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm ${ribbonClass}`}
+>
+  {ribbonLabel}
+</div>
+{/* Second ribbon (only if both flags true) */}
+{plan.highestseller && plan.recommended && (
+  <div className="absolute right-[-40px] top-[50px] w-[170px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm bg-[#9a2119] text-white">
+    Recommended
+  </div>
+)}
   </div>
 ) : null}
 
