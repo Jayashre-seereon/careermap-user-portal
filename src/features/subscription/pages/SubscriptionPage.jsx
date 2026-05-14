@@ -8,7 +8,7 @@ import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function SubscriptionPage() {
-  const { activePlanId } = useAppState();
+  const { activePlanIds } = useAppState();
   const { navigate } = usePortalNavigation();
   const [params] = useSearchParams();
   const returnTo = params.get("returnTo");
@@ -25,7 +25,7 @@ export default function SubscriptionPage() {
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}
       <Row gutter={[16, 16]} justify="center">
         {subscriptions.map((plan) => {
-          const isSelected = activePlanId === plan.id;
+          const isSelected = activePlanIds.includes(plan.id);
 
           return (
             <Col xs={24} sm={12} lg={6} key={plan.id}>
@@ -80,7 +80,7 @@ export default function SubscriptionPage() {
                     }`}
                     onClick={() => navigate(`/checkout?planId=${plan.id}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`)}
                   >
-                    {isSelected ? "Current" : "Select"}
+                    {isSelected ? "Active" : "Select"}
                   </Button>
                 </div>
               </Card>

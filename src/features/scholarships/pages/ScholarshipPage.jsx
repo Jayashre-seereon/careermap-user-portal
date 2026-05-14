@@ -24,7 +24,7 @@ import {
 
 export default function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate, location } = usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
   const [activeStatus, setActiveStatus] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -172,7 +172,7 @@ export default function ScholarshipPage() {
   /* ── LIST VIEW ── */
   return (
     <ModuleScreen className="space-y-4">
-      <PageHero backOnly onBack={() => navigate(-1)} />
+      <PageHero backOnly onBack={goToDashboard} />
 
       <div>
         <h1 className="text-2xl font-black text-[#1a0a09] m-0">Scholarships</h1>

@@ -75,7 +75,7 @@ export default function LibraryPage() {
     savedCareers,
     toggleSavedCareer,
   } = useAppState();
-  const { navigate, location } = usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
   const unlocked = isUnlocked("career-library");
   const [level, setLevel] = useState("streams");
@@ -164,7 +164,7 @@ export default function LibraryPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <PageHero backOnly onBack={level !== "streams" ? back : () => navigate(-1)} />
+      <PageHero backOnly onBack={level !== "streams" ? back : goToDashboard} />
 
       {/* Breadcrumb */}
       <LibraryBreadcrumb

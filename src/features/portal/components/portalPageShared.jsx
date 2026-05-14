@@ -7,7 +7,8 @@ const { Paragraph } = Typography;
 export function usePortalNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
-  return { navigate, location };
+  const goToDashboard = () => navigate("/app/dashboard");
+  return { navigate, location, goToDashboard };
 }
 
 export function PremiumGate({ title, description, returnTo }) {

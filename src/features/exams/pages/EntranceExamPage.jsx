@@ -17,7 +17,7 @@ import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function EntranceExamPage() {
-  const { navigate } = usePortalNavigation();
+  const { navigate, goToDashboard } = usePortalNavigation();
   const [selected, setSelected] = useState(null);
   const [typeFilter, setTypeFilter] = useState("All");
   const [catFilter, setCatFilter] = useState("All");
@@ -155,7 +155,7 @@ export default function EntranceExamPage() {
 
       {/* Top bar */}
       <div className="flex flex-wrap justify-between items-center gap-3">
-        <PageHero backOnly onBack={() => navigate(-1)} />
+        <PageHero backOnly onBack={goToDashboard} />
         <div className="inline-flex items-center bg-white border border-[#f0e4e2] rounded-full px-3 py-1 gap-0">
           <Select
             variant="borderless"

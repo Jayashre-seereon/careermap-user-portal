@@ -9,7 +9,7 @@ import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../por
 
 export default function LearnPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate, location } = usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
   const unlocked = isUnlocked("master-class");
   
@@ -48,7 +48,7 @@ export default function LearnPage() {
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={() => navigate(-1)} />
+      <PageHero backOnly onBack={goToDashboard} />
 
       <div>
         <h1>Master Classes</h1>

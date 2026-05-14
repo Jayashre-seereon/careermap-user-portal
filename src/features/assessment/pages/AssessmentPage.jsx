@@ -56,13 +56,13 @@ function InfoPanel({ title, icon, items, itemIcons }) {
 
 export default function AssessmentPage() {
   const { activePlanId, isUnlocked } = useAppState();
-  const { navigate, location } = usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
   const testUnlocked = isUnlocked("psychometric-test");
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={() => navigate(-1)} />
+      <PageHero backOnly onBack={goToDashboard} />
 
       <div>
         <h1>Assessment</h1>

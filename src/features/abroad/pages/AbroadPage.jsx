@@ -17,7 +17,7 @@ import { UnlockRedirectModal, usePortalNavigation } from "../../portal/component
 
 export default function AbroadPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate, location } = usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
   const unlocked = isUnlocked("abroad-consultancy");
 
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -180,7 +180,7 @@ export default function AbroadPage() {
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={() => navigate(-1)} />
+      <PageHero backOnly onBack={goToDashboard} />
 
       <div>
         <h1 className="text-2xl font-bold text-[#9a2119]">Study Abroad</h1>

@@ -36,7 +36,7 @@ function getAccent(name = "") {
 
 /* ================= COMPONENT ================= */
 export default function InstitutePage() {
-  const { navigate } = usePortalNavigation();
+  const { navigate, goToDashboard } = usePortalNavigation();
 
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
@@ -142,7 +142,7 @@ export default function InstitutePage() {
   /* ================= LIST VIEW ================= */
   return (
     <ModuleScreen className="space-y-5">
-        <PageHero backOnly onBack={() => navigate(-1)} />
+        <PageHero backOnly onBack={goToDashboard} />
 
         {/* HEADER */}
         <div className="flex justify-between items-end">

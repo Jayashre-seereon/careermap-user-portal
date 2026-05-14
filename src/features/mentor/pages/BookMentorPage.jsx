@@ -135,7 +135,7 @@ const BookingSummary = ({ mentor, date, time }) => (
 /* ─── Main page ───────────────────────────────────────────────── */
 export default function BookMentorPage() {
   const { addBooking, canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
-  const { navigate, location } = usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
 
   const unlocked = isUnlocked("book-mentor");
@@ -199,7 +199,7 @@ export default function BookMentorPage() {
   /* ── Main layout ── */
   return (
     <ModuleScreen className="space-y-6 pb-12">
-      <PageHero backOnly onBack={() => navigate(-1)} />
+      <PageHero backOnly onBack={goToDashboard} />
 
       {/* Hero */}
       <div className="motion-item px-5 pt-6 pb-1">
