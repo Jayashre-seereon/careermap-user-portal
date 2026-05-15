@@ -77,7 +77,7 @@ export default function AssessmentPage() {
           <div>
             <p className="mb-1.5 text-xl font-bold leading-tight text-[#231815]">Psychometric Assessment</p>
             <p className="text-[13px] leading-[1.65] text-[#65544f]">
-              Discover your strengths across 5 career domains in under 5 minutes.
+              Complete 6 guided modules with 5 questions each and get a downloadable report.
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function AssessmentPage() {
               className="!h-11 !rounded-xl !border-0 !bg-[#b12d1f] !px-5 !font-semibold hover:!bg-[#922316]"
               onClick={() => navigate("/app/psychometric-test")}
             >
-              Continue to full test <ArrowRightOutlined />
+              Take Full Psychometric Test <ArrowRightOutlined />
             </Button>
           ) : (
             <Button

@@ -143,7 +143,7 @@ export const entranceExams = [
   { id: "cuet", name: "CUET", authority: "NTA", date: "May 2025", eligibility: "Class 12 pass", type: "Central", category: "General", mode: "Computer Based", duration: "Varies by subject", subjects: "Language, Domain Subjects, General Test", totalMarks: "Subject-wise", frequency: "1 time/year", about: "Common University Entrance Test for undergraduate admissions.", examPattern: ["Multiple subject combinations allowed", "MCQ-based test", "Choice depends on target university and course"], topColleges: ["Delhi University", "BHU", "JMI", "University of Hyderabad"], website: "https://cuet.nta.nic.in/" },
 ];
 
-export const assessmentFeatures = ["50 MCQ questions", "Aptitude and personality analysis", "AI-powered career matching", "Detailed report summary", "One-year validity per plan"];
+export const assessmentFeatures = ["30 module-wise questions", "Interest, personality, aptitude, and values analysis", "Guided step-by-step assessment flow", "Downloadable report summary", "One-year validity per plan"];
 export const assessmentPolicies = ["Each subscription includes 1 psychometric test.", "Test validity lasts 1 year from purchase date.", "A new purchase is required for a retake.", "Study Abroad Access unlocks only the abroad module."];
 
 export const masterClasses = [
