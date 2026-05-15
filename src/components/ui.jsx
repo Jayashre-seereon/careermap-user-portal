@@ -53,15 +53,15 @@ export function AppProviders({ children }) {
   return (
     <ConfigProvider
       theme={{
-        algorithm: preferences.darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        algorithm: theme.defaultAlgorithm,
         token: {
           fontFamily: `"Manrope", "Segoe UI", sans-serif`,
           colorPrimary: palette.primary,
           colorLink: palette.primary,
           borderRadius: 18,
-          colorBgLayout: preferences.darkMode ? "#080808" : "#fcf7f4",
-          colorBgContainer: preferences.darkMode ? "#101010" : "#ffffff",
-          colorText: preferences.darkMode ? "#f6f1ef" : palette.text,
+          colorBgLayout: "#fcf7f4",
+          colorBgContainer: "#ffffff",
+          colorText: palette.text,
         },
       }}
     >

@@ -39,7 +39,6 @@ const initialState = {
     childName: "",
   },
   preferences: {
-    darkMode: false,
     notifications: {
       pushNotifications: true,
       scholarshipAlerts: true,
@@ -172,15 +171,6 @@ export function AppStateProvider({ children }) {
               ...current.preferences.notifications,
               ...(data.notifications || {}),
             },
-          },
-        }));
-      },
-      toggleDarkMode() {
-        setState((current) => ({
-          ...current,
-          preferences: {
-            ...current.preferences,
-            darkMode: !current.preferences.darkMode,
           },
         }));
       },

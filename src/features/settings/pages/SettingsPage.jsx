@@ -5,7 +5,7 @@ import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function SettingsPage() {
-  const { logout, preferences, requestProfileEdit, toggleDarkMode } = useAppState();
+  const { logout, requestProfileEdit } = useAppState();
   const { navigate } = usePortalNavigation();
   const [view, setView] = useState("menu");
   const [feedback, setFeedback] = useState("");
@@ -47,7 +47,6 @@ export default function SettingsPage() {
         items={[
           { key: "profile", label: "Edit Profile", children: <Button onClick={() => { requestProfileEdit(); navigate("/app/profile"); }}>Open profile editor</Button> },
           { key: "password", label: "Change Password", children: <Button onClick={() => setView("password")}>Open password form</Button> },
-          { key: "theme", label: preferences.darkMode ? "Light Mode" : "Dark Mode", children: <Button onClick={toggleDarkMode}>Toggle Theme</Button> },
           { key: "help", label: "Help Centre", children: <Button onClick={() => setView("help")}>Open help centre</Button> },
         ]}
       />
