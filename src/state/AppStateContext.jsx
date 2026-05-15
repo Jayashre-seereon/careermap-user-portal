@@ -12,6 +12,7 @@ const planFeatures = {
 
 const initialState = {
   activePlanId: null,
+  activePlanIds: [],
   promoMessage: "",
   onboarding: {
     userType: "",
@@ -38,7 +39,6 @@ const initialState = {
     childName: "",
   },
   preferences: {
-    darkMode: false,
     notifications: {
       pushNotifications: true,
       scholarshipAlerts: true,
@@ -78,7 +78,19 @@ function readInitialState() {
     if (!stored) {
       return initialState;
     }
-    return { ...initialState, ...JSON.parse(stored) };
+    const parsed = JSON.parse(stored);
+    const migratedPlanIds = Array.isArray(parsed.activePlanIds)
+      ? parsed.activePlanIds
+      : parsed.activePlanId
+        ? [parsed.activePlanId]
+        : [];
+
+    return {
+      ...initialState,
+      ...parsed,
+      activePlanIds: migratedPlanIds,
+      activePlanId: parsed.activePlanId ?? migratedPlanIds[migratedPlanIds.length - 1] ?? null,
+    };
   } catch {
     return initialState;
   }
@@ -93,18 +105,43 @@ export function AppStateProvider({ children }) {
 
   const value = useMemo(() => {
     const activePlanId = state.activePlanId;
+    const activePlanIds = state.activePlanIds?.length
+      ? state.activePlanIds
+      : activePlanId
+        ? [activePlanId]
+        : [];
+    const unlockedFeatures = new Set(
+      activePlanIds.flatMap((planId) => planFeatures[planId] || [])
+    );
+
     return {
       ...state,
-      hasActiveSubscription: activePlanId !== null,
+      activePlanIds,
+      hasActiveSubscription: activePlanIds.length > 0,
       unreadNotificationsCount: notificationItems.filter((item) => item.unread).length,
       isUnlocked(feature) {
-        if (!activePlanId) {
-          return false;
-        }
-        return planFeatures[activePlanId]?.includes(feature);
+        return unlockedFeatures.has(feature);
       },
       activatePlan(planId) {
-        setState((current) => ({ ...current, activePlanId: planId }));
+        setState((current) => {
+          const currentPlanIds = current.activePlanIds?.length
+            ? current.activePlanIds
+            : current.activePlanId
+              ? [current.activePlanId]
+              : [];
+
+          if (currentPlanIds.includes(planId) && current.activePlanId === planId) {
+            return current;
+          }
+
+          return {
+            ...current,
+            activePlanId: planId,
+            activePlanIds: currentPlanIds.includes(planId)
+              ? currentPlanIds
+              : [...currentPlanIds, planId],
+          };
+        });
       },
       authenticate() {
         setState((current) => ({ ...current, authenticated: true }));
@@ -137,15 +174,6 @@ export function AppStateProvider({ children }) {
           },
         }));
       },
-      toggleDarkMode() {
-        setState((current) => ({
-          ...current,
-          preferences: {
-            ...current.preferences,
-            darkMode: !current.preferences.darkMode,
-          },
-        }));
-      },
       toggleSavedCareer(career) {
         setState((current) => ({
           ...current,
@@ -167,7 +195,7 @@ export function AppStateProvider({ children }) {
         }));
       },
       canAccessFreeDetail(feature, itemKey) {
-        if (activePlanId && planFeatures[activePlanId]?.includes(feature)) {
+        if (unlockedFeatures.has(feature)) {
           return true;
         }
         const firstViewedItem = state.freeAccessUsage[feature];
@@ -175,7 +203,14 @@ export function AppStateProvider({ children }) {
       },
       registerFreeDetailAccess(feature, itemKey) {
         setState((current) => {
-          if (current.activePlanId && planFeatures[current.activePlanId]?.includes(feature)) {
+          const currentPlanIds = current.activePlanIds?.length
+            ? current.activePlanIds
+            : current.activePlanId
+              ? [current.activePlanId]
+              : [];
+          const hasUnlockedFeature = currentPlanIds.some((planId) => planFeatures[planId]?.includes(feature));
+
+          if (hasUnlockedFeature) {
             return current;
           }
           if (current.freeAccessUsage[feature] !== null) {
@@ -202,31 +237,27 @@ export function AppStateProvider({ children }) {
           preferences: current.preferences,
         }));
       },
-      subscriptionRecords: activePlanId
-        ? [
-            {
-              id: activePlanId,
-              planName:
-                activePlanId === "psychometric"
-                  ? "Psychometric Test"
-                  : activePlanId === "premium"
-                    ? "Psychometric + Counselling"
-                    : activePlanId === "infocentre"
-                      ? "Infocentre Access"
-                      : "Study Abroad Access",
-              price:
-                activePlanId === "psychometric"
-                  ? "Rs 1,500"
-                  : activePlanId === "premium"
-                    ? "Rs 3,000"
-                    : activePlanId === "infocentre"
-                      ? "Rs 5,000"
-                      : "Rs 2,500",
-              expiryDate: "10 Apr 2027",
-              transactionId: `TXN-${activePlanId.toUpperCase()}-2401`,
-            },
-          ]
-        : [],
+      subscriptionRecords: activePlanIds.map((planId) => ({
+        id: planId,
+        planName:
+          planId === "psychometric"
+            ? "Psychometric Test"
+            : planId === "premium"
+              ? "Psychometric + Counselling"
+              : planId === "infocentre"
+                ? "Infocentre Access"
+                : "Study Abroad Access",
+        price:
+          planId === "psychometric"
+            ? "Rs 1,500"
+            : planId === "premium"
+              ? "Rs 3,000"
+              : planId === "infocentre"
+                ? "Rs 5,000"
+                : "Rs 2,500",
+        expiryDate: "10 Apr 2027",
+        transactionId: `TXN-${planId.toUpperCase()}-2401`,
+      })),
     };
   }, [state]);
 
