@@ -164,28 +164,30 @@ export default function LibraryPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <PageHero backOnly onBack={level !== "streams" ? back : goToDashboard} />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <LibraryBreadcrumb
+            stream={selectedStream}
+            category={selectedCategory}
+            program={selectedProgram}
+            level={level}
+          />
 
-      {/* Breadcrumb */}
-      <LibraryBreadcrumb
-        stream={selectedStream}
-        category={selectedCategory}
-        program={selectedProgram}
-        level={level}
-      />
-
-      {/* Level heading */}
-      {meta.heading && (
-        <div className="mb-2">
-          <h1 className="text-2xl font-black text-[#1a0a09] m-0 leading-snug">{meta.heading}</h1>
-          {meta.sub && <p className="text-xs text-[#b8837e] mt-1 mb-0">{meta.sub}</p>}
-          <div className="w-8 h-[3px] bg-[#9a2119] rounded-full mt-2" />
+          {meta.heading && (
+            <div className="mb-2">
+              <h1 className="text-2xl font-black text-[#1a0a09] m-0 leading-snug">{meta.heading}</h1>
+              {meta.sub && <p className="text-xs text-[#b8837e] mt-1 mb-0">{meta.sub}</p>}
+              <div className="w-8 h-[3px] bg-[#9a2119] rounded-full mt-2" />
+            </div>
+          )}
         </div>
-      )}
+
+        <PageHero backOnly onBack={level !== "streams" ? back : goToDashboard} className="shrink-0" />
+      </div>
 
       {/* ── STREAMS ── */}
       {level === "streams" && (
-        <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {careerLibrary.streams.map((stream) => (
             <div
               key={stream.name}
@@ -211,7 +213,7 @@ export default function LibraryPage() {
 
       {/* ── CATEGORIES ── */}
       {level === "categories" && (
-        <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(careerLibrary.categories[selectedStream] || []).map((category) => (
             <div
               key={category}
@@ -232,7 +234,7 @@ export default function LibraryPage() {
 
       {/* ── PROGRAMS ── */}
       {level === "programs" && (
-        <div className="content-stagger flex flex-col gap-2">
+        <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(
             careerLibrary.specializations[selectedProgram] ||
             careerLibrary.programs[selectedCategory] ||

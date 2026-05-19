@@ -15,11 +15,12 @@ export default function SubscriptionPage() {
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={() => navigate(-1)} />
-
-      <div className="text-left">
-        <h2 className="text-2xl font-black text-ink">Choose Your Plan</h2>
-        <p className="text-muted text-sm mt-1">Four options tailored to your growth</p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="text-left">
+          <h2 className="text-2xl font-black text-ink">Choose Your Plan</h2>
+          <p className="text-muted text-sm mt-1">Four options tailored to your growth</p>
+        </div>
+        <PageHero backOnly onBack={() => navigate(-1)} className="shrink-0" />
       </div>
 
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}

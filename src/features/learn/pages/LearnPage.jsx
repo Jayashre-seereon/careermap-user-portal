@@ -48,11 +48,12 @@ export default function LearnPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <PageHero backOnly onBack={goToDashboard} />
-
-      <div>
-        <h1 className="m-0 text-2xl font-black text-[#1a0a09]">Master Classes</h1>
-        <p className="mt-1 mb-0 text-xs text-[#b8837e]">Explore expert sessions, career videos, and guided learning content.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="m-0 text-2xl font-black text-[#1a0a09]">Master Classes</h1>
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">Explore expert sessions, career videos, and guided learning content.</p>
+        </div>
+        <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
       <div className="rounded-2xl border border-[#eedad4] bg-white p-4 shadow-sm">
@@ -85,7 +86,7 @@ export default function LearnPage() {
         </div>
       </div>
 
-      <div className="content-stagger grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => {
           const detailUnlocked = unlocked || canAccessFreeDetail("master-class", item.title);
           return (

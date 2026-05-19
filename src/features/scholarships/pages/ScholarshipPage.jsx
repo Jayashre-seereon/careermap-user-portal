@@ -172,22 +172,24 @@ export default function ScholarshipPage() {
   /* ── LIST VIEW ── */
   return (
     <ModuleScreen className="space-y-4">
-      <PageHero backOnly onBack={goToDashboard} />
-
-      <div>
-        <h1 className="text-2xl font-black text-[#1a0a09] m-0">Scholarships</h1>
-        <p className="text-xs text-[#b8837e] mt-1">{filtered.length} opportunities found</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-[#1a0a09] m-0">Scholarships</h1>
+          <p className="text-xs text-[#b8837e] mt-1">{filtered.length} opportunities found</p>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <Tabs
+            activeKey={activeStatus}
+            onChange={setActiveStatus}
+            items={["All", "Active", "Expired"].map((key) => ({ key, label: key }))}
+            className="mb-0 [&_.ant-tabs-nav]:!mb-0 [&_.ant-tabs-tab]:font-semibold [&_.ant-tabs-tab]:text-xs [&_.ant-tabs-tab]:uppercase [&_.ant-tabs-tab]:tracking-widest [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-[#9a2119] [&_.ant-tabs-ink-bar]:!bg-[#9a2119] [&_.ant-tabs-nav::before]:!border-[#f0e4e2]"
+          />
+          <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
+        </div>
       </div>
 
-      <Tabs
-        activeKey={activeStatus}
-        onChange={setActiveStatus}
-        items={["All", "Active", "Expired"].map((key) => ({ key, label: key }))}
-        className="[&_.ant-tabs-tab]:font-semibold [&_.ant-tabs-tab]:text-xs [&_.ant-tabs-tab]:uppercase [&_.ant-tabs-tab]:tracking-widest [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-[#9a2119] [&_.ant-tabs-ink-bar]:!bg-[#9a2119] [&_.ant-tabs-nav::before]:!border-[#f0e4e2]"
-      />
-
       {/* Equal-size card grid */}
-      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => {
           const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
           const isActive = item.status === "Active";

@@ -62,11 +62,12 @@ export default function AssessmentPage() {
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={() => navigate("/app/dashboard", { replace: true })} />
-
-      <div>
-        <h1>Assessment</h1>
-        <p className="mt-1">Take your psychometric assessment and review your test access details.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1>Assessment</h1>
+          <p className="mt-1">Take your psychometric assessment and review your test access details.</p>
+        </div>
+        <PageHero backOnly onBack={() => navigate("/app/dashboard", { replace: true })} className="shrink-0" />
       </div>
 
       <div className="mb-[18px] flex flex-col gap-[18px] rounded-3xl border border-[rgba(120,74,62,0.16)] bg-white px-[26px] py-6 shadow-[0_8px_24px_rgba(53,26,20,0.05)] md:flex-row md:items-center md:justify-between">

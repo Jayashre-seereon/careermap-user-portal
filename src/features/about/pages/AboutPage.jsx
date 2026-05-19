@@ -9,10 +9,12 @@ export default function AboutPage() {
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={() => navigate(-1)} />
-      <div>
-        <h1>About Portal</h1>
-        <p className="mt-1">A quick overview of what this career guidance portal includes.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1>About Portal</h1>
+          <p className="mt-1">A quick overview of what this career guidance portal includes.</p>
+        </div>
+        <PageHero backOnly onBack={() => navigate(-1)} className="shrink-0" />
       </div>
       <SectionCard title="What's included">
         <Paragraph>

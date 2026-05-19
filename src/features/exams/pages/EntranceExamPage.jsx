@@ -152,38 +152,37 @@ export default function EntranceExamPage() {
   /* ── LIST VIEW ── */
   return (
     <ModuleScreen className="space-y-4">
-
-      {/* Top bar */}
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <PageHero backOnly onBack={goToDashboard} />
-        <div className="inline-flex items-center bg-white border border-[#f0e4e2] rounded-full px-3 py-1 gap-0">
-          <Select
-            variant="borderless"
-            value={typeFilter}
-            onChange={setTypeFilter}
-            className="w-28 text-xs font-semibold"
-            options={["All", "Central", "State", "Private"].map((v) => ({ label: v, value: v }))}
-          />
-          <span className="w-px h-4 bg-[#f0e4e2] shrink-0" />
-          <Select
-            variant="borderless"
-            value={catFilter}
-            onChange={setCatFilter}
-            className="w-36 text-xs font-semibold"
-            options={["All", "Engineering", "Medical", "Business", "Law", "Design"].map((v) => ({ label: v, value: v }))}
-          />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-[#1a0a09] m-0">Entrance Exams</h1>
+          <p className="text-xs text-[#b8837e] mt-1">
+            {filtered.length} exams available across streams and authorities.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="inline-flex items-center bg-white border border-[#f0e4e2] rounded-full px-3 py-1 gap-0">
+            <Select
+              variant="borderless"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              className="w-28 text-xs font-semibold"
+              options={["All", "Central", "State", "Private"].map((v) => ({ label: v, value: v }))}
+            />
+            <span className="w-px h-4 bg-[#f0e4e2] shrink-0" />
+            <Select
+              variant="borderless"
+              value={catFilter}
+              onChange={setCatFilter}
+              className="w-36 text-xs font-semibold"
+              options={["All", "Engineering", "Medical", "Business", "Law", "Design"].map((v) => ({ label: v, value: v }))}
+            />
+          </div>
+          <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
         </div>
       </div>
 
-      <div>
-        <h1 className="text-2xl font-black text-[#1a0a09] m-0">Entrance Exams</h1>
-        <p className="text-xs text-[#b8837e] mt-1">
-          {filtered.length} exams available across streams and authorities.
-        </p>
-      </div>
-
       {/* Equal-size card grid */}
-      <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => (
           <div
             key={item.name}
