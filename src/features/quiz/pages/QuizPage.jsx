@@ -169,13 +169,14 @@ export default function QuizPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <PageHero backOnly onBack={() => navigate(-1)} />
-
-      <div>
-        <h1 className="m-0 text-2xl font-black tracking-tight text-[#1a0a09]">Choose your quiz</h1>
-        <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-          Test your knowledge and identify where to grow next.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="m-0 text-2xl font-black tracking-tight text-[#1a0a09]">Choose your quiz</h1>
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">
+            Test your knowledge and identify where to grow next.
+          </p>
+        </div>
+        <PageHero backOnly onBack={() => navigate(-1)} className="shrink-0" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

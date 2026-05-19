@@ -180,11 +180,12 @@ export default function AbroadPage() {
 
   return (
     <ModuleScreen className="space-y-6">
-      <PageHero backOnly onBack={goToDashboard} />
-
-      <div>
-        <h1 className="text-2xl font-bold text-[#9a2119]">Study Abroad</h1>
-        <p className="mt-1 text-sm text-[#8c6c67]">Explore destinations, costs, visa details, and top universities.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#9a2119]">Study Abroad</h1>
+          <p className="mt-1 text-sm text-[#8c6c67]">Explore destinations, costs, visa details, and top universities.</p>
+        </div>
+        <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
       <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

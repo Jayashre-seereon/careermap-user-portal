@@ -164,24 +164,26 @@ export default function LibraryPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <PageHero backOnly onBack={level !== "streams" ? back : goToDashboard} />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <LibraryBreadcrumb
+            stream={selectedStream}
+            category={selectedCategory}
+            program={selectedProgram}
+            level={level}
+          />
 
-      {/* Breadcrumb */}
-      <LibraryBreadcrumb
-        stream={selectedStream}
-        category={selectedCategory}
-        program={selectedProgram}
-        level={level}
-      />
-
-      {/* Level heading */}
-      {meta.heading && (
-        <div className="mb-2">
-          <h1 className="text-2xl font-black text-[#1a0a09] m-0 leading-snug">{meta.heading}</h1>
-          {meta.sub && <p className="text-xs text-[#b8837e] mt-1 mb-0">{meta.sub}</p>}
-          <div className="w-8 h-[3px] bg-[#9a2119] rounded-full mt-2" />
+          {meta.heading && (
+            <div className="mb-2">
+              <h1 className="text-2xl font-black text-[#1a0a09] m-0 leading-snug">{meta.heading}</h1>
+              {meta.sub && <p className="text-xs text-[#b8837e] mt-1 mb-0">{meta.sub}</p>}
+              <div className="w-8 h-[3px] bg-[#9a2119] rounded-full mt-2" />
+            </div>
+          )}
         </div>
-      )}
+
+        <PageHero backOnly onBack={level !== "streams" ? back : goToDashboard} className="shrink-0" />
+      </div>
 
       {/* ── STREAMS ── */}
       {level === "streams" && (

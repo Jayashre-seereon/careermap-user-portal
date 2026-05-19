@@ -202,13 +202,14 @@ export default function BookMentorPage() {
   /* ── Main layout ── */
   return (
     <ModuleScreen className="space-y-6 pb-12">
-      <PageHero backOnly onBack={goToDashboard} />
-
-      <div className="motion-item">
-        <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
-        <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-          Connect with experienced professionals for guided career sessions.
-        </p>
+      <div className="motion-item flex items-start justify-between gap-4">
+        <div>
+          <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">
+            Connect with experienced professionals for guided career sessions.
+          </p>
+        </div>
+        <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

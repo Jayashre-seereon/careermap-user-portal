@@ -142,14 +142,17 @@ export default function InstitutePage() {
   /* ================= LIST VIEW ================= */
   return (
     <ModuleScreen className="space-y-5">
-        <PageHero backOnly onBack={goToDashboard} />
-
         {/* HEADER */}
-        <div className="flex justify-between items-end">
-          <h1 className="text-xl font-bold">Institutions</h1>
-          <span className="text-xs bg-[#fdf0ee] text-[#9a2119] px-3 py-1 rounded-full">
-            {filtered.length}
-          </span>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold">Institutions</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs bg-[#fdf0ee] text-[#9a2119] px-3 py-1 rounded-full">
+              {filtered.length}
+            </span>
+            <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
+          </div>
         </div>
 
        
