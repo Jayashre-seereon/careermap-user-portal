@@ -187,7 +187,7 @@ export default function AbroadPage() {
         <p className="mt-1 text-sm text-[#8c6c67]">Explore destinations, costs, visa details, and top universities.</p>
       </div>
 
-      <div className="content-stagger grid gap-4 md:grid-cols-2">
+      <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {studyAbroadCountries.map((country) => {
           const countryFree = unlocked || canAccessFreeDetail("abroad-consultancy", country.name);
 

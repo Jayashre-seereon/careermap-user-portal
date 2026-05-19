@@ -187,7 +187,7 @@ export default function ScholarshipPage() {
       />
 
       {/* Equal-size card grid */}
-      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => {
           const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
           const isActive = item.status === "Active";

@@ -66,28 +66,27 @@ const MentorCard = ({ mentor, isFree, onClick }) => (
   <div
     onClick={onClick}
     className="
-      motion-item group cursor-pointer relative overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white p-5
+      motion-item group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white p-5
       transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10
       transition-all duration-200
     "
   >
     <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors duration-200 group-hover:bg-[#9a2119]" />
 
-    <div className="mb-3 flex items-start justify-between gap-4 pt-2">
-      <div className="flex gap-3 items-start">
+    <div className="mb-3 pt-2">
+      <div className="flex items-start gap-3">
         <Avatar name={mentor.name} />
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="m-0 text-base font-black text-[#1a0a09]">{mentor.name}</p>
           <p className="mt-1 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">{mentor.specialty}</p>
         </div>
       </div>
-      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-        <span className="text-sm font-black whitespace-nowrap text-[#9a2119]">{mentor.price}</span>
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span className="text-sm font-black text-[#9a2119]">{mentor.price}</span>
         <Tag variant={isFree ? "free" : "lock"}>{isFree ? "FREE" : "LOCKED"}</Tag>
       </div>
     </div>
-
-    <p className="mb-4 text-sm leading-relaxed text-gray-500">{mentor.bio}</p>
 
     <div className="mb-4 flex flex-wrap gap-1.5">
       {mentor.tags.map((t) => <Tag key={t}>{t}</Tag>)}
@@ -212,7 +211,7 @@ export default function BookMentorPage() {
         </p>
       </div>
 
-      <div className="content-stagger grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {mentors.map((mentor) => {
           const mentorFree = unlocked || canAccessFreeDetail("book-mentor", mentor.name);
           return (
@@ -258,10 +257,6 @@ export default function BookMentorPage() {
               <p className="text-xs uppercase tracking-widest text-gray-400 mb-1">{selectedMentor.specialty}</p>
               <h2 className="text-2xl font-bold text-gray-900">{selectedMentor.name}</h2>
             </div>
-
-            <p className="text-sm text-gray-400 leading-relaxed font-light mb-5">{selectedMentor.bio}</p>
-
-            <div className="h-px bg-gray-100 my-5" />
 
             <div className="grid grid-cols-2 gap-3 mb-3">
               <Field label="Date">

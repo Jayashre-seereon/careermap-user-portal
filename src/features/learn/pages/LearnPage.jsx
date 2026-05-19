@@ -85,7 +85,7 @@ export default function LearnPage() {
         </div>
       </div>
 
-      <div className="content-stagger grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => {
           const detailUnlocked = unlocked || canAccessFreeDetail("master-class", item.title);
           return (

@@ -185,7 +185,7 @@ export default function LibraryPage() {
 
       {/* ── STREAMS ── */}
       {level === "streams" && (
-        <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {careerLibrary.streams.map((stream) => (
             <div
               key={stream.name}
@@ -211,7 +211,7 @@ export default function LibraryPage() {
 
       {/* ── CATEGORIES ── */}
       {level === "categories" && (
-        <div className="content-stagger grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(careerLibrary.categories[selectedStream] || []).map((category) => (
             <div
               key={category}
@@ -232,7 +232,7 @@ export default function LibraryPage() {
 
       {/* ── PROGRAMS ── */}
       {level === "programs" && (
-        <div className="content-stagger flex flex-col gap-2">
+        <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {(
             careerLibrary.specializations[selectedProgram] ||
             careerLibrary.programs[selectedCategory] ||

@@ -155,7 +155,7 @@ export default function InstitutePage() {
        
 
         {/* GRID */}
-        <div className="content-stagger grid md:grid-cols-2 gap-4">
+        <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {filtered.map((item) => {
             const accent = getAccent(item.name);
             const initials = getInitials(item.name);
