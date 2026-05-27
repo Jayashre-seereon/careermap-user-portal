@@ -1,4 +1,5 @@
 import api, { API_BASE_URL } from "./axios";
+import { useAuthStore } from "../store/authStore";
 
 export async function sendOtp(mobile, type = "signup") {
   const response = await api.post("/auth/send-otp", {
@@ -33,9 +34,15 @@ export async function sendSignupOtp(mobile) {
 }
 
 export async function signupUser(payload, tempToken) {
+  const signupToken = tempToken || useAuthStore.getState().tempToken;
+
+  if (!signupToken) {
+    throw new Error("Signup verification expired. Please verify OTP again.");
+  }
+
   const response = await api.post("/user/signup", payload, {
     headers: {
-      Authorization: `Bearer ${tempToken}`,
+      Authorization: `Bearer ${signupToken}`,
     },
   });
 
