@@ -1,4 +1,4 @@
-import { Alert, Avatar } from "antd";
+import { Avatar } from "antd";
 import { BankOutlined, BellOutlined, RightOutlined, TeamOutlined, TrophyOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../../api/dashboardApi";
@@ -100,32 +100,7 @@ export default function DashboardPage() {
 
   return (
     <div className="motion-stack space-y-6">
-      {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
-
-      <div className="flex items-center justify-between rounded-[24px] border border-[#eaded9] bg-white px-5 py-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Avatar size={44} style={{ backgroundColor: "#f6e7e2", color: palette.primary, fontWeight: 800 }}>
-            {dashboardUserName.charAt(0).toUpperCase()}
-          </Avatar>
-          <div>
-            <div className="text-[18px] font-black text-ink">{dashboardUserName}</div>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="flex h-[42px] w-[42px] items-center justify-center rounded-[16px] border border-[#eaded9] bg-[#fffaf8] text-[#321a15]"
-          onClick={() => navigate("/app/notifications")}
-        >
-          <div className="relative">
-            <BellOutlined />
-            {unreadNotificationsCount > 0 ? (
-              <span className="absolute -right-3 -top-3 min-w-[18px] rounded-full bg-[#9a2119] px-1 py-[1px] text-center text-[10px] font-extrabold text-white">
-                {unreadNotificationsCount}
-              </span>
-            ) : null}
-          </div>
-        </button>
-      </div>
+    
 
       <DashboardHeroSection onTestClick={handleTestClick} userName={dashboardUserName} />
       <ExploreModulesSection modules={dashboardData?.modules || []} />
