@@ -21,7 +21,6 @@ export default function EntranceExamPage() {
   const { goToDashboard } = usePortalNavigation();
   const [selected, setSelected] = useState(null);
   const [typeFilter, setTypeFilter] = useState("All");
-  const [catFilter, setCatFilter] = useState("All");
   const [items, setItems] = useState(fallbackEntranceExams);
   const [error, setError] = useState("");
 
@@ -51,15 +50,12 @@ export default function EntranceExamPage() {
   const filtered = useMemo(
     () =>
       items.filter(
-        (item) =>
-          (typeFilter === "All" || item.type === typeFilter) &&
-          (catFilter === "All" || item.category === catFilter)
+        (item) => typeFilter === "All" || item.type === typeFilter
       ),
-    [catFilter, items, typeFilter]
+    [items, typeFilter]
   );
 
   const typeOptions = useMemo(() => ["All", ...Array.from(new Set(items.map((item) => item.type).filter(Boolean)))], [items]);
-  const categoryOptions = useMemo(() => ["All", ...Array.from(new Set(items.map((item) => item.category).filter(Boolean)))], [items]);
 
   if (selected) {
     return (
@@ -76,9 +72,16 @@ export default function EntranceExamPage() {
                   <CalendarOutlined className="text-xs text-[#9a2119]" />
                   {selected.date}
                 </span>
-                <span className="h-3 w-px bg-[#f0e4e2]" />
-                <span className="rounded-full bg-[#fdf0ee] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#9a2119]">{selected.type}</span>
-                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">{selected.category}</span>
+                {selected.issueDate ? (
+                  <span className="rounded-full bg-[#fdf0ee] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#9a2119]">
+                    Issue Date: {selected.issueDate}
+                  </span>
+                ) : null}
+                {selected.lastDate ? (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+                    Last Date: {selected.lastDate}
+                  </span>
+                ) : null}
               </div>
             </div>
             <Button type="primary" icon={<GlobalOutlined />} href={selected.website} target="_blank" className="!rounded-full !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]">
@@ -159,8 +162,6 @@ export default function EntranceExamPage() {
         <div className="flex flex-wrap items-center justify-end gap-3">
           <div className="inline-flex items-center gap-0 rounded-full border border-[#f0e4e2] bg-white px-3 py-1">
             <Select variant="borderless" value={typeFilter} onChange={setTypeFilter} className="w-28 text-xs font-semibold" options={typeOptions.map((value) => ({ label: value, value }))} />
-            <span className="h-4 w-px shrink-0 bg-[#f0e4e2]" />
-            <Select variant="borderless" value={catFilter} onChange={setCatFilter} className="w-36 text-xs font-semibold" options={categoryOptions.map((value) => ({ label: value, value }))} />
           </div>
           <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
         </div>
@@ -173,21 +174,11 @@ export default function EntranceExamPage() {
             onClick={() => setSelected(item)}
             className="group flex cursor-pointer flex-col gap-2.5 rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">{item.authority}</span>
-              <span className="h-2 w-2 rounded-full bg-[#9a2119] opacity-20 transition-opacity group-hover:opacity-100" />
-            </div>
-
             <p className="m-0 line-clamp-2 flex-1 text-[15px] font-bold leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119]">{item.name}</p>
 
             <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
               <CalendarOutlined className="text-[11px] text-[#9a2119]" />
-              {item.date}
-            </div>
-
-            <div className="flex gap-1.5 pt-1">
-              <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500">{item.type}</span>
-              <span className="rounded-md bg-[#fdf0ee] px-2 py-0.5 text-[10px] font-bold text-[#9a2119]">{item.category}</span>
+              Exam Date {item.date}
             </div>
 
             <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">

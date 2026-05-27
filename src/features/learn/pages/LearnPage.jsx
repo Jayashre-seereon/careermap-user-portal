@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Select, Space } from "antd";
+import { Alert, Button, Space } from "antd";
 import { LockOutlined, PlayCircleOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
 import { getMasterClasses } from "../../../api/masterclassApi";
@@ -16,7 +16,6 @@ export default function LearnPage() {
   const [items, setItems] = useState(masterClasses);
   const [error, setError] = useState("");
   const [videoType, setVideoType] = useState("All");
-  const [career, setCareer] = useState("All");
   const [sortBy, setSortBy] = useState("popular");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
 
@@ -47,19 +46,17 @@ export default function LearnPage() {
     () =>
       [...items]
         .filter((item) => videoType === "All" || item.videoType === videoType)
-        .filter((item) => career === "All" || item.career === career)
         .sort((a, b) => {
           if (sortBy === "az") return a.title.localeCompare(b.title);
           if (sortBy === "za") return b.title.localeCompare(a.title);
           return b.views - a.views;
         }),
-    [career, items, sortBy, videoType]
+    [items, sortBy, videoType]
   );
 
   function buildLearnReturnTo(itemTitle = "") {
     const nextParams = new URLSearchParams();
     if (videoType !== "All") nextParams.set("videoType", videoType);
-    if (career !== "All") nextParams.set("career", career);
     if (sortBy !== "popular") nextParams.set("sortBy", sortBy);
     if (itemTitle) nextParams.set("video", itemTitle);
     const query = nextParams.toString();
@@ -68,17 +65,11 @@ export default function LearnPage() {
 
   useEffect(() => {
     const nextVideoType = params.get("videoType");
-    const nextCareer = params.get("career");
     const nextSortBy = params.get("sortBy");
     if (nextVideoType) setVideoType(nextVideoType);
-    if (nextCareer) setCareer(nextCareer);
     if (nextSortBy) setSortBy(nextSortBy);
   }, [params]);
 
-  const careerOptions = useMemo(
-    () => ["All", ...Array.from(new Set(items.map((item) => item.career)))],
-    [items]
-  );
   const videoTypeOptions = useMemo(
     () => ["All", ...Array.from(new Set(items.map((item) => item.videoType)))],
     [items]
@@ -96,21 +87,39 @@ export default function LearnPage() {
         <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
-      <div className="rounded-2xl border border-[#eedad4] bg-white p-4 shadow-sm">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_minmax(160px,180px)] md:items-center">
-          <p className="m-0 text-[10px] font-bold uppercase tracking-widest text-[#1a0a09]">Filter By</p>
-          <Select value={videoType} onChange={setVideoType} className="w-full" options={videoTypeOptions.map((item) => ({ label: item, value: item }))} />
-          <Select value={career} onChange={setCareer} className="w-full" options={careerOptions.map((item) => ({ label: item, value: item }))} />
-          <Select
-            value={sortBy}
-            onChange={setSortBy}
-            className="w-full"
-            options={[
-              { label: "Most Popular", value: "popular" },
-              { label: "A-Z", value: "az" },
-              { label: "Z-A", value: "za" },
-            ]}
-          />
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="m-0 shrink-0 text-[10px] font-bold uppercase tracking-widest text-[#1a0a09]">Filter By</p>
+        <div className="flex flex-wrap gap-2">
+          {videoTypeOptions.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setVideoType(item)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                videoType === item ? "bg-[#9a2119] text-white" : "bg-[#faf4f2] text-[#7b605c]"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { label: "Most Popular", value: "popular" },
+            { label: "A-Z", value: "az" },
+            { label: "Z-A", value: "za" },
+          ].map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => setSortBy(item.value)}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                sortBy === item.value ? "bg-[#9a2119] text-white" : "bg-[#faf4f2] text-[#7b605c]"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -141,7 +150,6 @@ export default function LearnPage() {
 
                 <Space wrap>
                   <SoftTag color="red">{item.career}</SoftTag>
-                  <SoftTag color="blue">{item.duration}</SoftTag>
                   <SoftTag color="gold">{(item.views / 1000).toFixed(1)}k views</SoftTag>
                 </Space>
 

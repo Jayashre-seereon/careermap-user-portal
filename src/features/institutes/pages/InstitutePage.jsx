@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Button } from "antd";
 import {
   EnvironmentOutlined,
-  StarFilled,
   BookOutlined,
-  GlobalOutlined,
-  CheckCircleFilled,
   RightOutlined,
   BankOutlined,
 } from "@ant-design/icons";
@@ -22,7 +19,7 @@ function getInitials(name = "") {
     .join("");
 }
 
-const ACCENTS = ["from-[#9a2119] to-red-400", "from-red-700 to-[#9a2119]", "from-[#9a2119] to-orange-500"];
+const ACCENTS = ["from-[#9a2119] to-[#c73a2f]", "from-[#b42117] to-[#9a2119]", "from-[#c84f15] to-[#ff7b12]"];
 
 function getAccent(name = "") {
   return ACCENTS[name.charCodeAt(0) % ACCENTS.length];
@@ -71,8 +68,6 @@ export default function InstitutePage() {
   );
 
   if (selected) {
-    const accent = getAccent(selected.name);
-
     return (
       <ModuleScreen className="space-y-4">
         <PageHero backOnly onBack={() => setSelected(null)} />
@@ -84,7 +79,6 @@ export default function InstitutePage() {
                 <BankOutlined className="text-lg text-white" />
               </div>
               <div className="flex flex-col items-center">
-                <StarFilled className="text-yellow-300" />
                 <span className="font-bold text-white">{selected.rank}</span>
               </div>
             </div>
@@ -95,21 +89,18 @@ export default function InstitutePage() {
               <p className="flex items-center gap-1 text-sm text-gray-500">
                 <EnvironmentOutlined /> {selected.location}
               </p>
-
-              <div className="flex gap-2 pt-2">
-                <Chip icon={<BookOutlined />} text={`${selected.courses?.length || 0} Courses`} />
-                <Chip icon={<GlobalOutlined />} text="Website" />
-                <Chip icon={<CheckCircleFilled />} text="Verified" green />
-              </div>
             </div>
           </div>
         </div>
 
         <div className="content-stagger space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <Stat icon={<BankOutlined />} label="Type" value={selected.type} />
-            <Stat icon={<StarFilled />} label="Rank" value={selected.rank} />
-            <Stat icon={<BookOutlined />} label="Courses" value={`${selected.courses?.length || 0}+`} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Card title="Type">
+              <p className="m-0 text-base font-bold text-[#9a2119]">{selected.type}</p>
+            </Card>
+            <Card title="Courses">
+              <p className="m-0 text-base font-bold text-[#1f1a1b]">{selected.courses?.length || 0} available</p>
+            </Card>
           </div>
 
           <Card title="About">
@@ -118,11 +109,11 @@ export default function InstitutePage() {
 
           <Card title="Courses Offered">
             <div className="flex flex-wrap gap-2">
-              {selected.courses?.map((course) => (
+              {selected.courses?.length ? selected.courses.map((course) => (
                 <span key={course} className="rounded-lg bg-[#fdf0ee] px-3 py-1 text-xs text-[#9a2119]">
                   {course}
                 </span>
-              ))}
+              )) : <span className="text-sm text-gray-500">No course list available.</span>}
             </div>
           </Card>
 
@@ -163,29 +154,45 @@ export default function InstitutePage() {
           const initials = getInitials(item.name);
 
           return (
-            <div key={item.id || item.name} onClick={() => setSelected(item)} className="cursor-pointer rounded-xl border bg-white p-4 hover:shadow">
-              <div className={`mb-3 h-1 bg-gradient-to-r ${accent}`} />
+            <div
+              key={item.id || item.name}
+              onClick={() => setSelected(item)}
+              className="group cursor-pointer overflow-hidden rounded-[28px] border border-[#e8dfda] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#d7c3bc] hover:shadow-xl"
+            >
+              <div className={`h-24 bg-gradient-to-r ${accent} p-5`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white/90">
+                    Institute
+                  </div>
+                  <div className="rounded-full bg-white px-3 py-1 text-[12px] font-bold text-[#9a2119] shadow-sm">
+                    {item.rank}
+                  </div>
+                </div>
+              </div>
 
-              <div className="flex gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${accent} font-bold text-white`}>
+              <div className="relative px-5 pb-5 pt-0">
+                <div className={`-mt-8 flex h-[64px] w-[64px] items-center justify-center rounded-[20px] border-4 border-white bg-gradient-to-br ${accent} text-[20px] font-black text-white shadow-md`}>
                   {initials}
                 </div>
 
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold">{item.name}</h3>
-                  <p className="flex items-center gap-1 text-xs text-gray-500">
-                    <EnvironmentOutlined /> {item.location}
+                <div className="mt-4">
+                  <h3 className="line-clamp-3 text-[20px] font-black leading-tight text-[#241d1e]">
+                    {item.name}
+                  </h3>
+                  <p className="mt-3 flex min-h-[44px] items-start gap-2 text-[14px] leading-6 text-[#746d73]">
+                    <EnvironmentOutlined className="mt-1 text-[13px] text-[#9a2119]" />
+                    <span>{item.location}</span>
                   </p>
                 </div>
 
-                <span className="rounded bg-[#9a2119] px-2 py-0.5 text-xs text-white">{item.rank}</span>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between border-t border-[#f0e4e2] pt-3 text-xs">
-                <span className="rounded bg-[#fdf0ee] px-2 py-1 text-[#9a2119]">{item.type}</span>
-                <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
-                  Explore <RightOutlined />
-                </span>
+                <div className="mt-5 flex items-center justify-between border-t border-[#efe3de] pt-4">
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#aa8a83]">
+                    View Details
+                  </span>
+                  <span className="flex items-center gap-2 text-[14px] font-bold text-[#b22b1f] transition-transform duration-200 group-hover:translate-x-1">
+                    Explore <RightOutlined />
+                  </span>
+                </div>
               </div>
             </div>
           );
@@ -202,20 +209,6 @@ function Card({ title, children }) {
     <div className="motion-item rounded-xl border bg-white p-4">
       <h3 className="mb-2 font-semibold">{title}</h3>
       {children}
-    </div>
-  );
-}
-
-function Chip({ icon, text, green }) {
-  return <div className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${green ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{icon} {text}</div>;
-}
-
-function Stat({ icon, label, value }) {
-  return (
-    <div className="motion-item rounded-lg border bg-white p-3 text-center">
-      <div className="mb-1 text-[#9a2119]">{icon}</div>
-      <p className="font-bold text-[#9a2119]">{value}</p>
-      <p className="text-[10px] text-gray-400">{label}</p>
     </div>
   );
 }
