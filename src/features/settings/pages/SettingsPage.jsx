@@ -20,7 +20,7 @@ export default function SettingsPage() {
           <Form.Item label="New Password"><Input.Password value={passwordForm.newPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))} /></Form.Item>
           <Form.Item label="Confirm Password"><Input.Password value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} /></Form.Item>
           <Button type="primary" onClick={() => setFeedback("Password changed successfully.")}>Save Password</Button>
-          {feedback ? <Alert className="mt-4" type="success" message={feedback} /> : null}
+          {feedback ? <Alert className="mt-4" type="success" title={feedback} /> : null}
         </Form>
       </SectionCard>
     );
@@ -33,7 +33,7 @@ export default function SettingsPage() {
           <Form.Item label="Your Email"><Input value={helpForm.email} onChange={(event) => setHelpForm((current) => ({ ...current, email: event.target.value }))} /></Form.Item>
           <Form.Item label="Message"><Input.TextArea rows={6} value={helpForm.message} onChange={(event) => setHelpForm((current) => ({ ...current, message: event.target.value }))} /></Form.Item>
           <Button type="primary" onClick={() => setFeedback("Help request sent successfully.")}>Send to Email Support</Button>
-          {feedback ? <Alert className="mt-4" type="success" message={feedback} /> : null}
+          {feedback ? <Alert className="mt-4" type="success" title={feedback} /> : null}
         </Form>
       </SectionCard>
     );
@@ -42,7 +42,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHero backOnly onBack={() => navigate(-1)} />
-      {feedback ? <Alert type="success" message={feedback} /> : null}
+      {feedback ? <Alert type="success" title={feedback} /> : null}
       <Collapse
         items={[
           { key: "profile", label: "Edit Profile", children: <Button onClick={() => { requestProfileEdit(); navigate("/app/profile"); }}>Open profile editor</Button> },

@@ -1,7 +1,23 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { notifications as notificationItems } from "../data/careermapData";
+import { useAuthStore } from "../store/authStore";
 
 const STORAGE_KEY = "careermap-userportal-state";
+const LEGACY_DEMO_EMAIL = "aarav.sharma@email.com";
+const emptyUserProfile = {
+  name: "",
+  email: "",
+  mobile: "",
+  password: "",
+  address: "",
+  city: "",
+  stateName: "",
+  district: "",
+  country: "India",
+  gender: "",
+  dob: "",
+  childName: "",
+};
 
 const planFeatures = {
   psychometric: ["psychometric-test"],
@@ -27,16 +43,7 @@ const initialState = {
     selectedGuidance: "",
   },
   userProfile: {
-    name: "Aarav Sharma",
-    email: "aarav.sharma@email.com",
-    mobile: "+91 98765 43210",
-    password: "Aarav@123",
-    address: "24 Palm Residency",
-    city: "Bengaluru",
-    stateName: "Karnataka",
-    gender: "Male",
-    dob: "2007-09-14",
-    childName: "",
+    ...emptyUserProfile,
   },
   preferences: {
     notifications: {
@@ -69,14 +76,16 @@ const initialState = {
 const AppStateContext = createContext(null);
 
 function readInitialState() {
+  const isAuthenticated = Boolean(useAuthStore.getState().accessToken);
+
   if (typeof window === "undefined") {
-    return initialState;
+    return { ...initialState, authenticated: isAuthenticated };
   }
 
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-      return initialState;
+      return { ...initialState, authenticated: isAuthenticated };
     }
     const parsed = JSON.parse(stored);
     const migratedPlanIds = Array.isArray(parsed.activePlanIds)
@@ -88,11 +97,19 @@ function readInitialState() {
     return {
       ...initialState,
       ...parsed,
+      authenticated: isAuthenticated,
+      userProfile:
+        !isAuthenticated && parsed?.userProfile?.email === LEGACY_DEMO_EMAIL
+          ? emptyUserProfile
+          : {
+              ...emptyUserProfile,
+              ...(parsed.userProfile || {}),
+            },
       activePlanIds: migratedPlanIds,
       activePlanId: parsed.activePlanId ?? migratedPlanIds[migratedPlanIds.length - 1] ?? null,
     };
   } catch {
-    return initialState;
+    return { ...initialState, authenticated: isAuthenticated };
   }
 }
 
@@ -102,6 +119,19 @@ export function AppStateProvider({ children }) {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
+
+  useEffect(() => {
+    const syncAuthentication = ({ accessToken }) => {
+      setState((current) =>
+        current.authenticated === Boolean(accessToken)
+          ? current
+          : { ...current, authenticated: Boolean(accessToken) }
+      );
+    };
+
+    syncAuthentication(useAuthStore.getState());
+    return useAuthStore.subscribe(syncAuthentication);
+  }, []);
 
   const value = useMemo(() => {
     const activePlanId = state.activePlanId;
@@ -147,6 +177,7 @@ export function AppStateProvider({ children }) {
         setState((current) => ({ ...current, authenticated: true }));
       },
       logout() {
+        useAuthStore.getState().logout();
         setState((current) => ({ ...current, authenticated: false }));
       },
       showPromoMessage(message) {
