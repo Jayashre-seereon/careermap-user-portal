@@ -1,0 +1,155 @@
+import {
+  BankOutlined,
+  BulbOutlined,
+  CreditCardOutlined,
+  FileDoneOutlined,
+  GlobalOutlined,
+  QuestionCircleOutlined,
+  ReadOutlined,
+  TeamOutlined,
+  TrophyOutlined,
+} from "@ant-design/icons";
+import { featuredInstitutes, featuredMentors, featuredScholarships, moduleCards, palette } from "../data/careermapData";
+
+export const moduleRouteMap = {
+  "career library": "/app/library",
+  assessment: "/app/assessment",
+  "master class": "/app/learn",
+  "entrance exam": "/app/entrance-exam",
+  institutes: "/app/institutes",
+  institute: "/app/institutes",
+  "book mentor": "/app/book-mentor",
+  scholarships: "/app/scholarships",
+  scholarship: "/app/scholarships",
+  quiz: "/app/quiz",
+  "study abroad": "/app/abroad",
+  subscription: "/app/subscription",
+  subscriptions: "/app/subscription",
+};
+
+export const moduleIconMap = {
+  "Career Library": <ReadOutlined style={{ color: "#c64f7a" }} />,
+  Assessment: <BulbOutlined style={{ color: "#5d8f26" }} />,
+  "Master Class": <TrophyOutlined style={{ color: "#4c45aa" }} />,
+  "Entrance Exam": <FileDoneOutlined style={{ color: "#0f8a7c" }} />,
+  Institutes: <BankOutlined style={{ color: "#c64f7a" }} />,
+  "Book Mentor": <TeamOutlined style={{ color: "#157f69" }} />,
+  Scholarships: <TrophyOutlined style={{ color: "#b77718" }} />,
+  Quiz: <QuestionCircleOutlined style={{ color: "#2c70c9" }} />,
+  "Study Abroad": <GlobalOutlined style={{ color: "#4c45aa" }} />,
+  Subscriptions: <CreditCardOutlined style={{ color: "#8c5a18" }} />,
+};
+
+export const moduleStyleMap = {
+  "Career Library": { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.blue },
+  Assessment: { background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)", actionBg: "#5d8f26", tone: palette.purple },
+  "Master Class": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.orange },
+  "Entrance Exam": { background: "linear-gradient(180deg, #def6f2 0%, #f0fbf9 100%)", actionBg: "#0f8a7c", tone: palette.teal },
+  Institutes: { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.pink },
+  "Book Mentor": { background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)", actionBg: "#157f69", tone: palette.secondary },
+  Scholarships: { background: "linear-gradient(180deg, #fff0d8 0%, #fff8ee 100%)", actionBg: "#b77718", tone: palette.green },
+  Quiz: { background: "linear-gradient(180deg, #e4efff 0%, #f3f8ff 100%)", actionBg: "#2c70c9", tone: palette.blue },
+  "Study Abroad": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.purple },
+  Subscriptions: { background: "linear-gradient(180deg, #fff1dd 0%, #fff9f0 100%)", actionBg: "#8c5a18", tone: palette.secondary },
+};
+
+export function normalizeModuleTitle(value = "") {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function resolveModuleLookupKey(value = "") {
+  const normalized = normalizeModuleTitle(value);
+  if (normalized === "scholarship") return "scholarships";
+  if (normalized === "institute") return "institutes";
+  if (normalized === "subscription") return "subscriptions";
+  return normalized;
+}
+
+export function buildDashboardModules(modules = []) {
+  const subscriptionsCard = {
+    title: "Subscriptions",
+    subtitle: "View subscription options and unlock premium modules.",
+    route: "/app/subscription",
+    tone: palette.secondary,
+  };
+  const allCards = [...moduleCards, subscriptionsCard];
+  const cardMap = new Map(allCards.map((card) => [resolveModuleLookupKey(card.title), card]));
+
+  if (!modules.length) {
+    return allCards.map((card) => ({
+      id: card.title,
+      title: card.title,
+      subtitle: card.subtitle,
+      route: card.route,
+      lockTitle: card.title,
+      tone: card.tone,
+    }));
+  }
+
+  return modules
+    .map((module) => {
+      const matchedCard = cardMap.get(resolveModuleLookupKey(module.title || ""));
+      const fallbackRoute = moduleRouteMap[resolveModuleLookupKey(module.title || "")];
+      if (!matchedCard && !fallbackRoute) {
+        return null;
+      }
+
+      return {
+        id: module.id || module.title,
+        title: module.title || matchedCard?.title || "Module",
+        subtitle: matchedCard?.subtitle || "Open this module and continue your journey.",
+        route: matchedCard?.route || fallbackRoute,
+        lockTitle: matchedCard?.title || module.title,
+        tone: matchedCard?.tone || palette.primary,
+      };
+    })
+    .filter(Boolean);
+}
+
+export function buildDashboardMentors(mentors = []) {
+  if (!mentors.length) {
+    return featuredMentors;
+  }
+
+  return mentors.map((mentor, index) => ({
+    ...featuredMentors[index % featuredMentors.length],
+    id: mentor.id,
+    name: mentor.name || featuredMentors[index % featuredMentors.length].name,
+    specialty: mentor.designation || featuredMentors[index % featuredMentors.length].specialty,
+    rating: mentor.rank || featuredMentors[index % featuredMentors.length].rating,
+    experience: mentor.experience ? `${mentor.experience} yrs` : featuredMentors[index % featuredMentors.length].experience,
+  }));
+}
+
+export function buildDashboardScholarships(items = []) {
+  if (!items.length) {
+    return featuredScholarships;
+  }
+
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name || "",
+    amount: item.price ? `Rs ${item.price} / year` : "",
+    deadline: item.deadline
+      ? new Date(item.deadline).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "",
+    tag: item.type || "",
+  }));
+}
+
+export function buildDashboardInstitutes(items = []) {
+  if (!items.length) {
+    return featuredInstitutes;
+  }
+
+  return items.map((item) => ({
+    id: item.id,
+    name: item.name || "",
+    location: item.state || "",
+    type: item.institute_type || "",
+  }));
+}

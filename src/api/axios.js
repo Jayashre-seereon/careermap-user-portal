@@ -6,10 +6,10 @@ function cleanBaseUrl(baseUrl) {
 }
 
 function resolveApiBaseUrl(baseUrl) {
-  const cleaned = cleanBaseUrl(baseUrl || "http://localhost:5000/api");
+  const cleaned = cleanBaseUrl(baseUrl);
 
   if (!cleaned) {
-    return "http://localhost:5000/api";
+    return env.API_BASE_URL ;
   }
 
   return cleaned.endsWith("/api") ? cleaned : `${cleaned}/api`;
