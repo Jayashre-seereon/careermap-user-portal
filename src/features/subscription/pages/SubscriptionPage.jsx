@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Col, List, Row } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
-import { subscriptions } from "../../../data/careermapData";
+import { getPlans } from "../../../api/subscriptionApi";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
@@ -12,6 +12,24 @@ export default function SubscriptionPage() {
   const { navigate } = usePortalNavigation();
   const [params] = useSearchParams();
   const returnTo = params.get("returnTo");
+
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPlans() {
+      try {
+        const data = await getPlans();
+        setPlans(data);
+      } catch (err) {
+        console.error("Failed to load plans", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPlans();
+  }, []);
 
   return (
     <ModuleScreen className="space-y-6">
@@ -25,7 +43,7 @@ export default function SubscriptionPage() {
 
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}
       <Row gutter={[16, 16]} justify="center">
-        {subscriptions.map((plan) => {
+      {plans.map((plan) => {
           const isSelected = activePlanIds.includes(plan.id);
           const ribbonLabel = plan.highestseller ? "Best Seller" : plan.recommended ? "Recommended" : null;
           const ribbonClass = plan.highestseller
@@ -66,26 +84,32 @@ export default function SubscriptionPage() {
                     </div>
                   </div>
                   
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-brand">{plan.price}</span>
-                    <span className="text-muted text-[10px] font-medium">/mo</span>
-                  </div>
+                 <div className="flex items-baseline gap-1">
+  <span className="text-3xl font-black text-brand">
+    ₹{plan.price}
+  </span>
+  <span className="text-muted text-[10px] font-medium">
+    /{plan.validity}
+  </span>
+</div>
                 </div>
 
                 {/* Features Area */}
                 <div className="p-5 flex-grow">
-                  <List
-                    split={false}
-                    dataSource={plan.features}
-                    renderItem={(item) => (
-                      <List.Item className="!border-none !px-0 !py-1.5">
-                        <div className="flex items-start gap-2">
-                          <CheckOutlined className="text-brand text-[12px] mt-1 flex-shrink-0" />
-                          <span className="text-[13px] text-ink/80 leading-snug">{item}</span>
-                        </div>
-                      </List.Item>
-                    )}
-                  />
+<List
+  split={false}
+  dataSource={plan.modules.length ? plan.modules : ["No modules available"]}
+  renderItem={(item) => (
+    <List.Item className="!border-none !px-0 !py-1.5">
+      <div className="flex items-start gap-2">
+        <CheckOutlined className="text-brand text-[12px] mt-1 flex-shrink-0" />
+        <span className="text-[13px] text-ink/80 leading-snug">
+          {item}
+        </span>
+      </div>
+    </List.Item>
+  )}
+/>
                 </div>
 
                 {/* Footer Button */}
