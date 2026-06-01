@@ -284,7 +284,7 @@ export default function AbroadPage() {
                     setSubmitting(true);
                     setSubmitError("");
                     await createStudyAbroadConsultation({
-                      studyAbroadId: selectedCountry.id,
+                      studyAbroadId: Number(selectedCountry.id),
                       preferredCountry: selectedCountry.name,
                       courseInterest: consultForm.courseInterest,
                       budgetRange: consultForm.budgetRange,

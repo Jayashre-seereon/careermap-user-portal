@@ -77,8 +77,17 @@ export async function getStudyAbroadCountries() {
 
 export async function createStudyAbroadConsultation(payload) {
   const token = useAuthStore.getState().accessToken;
+  const normalizedStudyAbroadId =
+    payload?.studyAbroadId === null || payload?.studyAbroadId === undefined
+      ? payload?.studyAbroadId
+      : Number(payload.studyAbroadId);
 
-  const response = await api.post("/studyabroad/consult/create", payload, {
+  const requestBody = {
+    ...payload,
+    studyAbroadId: normalizedStudyAbroadId,
+  };
+
+  const response = await api.post("/studyabroad/consult/create", requestBody, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
