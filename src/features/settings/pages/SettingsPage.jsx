@@ -1,58 +1,325 @@
-import { useState } from "react";
-import { Alert, Button, Collapse, Form, Input } from "antd";
-import { PageHero, SectionCard } from "../../../components/ui";
+import {
+  ArrowRightOutlined,
+  CustomerServiceOutlined,
+  LockOutlined,
+  SafetyOutlined,
+  SettingOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Alert, Button, Col, Form, Input, Row, Space, Tag, message } from "antd";
+import { useEffect, useMemo, useState } from "react";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
+import { PageHero, SectionCard, SoftTag } from "../../../components/ui";
+import { changeUserPassword, createHelpRequest } from "../../../api/userApi";
+import { getApiErrorMessage } from "../../../api/authApi";
+
+function SettingAction({ icon, title, description, onClick, cta = "Open" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center justify-between gap-4 rounded-[22px] border border-[#eedad4] bg-white px-5 py-4 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:border-[#d9b7ae] hover:shadow-lg"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdf0ed] text-brand">
+          {icon}
+        </div>
+        <div>
+          <div className="text-[15px] font-black text-ink">{title}</div>
+          <div className="mt-1 text-sm leading-6 text-muted">{description}</div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm font-bold text-brand">
+        <span>{cta}</span>
+        <ArrowRightOutlined className="transition-transform group-hover:translate-x-1" />
+      </div>
+    </button>
+  );
+}
 
 export default function SettingsPage() {
-  const { logout, requestProfileEdit } = useAppState();
+  const { logout, requestProfileEdit, userProfile } = useAppState();
   const { navigate } = usePortalNavigation();
   const [view, setView] = useState("menu");
-  const [feedback, setFeedback] = useState("");
-  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
-  const [helpForm, setHelpForm] = useState({ email: "", message: "" });
+  const [status, setStatus] = useState(null);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isSendingHelp, setIsSendingHelp] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [helpForm, setHelpForm] = useState({
+    email: userProfile.email || "",
+    subject: "",
+    message: "",
+  });
+
+  useEffect(() => {
+    setHelpForm((current) => ({
+      ...current,
+      email: userProfile.email || current.email,
+    }));
+  }, [userProfile.email]);
+
+  const profileSummary = useMemo(
+    () => ({
+      name: userProfile.name || "Your profile",
+      email: userProfile.email || "No email added",
+      mobile: userProfile.mobile || "Mobile not linked",
+    }),
+    [userProfile]
+  );
+
+  function showView(nextView) {
+    setStatus(null);
+    setView(nextView);
+  }
+
+  async function handlePasswordChange() {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setStatus({ type: "error", message: "Fill all password fields." });
+      return;
+    }
+
+    try {
+      setIsSavingPassword(true);
+      setStatus(null);
+      const response = await changeUserPassword(passwordForm);
+      setStatus({
+        type: "success",
+        message: response?.message || "Password changed successfully.",
+      });
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: getApiErrorMessage(error, "Failed to change password."),
+      });
+    } finally {
+      setIsSavingPassword(false);
+    }
+  }
+
+  async function handleSendHelp() {
+    if (!helpForm.email.trim() || !helpForm.subject.trim() || !helpForm.message.trim()) {
+      setStatus({ type: "error", message: "Please add your email, subject, and message." });
+      return;
+    }
+
+    try {
+      setIsSendingHelp(true);
+      setStatus(null);
+      const response = await createHelpRequest(helpForm);
+      setStatus({
+        type: "success",
+        message: response?.message || "Your help request has been sent.",
+      });
+      setHelpForm((current) => ({
+        ...current,
+        subject: "",
+        message: "",
+      }));
+      message.success("Support request submitted");
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: getApiErrorMessage(error, "Failed to send support request."),
+      });
+    } finally {
+      setIsSendingHelp(false);
+    }
+  }
 
   if (view === "password") {
     return (
-      <SectionCard title="Change Password" extra={<Button onClick={() => setView("menu")}>Back</Button>}>
-        <Form layout="vertical">
-          <Form.Item label="Current Password"><Input.Password value={passwordForm.currentPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))} /></Form.Item>
-          <Form.Item label="New Password"><Input.Password value={passwordForm.newPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))} /></Form.Item>
-          <Form.Item label="Confirm Password"><Input.Password value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))} /></Form.Item>
-          <Button type="primary" onClick={() => setFeedback("Password changed successfully.")}>Save Password</Button>
-          {feedback ? <Alert className="mt-4" type="success" title={feedback} /> : null}
-        </Form>
-      </SectionCard>
+      <div className="space-y-6">
+        <PageHero
+          backOnly
+          onBack={() => showView("menu")}
+        />
+        <SectionCard
+          title={<Space><LockOutlined className="text-brand" /> Change Password</Space>}
+          extra={<Button onClick={() => showView("menu")}>Back</Button>}
+        >
+          <div className="grid gap-5 lg:grid-cols-[1fr_300px]">
+            <Form layout="vertical" className="cm-form-label">
+              <Row gutter={16}>
+                <Col xs={24}>
+                  <Form.Item label="Current Password">
+                    <Input.Password
+                      value={passwordForm.currentPassword}
+                      onChange={(event) =>
+                        setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))
+                      }
+                      className="!rounded-xl !h-11"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item label="New Password">
+                    <Input.Password
+                      value={passwordForm.newPassword}
+                      onChange={(event) =>
+                        setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))
+                      }
+                      className="!rounded-xl !h-11"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Confirm Password">
+                    <Input.Password
+                      value={passwordForm.confirmPassword}
+                      onChange={(event) =>
+                        setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))
+                      }
+                      className="!rounded-xl !h-11"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Button
+                type="primary"
+                onClick={handlePasswordChange}
+                loading={isSavingPassword}
+                className="!h-12 !rounded-xl !px-8 font-bold"
+              >
+                Save Password
+              </Button>
+            </Form>
+
+            <div className="rounded-[22px] border border-[#eedad4] bg-[#fffaf8] p-5">
+              <SoftTag color="volcano">Security</SoftTag>
+              <h3 className="mt-4 text-lg font-black text-ink">Password tips</h3>
+              <ul className="mt-3 space-y-3 text-sm leading-6 text-muted">
+                <li>Use at least 6 characters.</li>
+                <li>Keep it different from your mobile OTP code.</li>
+                <li>Change it whenever you feel your account needs a refresh.</li>
+              </ul>
+            </div>
+          </div>
+          {status ? (
+            <Alert className="mt-5" type={status.type} message={status.message} showIcon />
+          ) : null}
+        </SectionCard>
+      </div>
     );
   }
 
   if (view === "help") {
     return (
-      <SectionCard title="Help Centre" extra={<Button onClick={() => setView("menu")}>Back</Button>}>
-        <Form layout="vertical">
-          <Form.Item label="Your Email"><Input value={helpForm.email} onChange={(event) => setHelpForm((current) => ({ ...current, email: event.target.value }))} /></Form.Item>
-          <Form.Item label="Message"><Input.TextArea rows={6} value={helpForm.message} onChange={(event) => setHelpForm((current) => ({ ...current, message: event.target.value }))} /></Form.Item>
-          <Button type="primary" onClick={() => setFeedback("Help request sent successfully.")}>Send to Email Support</Button>
-          {feedback ? <Alert className="mt-4" type="success" title={feedback} /> : null}
-        </Form>
-      </SectionCard>
+      <div className="space-y-6">
+        <PageHero backOnly onBack={() => showView("menu")} />
+        <SectionCard
+          title={<Space><CustomerServiceOutlined className="text-brand" /> Help Centre</Space>}
+          extra={<Button onClick={() => showView("menu")}>Back</Button>}
+        >
+          <div className="space-y-5">
+            <Form layout="vertical" className="cm-form-label">
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Your Email">
+                    <Input
+                      value={helpForm.email}
+                      onChange={(event) => setHelpForm((current) => ({ ...current, email: event.target.value }))}
+                      className="!rounded-xl !h-11"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item label="Subject">
+                    <Input
+                      value={helpForm.subject}
+                      onChange={(event) => setHelpForm((current) => ({ ...current, subject: event.target.value }))}
+                      className="!rounded-xl !h-11"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24}>
+                  <Form.Item label="Message">
+                    <Input.TextArea
+                      rows={6}
+                      value={helpForm.message}
+                      onChange={(event) => setHelpForm((current) => ({ ...current, message: event.target.value }))}
+                      className="!rounded-2xl"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Button
+                type="primary"
+                onClick={handleSendHelp}
+                loading={isSendingHelp}
+                className="!h-12 !rounded-xl !px-8 font-bold"
+              >
+                Send Request
+              </Button>
+            </Form>
+          </div>
+          {status ? (
+            <Alert className="mt-5" type={status.type} message={status.message} showIcon />
+          ) : null}
+        </SectionCard>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <PageHero backOnly onBack={() => navigate(-1)} />
-      {feedback ? <Alert type="success" title={feedback} /> : null}
-      <Collapse
-        items={[
-          { key: "profile", label: "Edit Profile", children: <Button onClick={() => { requestProfileEdit(); navigate("/app/profile"); }}>Open profile editor</Button> },
-          { key: "password", label: "Change Password", children: <Button onClick={() => setView("password")}>Open password form</Button> },
-          { key: "help", label: "Help Centre", children: <Button onClick={() => setView("help")}>Open help centre</Button> },
-        ]}
+      <PageHero
+        backOnly
+        onBack={() => navigate(-1)}
       />
-      <Button danger onClick={() => { logout(); navigate("/auth-entry"); }}>
-        Logout
-      </Button>
+
+      <SectionCard
+        title={<Space><SettingOutlined className="text-brand" /> Settings</Space>}
+        extra={<Tag color="default" className="!m-0 !rounded-full !px-4 !py-1 !font-bold">{profileSummary.name}</Tag>}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <SettingAction
+            icon={<UserOutlined />}
+            title="Edit Profile"
+            description="Update your name, email, address, city, state, gender, and date of birth."
+            cta="Edit"
+            onClick={() => {
+              requestProfileEdit();
+              navigate("/app/profile");
+            }}
+          />
+          <SettingAction
+            icon={<LockOutlined />}
+            title="Change Password"
+            description="Secure your account with a new password from the same place."
+            onClick={() => showView("password")}
+          />
+          <SettingAction
+            icon={<CustomerServiceOutlined />}
+            title="Help Centre"
+            description="Send support requests directly to the backend help desk."
+            onClick={() => showView("help")}
+          />
+          <SettingAction
+            icon={<SafetyOutlined />}
+            title="Logout"
+            description="Sign out from the user portal on this device."
+            cta="Logout"
+            onClick={() => {
+              logout();
+              navigate("/auth-entry");
+            }}
+          />
+        </div>
+      </SectionCard>
+
+      {status ? <Alert type={status.type} message={status.message} showIcon /> : null}
     </div>
   );
 }
