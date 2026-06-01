@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Space } from "antd";
+import { Alert, Button } from "antd";
 import { ArrowRightOutlined, LockOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
 import { getMasterClasses } from "../../../api/masterclassApi";
@@ -52,28 +52,26 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <SoftTag color="red">{item.career}</SoftTag>
-              <SoftTag color="gold">{formatViews(item.views)}</SoftTag>
-              <SoftTag color="default">{item.videoType}</SoftTag>
+            <div className="mt-3 flex flex-nowrap items-center gap-2 overflow-hidden">
+              <SoftTag color="red" className="shrink-0 whitespace-nowrap">
+                {item.career}
+              </SoftTag>
+              <SoftTag color="gold" className="shrink-0 whitespace-nowrap">
+                {formatViews(item.views)}
+              </SoftTag>
+              <SoftTag color="default" className="shrink-0 whitespace-nowrap">
+                {item.videoType}
+              </SoftTag>
             </div>
           </div>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <div className="rounded-[18px] border border-[#f4e3df] bg-[#fff9f7] p-4">
+          <div className="w-full rounded-[18px] border border-[#f4e3df] bg-[#fff9f7] px-5 py-3 sm:col-span-2">
             <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">
-              Duration
+              Date
             </div>
-            <div className="mt-2 text-[13px] font-semibold text-ink">{item.duration}</div>
-          </div>
-          <div className="rounded-[18px] border border-[#f4e3df] bg-[#fff9f7] p-4">
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">
-              Access
-            </div>
-            <div className="mt-2 text-[13px] font-semibold text-ink">
-              {locked ? (detailUnlocked ? "One free preview" : "Locked for now") : "Open access"}
-            </div>
+            <div className="mt-1 text-[13px] font-semibold text-ink">{item.duration}</div>
           </div>
         </div>
 
@@ -181,29 +179,6 @@ export default function LearnPage() {
     <ModuleScreen className="space-y-5 pb-8">
       {error ? <Alert type="warning" message={error} showIcon style={{ borderRadius: 16 }} /> : null}
 
-      <div className="motion-item overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
-        <div className="brand-gradient relative p-6 text-white md:p-8">
-          <div className="absolute right-5 top-5 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-bold tracking-[0.28em] text-white/85">
-            MASTER CLASS
-          </div>
-          <div className="max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white/90">
-              <PlayCircleOutlined />
-              Learning Library
-            </div>
-            <h1 className="m-0 text-3xl font-extrabold text-white">Master Classes</h1>
-            <p className="m-0 max-w-2xl text-sm leading-7 text-white/80">
-              Explore expert sessions, career videos, and guided learning content.
-            </p>
-          </div>
-        </div>
-        <div className="grid gap-3 border-t border-[#f0e4e2] bg-[#fffaf8] px-6 py-4 md:grid-cols-3">
-          <Metric label="Classes" value={String(filtered.length)} />
-          <Metric label="Mode" value={videoType} />
-          <Metric label="Sort" value={sortBy === "popular" ? "Most Popular" : sortBy.toUpperCase()} />
-        </div>
-      </div>
-
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <p className="m-0 shrink-0 text-[10px] font-bold uppercase tracking-widest text-[#1a0a09]">Filter By</p>
@@ -246,7 +221,7 @@ export default function LearnPage() {
         </div>
       </div>
 
-      <Space className="!flex !w-full !flex-col" size="middle">
+      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {filtered.length === 0 ? (
           <div className="rounded-[24px] border border-[#f0e4e2] bg-white p-5 text-sm text-muted">
             No master classes available right now.
@@ -279,7 +254,7 @@ export default function LearnPage() {
             />
           );
         })}
-      </Space>
+      </div>
 
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
@@ -294,14 +269,5 @@ export default function LearnPage() {
         }}
       />
     </ModuleScreen>
-  );
-}
-
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-[20px] border border-[#f4e3df] bg-white px-4 py-3">
-      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">{label}</div>
-      <div className="mt-1 text-[14px] font-extrabold text-ink">{value}</div>
-    </div>
   );
 }
