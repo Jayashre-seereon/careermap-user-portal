@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { notifications as notificationItems } from "../data/careermapData";
 import { useAuthStore } from "../store/authStore";
+import { getNotifications } from "../api/notificationApi";
 
 const STORAGE_KEY = "careermap-userportal-state";
 const LEGACY_DEMO_EMAIL = "aarav.sharma@email.com";
@@ -115,6 +116,26 @@ function readInitialState() {
 
 export function AppStateProvider({ children }) {
   const [state, setState] = useState(readInitialState);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadNotifications() {
+      try {
+        const items = await getNotifications();
+        if (active && items.length) {
+          setState((current) => ({ ...current, notifications: items }));
+        }
+      } catch {
+        // Keep the local fallback notifications when the API is unavailable.
+      }
+    }
+
+    loadNotifications();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
