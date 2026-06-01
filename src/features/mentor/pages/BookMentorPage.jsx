@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { ArrowRightOutlined, LockOutlined, StarFilled } from "@ant-design/icons";
 import { Modal } from "antd";
 import { useSearchParams } from "react-router-dom";
@@ -343,11 +343,19 @@ export default function BookMentorPage() {
           <PageHero backOnly onBack={() => setProcessing(false)} className="shrink-0" />
         </div>
 
-        <div className="flex min-h-[280px] flex-col items-center justify-center gap-[14px] rounded-[26px] border border-[#f0e4e2] bg-white p-7 shadow-sm">
-          <div className="h-[54px] w-[54px] animate-spin rounded-full border-4 border-[#eadfd6] border-t-[#9a2119]" />
-          <div className="text-center text-[22px] font-black text-[#1a0a09]">Processing Payment</div>
-          <div className="text-center text-[14px] leading-[22px] text-[#6f6663]">
-            Please wait while we confirm your mentor booking.
+        <div className="flex min-h-[320px] items-center justify-center px-2">
+          <div className="w-full max-w-[560px] rounded-[28px] border border-[#f0e4e2] bg-white px-6 py-7 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-4 border-[#f1d9d3] border-t-[#9a2119] animate-spin" />
+            <div className="mt-5 inline-flex rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
+              Processing
+            </div>
+            <div className="mt-4 text-[22px] font-black text-[#1a0a09]">Processing Payment</div>
+            <div className="mx-auto mt-2 max-w-md text-[14px] leading-7 text-[#6f6663]">
+              Please wait while we confirm your mentor booking.
+            </div>
+            <div className="mx-auto mt-6 h-2 w-full max-w-[280px] overflow-hidden rounded-full bg-[#f3ece8]">
+              <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-[#c72733] to-[#51154c] animate-pulse" />
+            </div>
           </div>
         </div>
       </ModuleScreen>
@@ -529,7 +537,7 @@ export default function BookMentorPage() {
           centered
           onCancel={() => setPaymentOpen(false)}
           footer={null}
-          width={980}
+          width={760}
           className="[&_.ant-modal-content]:!rounded-[28px] [&_.ant-modal-content]:!overflow-hidden"
         >
           <div className="bg-[#f7f7f8]">
