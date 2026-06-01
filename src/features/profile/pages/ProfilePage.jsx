@@ -10,6 +10,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { ModuleScreen, PageHero, SectionCard } from "../../../components/ui";
+import { getDashboard } from "../../../api/dashboardApi";
 import { getApiErrorMessage } from "../../../api/authApi";
 import { updateUserProfile } from "../../../api/userApi";
 import { useAppState } from "../../../state/AppStateContext";
@@ -32,6 +33,7 @@ export default function ProfilePage() {
   const { navigate } = usePortalNavigation();
   const [editOpen, setEditOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isLoadingProfileData, setIsLoadingProfileData] = useState(false);
   const [status, setStatus] = useState(null);
   const [form, setForm] = useState(userProfile);
 
@@ -45,10 +47,48 @@ export default function ProfilePage() {
     }
   }, [profileEditRequestKey]);
 
+  useEffect(() => {
+    if (editOpen) {
+      loadDashboardProfile();
+    }
+  }, [editOpen]);
+
   const profileName = useMemo(() => userProfile.name || "Your profile", [userProfile.name]);
   const profileEmail = useMemo(() => userProfile.email || "No email added yet", [userProfile.email]);
 
   const scrollableCardClass = "h-[320px] overflow-y-auto scrollbar-hide";
+
+  function buildEditForm(profile = userProfile) {
+    return {
+      name: profile.name || onboarding.name || "",
+      email: profile.email || "",
+      mobile: profile.mobile || "",
+      address: profile.address || "",
+      district: profile.district || "",
+      city: profile.city || "",
+      stateName: profile.stateName || "",
+      country: profile.country || "India",
+      dob: profile.dob || "",
+      gender: profile.gender || "",
+    };
+  }
+
+  async function loadDashboardProfile() {
+    try {
+      setIsLoadingProfileData(true);
+      const response = await getDashboard();
+      const dashboardProfile = response?.success ? mapApiUserToProfile(response?.data?.user) : null;
+      setForm(buildEditForm(dashboardProfile || userProfile));
+    } catch {
+      setForm(buildEditForm(userProfile));
+    } finally {
+      setIsLoadingProfileData(false);
+    }
+  }
+
+  async function openEditProfile() {
+    setEditOpen(true);
+  }
 
   async function handleProfileSave() {
     const { firstName, lastName } = splitFullName(form.name);
@@ -128,7 +168,7 @@ export default function ProfilePage() {
         <div className="flex flex-wrap gap-3">
           <Button
             icon={<EditOutlined />}
-            onClick={() => setEditOpen(true)}
+          onClick={openEditProfile}
             className="!h-11 !rounded-xl font-bold"
           >
             Edit Profile
@@ -249,53 +289,101 @@ export default function ProfilePage() {
       <Modal
         open={editOpen}
         footer={null}
-        onCancel={() => setEditOpen(false)}
+        onCancel={() => {
+          setEditOpen(false);
+          setForm(buildEditForm(userProfile));
+        }}
         title={<span className="text-xl font-black">Edit Profile</span>}
-        className="!rounded-3xl"
+        width={880}
+        className="profile-edit-modal [&_.ant-modal-content]:!rounded-[28px] [&_.ant-modal-content]:!overflow-hidden [&_.ant-modal-content]:!bg-white [&_.ant-modal-content]:!p-0 [&_.ant-modal-content]:!overflow-x-hidden [&_.ant-modal-header]:!m-0 [&_.ant-modal-header]:!border-b [&_.ant-modal-header]:!border-[#efe2db] [&_.ant-modal-header]:!bg-white [&_.ant-modal-header]:!px-5 [&_.ant-modal-header]:!py-4 [&_.ant-modal-body]:!p-0 [&_.ant-modal-body]:!overflow-x-hidden [&_.ant-modal-wrap]:!bg-[rgba(17,12,10,0.28)]"
         centered
       >
-        <Form layout="vertical" className="mt-4" onFinish={handleProfileSave}>
-          <div className="grid grid-cols-2 gap-x-4">
-            {[
-              ["name", onboarding.userType === "parent" ? "Parent Name" : "Full Name", 2],
-              ["email", "Email Address", 2],
-              ["mobile", "Mobile Number", 1],
-              ["dob", "Date of Birth", 1],
-              ["city", "City", 1],
-              ["stateName", "State", 1],
-              ["address", "Detailed Address", 2],
-            ].map(([key, label, span]) => (
-              <Form.Item
-                label={<span className="text-xs font-bold uppercase text-muted">{label}</span>}
-                key={key}
-                className={span === 2 ? "col-span-2" : "col-span-1"}
-              >
-                <Input
-                  value={form[key] || ""}
-                  readOnly={key === "mobile"}
-                  className="!h-11 !rounded-xl"
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, [key]: event.target.value }))
-                  }
-                />
-                {key === "mobile" ? (
-                  <div className="mt-2 text-xs text-muted">Mobile number is managed through OTP verification.</div>
-                ) : null}
-              </Form.Item>
-            ))}
-          </div>
+        <div className="bg-white px-4 pb-4 pt-2 md:px-6">
+          <div className="mx-auto flex max-h-[78vh] w-full flex-col gap-4 overflow-y-auto overflow-x-hidden pr-1 muted-scroll">
+            <div className="rounded-[18px] border border-[#e6cfc4] bg-white px-4 py-2 text-[12px] leading-5 text-[#7a6d66] shadow-sm">
+              Your saved profile details are prefilled here. Email, mobile number, and password are locked and cannot be edited.
+            </div>
 
-          <Button
-            type="primary"
-            size="large"
-            block
-            htmlType="submit"
-            loading={isSavingProfile}
-            className="mt-4 !h-12 !rounded-xl font-bold shadow-lg shadow-brand/20"
-          >
-            Save Profile Changes
-          </Button>
-        </Form>
+            {isLoadingProfileData ? (
+              <div className="rounded-2xl bg-[#fdf0ed] px-4 py-3 text-sm font-semibold text-brand">
+                Loading profile data...
+              </div>
+            ) : null}
+
+            <Form layout="vertical" className="space-y-4" onFinish={handleProfileSave}>
+              <div className="grid gap-4">
+                {[
+                  ["email", "Email Address", 2],
+                  ["mobile", "Mobile Number", 2],
+                  ["name", onboarding.userType === "parent" ? "Parent Name" : "Full Name", 2],
+                  ["address", "Address", 2],
+                  ["district", "District", 2],
+                  ["city", "City", 2],
+                  ["stateName", "State", 2],
+                  ["country", "Country", 2],
+                  ["dob", "Date of Birth", 2],
+                ].map(([key, label]) => (
+                  <Form.Item
+                    label={<span className="text-[12px] font-bold uppercase tracking-wide text-[#7a6d66]">{label}</span>}
+                    key={key}
+                    className="!mb-0"
+                  >
+                    <Input
+                      value={form[key] || ""}
+                      disabled={key === "email" || key === "mobile"}
+                      placeholder={`Enter ${String(label).toLowerCase()}`}
+                      className="!h-12 !rounded-2xl !border-[#e1d6cf] !bg-white !px-4 !text-[14px]"
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, [key]: event.target.value }))
+                      }
+                    />
+                    {key === "email" || key === "mobile" ? (
+                      <div className="mt-2 text-[12px] text-[#8a7f78]">Can&apos;t edit</div>
+                    ) : null}
+                  </Form.Item>
+                ))}
+              </div>
+
+              <div className="rounded-[20px] border border-[#ead9d0] bg-white p-4">
+                <div className="mb-3 text-[12px] font-bold uppercase tracking-wide text-[#7a6d66]">
+                  Gender
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {["Male", "Female", "Other"].map((gender) => {
+                    const active = form.gender === gender;
+                    return (
+                      <button
+                        key={gender}
+                        type="button"
+                        onClick={() => setForm((current) => ({ ...current, gender }))}
+                        className={`rounded-full border px-4 py-2 text-[12px] font-bold transition-colors ${
+                          active
+                            ? "border-brand bg-brand text-white"
+                            : "border-[#e1d6cf] bg-white text-[#4d3c37] hover:bg-[#fcf7f4]"
+                        }`}
+                      >
+                        {gender}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 -mx-4 border-t border-[#ead9d0] bg-[#fbf4ef]/95 px-4 pb-4 pt-4 backdrop-blur md:-mx-6 md:px-6">
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  htmlType="submit"
+                  loading={isSavingProfile}
+                  className="!h-12 !rounded-2xl !border-0 !bg-gradient-to-r !from-[#a61d33] !to-[#5b0f2c] !font-bold !shadow-lg !shadow-[#a61d33]/20"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </Form>
+          </div>
+        </div>
       </Modal>
     </ModuleScreen>
   );

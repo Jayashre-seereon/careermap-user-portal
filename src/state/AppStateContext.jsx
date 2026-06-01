@@ -98,6 +98,7 @@ function readInitialState() {
     return {
       ...initialState,
       ...parsed,
+      profileEditRequestKey: 0,
       authenticated: isAuthenticated,
       userProfile:
         !isAuthenticated && parsed?.userProfile?.email === LEGACY_DEMO_EMAIL
@@ -138,7 +139,8 @@ export function AppStateProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const { profileEditRequestKey, ...persistedState } = state;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
   }, [state]);
 
   useEffect(() => {
