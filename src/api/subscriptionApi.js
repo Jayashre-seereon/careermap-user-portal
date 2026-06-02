@@ -41,3 +41,13 @@ export async function getPlans() {
 
   return items.map((item, index) => mapPlanItem(item, index));
 }
+
+export async function createOrder(planId) {
+  const response = await api.post("/user/payment/create-order", { planId });
+  return response?.data;
+}
+
+export async function verifyPayment(paymentData) {
+  const response = await api.post("/user/payment/verify-payment", paymentData);
+  return response?.data;
+}

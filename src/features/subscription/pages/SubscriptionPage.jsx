@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Button, Card, Col, List, Row } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
-import { getPlans } from "../../../api/subscriptionApi";
+import { getPlans,createOrder, verifyPayment } from "../../../api/subscriptionApi";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import { loadRazorpayScript } from "../../../utils/razorpay.js";
 export default function SubscriptionPage() {
   const { activePlanIds } = useAppState();
   const { navigate } = usePortalNavigation();
@@ -30,6 +30,46 @@ export default function SubscriptionPage() {
 
     fetchPlans();
   }, []);
+
+  // handle payment button click
+  const handleSelectPlan = async (planId) => {
+    // try loading razor pay sdk script. if fails, show error toast
+    const script = await loadRazorpayScript();
+
+    if(!script) {
+      alert("Failed to load payment gateway. Please check your connection and try again.");
+      return;
+    }
+
+
+
+    // order create
+    const orderResponse = await createOrder(planId);
+    // response - order id.
+    const { order, key } = orderResponse || {};
+    if(!order.id || !key) {
+      alert("Failed to initiate payment. Please try again.");
+      return;
+    }
+
+    // razor pay sdk -> orderid and open payment modal
+    const options = {
+      key: key,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.id,
+      handler: async function (response) {
+        alert("Payment successful! Transaction ID: " + response.razorpay_payment_id);
+        // on successful payment, navigate to success page with transaction id and plan id as query params
+      // verify the payment 
+      // verify-payment 
+       await verifyPayment({ planId, ...response });
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  }
 
   return (
     <ModuleScreen className="space-y-6">
@@ -122,7 +162,7 @@ export default function SubscriptionPage() {
                     className={`!h-11 !rounded-xl !text-sm !font-bold transition-transform active:scale-95 ${
                       isSelected ? "!bg-gray-100 !text-gray-400 !border-transparent" : "shadow-md"
                     }`}
-                    onClick={() => navigate(`/checkout?planId=${plan.id}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`)}
+                    onClick={() => handleSelectPlan(plan.id)}
                   >
                     {isSelected ? "Subscribed" : "Select"}
                   </Button>
