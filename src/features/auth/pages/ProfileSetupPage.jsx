@@ -7,7 +7,10 @@ import { useAuthStore } from "../../../store/authStore";
 import {
   buildLandingData,
   buildUsername,
+  isValidEmail,
   isValidDateInput,
+  isValidMobileNumber,
+  isValidPassword,
   normalizeMobile,
   splitFullName,
 } from "../../../utils/auth";
@@ -51,6 +54,23 @@ export default function ProfileSetupPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
+  const emailError = values.email && !isValidEmail(values.email) ? "Enter a valid email address." : "";
+  const mobileError = values.mobile && !isValidMobileNumber(values.mobile) ? "Enter a valid 10 digit mobile number." : "";
+  const passwordError = values.password && !isValidPassword(values.password) ? "Password must be at least 6 characters." : "";
+  const dobError = values.dob && !isValidDateInput(values.dob) ? "Date of birth must be in YYYY-MM-DD format." : "";
+  const canSubmit =
+    values.name.trim() &&
+    values.username.trim() &&
+    isValidEmail(values.email) &&
+    isValidMobileNumber(values.mobile) &&
+    isValidPassword(values.password) &&
+    values.address.trim() &&
+    values.city.trim() &&
+    values.stateName.trim() &&
+    values.country.trim() &&
+    values.gender &&
+    isValidDateInput(values.dob) &&
+    !isSubmitting;
 
   useEffect(() => {
     const hasStoreSelections = Boolean(
@@ -86,8 +106,18 @@ export default function ProfileSetupPage() {
       return;
     }
 
-    if (normalizeMobile(values.mobile).length !== 10) {
+    if (!isValidEmail(values.email)) {
+      setStatus({ type: "error", message: "Enter a valid email address." });
+      return;
+    }
+
+    if (!isValidMobileNumber(values.mobile)) {
       setStatus({ type: "error", message: "Enter a valid 10 digit mobile number." });
+      return;
+    }
+
+    if (!isValidPassword(values.password)) {
+      setStatus({ type: "error", message: "Password must be at least 6 characters." });
       return;
     }
 
@@ -170,6 +200,7 @@ export default function ProfileSetupPage() {
                     value={values[key]}
                     onChange={(event) => update(key, event.target.value)}
                     style={{ borderRadius: "10px" }}
+                    autoComplete="new-password"
                   />
                 ) : (
                   <Input
@@ -177,8 +208,15 @@ export default function ProfileSetupPage() {
                     value={values[key]}
                     onChange={(event) => update(key, key === "mobile" ? normalizeMobile(event.target.value) : event.target.value)}
                     style={{ borderRadius: "10px" }}
+                    inputMode={key === "mobile" ? "numeric" : undefined}
+                    autoComplete={key === "email" ? "email" : key === "mobile" ? "tel" : key === "dob" ? "bday" : undefined}
+                    type={key === "dob" ? "date" : "text"}
                   />
                 )}
+                {key === "email" && emailError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{emailError}</div> : null}
+                {key === "mobile" && mobileError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{mobileError}</div> : null}
+                {key === "password" && passwordError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{passwordError}</div> : null}
+                {key === "dob" && dobError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{dobError}</div> : null}
               </Form.Item>
             </Col>
           ))}
@@ -211,7 +249,7 @@ export default function ProfileSetupPage() {
             </Form.Item>
           </Col>
         </Row>
-        <Button type="primary" size="large" style={{ ...authPrimaryButtonStyle, width: "100%" }} onClick={handleSubmit} disabled={isSubmitting}>
+        <Button type="primary" size="large" style={{ ...authPrimaryButtonStyle, width: "100%" }} onClick={handleSubmit} disabled={!canSubmit}>
           {isSubmitting ? "Creating Profile..." : "Complete Profile"}
         </Button>
         {status ? <Alert type={status.type} title={status.message} style={{ borderRadius: "10px", marginTop: 16 }} /> : null}

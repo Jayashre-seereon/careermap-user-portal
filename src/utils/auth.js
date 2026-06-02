@@ -13,6 +13,19 @@ export function formatOtpMobile(value = "") {
   return mobile ? `+91${mobile}` : "";
 }
 
+export function isValidEmail(value = "") {
+  const email = String(value).trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function isValidMobileNumber(value = "") {
+  return normalizeMobile(value).length === 10;
+}
+
+export function isValidPassword(value = "", minLength = 6) {
+  return String(value).trim().length >= minLength;
+}
+
 export function splitFullName(fullName = "") {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
 
@@ -48,7 +61,8 @@ export function isValidDateInput(value = "") {
     return false;
   }
 
-  return !Number.isNaN(new Date(value).getTime());
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 export function mapApiUserToProfile(user) {

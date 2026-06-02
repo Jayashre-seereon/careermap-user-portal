@@ -5,7 +5,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getApiErrorMessage, loginWithPassword, sendOtp } from "../../../api/authApi";
 import { useAppState } from "../../../state/AppStateContext";
 import { useAuthStore } from "../../../store/authStore";
-import { formatOtpMobile, mapApiUserToProfile, normalizeMobile } from "../../../utils/auth";
+import { formatOtpMobile, isValidEmail, isValidMobileNumber, isValidPassword, mapApiUserToProfile, normalizeMobile } from "../../../utils/auth";
 import { AuthShell } from "../components/AuthShell";
 import { authPrimaryButtonStyle } from "../components/authShared";
 
@@ -26,6 +26,13 @@ export default function LoginPage() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
   const [values, setValues] = useState({ mobile: "", email: "", password: "" });
+  const mobileError = values.mobile && !isValidMobileNumber(values.mobile) ? "Enter a valid 10 digit mobile number." : "";
+  const emailError = isExistingUser && mode === "email" && values.email && !isValidEmail(values.email)
+    ? "Enter a valid email address."
+    : "";
+  const passwordError = isExistingUser && mode === "email" && values.password && !isValidPassword(values.password)
+    ? "Password must be at least 6 characters."
+    : "";
 
   function update(key, value) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -51,7 +58,7 @@ export default function LoginPage() {
   async function handleSendOtp() {
     const normalizedMobile = normalizeMobile(values.mobile);
 
-    if (normalizedMobile.length !== 10) {
+    if (!isValidMobileNumber(normalizedMobile)) {
       setStatus({ type: "error", message: "Enter a valid 10 digit mobile number." });
       return;
     }
@@ -87,8 +94,13 @@ export default function LoginPage() {
   }
 
   async function handleEmailLogin() {
-    if (!values.email.trim() || !values.password) {
-      setStatus({ type: "error", message: "Enter email and password." });
+    if (!isValidEmail(values.email)) {
+      setStatus({ type: "error", message: "Enter a valid email address." });
+      return;
+    }
+
+    if (!isValidPassword(values.password)) {
+      setStatus({ type: "error", message: "Password must be at least 6 characters." });
       return;
     }
 
@@ -149,13 +161,16 @@ export default function LoginPage() {
                 onChange={(event) => update("mobile", normalizeMobile(event.target.value))}
                 size="large"
                 style={{ borderRadius: "10px" }}
+                inputMode="numeric"
+                autoComplete="tel"
               />
+              {mobileError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{mobileError}</div> : null}
             </Form.Item>
             <Button
               type="primary"
               block
               size="large"
-              disabled={normalizeMobile(values.mobile).length !== 10 || isSendingOtp}
+              disabled={!isValidMobileNumber(values.mobile) || isSendingOtp}
               onClick={handleSendOtp}
               style={{ ...authPrimaryButtonStyle, width: "100%" }}
             >
@@ -174,7 +189,9 @@ export default function LoginPage() {
                 onChange={(event) => update("email", event.target.value)}
                 size="large"
                 style={{ borderRadius: "10px" }}
+                autoComplete="email"
               />
+              {emailError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{emailError}</div> : null}
             </Form.Item>
             <Form.Item label="Password">
               <Input.Password
@@ -185,13 +202,15 @@ export default function LoginPage() {
                 iconRender={(visible) => (visible ? <EyeTwoTone twoToneColor="#9a2119" /> : <EyeInvisibleOutlined />)}
                 size="large"
                 style={{ borderRadius: "10px" }}
+                autoComplete="current-password"
               />
+              {passwordError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{passwordError}</div> : null}
             </Form.Item>
             <Button
               type="primary"
               block
               size="large"
-              disabled={!values.email.trim() || !values.password || isSubmittingEmail}
+              disabled={!isValidEmail(values.email) || !isValidPassword(values.password) || isSubmittingEmail}
               onClick={handleEmailLogin}
               style={{ ...authPrimaryButtonStyle, width: "100%" }}
             >

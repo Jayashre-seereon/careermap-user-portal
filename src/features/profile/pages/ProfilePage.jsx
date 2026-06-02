@@ -15,7 +15,7 @@ import { getApiErrorMessage } from "../../../api/authApi";
 import { updateUserProfile } from "../../../api/userApi";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
-import { buildUsername, mapApiUserToProfile, splitFullName } from "../../../utils/auth";
+import { buildUsername, isValidDateInput, mapApiUserToProfile, splitFullName } from "../../../utils/auth";
 
 export default function ProfilePage() {
   const {
@@ -55,6 +55,8 @@ export default function ProfilePage() {
 
   const profileName = useMemo(() => userProfile.name || "Your profile", [userProfile.name]);
   const profileEmail = useMemo(() => userProfile.email || "No email added yet", [userProfile.email]);
+  const dobError = form.dob && !isValidDateInput(form.dob) ? "Date of birth must be in YYYY-MM-DD format." : "";
+  const canSaveProfile = !form.dob || isValidDateInput(form.dob);
 
   const scrollableCardClass = "h-[320px] overflow-y-auto scrollbar-hide";
 
@@ -91,6 +93,11 @@ export default function ProfilePage() {
   }
 
   async function handleProfileSave() {
+    if (form.dob && !isValidDateInput(form.dob)) {
+      setStatus({ type: "error", message: "Date of birth must be in YYYY-MM-DD format." });
+      return;
+    }
+
     const { firstName, lastName } = splitFullName(form.name);
     const payload = {
       firstName,
@@ -328,7 +335,7 @@ export default function ProfilePage() {
                     key={key}
                     className="!mb-0"
                   >
-                    <Input
+                  <Input
                       value={form[key] || ""}
                       disabled={key === "email" || key === "mobile"}
                       placeholder={`Enter ${String(label).toLowerCase()}`}
@@ -336,10 +343,13 @@ export default function ProfilePage() {
                       onChange={(event) =>
                         setForm((current) => ({ ...current, [key]: event.target.value }))
                       }
+                      type={key === "dob" ? "date" : "text"}
+                      autoComplete={key === "dob" ? "bday" : undefined}
                     />
                     {key === "email" || key === "mobile" ? (
                       <div className="mt-2 text-[12px] text-[#8a7f78]">Can&apos;t edit</div>
                     ) : null}
+                    {key === "dob" && dobError ? <div className="mt-2 text-[12px] text-[#c62828]">{dobError}</div> : null}
                   </Form.Item>
                 ))}
               </div>
@@ -376,6 +386,7 @@ export default function ProfilePage() {
                   block
                   htmlType="submit"
                   loading={isSavingProfile}
+                  disabled={!canSaveProfile}
                   className="!h-12 !rounded-2xl !border-0 !bg-gradient-to-r !from-[#a61d33] !to-[#5b0f2c] !font-bold !shadow-lg !shadow-[#a61d33]/20"
                 >
                   Save Changes

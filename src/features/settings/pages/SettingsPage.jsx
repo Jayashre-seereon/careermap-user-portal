@@ -13,6 +13,7 @@ import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { PageHero, SectionCard, SoftTag } from "../../../components/ui";
 import { changeUserPassword, createHelpRequest } from "../../../api/userApi";
 import { getApiErrorMessage } from "../../../api/authApi";
+import { isValidEmail, isValidPassword } from "../../../utils/auth";
 
 function SettingAction({ icon, title, description, onClick, cta = "Open" }) {
   return (
@@ -55,6 +56,22 @@ export default function SettingsPage() {
     subject: "",
     message: "",
   });
+  const helpEmailError = helpForm.email && !isValidEmail(helpForm.email) ? "Please enter a valid email address." : "";
+  const currentPasswordError = passwordForm.currentPassword && !passwordForm.currentPassword.trim()
+    ? "Enter your current password."
+    : "";
+  const newPasswordError = passwordForm.newPassword && !isValidPassword(passwordForm.newPassword)
+    ? "New password must be at least 6 characters."
+    : "";
+  const confirmPasswordError =
+    passwordForm.confirmPassword && passwordForm.newPassword !== passwordForm.confirmPassword
+      ? "New password and confirm password must match."
+      : "";
+  const canSavePassword =
+    passwordForm.currentPassword.trim() &&
+    isValidPassword(passwordForm.newPassword) &&
+    passwordForm.newPassword === passwordForm.confirmPassword &&
+    !isSavingPassword;
 
   useEffect(() => {
     setHelpForm((current) => ({
@@ -80,6 +97,16 @@ export default function SettingsPage() {
   async function handlePasswordChange() {
     if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
       setStatus({ type: "error", message: "Fill all password fields." });
+      return;
+    }
+
+    if (!isValidPassword(passwordForm.newPassword)) {
+      setStatus({ type: "error", message: "New password must be at least 6 characters." });
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setStatus({ type: "error", message: "New password and confirm password must match." });
       return;
     }
 
@@ -158,7 +185,11 @@ export default function SettingsPage() {
                         setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))
                       }
                       className="!rounded-xl !h-11"
+                      autoComplete="current-password"
                     />
+                    {currentPasswordError ? (
+                      <div className="mt-2 text-[12px] text-[#c62828]">{currentPasswordError}</div>
+                    ) : null}
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -169,7 +200,9 @@ export default function SettingsPage() {
                         setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))
                       }
                       className="!rounded-xl !h-11"
+                      autoComplete="new-password"
                     />
+                    {newPasswordError ? <div className="mt-2 text-[12px] text-[#c62828]">{newPasswordError}</div> : null}
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
@@ -180,7 +213,11 @@ export default function SettingsPage() {
                         setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))
                       }
                       className="!rounded-xl !h-11"
+                      autoComplete="new-password"
                     />
+                    {confirmPasswordError ? (
+                      <div className="mt-2 text-[12px] text-[#c62828]">{confirmPasswordError}</div>
+                    ) : null}
                   </Form.Item>
                 </Col>
               </Row>
@@ -189,6 +226,7 @@ export default function SettingsPage() {
                 type="primary"
                 onClick={handlePasswordChange}
                 loading={isSavingPassword}
+                disabled={!canSavePassword}
                 className="!h-12 !rounded-xl !px-8 font-bold"
               >
                 Save Password
@@ -231,6 +269,7 @@ export default function SettingsPage() {
                       onChange={(event) => setHelpForm((current) => ({ ...current, email: event.target.value }))}
                       className="!rounded-xl !h-11"
                     />
+                    {helpEmailError ? <div className="mt-2 text-[12px] text-[#c62828]">{helpEmailError}</div> : null}
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
