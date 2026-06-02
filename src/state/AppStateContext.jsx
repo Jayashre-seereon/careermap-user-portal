@@ -117,11 +117,16 @@ function readInitialState() {
 
 export function AppStateProvider({ children }) {
   const [state, setState] = useState(readInitialState);
+  const accessToken = useAuthStore((current) => current.accessToken);
 
   useEffect(() => {
     let active = true;
 
     async function loadNotifications() {
+      if (!accessToken) {
+        return;
+      }
+
       try {
         const items = await getNotifications();
         if (active && items.length) {
@@ -136,7 +141,7 @@ export function AppStateProvider({ children }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
     const { profileEditRequestKey, ...persistedState } = state;
