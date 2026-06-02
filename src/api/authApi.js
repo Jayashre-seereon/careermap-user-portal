@@ -49,6 +49,11 @@ export async function signupUser(payload, tempToken) {
   return response.data;
 }
 
+export async function logoutUser() {
+  const response = await api.post("/auth/logout");
+  return response.data;
+}
+
 export function getApiErrorMessage(error, fallbackMessage = "Something went wrong") {
   if (error?.message === "Network Error") {
     return `Network error. Check backend & URL: ${API_BASE_URL}`;

@@ -12,7 +12,7 @@ import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { PageHero, SectionCard, SoftTag } from "../../../components/ui";
 import { changeUserPassword, createHelpRequest } from "../../../api/userApi";
-import { getApiErrorMessage } from "../../../api/authApi";
+import { getApiErrorMessage, logoutUser } from "../../../api/authApi";
 import { isValidEmail, isValidPassword } from "../../../utils/auth";
 
 function SettingAction({ icon, title, description, onClick, cta = "Open" }) {
@@ -350,9 +350,15 @@ export default function SettingsPage() {
             title="Logout"
             description="Sign out from the user portal on this device."
             cta="Logout"
-            onClick={() => {
-              logout();
-              navigate("/auth-entry");
+            onClick={async () => {
+              try {
+                await logoutUser();
+              } catch {
+                // Fall back to local logout even if the backend logout fails.
+              } finally {
+                logout();
+                navigate("/auth-entry");
+              }
             }}
           />
         </div>
