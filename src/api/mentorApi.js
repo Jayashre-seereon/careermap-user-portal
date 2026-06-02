@@ -196,3 +196,29 @@ export async function getMentorById(id) {
 
   return mentorItem ? mapMentorItem(mentorItem, 0) : null;
 }
+// booking mentor api function 
+export async function createMentorOrder(data) {
+  const response = await api.post(
+    "/mentor-booking/create-order",
+    data
+  );
+
+  return response.data;
+}
+
+export async function verifyMentorPayment(data) {
+  const response = await api.post(
+    "/mentor-booking/verify-payment",
+    data
+  );
+
+  return response.data;
+}
+
+export async function getMyBookings() {
+  const response = await api.get(
+    "/mentor-booking/my-bookings"
+  );
+
+  return response.data;
+}
