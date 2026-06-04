@@ -65,22 +65,70 @@ const api = axios.create({
   },
 });
 
+let refreshSessionPromise = null;
+
+function isPublicAuthRoute(requestUrl) {
+  return (
+    requestUrl.includes("/auth/login/password") ||
+    requestUrl.includes("/auth/send-otp") ||
+    requestUrl.includes("/auth/verify-otp") ||
+    requestUrl.includes("/auth/refresh-token") ||
+    requestUrl.includes("/auth/logout") ||
+    requestUrl.includes("/user/signup")
+  );
+}
+
+function redirectToAuthEntry() {
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/app")) {
+    window.location.replace("/auth-entry");
+  }
+}
+
+async function refreshSession() {
+  if (!refreshSessionPromise) {
+    refreshSessionPromise = (async () => {
+      const refreshToken = useAuthStore.getState().refreshToken;
+
+      if (!refreshToken) {
+        throw new Error("Refresh token missing");
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+        refreshToken,
+      });
+      const nextAccessToken = response?.data?.accessToken;
+
+      if (!nextAccessToken) {
+        throw new Error("Refresh token request did not return an access token");
+      }
+
+      useAuthStore.getState().updateAuthSession({
+        accessToken: nextAccessToken,
+        refreshToken: response?.data?.refreshToken,
+        user: response?.data?.user,
+      });
+
+      return nextAccessToken;
+    })().finally(() => {
+      refreshSessionPromise = null;
+    });
+  }
+
+  return refreshSessionPromise;
+}
+
 api.interceptors.request.use(
   (config) => {
     const token = useAuthStore.getState().accessToken;
     const requestUrl = String(config.url || "");
     const explicitAuthorization = getHeaderValue(config.headers, "Authorization");
-    const isPublicAuthRoute =
-      requestUrl.includes("/auth/login/password") ||
-      requestUrl.includes("/auth/send-otp") ||
-      requestUrl.includes("/auth/verify-otp");
-    const isSignupRoute = requestUrl.includes("/user/signup");
+    const publicAuthRoute = isPublicAuthRoute(requestUrl);
 
     if (explicitAuthorization) {
       return config;
     }
 
-    if (token && !isPublicAuthRoute && !isSignupRoute) {
+    if (token && !publicAuthRoute) {
       setHeaderValue(config.headers, "Authorization", `Bearer ${token}`);
     } else if (!token) {
       removeHeaderValue(config.headers, "Authorization");
@@ -93,22 +141,36 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error?.response?.status;
     const requestUrl = String(error?.config?.url || "");
-    const isProtectedRoute = requestUrl.includes("/user/dashboard") || requestUrl.includes("/user/payment");
-    const tokenMessage = String(error?.response?.data?.message || "").toLowerCase();
-    const isInvalidToken = tokenMessage.includes("token invalid") || tokenMessage.includes("token expired");
+    const shouldSkipRefresh = isPublicAuthRoute(requestUrl);
 
-    if (status === 401 && isProtectedRoute && isInvalidToken) {
-      useAuthStore.getState().logout();
-
-      if (typeof window !== "undefined" && window.location.pathname.startsWith("/app")) {
-        window.location.replace("/auth-entry");
-      }
+    if (status !== 401 || shouldSkipRefresh) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    if (error?.config?._retry) {
+      useAuthStore.getState().logout();
+      redirectToAuthEntry();
+      return Promise.reject(error);
+    }
+
+    try {
+      const nextAccessToken = await refreshSession();
+      const retryConfig = {
+        ...error.config,
+        _retry: true,
+        headers: { ...(error.config.headers || {}) },
+      };
+
+      setHeaderValue(retryConfig.headers, "Authorization", `Bearer ${nextAccessToken}`);
+      return api.request(retryConfig);
+    } catch (refreshError) {
+      useAuthStore.getState().logout();
+      redirectToAuthEntry();
+      return Promise.reject(refreshError);
+    }
   }
 );
 

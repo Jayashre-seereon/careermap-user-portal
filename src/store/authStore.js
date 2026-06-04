@@ -57,6 +57,14 @@ export const useAuthStore = create(
           tempToken: "",
         })),
 
+      updateAuthSession: ({ accessToken, refreshToken, user } = {}) =>
+        set((state) => ({
+          accessToken: accessToken ?? state.accessToken,
+          refreshToken: refreshToken ?? state.refreshToken,
+          user: user ?? state.user,
+          tempToken: "",
+        })),
+
       setUser: (user) => set(() => ({ user })),
 
       clearAuthFlow: () =>

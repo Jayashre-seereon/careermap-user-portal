@@ -1,4 +1,5 @@
 import api from "./axios";
+import { useAuthStore } from "../store/authStore";
 import { palette } from "../data/careermapData";
 
 const mentorAccentPalette = [
@@ -221,4 +222,21 @@ export async function getMyBookings() {
   );
 
   return response.data;
+}
+
+export async function getBookedMentorSlots(mentorId, date) {
+  if (mentorId === null || mentorId === undefined || mentorId === "" || !date) {
+    return [];
+  }
+
+  const token = useAuthStore.getState().accessToken;
+  const response = await api.get("/mentor-booking/booked-slots", {
+    params: {
+      mentorId,
+      date,
+    },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+
+  return Array.isArray(response?.data?.data) ? response.data.data.filter(Boolean) : [];
 }

@@ -2,8 +2,13 @@
 import { ArrowRightOutlined, LockOutlined, StarFilled } from "@ant-design/icons";
 import { Modal } from "antd";
 import { useSearchParams } from "react-router-dom";
-import { getMentorById, getMentors,  createMentorOrder,
-  verifyMentorPayment, } from "../../../api/mentorApi";
+import {
+  createMentorOrder,
+  getBookedMentorSlots,
+  getMentorById,
+  getMentors,
+  verifyMentorPayment,
+} from "../../../api/mentorApi";
 import { mentors as fallbackMentors } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
@@ -23,6 +28,14 @@ function formatNumericDate(value) {
     month: parsed.toLocaleDateString("en-IN", { month: "short" }),
     displayDate: parsed.toLocaleDateString("en-GB"),
   };
+}
+
+function normalizeSlotKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/\s*(am|pm)$/i, "");
 }
 
 function buildFallbackAvailability() {
@@ -180,6 +193,9 @@ export default function BookMentorPage() {
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [bookedSlotsLoading, setBookedSlotsLoading] = useState(false);
+  const [bookedSlotsError, setBookedSlotsError] = useState("");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -217,6 +233,11 @@ export default function BookMentorPage() {
     const activeDate = dates.find((item) => item.key === selectedDate) || dates[0];
     return activeDate?.slots || [];
   }, [dates, selectedDate]);
+  const bookedSlotKeys = useMemo(
+    () => new Set((bookedSlots || []).map((slot) => normalizeSlotKey(slot)).filter(Boolean)),
+    [bookedSlots]
+  );
+  const availableSlots = useMemo(() => slots.filter(Boolean), [slots]);
 
   function buildMentorReturnTo(mentorRef = activeMentor) {
     const mentorName = typeof mentorRef === "string" ? mentorRef : mentorRef?.name;
@@ -300,6 +321,8 @@ export default function BookMentorPage() {
     if (!activeMentor) {
       setSelectedDate("");
       setSelectedSlot("");
+      setBookedSlots([]);
+      setBookedSlotsError("");
       return;
     }
 
@@ -312,6 +335,51 @@ export default function BookMentorPage() {
       setSelectedSlot("");
     }
   }, [activeMentor, dates, selectedDate]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadBookedSlots() {
+      if (!activeMentor?.id || !selectedDate) {
+        setBookedSlots([]);
+        setBookedSlotsError("");
+        return;
+      }
+
+      try {
+        setBookedSlotsLoading(true);
+        setBookedSlotsError("");
+        const items = await getBookedMentorSlots(activeMentor.id, selectedDate);
+        if (active) {
+          setBookedSlots(items);
+        }
+      } catch (error) {
+        if (active) {
+          setBookedSlots([]);
+          setBookedSlotsError(error?.response?.data?.message || error?.message || "Failed to load booked slots.");
+        }
+      } finally {
+        if (active) {
+          setBookedSlotsLoading(false);
+        }
+      }
+    }
+
+    loadBookedSlots();
+    return () => {
+      active = false;
+    };
+  }, [activeMentor?.id, selectedDate]);
+
+  useEffect(() => {
+    if (!selectedSlot) {
+      return;
+    }
+
+    if (bookedSlotKeys.has(normalizeSlotKey(selectedSlot))) {
+      setSelectedSlot("");
+    }
+  }, [bookedSlotKeys, selectedSlot]);
 
   useEffect(() => {
     if (!processing || !activeMentor) {
@@ -586,21 +654,35 @@ handler: async function (response) {
         <SectionCard title="Select Time">
           {selectedDate ? (
             <div className="flex flex-wrap gap-2.5">
-              {slots.length ? (
-                slots.map((slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    onClick={() => setSelectedSlot(slot)}
-                    className="rounded-[12px] px-[14px] py-2.5 px-3.5 text-[12px] font-extrabold transition-all duration-150"
-                    style={{
-                      backgroundColor: selectedSlot === slot ? "#9a2119" : "#f2ebe6",
-                      color: selectedSlot === slot ? "#fff" : "#1a0a09",
-                    }}
-                  >
-                    {slot}
-                  </button>
-                ))
+              {availableSlots.length ? (
+                availableSlots.map((slot) => {
+                  const isBooked = bookedSlotKeys.has(normalizeSlotKey(slot));
+
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      disabled={isBooked}
+                      onClick={() => setSelectedSlot(slot)}
+                      className="rounded-[12px] px-[14px] py-2.5 px-3.5 text-[12px] font-extrabold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
+                      style={{
+                        backgroundColor: isBooked
+                          ? "#efe7e4"
+                          : selectedSlot === slot
+                            ? "#9a2119"
+                            : "#f2ebe6",
+                        color: isBooked
+                          ? "#a28f89"
+                          : selectedSlot === slot
+                            ? "#fff"
+                            : "#1a0a09",
+                      }}
+                    >
+                      {slot}
+                      {isBooked ? " (Booked)" : ""}
+                    </button>
+                  );
+                })
               ) : (
                 <div className="text-sm text-[#8c6c67]">No time slots available for this date.</div>
               )}
@@ -608,6 +690,8 @@ handler: async function (response) {
           ) : (
             <div className="text-sm text-[#8c6c67]">Choose a date to see available time slots.</div>
           )}
+          {bookedSlotsLoading ? <div className="mt-3 text-xs text-[#8c6c67]">Loading booked slots...</div> : null}
+          {bookedSlotsError ? <div className="mt-3 text-xs font-semibold text-[#9a2119]">{bookedSlotsError}</div> : null}
         </SectionCard>
 
         <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#efe4df] bg-white/95 p-4 backdrop-blur">
