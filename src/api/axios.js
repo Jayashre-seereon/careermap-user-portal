@@ -74,7 +74,9 @@ function isPublicAuthRoute(requestUrl) {
     requestUrl.includes("/auth/verify-otp") ||
     requestUrl.includes("/auth/refresh-token") ||
     requestUrl.includes("/auth/logout") ||
-    requestUrl.includes("/user/signup")
+    requestUrl.includes("/user/signup") ||
+    requestUrl.includes("/user/forgot-password") ||
+    requestUrl.includes("/user/reset-password")
   );
 }
 

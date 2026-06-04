@@ -7,3 +7,4 @@ export { default as OtpVerifyPage } from "./pages/OtpVerifyPage";
 export { default as ProfileSetupPage } from "./pages/ProfileSetupPage";
 export { default as PromoPage } from "./pages/PromoPage";
 export { default as ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+export { default as ResetPasswordPage } from "./pages/ResetPasswordPage";

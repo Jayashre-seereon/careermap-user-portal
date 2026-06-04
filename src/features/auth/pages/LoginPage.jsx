@@ -1,7 +1,7 @@
 import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 import { Alert, Button, Form, Input, Space, Typography } from "antd";
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { getApiErrorMessage, loginWithPassword, sendOtp } from "../../../api/authApi";
 import { useAppState } from "../../../state/AppStateContext";
 import { useAuthStore } from "../../../store/authStore";
@@ -14,14 +14,17 @@ const { Text } = Typography;
 export default function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const location = useLocation();
+  const navState = location.state || null;
   const { onboarding, saveUserProfile } = useAppState();
   const setSignupForm = useAuthStore((state) => state.setSignupForm);
   const setOnboardingData = useAuthStore((state) => state.setOnboardingData);
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
   const clearAuthFlow = useAuthStore((state) => state.clearAuthFlow);
   const isExistingUser = params.get("userType") === "existing";
+  const initialMode = isExistingUser && params.get("mode") === "email" ? "email" : "mobile";
 
-  const [mode, setMode] = useState("mobile");
+  const [mode, setMode] = useState(initialMode);
   const [status, setStatus] = useState(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
@@ -126,6 +129,10 @@ export default function LoginPage() {
       backTo="/auth-entry"
     >
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+        {navState?.passwordResetSuccess ? (
+          <Alert type="success" message={navState.passwordResetSuccess} showIcon style={{ borderRadius: "10px" }} />
+        ) : null}
+
         <div style={{ display: "flex", gap: "6px", background: "#f7ece8", borderRadius: "12px", padding: "4px" }}>
           {["mobile", ...(isExistingUser ? ["email"] : [])].map((item) => (
             <button
