@@ -1,5 +1,5 @@
 import { Avatar } from "antd";
-import { BankOutlined, BellOutlined, RightOutlined, TeamOutlined, TrophyOutlined } from "@ant-design/icons";
+import { BankOutlined, BellOutlined, RightOutlined, TrophyOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../../api/dashboardApi";
 import { personalityQuestions, personalityTypes, palette } from "../../../data/careermapData";
@@ -120,8 +120,20 @@ export default function DashboardPage() {
               className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               onClick={() => navigate("/app/book-mentor")}
             >
-              <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-[18px]" style={{ backgroundColor: `${mentor.accent}15` }}>
-                <TeamOutlined style={{ color: mentor.accent, fontSize: 22 }} />
+              <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px]" style={{ backgroundColor: `${mentor.accent}15` }}>
+                {mentor.image ? (
+                  <Avatar
+                    src={mentor.image}
+                    size={52}
+                    shape="square"
+                    className="!flex !items-center !justify-center !bg-transparent"
+                    style={{ borderRadius: 18 }}
+                  />
+                ) : (
+                  <span className="text-[18px] font-black" style={{ color: mentor.accent }}>
+                    {mentor.avatar}
+                  </span>
+                )}
               </div>
               <div className="text-[15px] font-black text-ink">{mentor.name}</div>
               <div className="mt-1 text-[12px] font-bold text-brand">{mentor.specialty}</div>
@@ -177,12 +189,22 @@ export default function DashboardPage() {
               className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
               onClick={() => navigate("/app/institutes")}
             >
-              <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-[18px] bg-[#edf3ff]">
-                <BankOutlined style={{ color: palette.blue, fontSize: 22 }} />
+              <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px] bg-[#edf3ff]">
+                {item.logo ? (
+                  <img
+                    src={item.logo}
+                    alt={item.name}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <BankOutlined style={{ color: palette.blue, fontSize: 22 }} />
+                )}
               </div>
               <div className="min-h-[52px] text-[15px] font-black text-ink">{item.name}</div>
               <div className="mt-1 text-[12px] font-bold text-brand">{item.location}</div>
               <div className="mt-2 text-[12px] text-muted">{item.type}</div>
+              {item.tentativeDate ? <div className="mt-1 text-[11px] font-semibold text-muted">Tentative: {item.tentativeDate}</div> : null}
             </button>
           ))}
         </div>

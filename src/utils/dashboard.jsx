@@ -11,6 +11,32 @@ import {
 } from "@ant-design/icons";
 import { featuredInstitutes, featuredMentors, featuredScholarships, moduleCards, palette } from "../data/careermapData";
 
+function formatDateDDMMYYYY(value) {
+  if (!value) {
+    return "";
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(value);
+  }
+
+  return parsedDate.toLocaleDateString("en-GB");
+}
+
+function buildInitials(name = "", fallback = "M") {
+  const initials = String(name)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+
+  return initials || fallback;
+}
+
 export const moduleRouteMap = {
   "career library": "/app/library",
   assessment: "/app/assessment",
@@ -118,6 +144,8 @@ export function buildDashboardMentors(mentors = []) {
     specialty: mentor.designation || featuredMentors[index % featuredMentors.length].specialty,
     rating: mentor.rank || featuredMentors[index % featuredMentors.length].rating,
     experience: mentor.experience ? `${mentor.experience} yrs` : featuredMentors[index % featuredMentors.length].experience,
+    image: mentor.image || null,
+    avatar: buildInitials(mentor.name || featuredMentors[index % featuredMentors.length].name),
   }));
 }
 
@@ -151,5 +179,7 @@ export function buildDashboardInstitutes(items = []) {
     name: item.name || "",
     location: item.state || "",
     type: item.institute_type || "",
+    logo: item.logo || null,
+    tentativeDate: formatDateDDMMYYYY(item.tentative_date || item.tentativeDate || ""),
   }));
 }

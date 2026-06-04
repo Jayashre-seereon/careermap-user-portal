@@ -75,8 +75,12 @@ export default function InstitutePage() {
         <div className="motion-item overflow-hidden rounded-2xl border bg-white shadow">
           <div className="flex">
             <div className="flex w-24 flex-col items-center justify-center bg-[#9a2119] py-6">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-white/20">
-                <BankOutlined className="text-lg text-white" />
+              <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white/20">
+                {selected.logo ? (
+                  <img src={selected.logo} alt={selected.name} className="h-full w-full object-cover" loading="lazy" />
+                ) : (
+                  <BankOutlined className="text-lg text-white" />
+                )}
               </div>
               <div className="flex flex-col items-center">
                 <span className="font-bold text-white">{selected.rank}</span>
@@ -102,6 +106,12 @@ export default function InstitutePage() {
               <p className="m-0 text-base font-bold text-[#1f1a1b]">{selected.courses?.length || 0} available</p>
             </Card>
           </div>
+
+          {selected.tentativeDate ? (
+            <Card title="Tentative Date">
+              <p className="m-0 text-base font-bold text-[#1f1a1b]">{selected.tentativeDate}</p>
+            </Card>
+          ) : null}
 
           <Card title="About">
             <p className="text-sm text-gray-500">{selected.about}</p>
@@ -171,8 +181,12 @@ export default function InstitutePage() {
               </div>
 
               <div className="relative px-5 pb-5 pt-0">
-                <div className={`-mt-8 flex h-[64px] w-[64px] items-center justify-center rounded-[20px] border-4 border-white bg-gradient-to-br ${accent} text-[20px] font-black text-white shadow-md`}>
-                  {initials}
+              <div className={`-mt-8 flex h-[64px] w-[64px] items-center justify-center rounded-[20px] border-4 border-white bg-gradient-to-br ${accent} text-[20px] font-black text-white shadow-md`}>
+                  {item.logo ? (
+                    <img src={item.logo} alt={item.name} className="h-full w-full rounded-[16px] object-cover" loading="lazy" />
+                  ) : (
+                    initials
+                  )}
                 </div>
 
                 <div className="mt-4">
@@ -193,6 +207,7 @@ export default function InstitutePage() {
                     Explore <RightOutlined />
                   </span>
                 </div>
+                {item.tentativeDate ? <div className="mt-2 text-[11px] font-semibold text-[#8b7f7b]">Tentative: {item.tentativeDate}</div> : null}
               </div>
             </div>
           );

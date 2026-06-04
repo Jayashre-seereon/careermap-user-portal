@@ -189,6 +189,34 @@ function normalizeSalaryRanges(value) {
   return [{ label: String(value) }];
 }
 
+function formatSalaryAmount(value) {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return String(value ?? "");
+  }
+
+  return new Intl.NumberFormat("en-IN").format(numericValue);
+}
+
+function formatSalaryRange(salary) {
+  if (!salary) {
+    return "Salary not available";
+  }
+
+  const currency = salary?.currency ? `${salary.currency} ` : "";
+
+  if (salary?.minSalary != null && salary?.maxSalary != null) {
+    return `${currency}${formatSalaryAmount(salary.minSalary)} - ${formatSalaryAmount(salary.maxSalary)}`;
+  }
+
+  if (salary?.label || salary?.value) {
+    return salary.label || salary.value;
+  }
+
+  return "Salary not available";
+}
+
 function normalizeDetailItem(item, index = 0, sourceItem = null) {
   const title = getDetailTitle(item) || getItemTitle(sourceItem) || `Career Detail ${index + 1}`;
 
@@ -742,9 +770,7 @@ export default function LibraryPage() {
             detail.salaryRanges.map((salary, salaryIndex) => (
               <div key={salary?.id ?? salaryIndex} className="mb-2">
                 <Text className="text-[15px] font-bold text-brand">
-                  {salary?.minSalary && salary?.maxSalary
-                    ? `${salary.minSalary} - ${salary.maxSalary}`
-                    : salary?.label || salary?.value || "Salary not available"}
+                  {formatSalaryRange(salary)}
                 </Text>
               </div>
             ))

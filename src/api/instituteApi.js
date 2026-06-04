@@ -12,6 +12,20 @@ function stripHtml(value) {
   return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function formatDateDDMMYYYY(value) {
+  if (!value) {
+    return "";
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return String(value);
+  }
+
+  return parsedDate.toLocaleDateString("en-GB");
+}
+
 function mapInstituteItem(item, index) {
   const state = item?.state || "";
   const city = item?.city || "";
@@ -29,6 +43,8 @@ function mapInstituteItem(item, index) {
     about: stripHtml(item?.about) || "About information is not available right now.",
     website: item?.url || "#",
     rank: item?.rank || "Top",
+    logo: item?.logo || null,
+    tentativeDate: formatDateDDMMYYYY(item?.tentative_date || item?.tentativeDate || ""),
   };
 }
 

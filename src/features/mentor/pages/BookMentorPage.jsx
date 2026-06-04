@@ -21,6 +21,7 @@ function formatNumericDate(value) {
     day: parsed.toLocaleDateString("en-IN", { weekday: "short" }),
     date: String(parsed.getDate()),
     month: parsed.toLocaleDateString("en-IN", { month: "short" }),
+    displayDate: parsed.toLocaleDateString("en-GB"),
   };
 }
 
@@ -59,6 +60,7 @@ function normalizeAvailability(availability) {
           day: item?.day || info?.day || "Day",
           date: item?.date || info?.date || "",
           month: item?.month || info?.month || "",
+          displayDate: item?.displayDate || info?.displayDate || item?.date || "",
           slots: Array.isArray(item?.slots) ? item.slots.filter(Boolean) : [],
         };
       })
@@ -68,12 +70,16 @@ function normalizeAvailability(availability) {
   return buildFallbackAvailability();
 }
 
-function Avatar({ name, accent, avatar }) {
+function Avatar({ name, accent, avatar, image }) {
   return (
     <div className="flex h-16 w-16 items-center justify-center rounded-[22px] shadow-sm" style={{ backgroundColor: `${accent}18` }}>
-      <span className="text-[22px] font-black" style={{ color: accent }}>
-        {avatar || String(name || "M").slice(0, 2).toUpperCase()}
-      </span>
+      {image ? (
+        <img src={image} alt={name} className="h-full w-full rounded-[22px] object-cover" loading="lazy" />
+      ) : (
+        <span className="text-[22px] font-black" style={{ color: accent }}>
+          {avatar || String(name || "M").slice(0, 2).toUpperCase()}
+        </span>
+      )}
     </div>
   );
 }
@@ -105,12 +111,16 @@ function MentorCard({ mentor, isFree, onClick }) {
     >
       <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors group-hover:bg-[#9a2119]" />
 
-      <div className="mb-4 flex items-start justify-between gap-3 pt-2">
+          <div className="mb-4 flex items-start justify-between gap-3 pt-2">
         <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-[18px]" style={{ backgroundColor: `${mentor.accent}18` }}>
-            <span className="text-[20px] font-black" style={{ color: mentor.accent }}>
-              {mentor.avatar}
-            </span>
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px]" style={{ backgroundColor: `${mentor.accent}18` }}>
+            {mentor.image ? (
+              <img src={mentor.image} alt={mentor.name} className="h-full w-full object-cover" loading="lazy" />
+            ) : (
+              <span className="text-[20px] font-black" style={{ color: mentor.accent }}>
+                {mentor.avatar}
+              </span>
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[15px] font-black text-[#1a0a09]">{mentor.name}</div>
@@ -198,6 +208,7 @@ export default function BookMentorPage() {
   }, [mentorList, selectedMentor, selectedMentorId]);
 
   const dates = useMemo(() => normalizeAvailability(activeMentor?.availability), [activeMentor]);
+  const selectedDateInfo = useMemo(() => dates.find((item) => item.key === selectedDate) || dates[0] || null, [dates, selectedDate]);
   const slots = useMemo(() => {
     if (!dates.length) {
       return [];
@@ -456,11 +467,11 @@ handler: async function (response) {
           <h2 className="mt-4 text-2xl font-black text-[#1a0a09]">Session booked successfully</h2>
           <p className="mt-2 text-sm leading-7 text-[#6f6663]">
             Payment successful. Your session with <strong className="text-[#1a0a09]">{activeMentor.name}</strong> is confirmed for{" "}
-            {selectedDate} at {selectedSlot}.
+            {selectedDateInfo?.displayDate || selectedDate} at {selectedSlot}.
           </p>
           <div className="mx-auto mt-5 max-w-md rounded-[22px] border border-[#f0e4e2] bg-[#fffaf8] p-4 text-left">
             <div className="text-sm text-[#6f6663]">Mentor: {activeMentor.name}</div>
-            <div className="mt-1 text-sm text-[#6f6663]">Date: {selectedDate}</div>
+            <div className="mt-1 text-sm text-[#6f6663]">Date: {selectedDateInfo?.displayDate || selectedDate}</div>
             <div className="mt-1 text-sm text-[#6f6663]">Time: {selectedSlot}</div>
             <div className="mt-1 text-sm text-[#6f6663]">Price: {activeMentor.price}</div>
           </div>
@@ -507,7 +518,7 @@ handler: async function (response) {
 
           <div className="relative z-[1]">
             <div className="flex flex-col items-center gap-3 text-center">
-              <Avatar name={activeMentor.name} accent={activeMentor.accent} avatar={activeMentor.avatar} />
+              <Avatar name={activeMentor.name} accent={activeMentor.accent} avatar={activeMentor.avatar} image={activeMentor.image} />
               <div className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
                 Mentor Profile
               </div>
@@ -558,15 +569,14 @@ handler: async function (response) {
                     setSelectedDate(date.key);
                     setSelectedSlot("");
                   }}
-                  className="w-[62px] rounded-[16px] py-3.5 px-3.5 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-35"
+                  className="w-[88px] rounded-[16px] px-2 py-3 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-35"
                   style={{
                     backgroundColor: isActive ? "#9a2119" : "#f2ebe6",
                     color: isActive ? "#fff" : "#1a0a09",
                   }}
                 >
                   <div className="text-[10px] font-bold">{date.day}</div>
-                  <div className="text-[17px] font-black">{date.date}</div>
-                  <div className="text-[10px] font-bold">{date.month}</div>
+                  <div className="text-[12px] font-black leading-tight">{date.displayDate}</div>
                 </button>
               );
             })}
@@ -603,16 +613,16 @@ handler: async function (response) {
         <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#efe4df] bg-white/95 p-4 backdrop-blur">
           <div className="mx-auto w-full max-w-5xl">
             <button
-  type="button"
-  disabled={!selectedDate || !selectedSlot}
-  onClick={handlePayment}
-  className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
-  style={{
+              type="button"
+              disabled={!selectedDate || !selectedSlot}
+              onClick={handlePayment}
+              className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+              style={{
                 background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)",
               }}
->
-  Book & Pay
-</button>
+            >
+              Book & Pay
+            </button>
           </div>
         </div>
 
