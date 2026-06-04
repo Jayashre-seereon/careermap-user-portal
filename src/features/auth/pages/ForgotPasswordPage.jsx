@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <AuthShell title="Forgot Password" subtitle="Enter your email address and we will send a reset link." backTo="/login">
+    <AuthShell title="Forgot Password" subtitle="Enter your email address and we will send a reset link." backTo="/login?userType=existing">
       <Space orientation="vertical" size="large" style={{ width: "100%" }}>
         <Form form={form} layout="vertical" className="cm-form-label" onFinish={handleSubmit} requiredMark={false}>
           <Form.Item
@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
         <div style={{ textAlign: "center", fontSize: "13px" }}>
           <button
             type="button"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/login?userType=existing")}
             style={{
               border: "none",
               background: "transparent",
