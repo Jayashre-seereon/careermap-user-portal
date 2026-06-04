@@ -2,12 +2,13 @@
 import { ArrowRightOutlined, LockOutlined, StarFilled } from "@ant-design/icons";
 import { Modal } from "antd";
 import { useSearchParams } from "react-router-dom";
-import { getMentorById, getMentors } from "../../../api/mentorApi";
+import { getMentorById, getMentors,  createMentorOrder,
+  verifyMentorPayment, } from "../../../api/mentorApi";
 import { mentors as fallbackMentors } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import { loadRazorpayScript } from "../../../utils/razorpay.js";
 function formatNumericDate(value) {
   const parsed = new Date(value);
 
@@ -321,6 +322,89 @@ export default function BookMentorPage() {
     return () => clearTimeout(timer);
   }, [activeMentor, addBooking, processing, selectedDate, selectedSlot]);
 
+
+const handlePayment = async () => {
+  try {
+
+    console.log("PAYMENT CLICKED");
+
+    const loaded = await loadRazorpayScript();
+
+    console.log("SDK LOADED =", loaded);
+
+    if (!loaded) {
+      alert("SDK FAILED");
+      return;
+    }
+
+    const orderResponse =
+      await createMentorOrder({
+        mentorId: activeMentor.id,
+        date: selectedDate,
+        timeSlot: selectedSlot,
+      });
+
+    console.log("ORDER RESPONSE", orderResponse);
+
+    const { order, bookingId, key } =
+      orderResponse;
+
+    const options = {
+      key: key,
+
+      amount: order.amount,
+
+      currency: order.currency,
+
+      order_id: order.id,
+
+      name: "CareerMap",
+
+      description: "Mentor Booking",
+
+handler: async function (response) {
+
+  await verifyMentorPayment({
+
+    mentorId: activeMentor.id,
+
+    date: selectedDate,
+
+    timeSlot: selectedSlot,
+
+    razorpay_order_id:
+      response.razorpay_order_id,
+
+    razorpay_payment_id:
+      response.razorpay_payment_id,
+
+    razorpay_signature:
+      response.razorpay_signature,
+  });
+
+  setBooked(true);
+},
+
+      theme: {
+        color: "#9a2119",
+      },
+    };
+
+    const rzp =
+      new window.Razorpay(options);
+
+    rzp.open();
+
+  } catch (err) {
+
+    console.log("FULL ERROR", err);
+
+    alert(
+      err?.response?.data?.message ||
+      err.message
+    );
+  }
+};
   const detailUnlocked = activeMentor ? canAccessFreeDetail("book-mentor", activeMentor.name) : true;
   const canPay =
     paymentMethod === "upi"
@@ -519,16 +603,16 @@ export default function BookMentorPage() {
         <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#efe4df] bg-white/95 p-4 backdrop-blur">
           <div className="mx-auto w-full max-w-5xl">
             <button
-              type="button"
-              disabled={!selectedDate || !selectedSlot}
-              onClick={() => setPaymentOpen(true)}
-              className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
-              style={{
+  type="button"
+  disabled={!selectedDate || !selectedSlot}
+  onClick={handlePayment}
+  className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+  style={{
                 background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)",
               }}
-            >
-              Book & Pay
-            </button>
+>
+  Book & Pay
+</button>
           </div>
         </div>
 
@@ -540,221 +624,7 @@ export default function BookMentorPage() {
           width={760}
           className="[&_.ant-modal-content]:!rounded-[28px] [&_.ant-modal-content]:!overflow-hidden"
         >
-          <div className="bg-[#f7f7f8]">
-            <div className="flex items-center justify-between border-b border-[#efefef] bg-white px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setPaymentOpen(false)}
-                className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-800"
-              >
-                <ArrowRightOutlined className="rotate-180" />
-                Back
-              </button>
-
-              <div className="flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-green-700">
-                <LockOutlined />
-                Secure Checkout
-              </div>
-            </div>
-
-            <div className="px-6 py-6">
-              <div className="mb-6">
-                <h2 className="text-3xl font-black text-[#12284c] max-sm:text-2xl">Complete your purchase</h2>
-                <p className="mt-1 text-sm text-[#9ba3b3]">You're one step away from booking {activeMentor.name}</p>
-              </div>
-
-              <div className="grid gap-5 lg:grid-cols-[1.55fr_0.95fr]">
-                <div className="overflow-hidden rounded-[24px] border border-[#efefef] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                  <div className="border-b border-[#f6f6f6] px-6 py-4">
-                    <h3 className="m-0 text-sm font-black uppercase tracking-tight text-gray-800">Payment Method</h3>
-                  </div>
-
-                  <div className="flex flex-col gap-5 px-6 py-5">
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: "upi", label: "UPI", icon: "⚡" },
-                        { id: "card", label: "Card", icon: "💳" },
-                        { id: "netbanking", label: "Net Banking", icon: "🏦" },
-                      ].map((item) => {
-                        const active = paymentMethod === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => setPaymentMethod(item.id)}
-                            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-3 text-xs font-medium transition-all"
-                            style={{
-                              borderColor: active ? "#9a2119" : "#e5e7eb",
-                              backgroundColor: active ? "#fdf1f0" : "#fff",
-                              color: active ? "#9a2119" : "#6b7280",
-                            }}
-                          >
-                            <span className="text-lg">{item.icon}</span>
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="flex flex-col gap-3">
-                      {paymentMethod === "upi" ? (
-                        <>
-                          <Field label="UPI ID">
-                            <input
-                              className="rounded-lg border border-gray-200 px-4 py-3 text-[14px] outline-none"
-                              placeholder="yourname@upi"
-                              value={paymentValues.upiId}
-                              onChange={(event) => setPaymentValues((current) => ({ ...current, upiId: event.target.value }))}
-                            />
-                          </Field>
-                          <p className="text-xs text-gray-400">Supported: @okicici, @ybl, @paytm, @upi</p>
-                        </>
-                      ) : null}
-
-                      {paymentMethod === "card" ? (
-                        <>
-                          <Field label="Cardholder Name">
-                            <input
-                              className="rounded-lg border border-gray-200 px-4 py-3 text-[14px] outline-none"
-                              placeholder="Full name on card"
-                              value={paymentValues.cardName}
-                              onChange={(event) =>
-                                setPaymentValues((current) => ({ ...current, cardName: event.target.value }))
-                              }
-                            />
-                          </Field>
-                          <Field label="Card Number">
-                            <input
-                              className="rounded-lg border border-gray-200 px-4 py-3 text-[14px] outline-none"
-                              placeholder="0000 0000 0000 0000"
-                              value={paymentValues.cardNumber}
-                              onChange={(event) =>
-                                setPaymentValues((current) => ({
-                                  ...current,
-                                  cardNumber: event.target.value.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim(),
-                                }))
-                              }
-                            />
-                          </Field>
-                          <div className="grid grid-cols-2 gap-3">
-                            <Field label="Expiry">
-                              <input
-                                className="rounded-lg border border-gray-200 px-4 py-3 text-[14px] outline-none"
-                                placeholder="MM / YY"
-                                value={paymentValues.cardExpiry}
-                                onChange={(event) => setPaymentValues((current) => ({ ...current, cardExpiry: event.target.value }))}
-                              />
-                            </Field>
-                            <Field label="CVV">
-                              <input
-                                className="rounded-lg border border-gray-200 px-4 py-3 text-[14px] outline-none"
-                                placeholder="***"
-                                value={paymentValues.cardCvv}
-                                onChange={(event) =>
-                                  setPaymentValues((current) => ({
-                                    ...current,
-                                    cardCvv: event.target.value.replace(/\D/g, "").slice(0, 4),
-                                  }))
-                                }
-                              />
-                            </Field>
-                          </div>
-                        </>
-                      ) : null}
-
-                      {paymentMethod === "netbanking" ? (
-                        <>
-                          <Field label="Select Bank">
-                            <select
-                              className="rounded-lg border border-gray-200 px-4 py-3 text-[14px] outline-none"
-                              value={paymentValues.bank}
-                              onChange={(event) =>
-                                setPaymentValues((current) => ({ ...current, bank: event.target.value }))
-                              }
-                            >
-                              <option value="">Choose your bank</option>
-                              {["SBI", "HDFC Bank", "ICICI Bank", "Axis Bank"].map((bank) => (
-                                <option key={bank} value={bank}>
-                                  {bank}
-                                </option>
-                              ))}
-                            </select>
-                          </Field>
-                          <p className="text-xs text-gray-400">You will be redirected to your bank&apos;s secure portal.</p>
-                        </>
-                      ) : null}
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-2 text-[11px] text-gray-400">
-                      <LockOutlined style={{ color: "#9ca3af", fontSize: 13 }} />
-                      Your payment info is encrypted and never stored.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-[24px] border border-[#f0d5d3] bg-white shadow-[0_1px_4px_rgba(154,33,25,0.08)]">
-                  <div className="h-1 w-full bg-[#9a2119]" />
-                  <div className="flex h-full flex-col px-5 py-5">
-                    <div className="mb-4 inline-flex self-start items-center gap-1.5 rounded-full bg-[#fdf1f0] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-[#9a2119]">
-                      <StarFilled style={{ color: "#9a2119" }} />
-                      Selected Booking
-                    </div>
-
-                    <h3 className="text-base font-black text-gray-900 mb-0.5">{activeMentor.name}</h3>
-                    <p className="mb-4 text-xs text-gray-400">{activeMentor.specialty}</p>
-
-                    <div className="flex flex-col gap-2 mb-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Mentor</span>
-                        <span className="font-semibold text-gray-800">{activeMentor.price}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Date</span>
-                        <span className="font-semibold text-gray-800">{selectedDate}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Time</span>
-                        <span className="font-semibold text-gray-800">{selectedSlot}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Duration</span>
-                        <span className="font-semibold text-gray-800">45 mins</span>
-                      </div>
-                    </div>
-
-                    <div className="my-4 border-t border-gray-100" />
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-gray-700">Total due</span>
-                      <span className="text-2xl font-black text-[#9a2119]">{activeMentor.price}</span>
-                    </div>
-
-                    <div className="mt-5">
-                      <button
-                        type="button"
-                        disabled={!canPay}
-                        onClick={() => {
-                          setPaymentOpen(false);
-                          setProcessing(true);
-                        }}
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-                        style={{ background: "#9a2119" }}
-                      >
-                        <LockOutlined />
-                        Complete Payment
-                      </button>
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
-                      <span>🔒</span>
-                      <span>256-bit SSL and PCI-DSS compliant</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
+         
         </Modal>
       </ModuleScreen>
     );
