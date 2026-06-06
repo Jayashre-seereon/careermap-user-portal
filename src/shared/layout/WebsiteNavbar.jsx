@@ -41,7 +41,7 @@ export default function WebsiteNavbar() {
   const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { unreadNotificationsCount, userProfile, logout, notifications } = useAppState();
-  const previewNotifications = notifications.slice(0, 3);
+  const previewNotifications = (notifications || []).slice(0, 3);
 
   const moduleMenu = {
     items: moduleItems.map((item) => ({ key: item.key, icon: item.icon, label: item.label })),
@@ -67,7 +67,7 @@ export default function WebsiteNavbar() {
           <button
             type="button"
             className="text-[11px] text-[#9b8f97] transition-colors hover:text-brand"
-            onClick={() => {}}
+            onClick={() => { }}
           >
             Mark all read
           </button>
@@ -78,11 +78,10 @@ export default function WebsiteNavbar() {
         {previewNotifications.map((item) => (
           <div
             key={item.id}
-            className={`cursor-pointer rounded-xl border px-3 py-2.5 transition-colors ${
-              item.unread
+            className={`cursor-pointer rounded-xl border px-3 py-2.5 transition-colors ${item.unread
                 ? "border-[#f2d1c7] bg-[#fff7f4] hover:bg-[#fef0eb]"
                 : "border-[#efe3de] bg-white hover:bg-[#faf5f3]"
-            }`}
+              }`}
           >
             <div className="mb-1 flex items-start justify-between gap-3">
               <Typography.Text className="!text-[13px] !font-semibold !text-ink">
@@ -129,11 +128,10 @@ export default function WebsiteNavbar() {
               <div className="flex items-center gap-1 whitespace-nowrap">
                 <Link
                   to="/app/dashboard"
-                  className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[14px] font-medium transition-colors ${
-                    location.pathname === "/app/dashboard"
+                  className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[14px] font-medium transition-colors ${location.pathname === "/app/dashboard"
                       ? "bg-[#fdf0ed] text-brand"
                       : "text-[#4b3d47] hover:bg-[#faf4f2] hover:text-brand"
-                  }`}
+                    }`}
                 >
                   <HomeOutlined className="text-[13px]" />
                   Home
@@ -142,16 +140,15 @@ export default function WebsiteNavbar() {
                 <Dropdown menu={moduleMenu} trigger={["click", "hover"]}>
                   <button
                     type="button"
-                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[14px] font-medium transition-colors ${
-                      moduleItems.some((item) => item.key === location.pathname)
+                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[14px] font-medium transition-colors ${moduleItems.some((item) => item.key === location.pathname)
                         ? "bg-[#fdf0ed] text-brand"
                         : "text-[#4b3d47] hover:bg-[#faf4f2] hover:text-brand"
-                    }`}
-                >
-                  Modules
-                  <DownOutlined className="text-[11px] opacity-60" />
-                </button>
-              </Dropdown>
+                      }`}
+                  >
+                    Modules
+                    <DownOutlined className="text-[11px] opacity-60" />
+                  </button>
+                </Dropdown>
               </div>
             </nav>
           </div>
@@ -203,7 +200,7 @@ export default function WebsiteNavbar() {
                   style={{ backgroundColor: "#9a2119", borderRadius: 6 }}
                 />
                 <span className="hidden text-[13px] font-medium text-[#2e1f28] md:inline">
-                  {userProfile.name || "demo2026"}
+                  {userProfile?.name || "demo2026"}
                 </span>
                 <DownOutlined className="text-[11px] text-[#9b8f97]" />
               </button>
