@@ -19,11 +19,9 @@ import {
 import { Avatar, Badge, Button, Divider, Dropdown, Popover, Space, Typography } from "antd";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { notifications } from "../../data/careermapData";
+import { logoutUser } from "../../api/authApi";
 import { useAppState } from "../../state/AppStateContext";
 import BrandMark from "../branding/BrandMark";
-
-const previewNotifications = notifications.slice(0, 3);
 
 const moduleItems = [
   { key: "/app/library", icon: <BookOutlined />, label: "Career Library" },
@@ -42,7 +40,8 @@ export default function WebsiteNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const { unreadNotificationsCount, userProfile, logout } = useAppState();
+  const { unreadNotificationsCount, userProfile, logout, notifications } = useAppState();
+  const previewNotifications = notifications.slice(0, 3);
 
   const moduleMenu = {
     items: moduleItems.map((item) => ({ key: item.key, icon: item.icon, label: item.label })),
@@ -179,12 +178,18 @@ export default function WebsiteNavbar() {
             <Dropdown
               menu={{
                 items: profileMenuItems,
-                onClick: ({ key }) => {
+                onClick: async ({ key }) => {
                   if (key === "profile") navigate("/app/profile");
                   if (key === "settings") navigate("/app/settings");
                   if (key === "logout") {
-                    logout();
-                    navigate("/auth-entry");
+                    try {
+                      await logoutUser();
+                    } catch {
+                      // Fall back to local logout even if the backend logout fails.
+                    } finally {
+                      logout();
+                      navigate("/auth-entry");
+                    }
                   }
                 },
               }}

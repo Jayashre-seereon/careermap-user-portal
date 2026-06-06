@@ -1,99 +1,16 @@
 import { Col, Row } from "antd";
 import { LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { moduleCards } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
+import { buildDashboardModules, moduleIconMap, moduleStyleMap } from "../../../utils/dashboard.jsx";
 import {
-    ReadOutlined,
-    TrophyOutlined,
-    TeamOutlined,
-    GiftOutlined,
-    GlobalOutlined,
-    BulbOutlined,
-    CreditCardOutlined,
-    BankOutlined,
-    FileDoneOutlined,
-    QuestionCircleOutlined,
+    AppstoreOutlined,
 } from "@ant-design/icons";
 
-const dashboardModuleVisuals = {
-    "Career Library": {
-        icon: <ReadOutlined style={{ color: "#c64f7a" }} />,
-         background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)",
-         actionBg: "#c64f7a",
-    },
-    "Master Class": {
-        icon: <TrophyOutlined style={{ color: "#4c45aa" }} />,
-        background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)",
-        actionBg: "#4c45aa",
-    },
-    "Book Mentor": {
-        icon: <TeamOutlined style={{ color: "#157f69" }} />,
-               background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)",
-        actionBg: "#157f69",
-    },
-    Scholarships: {
-        icon: <GiftOutlined style={{ color: "#b77718" }} />,
-        background: "linear-gradient(180deg, #fff0d8 0%, #fff8ee 100%)",
-        actionBg: "#b77718",
-    },
-    "Study Abroad": {
-        icon: <GlobalOutlined style={{ color: "#4c45aa" }} />,
-        background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)",
-        actionBg: "#4c45aa",
-    },
-    Assessment: {
-        icon: <BulbOutlined style={{ color: "#5d8f26" }} />,
-        background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)",
-   actionBg: "#5d8f26",
-    },
-    "Entrance Exam": {
-        icon: <FileDoneOutlined style={{ color: "#0f8a7c" }} />,
-        background: "linear-gradient(180deg, #def6f2 0%, #f0fbf9 100%)",
-        actionBg: "#0f8a7c",
-    },
-    Institutes: {
-        icon: <BankOutlined style={{ color: "#c64f7a" }} />,
-        background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)",
-        actionBg: "#c64f7a",
-    },
-    Quiz: {
-        icon: <QuestionCircleOutlined style={{ color: "#2c70c9" }} />,
-        background: "linear-gradient(180deg, #e4efff 0%, #f3f8ff 100%)",
-        actionBg: "#2c70c9",
-    },
-    Subscriptions: {
-        icon: <CreditCardOutlined style={{ color: "#8c5a18" }} />,
-        background: "linear-gradient(180deg, #fff1dd 0%, #fff9f0 100%)",
-        actionBg: "#8c5a18",
-    },
-};
-
-export function ExploreModulesSection() {
+export function ExploreModulesSection({ modules = [] }) {
     const navFunc = useNavigate();
     const { isUnlocked } = useAppState();
-    const priorityOrder = [
-        "Career Library",
-         "Assessment",
-        "Master Class",
-        "Book Mentor",
-         "Quiz",
-        "Entrance Exam",
-        "Institutes",
-        "Scholarships",
-        "Study Abroad",
-        "Subscriptions",
-    ];
-    const subscriptionsCard = {
-        title: "Subscriptions",
-        subtitle: "View subscription options and unlock premium modules.",
-        route: "/app/subscription",
-    };
-    const sourceCards = [...moduleCards, subscriptionsCard];
-    const curatedCards = priorityOrder
-        .map((title) => moduleCards.find((card) => card.title === title))
-        .map((card, index) => card || sourceCards.find((item) => item.title === priorityOrder[index]))
-        .filter(Boolean);
+    const curatedCards = modules.length && modules[0]?.route ? modules : buildDashboardModules(modules);
 
     return (
         <section>
@@ -111,7 +28,7 @@ export function ExploreModulesSection() {
                         (card.title === "Book Mentor" && !isUnlocked("book-mentor")) ||
                         (card.title === "Scholarships" && !isUnlocked("scholarship")) ||
                         (card.title === "Study Abroad" && !isUnlocked("abroad-consultancy"));
-                    const art = dashboardModuleVisuals[card.title] || dashboardModuleVisuals.Assessment;
+                    const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
                     const description =
                         card.title === "Assessment"
                             ? "Deep personality and aptitude analysis for smarter career decisions."
@@ -130,7 +47,7 @@ export function ExploreModulesSection() {
                                 >
                                     <div className="flex h-full items-center justify-center">
                                         <div className="dashboard-module-icon text-[36px] transition duration-300 group-hover:scale-110">
-                                            {art.icon}
+                                            {moduleIconMap[card.title] || <AppstoreOutlined style={{ color: art.actionBg }} />}
                                         </div>
                                     </div>
 

@@ -1,228 +1,767 @@
-import { useEffect, useState } from "react";
-import { ArrowRightOutlined } from "@ant-design/icons";
-import { DatePicker, Select, Modal } from "antd";
+﻿import { useEffect, useMemo, useState } from "react";
+import { ArrowRightOutlined, LockOutlined, StarFilled } from "@ant-design/icons";
+import { Modal } from "antd";
 import { useSearchParams } from "react-router-dom";
-import { mentors } from "../../../data/careermapData";
+import {
+  createMentorOrder,
+  getBookedMentorSlots,
+  getMentorById,
+  getMentors,
+  verifyMentorPayment,
+} from "../../../api/mentorApi";
+import { mentors as fallbackMentors } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { loadRazorpayScript } from "../../../utils/razorpay.js";
+function formatNumericDate(value) {
+  const parsed = new Date(value);
 
-/* ─── Avatar initials ─────────────────────────────────────────── */
-const Avatar = ({ name }) => {
-  const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return {
+    key: parsed.toISOString().split("T")[0],
+    day: parsed.toLocaleDateString("en-IN", { weekday: "short" }),
+    date: String(parsed.getDate()),
+    month: parsed.toLocaleDateString("en-IN", { month: "short" }),
+    displayDate: parsed.toLocaleDateString("en-GB"),
+  };
+}
+
+function normalizeSlotKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/\s*(am|pm)$/i, "");
+}
+
+function buildFallbackAvailability() {
+  const output = [];
+
+  for (let index = 0; index < 6; index += 1) {
+    const current = new Date();
+    current.setDate(current.getDate() + index);
+    const info = formatNumericDate(current);
+
+    output.push({
+      key: info.key,
+      day: info.day,
+      date: info.date,
+      month: info.month,
+      slots: index % 4 === 1 ? [] : ["9:00 AM", "10:00 AM", "11:30 AM", "2:00 PM", "3:30 PM", "5:00 PM", "6:30 PM"].slice(0, 3 + (index % 3)),
+    });
+  }
+
+  return output;
+}
+
+function normalizeAvailability(availability) {
+  if (Array.isArray(availability) && availability.length) {
+    return availability
+      .map((item) => {
+        const info = formatNumericDate(item?.rawDate || item?.date);
+
+        if (!info && !item?.key) {
+          return null;
+        }
+
+        return {
+          key: item?.key || info?.key || String(item?.date || ""),
+          day: item?.day || info?.day || "Day",
+          date: item?.date || info?.date || "",
+          month: item?.month || info?.month || "",
+          displayDate: item?.displayDate || info?.displayDate || item?.date || "",
+          slots: Array.isArray(item?.slots) ? item.slots.filter(Boolean) : [],
+        };
+      })
+      .filter(Boolean);
+  }
+
+  return buildFallbackAvailability();
+}
+
+function Avatar({ name, accent, avatar, image }) {
   return (
-    <div className="w-11 h-11 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center text-red-800 font-bold text-sm flex-shrink-0">
-      {initials}
+    <div className="flex h-16 w-16 items-center justify-center rounded-[22px] shadow-sm" style={{ backgroundColor: `${accent}18` }}>
+      {image ? (
+        <img src={image} alt={name} className="h-full w-full rounded-[22px] object-cover" loading="lazy" />
+      ) : (
+        <span className="text-[22px] font-black" style={{ color: accent }}>
+          {avatar || String(name || "M").slice(0, 2).toUpperCase()}
+        </span>
+      )}
     </div>
   );
-};
+}
 
-/* ─── Tag ─────────────────────────────────────────────────────── */
-const Tag = ({ children, variant = "default" }) => {
-  const cls = {
-    default: "bg-red-50 text-red-800",
-    free: "bg-green-50 text-green-700",
-    lock: "bg-gray-100 text-gray-500",
-  }[variant];
+function SectionCard({ title, children }) {
   return (
-    <span className={`${cls} text-xs font-medium px-2.5 py-0.5 rounded-full`}>
-      {children}
-    </span>
+    <div className="rounded-[24px] border border-[#f0e4e2] bg-white p-5 shadow-sm">
+      <h3 className="m-0 text-[18px] font-black text-[#1a0a09]">{title}</h3>
+      <div className="mt-3">{children}</div>
+    </div>
   );
-};
+}
 
-/* ─── Button ──────────────────────────────────────────────────── */
-const Btn = ({ children, onClick, disabled, ghost, className = "" }) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`
-      text-sm font-medium px-5 py-2 rounded-lg transition-all duration-150
-      ${ghost
-        ? "border border-gray-200 text-gray-500 bg-transparent hover:bg-gray-50"
-        : disabled
-          ? "bg-red-800 text-white opacity-40 cursor-not-allowed"
-          : "bg-red-800 text-white hover:bg-red-700 active:bg-red-900"
-      }
-      ${className}
-    `}
-  >
-    {children}
-  </button>
-);
+function Field({ label, children }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{label}</span>
+      {children}
+    </div>
+  );
+}
 
-/* ─── Form field ──────────────────────────────────────────────── */
-const Field = ({ label, children }) => (
-  <div className="flex flex-col gap-1.5 mb-3">
-    <label className="text-xs uppercase tracking-widest text-gray-400 font-medium">{label}</label>
-    {children}
-  </div>
-);
+function MentorCard({ mentor, isFree, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10"
+    >
+      <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors group-hover:bg-[#9a2119]" />
 
-const inputCls = "w-full text-sm px-3.5 py-2.5 border border-gray-200 rounded-lg bg-stone-50 text-gray-900 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100 transition";
+          <div className="mb-4 flex items-start justify-between gap-3 pt-2">
+        <div className="flex items-start gap-3">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px]" style={{ backgroundColor: `${mentor.accent}18` }}>
+            {mentor.image ? (
+              <img src={mentor.image} alt={mentor.name} className="h-full w-full object-cover" loading="lazy" />
+            ) : (
+              <span className="text-[20px] font-black" style={{ color: mentor.accent }}>
+                {mentor.avatar}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-black text-[#1a0a09]">{mentor.name}</div>
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">
+              {mentor.specialty}
+            </div>
+          </div>
+        </div>
+        {!isFree ? (
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-500">LOCKED</span>
+        ) : (
+          <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700">FREE</span>
+        )}
+      </div>
 
-/* ─── Mentor card ─────────────────────────────────────────────── */
-const MentorCard = ({ mentor, isFree, onClick }) => (
-  <div
-    onClick={onClick}
-    className="
-      motion-item group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white p-5
-      transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10
-      transition-all duration-200
-    "
-  >
-    <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors duration-200 group-hover:bg-[#9a2119]" />
+      <div className="mb-4 flex items-center gap-2">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
+          <StarFilled style={{ color: "#d4a017" }} />
+          {mentor.rating}
+        </span>
+        <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
+          {mentor.experience}
+        </span>
+        <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
+          {mentor.price}
+        </span>
+      </div>
 
-    <div className="mb-3 pt-2">
-      <div className="flex items-start gap-3">
-        <Avatar name={mentor.name} />
-        <div className="min-w-0 flex-1">
-          <p className="m-0 text-base font-black text-[#1a0a09]">{mentor.name}</p>
-          <p className="mt-1 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">{mentor.specialty}</p>
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {(mentor.tags || []).map((tag) => (
+          <span key={tag} className="rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]">
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="border-t border-[#f0e4e2] pt-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-[#8c6c67]">Tap to view mentor</span>
+          <span className="text-sm font-bold text-[#9a2119]">
+            Explore <ArrowRightOutlined />
+          </span>
         </div>
       </div>
+    </button>
+  );
+}
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <span className="text-sm font-black text-[#9a2119]">{mentor.price}</span>
-        <Tag variant={isFree ? "free" : "lock"}>{isFree ? "FREE" : "LOCKED"}</Tag>
-      </div>
-    </div>
-
-    <div className="mb-4 flex flex-wrap gap-1.5">
-      {mentor.tags.map((t) => <Tag key={t}>{t}</Tag>)}
-    </div>
-
-    <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-      <span className="text-xs font-semibold text-[#8c6c67]">Tap to view mentor</span>
-      <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
-        Explore <ArrowRightOutlined />
-      </span>
-    </div>
-  </div>
-);
-
-/* ─── Payment method button ───────────────────────────────────── */
-const PaymentBtn = ({ label, icon, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`
-      flex-1 py-2.5 text-center rounded-lg border text-sm transition-all duration-150
-      ${active ? "border-red-800 bg-red-50 text-red-800 font-medium" : "border-gray-200 text-gray-400 hover:border-gray-300"}
-    `}
-  >
-    <div className="text-lg mb-0.5">{icon}</div>
-    {label}
-  </button>
-);
-
-/* ─── Booking summary ─────────────────────────────────────────── */
-const BookingSummary = ({ mentor, date, time }) => (
-  <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-5">
-    {[
-      ["Mentor", mentor?.name],
-      ["Date", date?.format?.("YYYY-MM-DD") ?? date],
-      ["Time", time],
-    ].map(([k, v]) => (
-      <div key={k} className="flex justify-between text-sm py-1 text-gray-500">
-        <span>{k}</span>
-        <span className="text-gray-900 font-medium">{v}</span>
-      </div>
-    ))}
-    <div className="flex justify-between text-sm pt-3 mt-2 border-t border-red-200 text-red-800 font-semibold">
-      <span>Total</span>
-      <span>{mentor?.price}</span>
-    </div>
-  </div>
-);
-
-/* ─── Main page ───────────────────────────────────────────────── */
 export default function BookMentorPage() {
-  const { addBooking, canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess, addBooking } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
 
   const unlocked = isUnlocked("book-mentor");
+  const [mentorList, setMentorList] = useState(fallbackMentors);
+  const [selectedMentorId, setSelectedMentorId] = useState("");
   const [selectedMentor, setSelectedMentor] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
-  const [paymentOpen, setPaymentOpen] = useState(false);
-  const [booked, setBooked] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [bookedSlotsLoading, setBookedSlotsLoading] = useState(false);
+  const [bookedSlotsError, setBookedSlotsError] = useState("");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
+  const [loadError, setLoadError] = useState("");
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [paymentValues, setPaymentValues] = useState({
-    upiId: "", cardName: "", cardNumber: "", cardExpiry: "", cardCvv: "", bank: "",
+    upiId: "",
+    cardName: "",
+    cardNumber: "",
+    cardExpiry: "",
+    cardCvv: "",
+    bank: "",
   });
+  const [processing, setProcessing] = useState(false);
+  const [booked, setBooked] = useState(false);
 
-  function buildMentorReturnTo(mentorName = selectedMentor?.name) {
+  const activeMentor = useMemo(() => {
+    if (!selectedMentorId) {
+      return null;
+    }
+
+    return (
+      selectedMentor ||
+      mentorList.find((item) => String(item.id) === String(selectedMentorId) || item.name === selectedMentorId) ||
+      null
+    );
+  }, [mentorList, selectedMentor, selectedMentorId]);
+
+  const dates = useMemo(() => normalizeAvailability(activeMentor?.availability), [activeMentor]);
+  const selectedDateInfo = useMemo(() => dates.find((item) => item.key === selectedDate) || dates[0] || null, [dates, selectedDate]);
+  const slots = useMemo(() => {
+    if (!dates.length) {
+      return [];
+    }
+
+    const activeDate = dates.find((item) => item.key === selectedDate) || dates[0];
+    return activeDate?.slots || [];
+  }, [dates, selectedDate]);
+  const bookedSlotKeys = useMemo(
+    () => new Set((bookedSlots || []).map((slot) => normalizeSlotKey(slot)).filter(Boolean)),
+    [bookedSlots]
+  );
+  const availableSlots = useMemo(() => slots.filter(Boolean), [slots]);
+
+  function buildMentorReturnTo(mentorRef = activeMentor) {
+    const mentorName = typeof mentorRef === "string" ? mentorRef : mentorRef?.name;
+    const mentorId = typeof mentorRef === "object" ? mentorRef?.id : "";
     const nextParams = new URLSearchParams();
+
+    if (mentorId) nextParams.set("mentorId", mentorId);
     if (mentorName) nextParams.set("mentor", mentorName);
+    if (selectedDate) nextParams.set("date", selectedDate);
+    if (selectedSlot) nextParams.set("time", selectedSlot);
+
     const query = nextParams.toString();
     return query ? `${location.pathname}?${query}` : location.pathname;
   }
 
   useEffect(() => {
-    const mentorName = params.get("mentor");
-    if (!mentorName) return;
-    const mentor = mentors.find((m) => m.name === mentorName);
-    if (mentor) setSelectedMentor(mentor);
-  }, [params]);
+    let active = true;
 
+    async function loadMentors() {
+      try {
+        setLoadError("");
+        const items = await getMentors();
+        if (active) {
+          setMentorList(items.length ? items : fallbackMentors);
+        }
+      } catch (error) {
+        if (active) {
+          setLoadError(error?.response?.data?.message || error?.message || "Failed to load mentor list.");
+          setMentorList(fallbackMentors);
+        }
+      }
+    }
+
+    loadMentors();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const mentorParam = params.get("mentorId") || params.get("mentor");
+    if (!mentorParam) {
+      return;
+    }
+
+    let active = true;
+
+    async function resolveMentor() {
+      const numericId = /^\d+$/.test(mentorParam);
+
+      if (numericId) {
+        try {
+          const mentor = await getMentorById(mentorParam);
+          if (active && mentor) {
+            setSelectedMentor(mentor);
+            setSelectedMentorId(String(mentor.id));
+            return;
+          }
+        } catch {
+          // Fall back to the list below.
+        }
+      }
+
+      const mentor = mentorList.find(
+        (item) => String(item.id) === String(mentorParam) || item.name === mentorParam
+      );
+
+      if (active && mentor) {
+        setSelectedMentor(mentor);
+        setSelectedMentorId(String(mentor.id || mentor.name));
+      }
+    }
+
+    resolveMentor();
+    return () => {
+      active = false;
+    };
+  }, [mentorList, params]);
+
+  useEffect(() => {
+    if (!activeMentor) {
+      setSelectedDate("");
+      setSelectedSlot("");
+      setBookedSlots([]);
+      setBookedSlotsError("");
+      return;
+    }
+
+    if (!selectedDate && dates[0]) {
+      setSelectedDate(dates[0].key);
+    }
+
+    if (selectedDate && !dates.some((item) => item.key === selectedDate)) {
+      setSelectedDate(dates[0]?.key || "");
+      setSelectedSlot("");
+    }
+  }, [activeMentor, dates, selectedDate]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadBookedSlots() {
+      if (!activeMentor?.id || !selectedDate) {
+        setBookedSlots([]);
+        setBookedSlotsError("");
+        return;
+      }
+
+      try {
+        setBookedSlotsLoading(true);
+        setBookedSlotsError("");
+        const items = await getBookedMentorSlots(activeMentor.id, selectedDate);
+        if (active) {
+          setBookedSlots(items);
+        }
+      } catch (error) {
+        if (active) {
+          setBookedSlots([]);
+          setBookedSlotsError(error?.response?.data?.message || error?.message || "Failed to load booked slots.");
+        }
+      } finally {
+        if (active) {
+          setBookedSlotsLoading(false);
+        }
+      }
+    }
+
+    loadBookedSlots();
+    return () => {
+      active = false;
+    };
+  }, [activeMentor?.id, selectedDate]);
+
+  useEffect(() => {
+    if (!selectedSlot) {
+      return;
+    }
+
+    if (bookedSlotKeys.has(normalizeSlotKey(selectedSlot))) {
+      setSelectedSlot("");
+    }
+  }, [bookedSlotKeys, selectedSlot]);
+
+  useEffect(() => {
+    if (!processing || !activeMentor) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      addBooking({
+        id: `booking-${activeMentor.name}-${selectedDate}-${selectedSlot}`,
+        mentorName: activeMentor.name,
+        date: selectedDate,
+        time: selectedSlot,
+        status: "Confirmed",
+      });
+      setProcessing(false);
+      setBooked(true);
+    }, 1600);
+
+    return () => clearTimeout(timer);
+  }, [activeMentor, addBooking, processing, selectedDate, selectedSlot]);
+
+
+const handlePayment = async () => {
+  try {
+
+    console.log("PAYMENT CLICKED");
+
+    const loaded = await loadRazorpayScript();
+
+    console.log("SDK LOADED =", loaded);
+
+    if (!loaded) {
+      alert("SDK FAILED");
+      return;
+    }
+
+    const orderResponse =
+      await createMentorOrder({
+        mentorId: activeMentor.id,
+        date: selectedDate,
+        timeSlot: selectedSlot,
+      });
+
+    console.log("ORDER RESPONSE", orderResponse);
+
+    const { order, bookingId, key } =
+      orderResponse;
+
+    const options = {
+      key: key,
+
+      amount: order.amount,
+
+      currency: order.currency,
+
+      order_id: order.id,
+
+      name: "CareerMap",
+
+      description: "Mentor Booking",
+
+handler: async function (response) {
+
+  await verifyMentorPayment({
+
+    mentorId: activeMentor.id,
+
+    date: selectedDate,
+
+    timeSlot: selectedSlot,
+
+    razorpay_order_id:
+      response.razorpay_order_id,
+
+    razorpay_payment_id:
+      response.razorpay_payment_id,
+
+    razorpay_signature:
+      response.razorpay_signature,
+  });
+
+  setBooked(true);
+},
+
+      theme: {
+        color: "#9a2119",
+      },
+    };
+
+    const rzp =
+      new window.Razorpay(options);
+
+    rzp.open();
+
+  } catch (err) {
+
+    console.log("FULL ERROR", err);
+
+    alert(
+      err?.response?.data?.message ||
+      err.message
+    );
+  }
+};
+  const detailUnlocked = activeMentor ? canAccessFreeDetail("book-mentor", activeMentor.name) : true;
   const canPay =
-    paymentMethod === "upi" ? paymentValues.upiId.includes("@") :
-    paymentMethod === "card" ? paymentValues.cardName && paymentValues.cardNumber.length === 16 && paymentValues.cardCvv.length >= 3 :
-    Boolean(paymentValues.bank);
+    paymentMethod === "upi"
+      ? paymentValues.upiId.includes("@") && paymentValues.upiId.length > 3
+      : paymentMethod === "card"
+        ? paymentValues.cardName.trim().length > 0 &&
+          paymentValues.cardNumber.replace(/\s/g, "").length === 16 &&
+          paymentValues.cardExpiry.trim().length > 0 &&
+          paymentValues.cardCvv.length >= 3
+        : Boolean(paymentValues.bank);
 
-  const pv = (patch) => setPaymentValues((c) => ({ ...c, ...patch }));
-
-  /* ── Success screen ── */
-  if (booked && selectedMentor) {
+  if (processing && activeMentor) {
     return (
       <ModuleScreen className="space-y-6">
-      <div className="flex flex-col items-center justify-center text-center px-4 py-16">
-        <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-800 text-2xl mb-4">
-          ✓
+        <div className="motion-item flex items-start justify-between gap-4">
+          <div>
+            <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
+            <p className="mt-1 mb-0 text-xs text-[#b8837e]">Confirming your mentor booking.</p>
+          </div>
+          <PageHero backOnly onBack={() => setProcessing(false)} className="shrink-0" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Session Confirmed!</h2>
-        <p className="text-gray-500 text-sm leading-relaxed font-light">
-          Payment received. Your session with{" "}
-          <strong className="text-gray-900">{selectedMentor.name}</strong>
-          <br />is booked for {selectedDate?.format("YYYY-MM-DD")} at {selectedSlot}.
-        </p>
-        <Btn
-          className="mt-6"
-          onClick={() => { setBooked(false); setSelectedMentor(null); setSelectedDate(null); setSelectedSlot(""); }}
-        >
-          ← Back to Mentors
-        </Btn>
-      </div>
+
+        <div className="flex min-h-[320px] items-center justify-center px-2">
+          <div className="w-full max-w-[560px] rounded-[28px] border border-[#f0e4e2] bg-white px-6 py-7 text-center shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-4 border-[#f1d9d3] border-t-[#9a2119] animate-spin" />
+            <div className="mt-5 inline-flex rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
+              Processing
+            </div>
+            <div className="mt-4 text-[22px] font-black text-[#1a0a09]">Processing Payment</div>
+            <div className="mx-auto mt-2 max-w-md text-[14px] leading-7 text-[#6f6663]">
+              Please wait while we confirm your mentor booking.
+            </div>
+            <div className="mx-auto mt-6 h-2 w-full max-w-[280px] overflow-hidden rounded-full bg-[#f3ece8]">
+              <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-[#c72733] to-[#51154c] animate-pulse" />
+            </div>
+          </div>
+        </div>
       </ModuleScreen>
     );
   }
 
-  /* ── Main layout ── */
+  if (booked && activeMentor) {
+    return (
+      <ModuleScreen className="space-y-6">
+        <div className="rounded-[28px] border border-[#f0e4e2] bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-[24px] bg-green-50 text-3xl text-green-600">
+            ✓
+          </div>
+          <h2 className="mt-4 text-2xl font-black text-[#1a0a09]">Session booked successfully</h2>
+          <p className="mt-2 text-sm leading-7 text-[#6f6663]">
+            Payment successful. Your session with <strong className="text-[#1a0a09]">{activeMentor.name}</strong> is confirmed for{" "}
+            {selectedDateInfo?.displayDate || selectedDate} at {selectedSlot}.
+          </p>
+          <div className="mx-auto mt-5 max-w-md rounded-[22px] border border-[#f0e4e2] bg-[#fffaf8] p-4 text-left">
+            <div className="text-sm text-[#6f6663]">Mentor: {activeMentor.name}</div>
+            <div className="mt-1 text-sm text-[#6f6663]">Date: {selectedDateInfo?.displayDate || selectedDate}</div>
+            <div className="mt-1 text-sm text-[#6f6663]">Time: {selectedSlot}</div>
+            <div className="mt-1 text-sm text-[#6f6663]">Price: {activeMentor.price}</div>
+          </div>
+          <button
+            type="button"
+            className="mt-6 rounded-[16px] bg-[#9a2119] px-6 py-3 text-sm font-extrabold text-white"
+            onClick={() => {
+              setBooked(false);
+              setSelectedMentorId("");
+              setSelectedMentor(null);
+              setSelectedDate("");
+              setSelectedSlot("");
+              setPaymentOpen(false);
+            }}
+          >
+            Back to Mentor List
+          </button>
+        </div>
+      </ModuleScreen>
+    );
+  }
+
+  if (activeMentor) {
+    return (
+      <ModuleScreen className="space-y-6 pb-24">
+        <div className="motion-item flex items-start justify-between gap-4">
+          <div>
+            <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
+            <p className="mt-1 mb-0 text-xs text-[#b8837e]">Profile, schedule selection, and booking flow.</p>
+          </div>
+          <PageHero backOnly onBack={() => setSelectedMentorId("")} className="shrink-0" />
+        </div>
+
+        {!unlocked ? (
+          <div className="inline-flex self-start rounded-full bg-green-50 px-3 py-2 text-[12px] font-extrabold text-green-700">
+            {detailUnlocked ? "1 free mentor detail unlocked" : "Subscribe to unlock more mentor profiles"}
+          </div>
+        ) : null}
+
+        <div className="relative overflow-hidden rounded-[30px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
+          <div className="absolute right-5 top-5 h-14 w-14 rounded-full bg-[#f9ece8]" />
+          <div className="absolute left-5 top-20 h-4 w-4 rounded-full bg-[#f1d9d3]" />
+          <div className="absolute bottom-6 right-6 h-3 w-3 rounded-full bg-[#f1d9d3]" />
+
+          <div className="relative z-[1]">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <Avatar name={activeMentor.name} accent={activeMentor.accent} avatar={activeMentor.avatar} image={activeMentor.image} />
+              <div className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
+                Mentor Profile
+              </div>
+              <h2 className="m-0 text-[24px] font-black leading-tight text-[#1a0a09]">{activeMentor.name}</h2>
+              <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">
+                {activeMentor.specialty}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
+                  <StarFilled style={{ color: "#d4a017" }} /> {activeMentor.rating} rating
+                </span>
+                <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
+                  {activeMentor.experience}
+                </span>
+                <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#9a2119]">
+                  {activeMentor.price}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-2 pt-1">
+                {(activeMentor.tags || []).map((tag) => (
+                  <span key={tag} className="rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <SectionCard title="About">
+          <p className="m-0 text-[14px] leading-7 text-[#6f6663]">{activeMentor.bio}</p>
+        </SectionCard>
+
+        <SectionCard title="Select Date">
+          <div className="flex flex-wrap gap-2.5">
+            {dates.map((date) => {
+              const isActive = selectedDate === date.key;
+              const hasSlots = (date.slots || []).length > 0;
+
+              return (
+                <button
+                  key={date.key}
+                  type="button"
+                  disabled={!hasSlots}
+                  onClick={() => {
+                    setSelectedDate(date.key);
+                    setSelectedSlot("");
+                  }}
+                  className="w-[88px] rounded-[16px] px-2 py-3 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-35"
+                  style={{
+                    backgroundColor: isActive ? "#9a2119" : "#f2ebe6",
+                    color: isActive ? "#fff" : "#1a0a09",
+                  }}
+                >
+                  <div className="text-[10px] font-bold">{date.day}</div>
+                  <div className="text-[12px] font-black leading-tight">{date.displayDate}</div>
+                </button>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Select Time">
+          {selectedDate ? (
+            <div className="flex flex-wrap gap-2.5">
+              {availableSlots.length ? (
+                availableSlots.map((slot) => {
+                  const isBooked = bookedSlotKeys.has(normalizeSlotKey(slot));
+
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      disabled={isBooked}
+                      onClick={() => setSelectedSlot(slot)}
+                      className="rounded-[12px] px-[14px] py-2.5 px-3.5 text-[12px] font-extrabold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
+                      style={{
+                        backgroundColor: isBooked
+                          ? "#efe7e4"
+                          : selectedSlot === slot
+                            ? "#9a2119"
+                            : "#f2ebe6",
+                        color: isBooked
+                          ? "#a28f89"
+                          : selectedSlot === slot
+                            ? "#fff"
+                            : "#1a0a09",
+                      }}
+                    >
+                      {slot}
+                      {isBooked ? " (Booked)" : ""}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="text-sm text-[#8c6c67]">No time slots available for this date.</div>
+              )}
+            </div>
+          ) : (
+            <div className="text-sm text-[#8c6c67]">Choose a date to see available time slots.</div>
+          )}
+          {bookedSlotsLoading ? <div className="mt-3 text-xs text-[#8c6c67]">Loading booked slots...</div> : null}
+          {bookedSlotsError ? <div className="mt-3 text-xs font-semibold text-[#9a2119]">{bookedSlotsError}</div> : null}
+        </SectionCard>
+
+        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#efe4df] bg-white/95 p-4 backdrop-blur">
+          <div className="mx-auto w-full max-w-5xl">
+            <button
+              type="button"
+              disabled={!selectedDate || !selectedSlot}
+              onClick={handlePayment}
+              className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+              style={{
+                background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)",
+              }}
+            >
+              Book & Pay
+            </button>
+          </div>
+        </div>
+
+        <Modal
+          open={paymentOpen}
+          centered
+          onCancel={() => setPaymentOpen(false)}
+          footer={null}
+          width={760}
+          className="[&_.ant-modal-content]:!rounded-[28px] [&_.ant-modal-content]:!overflow-hidden"
+        >
+         
+        </Modal>
+      </ModuleScreen>
+    );
+  }
+
   return (
-    <ModuleScreen className="space-y-6 pb-12">
+    <ModuleScreen className="space-y-6 pb-8">
       <div className="motion-item flex items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
-          <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-            Connect with experienced professionals for guided career sessions.
-          </p>
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">Mentor list and booking flow adapted from the mobile app.</p>
+          {loadError ? <p className="mt-2 text-xs font-semibold text-[#9a2119]">{loadError}</p> : null}
         </div>
         <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
-      <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {mentors.map((mentor) => {
+      <div className="rounded-[28px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
+        <div className="inline-flex rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
+          Mentor Booking
+        </div>
+        <h2 className="mt-4 text-[24px] font-black text-[#1a0a09]">Choose a mentor and open the profile view</h2>
+        <p className="mt-2 text-[14px] leading-7 text-[#6f6663]">
+          Tap a mentor to see ratings, about information, available dates, and time slots exactly in the booking flow.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {mentorList.map((mentor, index) => {
           const mentorFree = unlocked || canAccessFreeDetail("book-mentor", mentor.name);
+
           return (
             <MentorCard
-              key={mentor.name}
+              key={mentor.id || mentor.name}
               mentor={mentor}
               isFree={mentorFree}
               onClick={() => {
-                if (!unlocked && !mentorFree) { setUnlockModalItem(mentor.name); return; }
+                if (!unlocked && !mentorFree) {
+                  setUnlockModalItem(mentor.name);
+                  return;
+                }
+
                 registerFreeDetailAccess("book-mentor", mentor.name);
+                setSelectedMentorId(String(mentor.id || index));
                 setSelectedMentor(mentor);
               }}
             />
@@ -230,7 +769,6 @@ export default function BookMentorPage() {
         })}
       </div>
 
-      {/* Unlock modal */}
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
         title="Unlock Mentor Access"
@@ -243,158 +781,6 @@ export default function BookMentorPage() {
           navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
         }}
       />
-
-      {/* ── Booking modal ── */}
-      <Modal
-        open={Boolean(selectedMentor)}
-        footer={null}
-        onCancel={() => setSelectedMentor(null)}
-        width={560}
-        className="rounded-2xl"
-      >
-        {selectedMentor && (
-          <div className="p-1">
-            <div className="border-b border-gray-100 pb-4 mb-5">
-              <p className="text-xs uppercase tracking-widest text-gray-400 mb-1">{selectedMentor.specialty}</p>
-              <h2 className="text-2xl font-bold text-gray-900">{selectedMentor.name}</h2>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <Field label="Date">
-                <DatePicker
-                  value={selectedDate}
-                  onChange={setSelectedDate}
-                  className="w-full rounded-lg border-gray-200 bg-stone-50"
-                />
-              </Field>
-              <Field label="Time Slot">
-                <Select
-                  placeholder="Select time"
-                  value={selectedSlot || undefined}
-                  onChange={setSelectedSlot}
-                  className="w-full"
-                  options={["9:00 AM","10:00 AM","11:30 AM","2:00 PM","3:30 PM","5:00 PM","6:30 PM"]
-                    .map((s) => ({ label: s, value: s }))}
-                />
-              </Field>
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 mt-5">
-              <Btn ghost onClick={() => setSelectedMentor(null)}>Cancel</Btn>
-              <Btn disabled={!selectedDate || !selectedSlot} onClick={() => setPaymentOpen(true)}>
-                Book & Pay →
-              </Btn>
-            </div>
-
-            {/* ── Payment modal ── */}
-            <Modal
-              open={paymentOpen}
-              footer={null}
-              onCancel={() => setPaymentOpen(false)}
-              width={480}
-            >
-              <div className="p-1">
-                <div className="border-b border-gray-100 pb-4 mb-5">
-                  <h2 className="text-2xl font-bold text-gray-900">Payment</h2>
-                </div>
-
-                <BookingSummary mentor={selectedMentor} date={selectedDate} time={selectedSlot} />
-
-                <Field label="Payment Method">
-                  <div className="flex gap-2 mt-1">
-                    {[
-                      { key: "upi", label: "UPI", icon: "📱" },
-                      { key: "card", label: "Card", icon: "💳" },
-                      { key: "netbanking", label: "Net Banking", icon: "🏦" },
-                    ].map((m) => (
-                      <PaymentBtn
-                        key={m.key}
-                        label={m.label}
-                        icon={m.icon}
-                        active={paymentMethod === m.key}
-                        onClick={() => setPaymentMethod(m.key)}
-                      />
-                    ))}
-                  </div>
-                </Field>
-
-                {paymentMethod === "upi" && (
-                  <Field label="UPI ID">
-                    <input
-                      className={inputCls}
-                      placeholder="yourname@upi"
-                      value={paymentValues.upiId}
-                      onChange={(e) => pv({ upiId: e.target.value })}
-                    />
-                  </Field>
-                )}
-
-                {paymentMethod === "card" && (
-                  <>
-                    <Field label="Name on Card">
-                      <input className={inputCls} placeholder="Full name"
-                        value={paymentValues.cardName}
-                        onChange={(e) => pv({ cardName: e.target.value })} />
-                    </Field>
-                    <Field label="Card Number">
-                      <input className={inputCls} placeholder="1234 5678 9012 3456" maxLength={16}
-                        value={paymentValues.cardNumber}
-                        onChange={(e) => pv({ cardNumber: e.target.value.replace(/\D/g, "").slice(0, 16) })} />
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field label="Expiry">
-                        <input className={inputCls} placeholder="MM/YY"
-                          value={paymentValues.cardExpiry}
-                          onChange={(e) => pv({ cardExpiry: e.target.value })} />
-                      </Field>
-                      <Field label="CVV">
-                        <input className={inputCls} placeholder="•••" maxLength={4}
-                          value={paymentValues.cardCvv}
-                          onChange={(e) => pv({ cardCvv: e.target.value.replace(/\D/g, "").slice(0, 4) })} />
-                      </Field>
-                    </div>
-                  </>
-                )}
-
-                {paymentMethod === "netbanking" && (
-                  <Field label="Select Bank">
-                    <select
-                      className={inputCls}
-                      value={paymentValues.bank}
-                      onChange={(e) => pv({ bank: e.target.value })}
-                    >
-                      <option value="">Choose bank</option>
-                      {["SBI", "HDFC Bank", "ICICI Bank", "Axis Bank"].map((b) => (
-                        <option key={b} value={b}>{b}</option>
-                      ))}
-                    </select>
-                  </Field>
-                )}
-
-                <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 mt-5">
-                  <Btn ghost onClick={() => setPaymentOpen(false)}>Back</Btn>
-                  <Btn
-                    disabled={!canPay}
-                    onClick={() => {
-                      addBooking({
-                        id: `booking-${selectedMentor.name}-${selectedDate?.format("YYYY-MM-DD")}-${selectedSlot}`,
-                        mentorName: selectedMentor.name,
-                        date: selectedDate?.format("YYYY-MM-DD"),
-                        time: selectedSlot,
-                        status: "Confirmed",
-                      });
-                      setPaymentOpen(false);
-                      setBooked(true);
-                    }}
-                  >
-                    Pay {selectedMentor.price} →
-                  </Btn>
-                </div>
-              </div>
-            </Modal>
-          </div>
-        )}
-      </Modal>
     </ModuleScreen>
   );
 }

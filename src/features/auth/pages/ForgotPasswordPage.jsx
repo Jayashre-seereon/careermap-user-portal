@@ -1,86 +1,86 @@
 import { MailOutlined } from "@ant-design/icons";
-import { Alert, Button, Form, Input, Space } from "antd";
+import { Alert, Button, Form, Input, Space, Typography } from "antd";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { existingUsers } from "../../../data/careermapData";
-import { useAppState } from "../../../state/AppStateContext";
+import { Link, useNavigate } from "react-router-dom";
+import { forgotPassword, getApiErrorMessage } from "../../../api/authApi";
 import { AuthShell } from "../components/AuthShell";
 import { authPrimaryButtonStyle } from "../components/authShared";
 
+const { Text } = Typography;
+
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const { authenticate } = useAppState();
-  const [step, setStep] = useState("email");
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [message, setMessage] = useState("");
+  const [form] = Form.useForm();
+  const [status, setStatus] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function sendReset() {
-    const user = existingUsers.find((item) => item.email.toLowerCase() === email.trim().toLowerCase());
-    if (!user) {
-      setMessage("User not exist with this email.");
-      return;
+  async function handleSubmit(values) {
+    try {
+      setIsSubmitting(true);
+      setStatus(null);
+
+      const response = await forgotPassword(values.email.trim());
+      setStatus({
+        type: "success",
+        message: response?.message || "If the email exists, a reset link has been sent.",
+      });
+      form.resetFields();
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: getApiErrorMessage(error, "Failed to send password reset email."),
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setMessage("Reset code sent. Use 1234.");
-    setStep("code");
-  }
-
-  function verifyCode() {
-    if (code !== "1234") {
-      setMessage("Invalid reset code.");
-      return;
-    }
-
-    authenticate();
-    navigate("/app/dashboard");
   }
 
   return (
-    <AuthShell
-      title={step === "email" ? "Forgot Password" : "Enter Reset Code"}
-      subtitle={step === "email" ? "Enter your email to receive a reset code." : "Enter the 4-digit code to continue."}
-      backTo="/login"
-    >
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        {step === "email" ? (
-          <>
-            <Form layout="vertical" className="cm-form-label">
-              <Form.Item label="Email Address">
-                <Input
-                  className="cm-input-field"
-                  prefix={<MailOutlined style={{ color: "#9a2119" }} />}
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  size="large"
-                  style={{ borderRadius: "10px" }}
-                />
-              </Form.Item>
-            </Form>
-            <Button type="primary" size="large" block onClick={sendReset} style={{ ...authPrimaryButtonStyle, width: "100%" }}>
-              Send Reset Link
-            </Button>
-          </>
-        ) : (
-          <>
-            <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <div style={{ fontSize: "13px", color: "#888", marginBottom: "16px" }}>Enter the 4-digit code sent to your email</div>
-              <div className="cm-otp" style={{ display: "flex", justifyContent: "center" }}>
-                <Input.OTP length={4} value={code} onChange={setCode} />
-              </div>
-            </div>
-            <Button type="primary" size="large" block onClick={verifyCode} style={{ ...authPrimaryButtonStyle, width: "100%" }}>
-              Verify Code
-            </Button>
-          </>
-        )}
-        {message ? (
-          <Alert
-            type={message.includes("not exist") || message.includes("Invalid") ? "error" : "success"}
-            message={message}
-            style={{ borderRadius: "10px" }}
-          />
-        ) : null}
+    <AuthShell title="Forgot Password" subtitle="Enter your email address and we will send a reset link." backTo="/login?userType=existing">
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+        <Form form={form} layout="vertical" className="cm-form-label" onFinish={handleSubmit} requiredMark={false}>
+          <Form.Item
+            label="Email Address"
+            name="email"
+            rules={[
+              { required: true, message: "Please enter your email address." },
+              { type: "email", message: "Enter a valid email address." },
+            ]}
+          >
+            <Input
+              className="cm-input-field"
+              prefix={<MailOutlined style={{ color: "#9a2119" }} />}
+              size="large"
+              style={{ borderRadius: "10px" }}
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+          </Form.Item>
+
+          <Button type="primary" htmlType="submit" block size="large" loading={isSubmitting} style={{ ...authPrimaryButtonStyle, width: "100%" }}>
+            {isSubmitting ? "Sending Link..." : "Send Reset Link"}
+          </Button>
+        </Form>
+
+        {status ? <Alert type={status.type} message={status.message} showIcon style={{ borderRadius: "10px" }} /> : null}
+
+
+        <div style={{ textAlign: "center", fontSize: "13px" }}>
+          <button
+            type="button"
+            onClick={() => navigate("/login?userType=existing")}
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "#9a2119",
+              fontWeight: "700",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            Back to login
+          </button>
+        </div>
       </Space>
     </AuthShell>
   );

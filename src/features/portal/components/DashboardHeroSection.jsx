@@ -2,9 +2,10 @@ import { Button } from "antd";
 import { ExperimentOutlined } from "@ant-design/icons";
 import { useAppState } from "../../../state/AppStateContext";
 
-export function DashboardHeroSection({ onTestClick }) {
+export function DashboardHeroSection({ onTestClick, userName }) {
     const { userProfile, onboarding, isUnlocked } = useAppState();
     const testLabel = isUnlocked("psychometric-test") ? "Take Full Psychometric Test" : "Take the Test";
+    const resolvedUserName = userName || userProfile.name || onboarding.name || "Student";
 
     return (
         <section className="dashboard-hero-panel group relative overflow-hidden rounded-[24px] px-7 py-8 md:px-8 md:py-10">
@@ -18,7 +19,7 @@ export function DashboardHeroSection({ onTestClick }) {
                         Home
                     </div>
                     <h1 className="display-font text-[2.15rem] font-bold leading-tight text-white md:text-[2.65rem]">
-                        {`Welcome, ${userProfile.name || onboarding.name || "Student"}`}
+                        {`Welcome, ${resolvedUserName}`}
                     </h1>
                     <p className="mt-4 max-w-[34rem] text-sm font-medium leading-7 text-[#dcc5bc] md:text-base">
                         {isUnlocked("psychometric-test")

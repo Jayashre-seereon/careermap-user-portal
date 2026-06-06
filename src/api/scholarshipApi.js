@@ -1,0 +1,85 @@
+import api from "./axios";
+
+function stripHtml(value) {
+  if (!value) {
+    return "";
+  }
+
+  return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function formatDeadline(deadline) {
+  if (!deadline) {
+    return "Deadline not available";
+  }
+
+  const parsedDate = new Date(deadline);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return deadline;
+  }
+
+  return parsedDate.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function getScholarshipStatus(deadline) {
+  if (!deadline) {
+    return "Active";
+  }
+
+  const parsedDate = new Date(deadline);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Active";
+  }
+
+  return parsedDate.getTime() >= Date.now() ? "Active" : "Expired";
+}
+
+function formatAmount(price) {
+  if (!price) {
+    return "Amount not available";
+  }
+
+  return `Rs ${price} / year`;
+}
+
+function formatRequirements(requirement) {
+  if (!requirement) {
+    return ["Requirements not available"];
+  }
+
+  return String(requirement)
+    .split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function mapScholarshipItem(item, index) {
+  const scholarshipType = item?.type || "Scholarship";
+
+  return {
+    id: String(item?.id ?? `scholarship-${index}`),
+    name: item?.name || "Unnamed Scholarship",
+    eligibility: stripHtml(item?.eligibility) || "Eligibility not available",
+    amount: formatAmount(item?.price),
+    deadline: formatDeadline(item?.deadline),
+    tag: scholarshipType,
+    status: getScholarshipStatus(item?.deadline),
+    provider: scholarshipType,
+    description: stripHtml(item?.description) || "Scholarship details are not available right now.",
+    requirements: formatRequirements(item?.requirement),
+    link: item?.url || "#",
+  };
+}
+
+export async function getScholarships() {
+  const response = await api.get("/scholarship");
+  const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+
+  return items.map((item, index) => mapScholarshipItem(item, index));
+}
