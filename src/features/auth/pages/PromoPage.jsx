@@ -11,7 +11,7 @@ export default function PromoPage() {
   return (
     <AuthShell title="What You Can Explore" subtitle="Everything you need for career guidance." backTo="/profile-setup">
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        {promoMessage ? <Alert type="success" message={promoMessage} afterClose={clearPromoMessage} closable style={{ borderRadius: "12px" }} /> : null}
+        {promoMessage ? <Alert type="success" title={promoMessage} afterClose={clearPromoMessage} closable style={{ borderRadius: "12px" }} /> : null}
         <div style={{ display: "grid", gap: "10px" }}>
           {[
             ["Psychometric Tests", "Discover strengths and ideal fit.", "PT"],

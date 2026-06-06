@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FileTextOutlined,
   TeamOutlined,
@@ -10,9 +10,12 @@ import {
   BulbOutlined,
   ArrowRightOutlined,
   CheckCircleOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
+import { Alert } from "antd";
 import { ModuleScreen, PageHero } from "../../../components/ui";
-import { quizCatalog, sampleQuizQuestions } from "../../../data/careermapData";
+import { quizCatalog as fallbackQuizCatalog, sampleQuizQuestions } from "../../../data/careermapData";
+import { getQuizzes, submitQuiz } from "../../../api/quizApi";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 const QUIZ_ICONS = [
@@ -34,24 +37,193 @@ const SCORE_MESSAGES = [
   "Perfect score, outstanding.",
 ];
 
+function mapFallbackQuestions(quizIndex = 0) {
+  return sampleQuizQuestions.map((question, index) => ({
+    id: `fallback-${quizIndex}-${index}`,
+    question: question.q,
+    quizId: `fallback-${quizIndex}`,
+    options: question.options.map((option, optionIndex) => ({
+      id: `fallback-${quizIndex}-${index}-${optionIndex}`,
+      text: option,
+    })),
+  }));
+}
+
+function buildFallbackQuizzes() {
+  return fallbackQuizCatalog.map((quiz, index) => ({
+    id: `fallback-${index}`,
+    title: quiz.title,
+    type: "Quiz",
+    duration: quiz.questions || sampleQuizQuestions.length,
+    from: null,
+    to: null,
+    questions: mapFallbackQuestions(index),
+    raw: quiz,
+  }));
+}
+
+function getQuestionText(question) {
+  return question?.question || question?.q || "";
+}
+
+function getOptionText(option) {
+  return option?.text || option || "";
+}
+
+function normalizeQuizQuestions(quiz) {
+  const questions = Array.isArray(quiz?.questions) ? quiz.questions : [];
+
+  if (!questions.length) {
+    return [];
+  }
+
+  return questions.map((question, index) => ({
+    id: String(question?.id ?? `${quiz?.id || "quiz"}-${index}`),
+    question: getQuestionText(question),
+    quizId: question?.quizId ?? quiz?.id ?? null,
+    options: Array.isArray(question?.options)
+      ? question.options.map((option, optionIndex) => ({
+          id: String(option?.id ?? `${quiz?.id || "quiz"}-${index}-${optionIndex}`),
+          text: getOptionText(option),
+          isCorrect: Boolean(option?.isCorrect),
+        }))
+      : [],
+  }));
+}
+
+function getQuizQuestions(quiz) {
+  const normalized = normalizeQuizQuestions(quiz);
+
+  if (normalized.length) {
+    return normalized;
+  }
+
+  return mapFallbackQuestions(Number(quiz?.id || 0));
+}
+
+function getQuizTitle(quiz) {
+  return quiz?.title || "Quiz";
+}
+
+function getQuizMeta(quiz) {
+  const questions = getQuizQuestions(quiz);
+  return {
+    title: getQuizTitle(quiz),
+    questions,
+    count: questions.length || quiz?.questions?.length || sampleQuizQuestions.length,
+  };
+}
+
 export default function QuizPage() {
   const { navigate } = usePortalNavigation();
-  const [activeQuiz, setActiveQuiz] = useState(null);
+  const [quizzes, setQuizzes] = useState(buildFallbackQuizzes());
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [activeQuizId, setActiveQuizId] = useState(null);
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState(Array(sampleQuizQuestions.length).fill(null));
+  const [answers, setAnswers] = useState([]);
   const [completed, setCompleted] = useState(false);
+  const [result, setResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const totalQ = sampleQuizQuestions.length;
-  const score = answers.filter((answer, index) => answer === sampleQuizQuestions[index].correct).length;
+  useEffect(() => {
+    let active = true;
+
+    async function loadQuizzes() {
+      try {
+        setLoading(true);
+        setLoadError("");
+        const items = await getQuizzes();
+
+        if (active) {
+          setQuizzes(items.length ? items : buildFallbackQuizzes());
+        }
+      } catch (error) {
+        if (active) {
+          setLoadError(error?.response?.data?.message || error?.message || "Failed to load quizzes.");
+          setQuizzes(buildFallbackQuizzes());
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadQuizzes();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const activeQuiz = useMemo(() => quizzes.find((quiz) => String(quiz.id) === String(activeQuizId)) || null, [activeQuizId, quizzes]);
+  const quizMeta = useMemo(() => (activeQuiz ? getQuizMeta(activeQuiz) : null), [activeQuiz]);
+  const questions = quizMeta?.questions || [];
+  const totalQ = questions.length || sampleQuizQuestions.length;
+  const score = answers.filter((answer, index) => {
+    const selected = answer;
+    const correctOption = questions[index]?.options?.find((option) => option.isCorrect);
+    return Boolean(correctOption && selected && String(selected) === String(correctOption.id));
+  }).length;
+
+  useEffect(() => {
+    if (!activeQuiz) {
+      return;
+    }
+
+    setCurrent(0);
+    setAnswers(Array(getQuizMeta(activeQuiz).questions.length).fill(null));
+    setCompleted(false);
+    setResult(null);
+  }, [activeQuiz]);
 
   const resetQuiz = () => {
-    setActiveQuiz(null);
+    setActiveQuizId(null);
     setCurrent(0);
-    setAnswers(Array(totalQ).fill(null));
+    setAnswers([]);
     setCompleted(false);
+    setResult(null);
+    setSubmitting(false);
+  };
+
+  const startQuiz = (quiz) => {
+    setActiveQuizId(quiz.id);
+  };
+
+  const handleFinish = async () => {
+    const payloadAnswers = questions.map((question, index) => ({
+      questionId: Number(question.id) || question.id,
+      selectedOption: answers[index],
+    }));
+
+    setSubmitting(true);
+
+    try {
+      const response = await submitQuiz({
+        quizId: activeQuiz?.id,
+        answers: payloadAnswers,
+      });
+
+      setResult(response || { score: `${score}/${totalQ}`, total: totalQ, correct: score, wrong: totalQ - score });
+    } catch (error) {
+      setResult({
+        score: `${score}/${totalQ}`,
+        total: totalQ,
+        correct: score,
+        wrong: totalQ - score,
+        message: error?.response?.data?.message || error?.message || "Quiz submitted locally.",
+      });
+    } finally {
+      setSubmitting(false);
+      setCompleted(true);
+    }
   };
 
   if (completed) {
+    const finalScore = result?.score || `${score}/${totalQ}`;
+    const correct = result?.correct ?? score;
+    const wrong = result?.wrong ?? Math.max(totalQ - score, 0);
+
     return (
       <ModuleScreen maxWidthClass="max-w-sm" className="space-y-6">
         <PageHero backOnly onBack={resetQuiz} />
@@ -69,12 +241,12 @@ export default function QuizPage() {
           </p>
 
           <p className="mb-2 text-5xl font-bold tracking-tight text-gray-900">
-            {score}
-            <span className="text-2xl font-normal text-gray-300"> / {totalQ}</span>
+            {finalScore}
           </p>
 
-          <p className="mb-8 text-sm text-gray-400">
-            {SCORE_MESSAGES[score] ?? SCORE_MESSAGES[SCORE_MESSAGES.length - 1]}
+          <p className="mb-2 text-sm text-gray-400">{SCORE_MESSAGES[Math.min(correct, SCORE_MESSAGES.length - 1)]}</p>
+          <p className="mb-8 text-xs text-gray-400">
+            Correct: {correct} | Wrong: {wrong}
           </p>
 
           <button
@@ -89,17 +261,17 @@ export default function QuizPage() {
     );
   }
 
-  if (activeQuiz !== null) {
-    const question = sampleQuizQuestions[current];
-    const progress = ((current + 1) / totalQ) * 100;
-    const isLast = current === totalQ - 1;
+  if (activeQuiz) {
+    const question = questions[current];
+    const progress = questions.length ? ((current + 1) / questions.length) * 100 : 0;
+    const isLast = current === questions.length - 1;
 
     return (
       <ModuleScreen maxWidthClass="max-w-3xl" className="space-y-5">
         <div className="flex items-center justify-between">
-          <PageHero backOnly onBack={() => setActiveQuiz(null)} />
+          <PageHero backOnly onBack={resetQuiz} />
           <span className="text-xs font-semibold text-[#b8837e]">
-            {current + 1} / {totalQ}
+            {current + 1} / {questions.length}
           </span>
         </div>
 
@@ -112,22 +284,23 @@ export default function QuizPage() {
 
         <div className="rounded-[24px] border border-[#f0e4e2] bg-white p-5 shadow-sm md:p-6">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-[#9a2119]">
-            {quizCatalog[activeQuiz]?.title || "Quiz"}
+            {quizMeta?.title || "Quiz"}
           </p>
 
           <h2 className="mb-6 text-xl font-black leading-snug text-[#1a0a09] md:text-2xl">
-            {question.q}
+            {question?.question || "Question not available."}
           </h2>
 
           <div className="mb-6 flex flex-col gap-3">
-            {question.options.map((option, index) => {
-              const selected = answers[current] === index;
+            {(question?.options || []).map((option, index) => {
+              const selected = String(answers[current] || "") === String(option.id);
+
               return (
                 <button
-                  key={option}
+                  key={option.id || `${question?.id}-${index}`}
                   onClick={() => {
                     const next = [...answers];
-                    next[current] = index;
+                    next[current] = option.id;
                     setAnswers(next);
                   }}
                   className="flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left text-sm transition-all"
@@ -147,20 +320,35 @@ export default function QuizPage() {
                   >
                     {String.fromCharCode(65 + index)}
                   </span>
-                  {option}
+                  {option.text}
                 </button>
               );
             })}
           </div>
 
           <button
-            onClick={() => (isLast ? setCompleted(true) : setCurrent((value) => value + 1))}
-            disabled={answers[current] === null}
+            onClick={() => {
+              if (isLast) {
+                handleFinish();
+              } else {
+                setCurrent((value) => value + 1);
+              }
+            }}
+            disabled={answers[current] === null || submitting}
             className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-30"
             style={{ background: "#9a2119" }}
           >
-            {isLast ? "Finish quiz" : "Next question"}
-            <ArrowRightOutlined />
+            {submitting ? (
+              <>
+                <LoadingOutlined />
+                Submitting
+              </>
+            ) : (
+              <>
+                {isLast ? "Finish quiz" : "Next question"}
+                <ArrowRightOutlined />
+              </>
+            )}
           </button>
         </div>
       </ModuleScreen>
@@ -169,80 +357,90 @@ export default function QuizPage() {
 
   return (
     <ModuleScreen className="space-y-5">
+      {loadError ? <Alert type="warning" message={loadError} showIcon style={{ borderRadius: 16 }} /> : null}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-2xl font-black tracking-tight text-[#1a0a09]">Choose your quiz</h1>
-          <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-            Test your knowledge and identify where to grow next.
-          </p>
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">Live quizzes loaded from the same backend as the mobile app.</p>
         </div>
         <PageHero backOnly onBack={() => navigate(-1)} className="shrink-0" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {quizCatalog.map((quiz, index) => (
-          <div
-            key={quiz.title}
-            className="group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
-            style={{
-              background: "#fff",
-              border: "1.5px solid #e8dcd9",
-              boxShadow: "none",
-            }}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.borderColor = "#9a2119";
-              event.currentTarget.style.boxShadow = "0 6px 24px rgba(154,33,25,0.10)";
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.borderColor = "#e8dcd9";
-              event.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <div
-              className="absolute left-0 right-0 top-0 h-[3px]"
-              style={{ background: "#9a2119", borderRadius: "16px 16px 0 0" }}
-            />
-
-            <div
-              className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-5 transition-all duration-300 group-hover:scale-110 group-hover:opacity-10"
-              style={{ background: "#9a2119" }}
-            />
-
-            <div
-              className="relative mb-5 flex h-11 w-11 items-center justify-center rounded-xl text-xl"
-              style={{ background: "#fdf0ef", color: "#9a2119" }}
-            >
-              {QUIZ_ICONS[index % QUIZ_ICONS.length]}
-            </div>
-
-            <p className="relative mb-1.5 text-[15px] font-bold tracking-tight" style={{ color: "#1a1512" }}>
-              {quiz.title}
-            </p>
-            <p className="relative mb-5 text-[13px] leading-relaxed" style={{ color: "#6b6560" }}>
-              {quiz.description}
-            </p>
-
-            <div className="relative flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-              <span
-                className="rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide"
-                style={{
-                  background: "#fdf0ef",
-                  color: "#9a2119",
-                  border: "1px solid #f5cdc9",
-                }}
-              >
-                {quiz.questions} questions
-              </span>
-
-              <button
-                onClick={() => setActiveQuiz(index)}
-                className="flex items-center gap-1 text-sm font-bold text-[#9a2119] transition-colors hover:text-[#7a1a13]"
-              >
-                Explore <ArrowRightOutlined />
-              </button>
-            </div>
+        {loading ? (
+          <div className="col-span-full rounded-[24px] border border-[#f0e4e2] bg-white p-5 text-sm text-muted">
+            Loading quizzes...
           </div>
-        ))}
+        ) : null}
+
+        {quizzes.map((quiz, index) => {
+          const meta = getQuizMeta(quiz);
+
+          return (
+            <div
+              key={quiz.id || quiz.title}
+              className="group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
+              style={{
+                background: "#fff",
+                border: "1.5px solid #e8dcd9",
+                boxShadow: "none",
+              }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.borderColor = "#9a2119";
+                event.currentTarget.style.boxShadow = "0 6px 24px rgba(154,33,25,0.10)";
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.borderColor = "#e8dcd9";
+                event.currentTarget.style.boxShadow = "none";
+              }}
+            >
+              <div
+                className="absolute left-0 right-0 top-0 h-[3px]"
+                style={{ background: "#9a2119", borderRadius: "16px 16px 0 0" }}
+              />
+
+              <div
+                className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-5 transition-all duration-300 group-hover:scale-110 group-hover:opacity-10"
+                style={{ background: "#9a2119" }}
+              />
+
+              <div
+                className="relative mb-5 flex h-11 w-11 items-center justify-center rounded-xl text-xl"
+                style={{ background: "#fdf0ef", color: "#9a2119" }}
+              >
+                {QUIZ_ICONS[index % QUIZ_ICONS.length]}
+              </div>
+
+              <p className="relative mb-1.5 text-[15px] font-bold tracking-tight" style={{ color: "#1a1512" }}>
+                {meta.title}
+              </p>
+              <p className="relative mb-5 text-[13px] leading-relaxed" style={{ color: "#6b6560" }}>
+                {quiz.type || "Quiz"}
+              </p>
+
+              <div className="relative flex items-center justify-between border-t border-[#f0e4e2] pt-3">
+                <span
+                  className="rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide"
+                  style={{
+                    background: "#fdf0ef",
+                    color: "#9a2119",
+                    border: "1px solid #f5cdc9",
+                  }}
+                >
+                  {meta.count} questions
+                </span>
+
+                <button
+                  onClick={() => startQuiz(quiz)}
+                  className="flex items-center gap-1 text-sm font-bold text-[#9a2119] transition-colors hover:text-[#7a1a13]"
+                >
+                  Explore <ArrowRightOutlined />
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </ModuleScreen>
   );

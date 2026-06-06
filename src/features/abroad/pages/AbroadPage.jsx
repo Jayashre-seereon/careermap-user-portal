@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRightOutlined,
   BankOutlined,
@@ -11,28 +11,118 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { ModuleScreen, PageHero } from "../../../components/ui";
-import { studyAbroadCountries } from "../../../data/careermapData";
+import { createStudyAbroadConsultation, getStudyAbroadCountries } from "../../../api/studyabroadApi";
+import { studyAbroadCountries as fallbackStudyAbroadCountries } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+
+function buildClassName(base, active) {
+  return `${base} ${active ? "border-[#9a2119] bg-[#fdf0ee] text-[#9a2119]" : "border-gray-200 bg-white text-gray-500"}`;
+}
+
+function InfoCard({ icon, title, value }) {
+  return (
+    <div className="motion-item rounded-[24px] border border-[#f0e4e2] bg-white p-5 shadow-sm">
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fdf0ee] text-lg text-[#9a2119]">
+        {icon}
+      </div>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-[#b8837e]">{title}</p>
+      <p className="mt-2 text-sm font-semibold leading-7 text-[#1a0a09]">{value}</p>
+    </div>
+  );
+}
+
+function SectionCard({ icon, title, children }) {
+  return (
+    <div className="motion-item rounded-[26px] border border-[#f0e4e2] bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+          {icon}
+        </div>
+        <h2 className="m-0 text-lg font-semibold text-gray-800">{title}</h2>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function AbroadPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
   const unlocked = isUnlocked("abroad-consultancy");
 
+  const [countryList, setCountryList] = useState(fallbackStudyAbroadCountries);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [consultForm, setConsultForm] = useState({
+    courseInterest: "",
+    budgetRange: "",
+    preferredIntake: "",
+    message: "",
+  });
 
-  function buildAbroadReturnTo(countryName = selectedCountry?.name) {
+  const activeCountry = useMemo(() => selectedCountry, [selectedCountry]);
+
+  function buildAbroadReturnTo(countryRef = activeCountry) {
+    const countryName = typeof countryRef === "string" ? countryRef : countryRef?.name;
+    const countryId = typeof countryRef === "object" ? countryRef?.id : "";
     const nextParams = new URLSearchParams();
+
+    if (countryId) nextParams.set("countryId", countryId);
     if (countryName) nextParams.set("country", countryName);
+
     const query = nextParams.toString();
     return query ? `${location.pathname}?${query}` : location.pathname;
   }
 
-  if (submitted) {
+  useEffect(() => {
+    let active = true;
+
+    async function loadCountries() {
+      try {
+        setLoadError("");
+        const items = await getStudyAbroadCountries();
+        if (active) {
+          setCountryList(items.length ? items : fallbackStudyAbroadCountries);
+        }
+      } catch (error) {
+        if (active) {
+          setLoadError(error?.response?.data?.message || error?.message || "Failed to load study abroad destinations.");
+          setCountryList(fallbackStudyAbroadCountries);
+        }
+      }
+    }
+
+    loadCountries();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const countryParam = searchParams.get("countryId") || searchParams.get("country");
+
+    if (!countryParam) {
+      return;
+    }
+
+    const country = countryList.find(
+      (item) => String(item.id) === String(countryParam) || item.name === countryParam || item.countryName === countryParam
+    );
+
+    if (country) {
+      setSelectedCountry(country);
+    }
+  }, [countryList, location.search]);
+
+  if (submitted && activeCountry) {
     return (
       <ModuleScreen className="space-y-6">
         <PageHero backOnly onBack={() => setSubmitted(false)} />
@@ -41,8 +131,11 @@ export default function AbroadPage() {
             <CheckCircleOutlined />
           </div>
           <h2 className="text-xl font-bold text-[#9a2119]">Request Submitted</h2>
-          <p className="mt-2 text-gray-600">Our team will contact you shortly.</p>
+          <p className="mt-2 text-gray-600">
+            Your consultation request for {activeCountry.name} has been recorded.
+          </p>
           <button
+            type="button"
             onClick={() => {
               setSubmitted(false);
               setSelectedCountry(null);
@@ -138,6 +231,7 @@ export default function AbroadPage() {
         <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-4">
           <div className="mx-auto w-full max-w-7xl">
             <button
+              type="button"
               onClick={() => setFormOpen(true)}
               className="w-full rounded-xl bg-[#9a2119] py-3 font-semibold text-white shadow-md"
             >
@@ -146,34 +240,75 @@ export default function AbroadPage() {
           </div>
         </div>
 
-        {formOpen && (
+        {formOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="w-[90%] max-w-md space-y-4 rounded-xl bg-white p-6">
               <h2 className="text-lg font-bold text-[#9a2119]">Consultation Form</h2>
-              <input className="w-full rounded border p-2" placeholder="Course Interest" />
-              <input className="w-full rounded border p-2" placeholder="Budget Range" />
-              <input className="w-full rounded border p-2" placeholder="Preferred Intake" />
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Course Interest"
+                value={consultForm.courseInterest}
+                onChange={(event) => setConsultForm((current) => ({ ...current, courseInterest: event.target.value }))}
+              />
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Budget Range"
+                value={consultForm.budgetRange}
+                onChange={(event) => setConsultForm((current) => ({ ...current, budgetRange: event.target.value }))}
+              />
+              <input
+                className="w-full rounded border p-2"
+                placeholder="Preferred Intake"
+                value={consultForm.preferredIntake}
+                onChange={(event) => setConsultForm((current) => ({ ...current, preferredIntake: event.target.value }))}
+              />
+              <textarea
+                className="w-full rounded border p-2"
+                rows={4}
+                placeholder="Message"
+                value={consultForm.message}
+                onChange={(event) => setConsultForm((current) => ({ ...current, message: event.target.value }))}
+              />
+              {submitError ? <p className="text-sm text-[#9a2119]">{submitError}</p> : null}
               <button
-                onClick={() => {
-                  if (unlocked) {
-                    setSubmitted(true);
+                type="button"
+                disabled={submitting}
+                onClick={async () => {
+                  if (!unlocked) {
                     setFormOpen(false);
+                    navigate(`/app/subscription?returnTo=${encodeURIComponent(buildAbroadReturnTo())}`);
                     return;
                   }
 
-                  setFormOpen(false);
-                  navigate(`/app/subscription?returnTo=${encodeURIComponent(buildAbroadReturnTo())}`);
+                  try {
+                    setSubmitting(true);
+                    setSubmitError("");
+                    await createStudyAbroadConsultation({
+                      studyAbroadId: Number(selectedCountry.id),
+                      preferredCountry: selectedCountry.name,
+                      courseInterest: consultForm.courseInterest,
+                      budgetRange: consultForm.budgetRange,
+                      preferredIntake: consultForm.preferredIntake,
+                      message: consultForm.message,
+                    });
+                    setSubmitted(true);
+                    setFormOpen(false);
+                  } catch (error) {
+                    setSubmitError(error?.response?.data?.message || error?.message || "Failed to submit consultation.");
+                  } finally {
+                    setSubmitting(false);
+                  }
                 }}
                 className="w-full rounded bg-[#9a2119] py-2 text-white"
               >
-                {unlocked ? "Submit Request" : "Subscribe to Submit"}
+                {submitting ? "Submitting..." : unlocked ? "Submit Request" : "Subscribe to Submit"}
               </button>
-              <button onClick={() => setFormOpen(false)} className="w-full text-sm text-gray-500">
+              <button type="button" onClick={() => setFormOpen(false)} className="w-full text-sm text-gray-500">
                 Cancel
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </ModuleScreen>
     );
   }
@@ -184,17 +319,19 @@ export default function AbroadPage() {
         <div>
           <h1 className="text-2xl font-bold text-[#9a2119]">Study Abroad</h1>
           <p className="mt-1 text-sm text-[#8c6c67]">Explore destinations, costs, visa details, and top universities.</p>
+          {loadError ? <p className="mt-2 text-sm font-semibold text-[#9a2119]">{loadError}</p> : null}
         </div>
         <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
       <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {studyAbroadCountries.map((country) => {
+        {countryList.map((country) => {
           const countryFree = unlocked || canAccessFreeDetail("abroad-consultancy", country.name);
 
           return (
-            <div
+            <button
               key={country.name}
+              type="button"
               onClick={() => {
                 if (!unlocked && !countryFree) {
                   setUnlockModalItem(country.name);
@@ -204,10 +341,9 @@ export default function AbroadPage() {
                 registerFreeDetailAccess("abroad-consultancy", country.name);
                 setSelectedCountry(country);
               }}
-              className="group relative cursor-pointer overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:border-[#d9b5ad] hover:shadow-lg hover:shadow-[#9a2119]/10"
+              className="group relative overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:border-[#d9b5ad] hover:shadow-lg hover:shadow-[#9a2119]/10"
             >
               <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#7f1913] via-[#9a2119] to-[#d56547]" />
-
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
@@ -245,10 +381,10 @@ export default function AbroadPage() {
                   </div>
                   <div className="rounded-2xl border border-[#f7ebe7] bg-[#fffaf8] px-3 py-3">
                     <div className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
-                      <BankOutlined className="text-[#9a2119]" />
-                      Intake
+                      <DollarOutlined className="text-[#9a2119]" />
+                      Living Cost
                     </div>
-                    <p className="m-0 text-sm font-semibold text-[#1a0a09]">{country.intake}</p>
+                    <p className="m-0 text-sm font-semibold text-[#1a0a09]">{country.living}</p>
                   </div>
                 </div>
 
@@ -259,7 +395,7 @@ export default function AbroadPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -277,31 +413,5 @@ export default function AbroadPage() {
         }}
       />
     </ModuleScreen>
-  );
-}
-
-function InfoCard({ icon, title, value }) {
-  return (
-    <div className="motion-item rounded-[24px] border border-[#f0e4e2] bg-white p-5 shadow-sm">
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fdf0ee] text-lg text-[#9a2119]">
-        {icon}
-      </div>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-[#b8837e]">{title}</p>
-      <p className="mt-2 text-sm font-semibold leading-7 text-[#1a0a09]">{value}</p>
-    </div>
-  );
-}
-
-function SectionCard({ icon, title, children }) {
-  return (
-    <div className="motion-item rounded-[26px] border border-[#f0e4e2] bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
-          {icon}
-        </div>
-        <h2 className="m-0 text-lg font-semibold text-gray-800">{title}</h2>
-      </div>
-      {children}
-    </div>
   );
 }

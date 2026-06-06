@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { Button, Tabs } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Tabs } from "antd";
 import {
-  ClockCircleOutlined,
   LockOutlined,
   UnlockOutlined,
   CheckCircleOutlined,
@@ -13,25 +12,49 @@ import {
   TeamOutlined,
 } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
-import { scholarships } from "../../../data/careermapData";
+import { getScholarships } from "../../../api/scholarshipApi";
+import { scholarships as fallbackScholarships } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
-import {
-  PremiumGate,
-  UnlockRedirectModal,
-  usePortalNavigation,
-} from "../../portal/components/portalPageShared";
+import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
+  const [items, setItems] = useState(fallbackScholarships);
+  const [error, setError] = useState("");
   const [activeStatus, setActiveStatus] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const unlocked = isUnlocked("scholarship");
-  const filtered = scholarships.filter(
-    (item) => activeStatus === "All" || item.status === activeStatus
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadScholarships() {
+      try {
+        setError("");
+        const response = await getScholarships();
+        if (active && response.length) {
+          setItems(response);
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(loadError?.response?.data?.message || loadError?.message || "Failed to load scholarships.");
+        }
+      }
+    }
+
+    loadScholarships();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filtered = useMemo(
+    () => items.filter((item) => activeStatus === "All" || item.status === activeStatus),
+    [activeStatus, items]
   );
 
   function buildScholarshipReturnTo(itemName = selectedItem?.name) {
@@ -58,12 +81,11 @@ export default function ScholarshipPage() {
     const itemName = params.get("item");
     if (status) setActiveStatus(status);
     if (itemName) {
-      const matched = scholarships.find((item) => item.name === itemName);
+      const matched = items.find((item) => item.name === itemName);
       if (matched) setSelectedItem(matched);
     }
-  }, [params]);
+  }, [items, params]);
 
-  /* ── DETAIL VIEW ── */
   if (selectedItem) {
     const detailUnlocked = unlocked || canAccessFreeDetail("scholarship", selectedItem.name);
     const isActive = selectedItem.status === "Active";
@@ -72,110 +94,84 @@ export default function ScholarshipPage() {
       <ModuleScreen className="space-y-4">
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
         <div className="content-stagger space-y-4">
-          {!unlocked && !detailUnlocked ? (
-            <PremiumGate
-              title="Unlock Scholarships"
-              description="Subscribe to more scholarship details, requirements, and application links."
-              returnTo={buildScholarshipReturnTo()}
-            />
-          ) : null}
+          {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
 
-          {/* Overview card */}
-          <div className="bg-white rounded-[26px] border border-[#f0e4e2] overflow-hidden shadow-sm">
+          <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
             <div className={`h-1 ${isActive ? "bg-[#9a2119]" : "bg-gray-200"}`} />
-            <div className="p-6 space-y-5">
+            <div className="space-y-5 p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1.5">
-                  <h2 className="text-xl font-black text-[#1a0a09] leading-snug m-0">
-                    {selectedItem.name}
-                  </h2>
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-[#b8837e] mt-1 mb-0">
-                    {selectedItem.provider}
-                  </p>
+                  <h2 className="m-0 text-xl font-black leading-snug text-[#1a0a09]">{selectedItem.name}</h2>
+                  <p className="mt-1 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">{selectedItem.provider}</p>
                 </div>
-                <span
-                  className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-3 py-1 ${
-                    isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
-                  }`}
-                >
+                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
                   {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
                   {selectedItem.status}
                 </span>
               </div>
 
               <div className="h-px bg-[#f0e4e2]" />
-
-              <p className="text-sm text-gray-500 leading-7 m-0">
-                {selectedItem.description}
-              </p>
+              <p className="m-0 text-sm leading-7 text-gray-500">{selectedItem.description}</p>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-[#f5e4df] bg-[#fff8f6] px-4 py-4">
-                  <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
                     <DollarOutlined className="text-[#9a2119]" /> Amount
                   </p>
-                  <p className="text-2xl font-black text-[#9a2119] m-0">{selectedItem.amount}</p>
+                  <p className="m-0 text-2xl font-black text-[#9a2119]">{selectedItem.amount}</p>
                 </div>
                 <div className="rounded-2xl border border-[#f5e4df] bg-[#fff8f6] px-4 py-4">
-                  <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
                     <CalendarOutlined className="text-[#9a2119]" /> Deadline
                   </p>
-                  <p className="text-sm font-semibold text-[#1a0a09] m-0">{selectedItem.deadline}</p>
+                  <p className="m-0 text-sm font-semibold text-[#1a0a09]">{selectedItem.deadline}</p>
                 </div>
                 <div className="rounded-2xl border border-[#f5e4df] bg-[#fff8f6] px-4 py-4 sm:col-span-2">
-                  <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
                     <TeamOutlined className="text-[#9a2119]" /> Eligibility
                   </p>
-                  <p className="text-sm font-medium leading-7 text-[#1a0a09] m-0">{selectedItem.eligibility}</p>
+                  <p className="m-0 text-sm font-medium leading-7 text-[#1a0a09]">{selectedItem.eligibility}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-[26px] border border-[#f0e4e2] overflow-hidden shadow-sm">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
-              <FileTextOutlined className="text-[#9a2119] text-sm" />
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09] m-0">
-                Requirements
-              </h3>
+          <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+            <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
+              <FileTextOutlined className="text-sm text-[#9a2119]" />
+              <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Requirements</h3>
             </div>
             <div className="px-5 py-3">
-              {selectedItem.requirements.map((req, i) => (
-                <div
-                  key={i}
-                  className={`flex items-start gap-3 py-3 ${
-                    i < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
-                  }`}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] mt-2 shrink-0" />
-                  <p className="text-sm text-gray-600 leading-7 m-0">{req}</p>
+              {selectedItem.requirements.map((req, index) => (
+                <div key={index} className={`flex items-start gap-3 py-3 ${index < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""}`}>
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#9a2119]" />
+                  <p className="m-0 text-sm leading-7 text-gray-600">{req}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <Button
-            type="primary"
-            href={selectedItem.link}
-            target="_blank"
-            block
-            icon={<ArrowRightOutlined />}
-            className="!mt-1 !h-12 !rounded-xl !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
-          >
+          <Button type="primary" href={selectedItem.link} target="_blank" block icon={<ArrowRightOutlined />} className="!mt-1 !h-12 !rounded-xl !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]">
             Apply Now
           </Button>
+          {!unlocked && !detailUnlocked ? (
+            <Button block onClick={() => handleGoToPlans(selectedItem.name)} className="!h-12 !rounded-xl">
+              Unlock to Continue
+            </Button>
+          ) : null}
         </div>
       </ModuleScreen>
     );
   }
 
-  /* ── LIST VIEW ── */
   return (
     <ModuleScreen className="space-y-4">
+      {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
+
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1a0a09] m-0">Scholarships</h1>
-          <p className="text-xs text-[#b8837e] mt-1">{filtered.length} opportunities found</p>
+          <h1 className="m-0 text-2xl font-black text-[#1a0a09]">Scholarships</h1>
+          <p className="mt-1 text-xs text-[#b8837e]">{filtered.length} opportunities found</p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
           <Tabs
@@ -188,7 +184,6 @@ export default function ScholarshipPage() {
         </div>
       </div>
 
-      {/* Equal-size card grid */}
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => {
           const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
@@ -196,16 +191,17 @@ export default function ScholarshipPage() {
 
           return (
             <div
-              key={item.name}
+              key={item.id || item.name}
               onClick={() => {
-                if (!unlocked && !itemFree) { setUnlockModalItem(item.name); return; }
+                if (!unlocked && !itemFree) {
+                  setUnlockModalItem(item.name);
+                  return;
+                }
                 openScholarship(item);
               }}
-              className={`group overflow-hidden rounded-[24px] border bg-white cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10 ${
-                isActive ? "border-[#f0e4e2] hover:border-[#9a2119]" : "border-gray-100 hover:border-[#9a2119]"
-              }`}
+              className={`group cursor-pointer overflow-hidden rounded-[24px] border bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10 ${isActive ? "border-[#f0e4e2] hover:border-[#9a2119]" : "border-gray-100 hover:border-[#9a2119]"}`}
             >
-              <div className={`h-[3px] w-full ${isActive ? "bg-[#9a2119]" : "bg-gray-200 group-hover:bg-[#9a2119]"} transition-colors`} />
+              <div className={`h-[3px] w-full transition-colors ${isActive ? "bg-[#9a2119]" : "bg-gray-200 group-hover:bg-[#9a2119]"}`} />
 
               <div className="flex h-full flex-col gap-4 px-5 pb-5 pt-4">
                 <div className="flex items-start justify-between gap-3">
@@ -213,32 +209,20 @@ export default function ScholarshipPage() {
                     <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fdf0ee] text-lg text-[#9a2119] transition-colors group-hover:bg-[#9a2119] group-hover:text-white">
                       <DollarOutlined />
                     </div>
-                    <p className="m-0 text-[16px] font-black leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119] line-clamp-2">
-                      {item.name}
-                    </p>
-                    <p className="mt-2 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">
-                      {item.provider}
-                    </p>
+                    <p className="m-0 line-clamp-2 text-[16px] font-black leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119]">{item.name}</p>
+                    <p className="mt-2 mb-0 text-[11px] font-semibold uppercase tracking-widest text-[#b8837e]">{item.provider}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                        isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
                       {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
                       {item.status}
                     </span>
-                    {!unlocked && (
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                          itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"
-                        }`}
-                      >
+                    {!unlocked ? (
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"}`}>
                         {itemFree ? <UnlockOutlined /> : <LockOutlined />}
                         {itemFree ? "Free" : "Locked"}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -252,9 +236,7 @@ export default function ScholarshipPage() {
                     <span>{item.deadline}</span>
                   </div>
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-semibold text-[#8c6c67]">
-                      Tap to view details
-                    </span>
+                    <span className="text-xs font-semibold text-[#8c6c67]">Tap to view details</span>
                     <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
                       Explore <ArrowRightOutlined />
                     </span>

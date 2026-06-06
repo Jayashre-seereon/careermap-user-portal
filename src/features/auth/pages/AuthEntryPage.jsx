@@ -27,7 +27,7 @@ export default function AuthEntryPage() {
             </div>
             <div>
               <div style={{ fontSize: "16px", fontWeight: "800", color: "#1a0a09", marginBottom: "3px" }}>New User</div>
-              <div style={{ fontSize: "13px", color: "#888" }}>Start onboarding and create your profile.</div>
+              <div style={{ fontSize: "13px", color: "#888" }}>Start onboarding, verify OTP, and create your profile.</div>
             </div>
           </Space>
         </Link>
@@ -51,7 +51,7 @@ export default function AuthEntryPage() {
             </div>
             <div>
               <div style={{ fontSize: "16px", fontWeight: "800", color: "#1a0a09", marginBottom: "3px" }}>Existing User</div>
-              <div style={{ fontSize: "13px", color: "#888" }}>Login with OTP, coupon, or email and password.</div>
+              <div style={{ fontSize: "13px", color: "#888" }}>Login with OTP or email and password.</div>
             </div>
           </Space>
         </Link>

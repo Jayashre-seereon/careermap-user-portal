@@ -12,6 +12,7 @@ import OtpVerifyPage from "../features/auth/pages/OtpVerifyPage";
 import ProfileSetupPage from "../features/auth/pages/ProfileSetupPage";
 import PromoPage from "../features/auth/pages/PromoPage";
 import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
 
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import AssessmentPage from "../features/assessment/pages/AssessmentPage";
@@ -46,6 +47,8 @@ export const router = createBrowserRouter([
           { path: "/signup", element: <SignupPage /> },
           { path: "/otp-verify", element: <OtpVerifyPage /> },
           { path: "/forgot-password", element: <ForgotPasswordPage /> },
+          { path: "/reset-password", element: <ResetPasswordPage /> },
+          { path: "/reset-password/:token", element: <ResetPasswordPage /> },
         ],
       },
       { path: "/profile-setup", element: <ProfileSetupPage /> },
