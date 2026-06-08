@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Col, Row } from "antd";
+
 import { LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { useAppState } from "../../../state/AppStateContext";
@@ -6,12 +8,40 @@ import { buildDashboardModules, moduleIconMap, moduleStyleMap } from "../../../u
 import {
     AppstoreOutlined,
 } from "@ant-design/icons";
-
+import { UnlockRedirectModal } from "./portalPageShared.jsx";
+import { checkModuleAccess } from "../../../api/moduleAccessApi";
 export function ExploreModulesSection({ modules = [] }) {
     const navFunc = useNavigate();
     const { isUnlocked } = useAppState();
     const curatedCards = modules.length && modules[0]?.route ? modules : buildDashboardModules(modules);
+    const [lockedModule, setLockedModule] =
+  useState(null);
+const handleModuleClick = async (card) => {
+  try {
 
+    const response =
+      await checkModuleAccess(card.id);
+
+   if (!response?.allowed) {
+
+  setLockedModule({
+    title: card.title,
+    message: response?.message,
+  });
+
+  return;
+}
+
+  
+
+    navFunc(card.route);
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+};
     return (
         <section>
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -22,6 +52,7 @@ export function ExploreModulesSection({ modules = [] }) {
             </div>
             <Row gutter={[14, 14]}>
                 {curatedCards.map((card) => {
+                    console.log(card);
                     const showLock =
                         (card.title === "Career Library" && !isUnlocked("career-library")) ||
                         (card.title === "Master Class" && !isUnlocked("master-class")) ||
@@ -39,7 +70,7 @@ export function ExploreModulesSection({ modules = [] }) {
                             <button
                                 type="button"
                                 className="dashboard-module-card group h-full w-full overflow-hidden rounded-[24px] border border-[#e8dbd6] bg-white text-left"
-                                onClick={() => navFunc(card.route)}
+                                onClick={() => handleModuleClick(card)}
                             >
                                 <div
                                     className="dashboard-module-media relative h-28 overflow-hidden"
@@ -83,6 +114,26 @@ export function ExploreModulesSection({ modules = [] }) {
                     );
                 })}
             </Row>
+             <UnlockRedirectModal
+      open={!!lockedModule}
+      title={`Unlock ${lockedModule?.title || "Module"}`}
+      itemLabel={lockedModule?.title}
+      description={
+        lockedModule?.message ||
+        "Free preview already used. Please purchase a subscription to continue accessing this module."
+      }
+      onCancel={() => setLockedModule(null)}
+      onConfirm={() => {
+        navFunc(
+          `/app/subscription?returnTo=${encodeURIComponent(
+            location.pathname
+          )}`
+        );
+
+        setLockedModule(null);
+      }}
+    />
+
         </section>
     );
 }

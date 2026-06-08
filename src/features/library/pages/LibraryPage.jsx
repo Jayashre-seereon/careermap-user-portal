@@ -24,7 +24,9 @@ import { careerLibrary, palette } from "../../../data/careermapData";
 import { ModuleScreen, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import {
+  checkModuleAccess
+} from "../../../api/moduleAccessApi";
 const streamIcons = {
   Science: <ExperimentOutlined />,
   Commerce: <CreditCardOutlined />,
@@ -351,8 +353,10 @@ export default function LibraryPage() {
   const [detailReturnLevel, setDetailReturnLevel] = useState("streams");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [moduleStatus, setModuleStatus] =
+  useState("preview");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
-  const [claimedFreeKey, setClaimedFreeKey] = useState(null);
+  // const [claimedFreeKey, setClaimedFreeKey] = useState(null);
   const hasSubscriptionAccess = isUnlocked("career-library");
 
   useEffect(() => {
@@ -388,26 +392,42 @@ export default function LibraryPage() {
       active = false;
     };
   }, []);
+useEffect(() => {
 
-  const detailKey = selectedDetailSource?.id != null ? String(selectedDetailSource.id) : null;
-  const detailUnlocked = hasSubscriptionAccess || claimedFreeKey === null || detailKey === claimedFreeKey;
+  const status =
+    sessionStorage.getItem(
+      "career-library-status"
+    );
 
-  function getAccessKey(item) {
-    return String(item?.id ?? getItemTitle(item) ?? "");
+  if (status) {
+
+    setModuleStatus(status);
+
   }
 
-  function isItemFree(item) {
-    if (hasSubscriptionAccess) {
-      return true;
-    }
+}, []);
+  // const detailKey = selectedDetailSource?.id != null ? String(selectedDetailSource.id) : null;
+  // const detailUnlocked = hasSubscriptionAccess || claimedFreeKey === null || detailKey === claimedFreeKey;
 
-    if (claimedFreeKey === null) {
-      return true;
-    }
+  // function getAccessKey(item) {
+  //   return String(item?.id ?? getItemTitle(item) ?? "");
+  // }
 
-    return getAccessKey(item) === claimedFreeKey;
-  }
+  // function isItemFree(item) {
+  //   if (hasSubscriptionAccess) {
+  //     return true;
+  //   }
 
+  //   if (claimedFreeKey === null) {
+  //     return true;
+  //   }
+
+  //   return getAccessKey(item) === claimedFreeKey;
+  // }
+
+  const detailUnlocked =
+  hasSubscriptionAccess ||
+  moduleStatus !== "locked";
   const pageTitle = useMemo(() => {
     if (currentLevel === "streams") {
       return "Career Library";
@@ -548,6 +568,11 @@ export default function LibraryPage() {
         setSelectedDetailSource(item);
         setDetails(detailItems);
         setCurrentLevel("details");
+        if (!hasSubscriptionAccess) {
+
+  setModuleStatus("locked");
+
+}
         if (item?.id != null) {
           registerFreeDetailAccess("career-library", String(item.id));
         }
@@ -560,11 +585,20 @@ export default function LibraryPage() {
   }
 
   function handleBack() {
-    if (currentLevel === "details") {
-      setCurrentLevel(detailReturnLevel);
-      setSelectedDetailSource(null);
-      return;
-    }
+  if (currentLevel === "details") {
+
+  if (!hasSubscriptionAccess) {
+
+    setModuleStatus("locked");
+
+  }
+
+  setCurrentLevel(detailReturnLevel);
+
+  setSelectedDetailSource(null);
+
+  return;
+}
 
     if (currentLevel === "subcategory") {
       setCurrentLevel("secondcategory");
@@ -587,21 +621,30 @@ export default function LibraryPage() {
     goToDashboard();
   }
 
-  function handleLockedCareerClick(item, type) {
-    const unlockedItem = isItemFree(item);
+function handleLockedCareerClick(
+  item,
+  type
+) {
 
-    if (!unlockedItem) {
-      setUnlockModalItem({ item, type });
-      return;
-    }
+  if (
+    moduleStatus === "locked" &&
+    !hasSubscriptionAccess
+  ) {
 
-    if (!hasSubscriptionAccess && claimedFreeKey === null) {
-      setClaimedFreeKey(getAccessKey(item));
-    }
+    setUnlockModalItem({
+      item,
+      type,
+    });
 
-    handleClick(type, item?.id, item);
+    return;
   }
 
+  handleClick(
+    type,
+    item?.id,
+    item
+  );
+}
   function handleGoToPlans() {
     const returnTo = buildReturnTo();
     setUnlockModalItem(null);
@@ -641,7 +684,8 @@ export default function LibraryPage() {
     return (
       <div className="flex flex-col gap-3">
         {items.map((item, index) => {
-          const unlockedItem = isItemFree(item);
+          const unlockedItem =
+  moduleStatus !== "locked";
 
           return (
             <button
@@ -678,7 +722,8 @@ export default function LibraryPage() {
     return (
       <div className="flex flex-col gap-3">
         {items.map((item, index) => {
-          const unlockedItem = isItemFree(item);
+         const unlockedItem =
+  moduleStatus !== "locked";
 
           return (
             <button
