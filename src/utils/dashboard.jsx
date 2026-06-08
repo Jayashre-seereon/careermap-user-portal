@@ -127,6 +127,7 @@ export function buildDashboardModules(modules = []) {
         route: matchedCard?.route || fallbackRoute,
         lockTitle: matchedCard?.title || module.title,
         tone: matchedCard?.tone || palette.primary,
+        accessStatus: module.accessStatus,
       };
     })
     .filter(Boolean);

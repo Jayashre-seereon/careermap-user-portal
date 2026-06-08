@@ -17,7 +17,9 @@ import {
   TrophyOutlined,
   UnlockOutlined,
 } from "@ant-design/icons";
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useMemo, useState,useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { Empty } from "antd";
 import { getCareerLibraryCategoriesByStream, getCareerLibraryNext, getCareerLibraryStreams } from "../../../api/careerLibraryApi";
 import { careerLibrary, palette } from "../../../data/careermapData";
@@ -353,11 +355,19 @@ export default function LibraryPage() {
   const [detailReturnLevel, setDetailReturnLevel] = useState("streams");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [moduleStatus, setModuleStatus] =
-  useState("preview");
+  
   const [unlockModalItem, setUnlockModalItem] = useState(null);
+    const pageLocation = useLocation();
+
+const accessStatus =
+  pageLocation.state?.accessStatus ||
+  "preview";
+
+  const [moduleStatus, setModuleStatus] =
+  useState(accessStatus);
   // const [claimedFreeKey, setClaimedFreeKey] = useState(null);
-  const hasSubscriptionAccess = isUnlocked("career-library");
+  const hasSubscriptionAccess =  accessStatus === "unlocked";
+
 
   useEffect(() => {
     let active = true;
@@ -392,20 +402,7 @@ export default function LibraryPage() {
       active = false;
     };
   }, []);
-useEffect(() => {
 
-  const status =
-    sessionStorage.getItem(
-      "career-library-status"
-    );
-
-  if (status) {
-
-    setModuleStatus(status);
-
-  }
-
-}, []);
   // const detailKey = selectedDetailSource?.id != null ? String(selectedDetailSource.id) : null;
   // const detailUnlocked = hasSubscriptionAccess || claimedFreeKey === null || detailKey === claimedFreeKey;
 

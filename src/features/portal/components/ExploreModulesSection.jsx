@@ -34,7 +34,11 @@ const handleModuleClick = async (card) => {
 
   
 
-    navFunc(card.route);
+  navFunc(card.route, {
+  state: {
+    accessStatus: card.accessStatus,
+  },
+});
 
   } catch (err) {
 
