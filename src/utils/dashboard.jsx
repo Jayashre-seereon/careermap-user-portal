@@ -102,14 +102,7 @@ export function buildDashboardModules(modules = []) {
   const cardMap = new Map(allCards.map((card) => [resolveModuleLookupKey(card.title), card]));
 
   if (!modules.length) {
-    return allCards.map((card) => ({
-      id: card.title,
-      title: card.title,
-      subtitle: card.subtitle,
-      route: card.route,
-      lockTitle: card.title,
-      tone: card.tone,
-    }));
+    return [];
   }
 
   return modules

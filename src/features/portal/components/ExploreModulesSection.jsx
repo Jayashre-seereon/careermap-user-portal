@@ -14,38 +14,30 @@ export function ExploreModulesSection({ modules = [] }) {
     const navFunc = useNavigate();
     const { isUnlocked } = useAppState();
     const curatedCards = modules.length && modules[0]?.route ? modules : buildDashboardModules(modules);
-    const [lockedModule, setLockedModule] =
-  useState(null);
-const handleModuleClick = async (card) => {
-  try {
+    const [lockedModule, setLockedModule] = useState(null);
 
-    const response =
-      await checkModuleAccess(card.id);
+    const handleModuleClick = async (card) => {
+        try {
+            const response = await checkModuleAccess(card.id);
 
-   if (!response?.allowed) {
+            if (!response?.allowed) {
+                setLockedModule({
+                    title: card.title,
+                    message: response?.message,
+                });
+                return;
+            }
 
-  setLockedModule({
-    title: card.title,
-    message: response?.message,
-  });
+            navFunc(card.route, {
+                state: {
+                    accessStatus: card.accessStatus,
+                },
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
-  return;
-}
-
-  
-
-  navFunc(card.route, {
-  state: {
-    accessStatus: card.accessStatus,
-  },
-});
-
-  } catch (err) {
-
-    console.error(err);
-
-  }
-};
     return (
         <section>
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -54,89 +46,93 @@ const handleModuleClick = async (card) => {
                     <div className="mt-1 text-sm text-muted">Open any module and continue the exact flow from there.</div>
                 </div>
             </div>
-            <Row gutter={[14, 14]}>
-                {curatedCards.map((card) => {
-                    console.log(card);
-                    const showLock =
-                        (card.title === "Career Library" && !isUnlocked("career-library")) ||
-                        (card.title === "Master Class" && !isUnlocked("master-class")) ||
-                        (card.title === "Book Mentor" && !isUnlocked("book-mentor")) ||
-                        (card.title === "Scholarships" && !isUnlocked("scholarship")) ||
-                        (card.title === "Study Abroad" && !isUnlocked("abroad-consultancy"));
-                    const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
-                    const description =
-                        card.title === "Assessment"
-                            ? "Deep personality and aptitude analysis for smarter career decisions."
-                            : card.subtitle;
+            {curatedCards.length ? (
+                <Row gutter={[14, 14]}>
+                    {curatedCards.map((card) => {
+                        const showLock =
+                            (card.title === "Career Library" && !isUnlocked("career-library")) ||
+                            (card.title === "Master Class" && !isUnlocked("master-class")) ||
+                            (card.title === "Book Mentor" && !isUnlocked("book-mentor")) ||
+                            (card.title === "Scholarships" && !isUnlocked("scholarship")) ||
+                            (card.title === "Study Abroad" && !isUnlocked("abroad-consultancy"));
+                        const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
+                        const description =
+                            card.title === "Assessment"
+                                ? "Deep personality and aptitude analysis for smarter career decisions."
+                                : card.subtitle;
 
-                    return (
-                        <Col xs={24} sm={12} lg={8} xl={6} key={card.title}>
-                            <button
-                                type="button"
-                                className="dashboard-module-card group h-full w-full overflow-hidden rounded-[24px] border border-[#e8dbd6] bg-white text-left"
-                                onClick={() => handleModuleClick(card)}
-                            >
-                                <div
-                                    className="dashboard-module-media relative h-28 overflow-hidden"
-                                    style={{ background: art.background }}
+                        return (
+                            <Col xs={24} sm={12} lg={8} xl={6} key={card.id || card.title}>
+                                <button
+                                    type="button"
+                                    className="dashboard-module-card group h-full w-full overflow-hidden rounded-[24px] border border-[#e8dbd6] bg-white text-left"
+                                    onClick={() => handleModuleClick(card)}
                                 >
-                                    <div className="flex h-full items-center justify-center">
-                                        <div className="dashboard-module-icon text-[36px] transition duration-300 group-hover:scale-110">
-                                            {moduleIconMap[card.title] || <AppstoreOutlined style={{ color: art.actionBg }} />}
-                                        </div>
-                                    </div>
-
-                                    {showLock ? (
-                                        <div className="absolute right-4 top-4 flex items-center justify-center text-[13px] text-brand">
-                                            <LockOutlined />
-                                        </div>
-                                    ) : null}
-                                </div>
-                                <div className="flex min-h-[148px] flex-col px-4 pb-4 pt-3.5">
-                                    <div className="pr-4">
-                                        <div className="display-font text-[19px] font-bold leading-tight text-ink">{card.title}</div>
-                                        <div className="mt-1.5 text-[13px] leading-5 text-muted">{description}</div>
-                                    </div>
                                     <div
-                                        className="mt-auto flex items-center justify-between gap-3 pt-4"
-                                        style={{ color: art.actionBg }}
+                                        className="dashboard-module-media relative h-28 overflow-hidden"
+                                        style={{ background: art.background }}
                                     >
-                                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-                                            Explore now
-                                        </span>
+                                        <div className="flex h-full items-center justify-center">
+                                            <div className="dashboard-module-icon text-[36px] transition duration-300 group-hover:scale-110">
+                                                {moduleIconMap[card.title] || <AppstoreOutlined style={{ color: art.actionBg }} />}
+                                            </div>
+                                        </div>
 
-                                        <span
-                                            className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all duration-200"
-                                            style={{ backgroundColor: art.actionBg }}
-                                        >
-                                            <ArrowRightOutlined className="transition-transform duration-200 group-hover:translate-x-1" />
-                                        </span>
+                                        {showLock ? (
+                                            <div className="absolute right-4 top-4 flex items-center justify-center text-[13px] text-brand">
+                                                <LockOutlined />
+                                            </div>
+                                        ) : null}
                                     </div>
-                                </div>
-                            </button>
-                        </Col>
-                    );
-                })}
-            </Row>
-             <UnlockRedirectModal
-      open={!!lockedModule}
-      title={`Unlock ${lockedModule?.title || "Module"}`}
-      itemLabel={lockedModule?.title}
-      description={
-        lockedModule?.message ||
-        "Free preview already used. Please purchase a subscription to continue accessing this module."
-      }
-      onCancel={() => setLockedModule(null)}
-      onConfirm={() => {
-        navFunc(
-          `/app/subscription?returnTo=${encodeURIComponent(
-            location.pathname
-          )}`
-        );
+                                    <div className="flex min-h-[148px] flex-col px-4 pb-4 pt-3.5">
+                                        <div className="pr-4">
+                                            <div className="display-font text-[19px] font-bold leading-tight text-ink">{card.title}</div>
+                                            <div className="mt-1.5 text-[13px] leading-5 text-muted">{description}</div>
+                                        </div>
+                                        <div
+                                            className="mt-auto flex items-center justify-between gap-3 pt-4"
+                                            style={{ color: art.actionBg }}
+                                        >
+                                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+                                                Explore now
+                                            </span>
 
-        setLockedModule(null);
-      }}
-    />
+                                            <span
+                                                className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-all duration-200"
+                                                style={{ backgroundColor: art.actionBg }}
+                                            >
+                                                <ArrowRightOutlined className="transition-transform duration-200 group-hover:translate-x-1" />
+                                            </span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </Col>
+                        );
+                    })}
+                </Row>
+            ) : (
+                <div className="rounded-[24px] border border-dashed border-[#e8dbd6] bg-white px-5 py-10 text-center shadow-sm">
+                    <div className="display-font text-xl font-bold text-ink">No modules available yet</div>
+                    <div className="mt-2 text-sm text-muted">
+                        Modules will appear here automatically after they are added from the admin side.
+                    </div>
+                </div>
+            )}
+            <UnlockRedirectModal
+                open={!!lockedModule}
+                title={`Unlock ${lockedModule?.title || "Module"}`}
+                itemLabel={lockedModule?.title}
+                description={
+                    lockedModule?.message ||
+                    "Free preview already used. Please purchase a subscription to continue accessing this module."
+                }
+                onCancel={() => setLockedModule(null)}
+                onConfirm={() => {
+                    navFunc(`/app/subscription?returnTo=${encodeURIComponent(location.pathname)}`);
+
+                    setLockedModule(null);
+                }}
+            />
 
         </section>
     );
