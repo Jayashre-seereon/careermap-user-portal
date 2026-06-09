@@ -155,6 +155,7 @@ export default function ProfilePage() {
     <ModuleScreen className="space-y-8">
       <PageHero backOnly onBack={() => navigate(-1)} />
 
+      {/* Profile Header */}
       <div className="flex flex-col justify-between gap-6 rounded-3xl border border-[#eedad4] bg-white p-6 shadow-soft md:flex-row md:items-center">
         <div className="flex flex-col items-center gap-4 md:flex-row md:items-center">
           <Avatar size={80} icon={<UserOutlined />} className="bg-brand/10 text-brand border-2 border-brand/20" />
@@ -175,7 +176,7 @@ export default function ProfilePage() {
         <div className="flex flex-wrap gap-3">
           <Button
             icon={<EditOutlined />}
-          onClick={openEditProfile}
+            onClick={openEditProfile}
             className="!h-11 !rounded-xl font-bold"
           >
             Edit Profile
@@ -192,27 +193,71 @@ export default function ProfilePage() {
 
       {status ? <Alert type={status.type} message={status.message} showIcon /> : null}
 
-      <Row gutter={[20, 20]}>
-        <Col xs={24} lg={8}>
-          <SectionCard title={<Space><BookOutlined className="text-brand" /> Saved Careers</Space>}>
+      {/* Equal Height Cards Row */}
+      <Row gutter={[20, 20]} className="items-stretch">
+
+        {/* Subscription Plan */}
+        <Col xs={24} lg={8} className="flex flex-col">
+          <SectionCard
+            title={<Space><CreditCardOutlined className="text-brand" /> Subscription Plan</Space>}
+            className="flex-1 flex flex-col"
+          >
             <div className={scrollableCardClass}>
-              <List
-                dataSource={savedCareers}
-                renderItem={(item) => (
-                  <List.Item className="!px-0 !border-gray-50">
-                    <div className="flex w-full items-center gap-3">
-                      <div className="h-2 w-2 rounded-full bg-brand" />
-                      <span className="text-sm font-medium text-ink">{item}</span>
+              {subscriptionRecords.length > 0 ? (
+                <List
+                  dataSource={subscriptionRecords}
+                  className="w-full"
+                  renderItem={(item) => (
+                    <div className="flex flex-col gap-4 rounded-2xl bg-gray-50 p-4 md:flex-row md:items-center md:justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-xl bg-brand/10 p-3">
+                          <CreditCardOutlined className="text-xl text-brand" />
+                        </div>
+                        <div>
+                          <span className="block text-xs font-black uppercase tracking-[0.18em] text-brand">
+                            {item.subscriptionName || item.planName}
+                          </span>
+                          <span className="text-sm font-bold text-ink">
+                            {item.amount !== "" && item.amount != null ? `Rs ${item.amount}` : item.price}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-left md:text-right">
+                        <span className="block text-xs font-bold uppercase text-muted">Validity</span>
+                        <span className="font-bold text-ink">{item.validity || item.expiryDate}</span>
+                      </div>
+                      <Tag color="green" className="!m-0 !rounded-full !px-4 !font-bold uppercase">
+                        {item.status || "Active"}
+                      </Tag>
                     </div>
-                  </List.Item>
-                )}
-              />
+                  )}
+                />
+              ) : hasActiveSubscription ? (
+                <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gray-50 p-6 md:flex-row md:items-center">
+                  <p className="m-0 text-sm text-muted">Subscription data is loading.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gray-50 p-6 md:flex-row md:items-center">
+                  <p className="m-0 text-sm text-muted">You are currently on the Free Tier</p>
+                  <Button
+                    type="primary"
+                    className="!rounded-xl font-bold"
+                    onClick={() => navigate("/app/subscription")}
+                  >
+                    Upgrade to Pro
+                  </Button>
+                </div>
+              )}
             </div>
           </SectionCard>
         </Col>
 
-        <Col xs={24} lg={8}>
-          <SectionCard title={<Space><HistoryOutlined className="text-brand" /> Test History</Space>}>
+        {/* Test History */}
+        <Col xs={24} lg={8} className="flex flex-col">
+          <SectionCard
+            title={<Space><HistoryOutlined className="text-brand" /> Test History</Space>}
+            className="flex-1 flex flex-col"
+          >
             <div className={scrollableCardClass}>
               <List
                 dataSource={testHistory}
@@ -221,7 +266,12 @@ export default function ProfilePage() {
                     <div className="flex flex-col">
                       <div className="text-sm font-bold text-ink">{item.quizName || item.title}</div>
                       <div className="mt-1 text-xs text-muted">
-                        {[item.score ? `Score: ${item.score}` : "", item.attemptedAt ? `Attempted: ${item.attemptedAt}` : item.subtitle].filter(Boolean).join(" • ")}
+                        {[
+                          item.score ? `Score: ${item.score}` : "",
+                          item.attemptedAt ? `Attempted: ${item.attemptedAt}` : item.subtitle,
+                        ]
+                          .filter(Boolean)
+                          .join(" • ")}
                       </div>
                     </div>
                   </List.Item>
@@ -231,8 +281,12 @@ export default function ProfilePage() {
           </SectionCard>
         </Col>
 
-        <Col xs={24} lg={8}>
-          <SectionCard title={<Space><CalendarOutlined className="text-brand" /> Mentor Bookings</Space>}>
+        {/* Mentor Bookings */}
+        <Col xs={24} lg={8} className="flex flex-col">
+          <SectionCard
+            title={<Space><CalendarOutlined className="text-brand" /> Mentor Bookings</Space>}
+            className="flex-1 flex flex-col"
+          >
             <div className={scrollableCardClass}>
               <List
                 dataSource={bookings}
@@ -242,7 +296,9 @@ export default function ProfilePage() {
                       <div className="text-sm font-bold text-ink">{item.mentorName}</div>
                       <div className="flex w-full justify-between gap-2">
                         <span className="text-xs italic text-muted">{item.timeSlot || item.time}</span>
-                        <span className="text-xs italic text-muted">{item.mentorFee ? `Fee: Rs ${item.mentorFee}` : item.date}</span>
+                        <span className="text-xs italic text-muted">
+                          {item.mentorFee ? `Fee: Rs ${item.mentorFee}` : item.date}
+                        </span>
                         <Tag className="!m-0 !text-[10px]">{item.status}</Tag>
                       </div>
                     </div>
@@ -252,54 +308,10 @@ export default function ProfilePage() {
             </div>
           </SectionCard>
         </Col>
+
       </Row>
 
-      <Row>
-        <Col span={24}>
-          <SectionCard title={<Space><CreditCardOutlined className="text-brand" /> Subscription Plan</Space>}>
-            {subscriptionRecords.length > 0 ? (
-              <List
-                dataSource={subscriptionRecords}
-                className="w-full"
-                renderItem={(item) => (
-                  <div className="flex flex-col gap-4 rounded-2xl bg-gray-50 p-4 md:flex-row md:items-center md:justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="rounded-xl bg-brand/10 p-3">
-                        <CreditCardOutlined className="text-xl text-brand" />
-                      </div>
-                      <div>
-                        <span className="block text-xs font-black uppercase tracking-[0.18em] text-brand">
-                          {item.subscriptionName || item.planName}
-                        </span>
-                        <span className="text-sm font-bold text-ink">{item.amount !== "" && item.amount != null ? `Rs ${item.amount}` : item.price}</span>
-                      </div>
-                    </div>
-                    <div className="text-left md:text-right">
-                      <span className="block text-xs font-bold uppercase text-muted">Validity</span>
-                      <span className="font-bold text-ink">{item.validity || item.expiryDate}</span>
-                    </div>
-                    <Tag color="green" className="!m-0 !rounded-full !px-4 !font-bold uppercase">
-                      {item.status || "Active"}
-                    </Tag>
-                  </div>
-                )}
-              />
-            ) : hasActiveSubscription ? (
-              <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gray-50 p-6 md:flex-row md:items-center">
-                <p className="m-0 text-sm text-muted">Subscription data is loading.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gray-50 p-6 md:flex-row md:items-center">
-                <p className="m-0 text-sm text-muted">You are currently on the Free Tier</p>
-                <Button type="primary" className="!rounded-xl font-bold" onClick={() => navigate("/app/subscription")}>
-                  Upgrade to Pro
-                </Button>
-              </div>
-            )}
-          </SectionCard>
-        </Col>
-      </Row>
-
+      {/* Edit Profile Modal */}
       <Modal
         open={editOpen}
         footer={null}
@@ -338,11 +350,15 @@ export default function ProfilePage() {
                   ["dob", "Date of Birth", 2],
                 ].map(([key, label]) => (
                   <Form.Item
-                    label={<span className="text-[12px] font-bold uppercase tracking-wide text-[#7a6d66]">{label}</span>}
+                    label={
+                      <span className="text-[12px] font-bold uppercase tracking-wide text-[#7a6d66]">
+                        {label}
+                      </span>
+                    }
                     key={key}
                     className="!mb-0"
                   >
-                  <Input
+                    <Input
                       value={form[key] || ""}
                       disabled={key === "email" || key === "mobile"}
                       placeholder={`Enter ${String(label).toLowerCase()}`}
@@ -356,7 +372,9 @@ export default function ProfilePage() {
                     {key === "email" || key === "mobile" ? (
                       <div className="mt-2 text-[12px] text-[#8a7f78]">Can&apos;t edit</div>
                     ) : null}
-                    {key === "dob" && dobError ? <div className="mt-2 text-[12px] text-[#c62828]">{dobError}</div> : null}
+                    {key === "dob" && dobError ? (
+                      <div className="mt-2 text-[12px] text-[#c62828]">{dobError}</div>
+                    ) : null}
                   </Form.Item>
                 ))}
               </div>
