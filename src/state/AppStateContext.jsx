@@ -117,16 +117,22 @@ function readInitialState() {
   }
 }
 
-function toArray(value) {
-  if (Array.isArray(value)) {
-    return value.filter(Boolean);
+function extractResponseItems(response) {
+  const candidates = [
+    response?.data?.data,
+    response?.data?.results,
+    response?.data,
+    response?.results,
+    response,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate.filter(Boolean);
+    }
   }
 
-  if (!value) {
-    return [];
-  }
-
-  return [value];
+  return [];
 }
 
 function formatDateLabel(value) {
@@ -145,6 +151,19 @@ function formatDateLabel(value) {
     month: "short",
     year: "numeric",
   });
+}
+
+function formatValidityDays(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const numericValue = Number(value);
+  if (!Number.isNaN(numericValue) && String(value).trim() !== "") {
+    return `${numericValue} days`;
+  }
+
+  return formatDateLabel(value);
 }
 
 function mapTestHistoryItem(item, index = 0) {
@@ -259,15 +278,16 @@ function normalizeSubscriptionItems(items = []) {
     const mapped = mapSubscriptionItem(item, index);
     const subscriptionName = item?.plan?.name || item?.subscriptionName || item?.subscription_name || item?.planName || mapped.planName;
     const amount = item?.amount != null ? item.amount : item?.plan?.price != null ? item.plan.price : item?.price != null ? item.price : mapped.amount || "";
-    const validity = formatDateLabel(item?.endDate || item?.validity || item?.validityDate || item?.expiryDate || item?.expiry_date || item?.validUntil || item?.renewalDate || mapped.validity || mapped.expiryDate);
+    const validity = formatValidityDays(item?.plan?.validity ?? item?.validity ?? item?.validityDays ?? item?.daysValid ?? item?.subscriptionValidity ?? mapped.validity);
+    const expiryDate = formatDateLabel(item?.endDate || item?.expiryDate || item?.expiry_date || item?.validUntil || item?.renewalDate);
 
     return {
       ...mapped,
       planName: subscriptionName,
       subscriptionName,
       amount,
-      validity,
-      expiryDate: validity || mapped.expiryDate,
+      validity: validity || mapped.validity,
+      expiryDate: expiryDate || mapped.expiryDate,
       price: amount !== "" ? `Rs ${amount}` : mapped.price,
     };
   });
@@ -326,9 +346,9 @@ export function AppStateProvider({ children }) {
           return;
         }
 
-        const testItems = toArray(testResponse?.data ?? testResponse?.data?.data ?? testResponse?.data?.results ?? testResponse?.results ?? testResponse);
-        const bookingItems = toArray(bookingResponse?.data ?? bookingResponse?.data?.data ?? bookingResponse?.data?.results ?? bookingResponse?.results ?? bookingResponse);
-        const subscriptionItems = toArray(subscriptionResponse?.data ?? subscriptionResponse?.data?.data ?? subscriptionResponse?.data?.results ?? subscriptionResponse?.results ?? subscriptionResponse);
+        const testItems = extractResponseItems(testResponse);
+        const bookingItems = extractResponseItems(bookingResponse);
+        const subscriptionItems = extractResponseItems(subscriptionResponse);
 
         setState((current) => {
           const nextState = { ...current };
