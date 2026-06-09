@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Col, Row } from "antd";
 
-import { LockOutlined, ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { useAppState } from "../../../state/AppStateContext";
 import { buildDashboardModules, moduleIconMap, moduleStyleMap } from "../../../utils/dashboard.jsx";
 import {
     AppstoreOutlined,
@@ -12,7 +11,6 @@ import { UnlockRedirectModal } from "./portalPageShared.jsx";
 import { checkModuleAccess } from "../../../api/moduleAccessApi";
 export function ExploreModulesSection({ modules = [] }) {
     const navFunc = useNavigate();
-    const { isUnlocked } = useAppState();
     const curatedCards = modules.length && modules[0]?.route ? modules : buildDashboardModules(modules);
     const [lockedModule, setLockedModule] = useState(null);
 
@@ -49,12 +47,6 @@ export function ExploreModulesSection({ modules = [] }) {
             {curatedCards.length ? (
                 <Row gutter={[14, 14]}>
                     {curatedCards.map((card) => {
-                        const showLock =
-                            (card.title === "Career Library" && !isUnlocked("career-library")) ||
-                            (card.title === "Master Class" && !isUnlocked("master-class")) ||
-                            (card.title === "Book Mentor" && !isUnlocked("book-mentor")) ||
-                            (card.title === "Scholarships" && !isUnlocked("scholarship")) ||
-                            (card.title === "Study Abroad" && !isUnlocked("abroad-consultancy"));
                         const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
                         const description =
                             card.title === "Assessment"
@@ -77,12 +69,6 @@ export function ExploreModulesSection({ modules = [] }) {
                                                 {moduleIconMap[card.title] || <AppstoreOutlined style={{ color: art.actionBg }} />}
                                             </div>
                                         </div>
-
-                                        {showLock ? (
-                                            <div className="absolute right-4 top-4 flex items-center justify-center text-[13px] text-brand">
-                                                <LockOutlined />
-                                            </div>
-                                        ) : null}
                                     </div>
                                     <div className="flex min-h-[148px] flex-col px-4 pb-4 pt-3.5">
                                         <div className="pr-4">
