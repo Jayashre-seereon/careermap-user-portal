@@ -12,13 +12,31 @@ import {
   TrophyOutlined,
   ArrowRightOutlined,
 } from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
+import { UnlockRedirectModal } from "../../portal/components/portalPageShared";
 import { getEntranceExams } from "../../../api/entranceExamApi";
 import { entranceExams as fallbackEntranceExams } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function EntranceExamPage() {
+
   const { goToDashboard } = usePortalNavigation();
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const accessStatus =
+    location.state?.accessStatus || "preview";
+
+  const isSubscribed =
+    accessStatus === "unlocked";
+
+  const [previewUsed, setPreviewUsed] =
+    useState(false);
+
+  const [unlockModalItem, setUnlockModalItem] =
+    useState(null);
   const [selected, setSelected] = useState(null);
   const [typeFilter, setTypeFilter] = useState("All");
   const [items, setItems] = useState(fallbackEntranceExams);
@@ -150,20 +168,48 @@ export default function EntranceExamPage() {
     );
   }
 
-  return (
+return (
+  <>
     <ModuleScreen className="space-y-4">
-      {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
+      {error ? (
+        <Alert
+          type="warning"
+          title={error}
+          showIcon
+          style={{ borderRadius: 16 }}
+        />
+      ) : null}
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="m-0 text-2xl font-black text-[#1a0a09]">Entrance Exams</h1>
-          <p className="mt-1 text-xs text-[#b8837e]">{filtered.length} exams available across streams and authorities.</p>
+          <h1 className="m-0 text-2xl font-black text-[#1a0a09]">
+            Entrance Exams
+          </h1>
+
+          <p className="mt-1 text-xs text-[#b8837e]">
+            {filtered.length} exams available across streams and authorities.
+          </p>
         </div>
+
         <div className="flex flex-wrap items-center justify-end gap-3">
           <div className="inline-flex items-center gap-0 rounded-full border border-[#f0e4e2] bg-white px-3 py-1">
-            <Select variant="borderless" value={typeFilter} onChange={setTypeFilter} className="w-28 text-xs font-semibold" options={typeOptions.map((value) => ({ label: value, value }))} />
+            <Select
+              variant="borderless"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              className="w-28 text-xs font-semibold"
+              options={typeOptions.map((value) => ({
+                label: value,
+                value,
+              }))}
+            />
           </div>
-          <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
+
+          <PageHero
+            backOnly
+            onBack={goToDashboard}
+            className="shrink-0"
+          />
         </div>
       </div>
 
@@ -171,10 +217,30 @@ export default function EntranceExamPage() {
         {filtered.map((item) => (
           <div
             key={item.id || item.name}
-            onClick={() => setSelected(item)}
+            onClick={() => {
+              // subscribed user
+              if (isSubscribed) {
+                setSelected(item);
+                return;
+              }
+
+              // first preview
+              if (!previewUsed) {
+                setSelected(item);
+                setPreviewUsed(true);
+                return;
+              }
+
+              // lock
+              setUnlockModalItem({
+                title: item.name,
+              });
+            }}
             className="group flex cursor-pointer flex-col gap-2.5 rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
           >
-            <p className="m-0 line-clamp-2 flex-1 text-[15px] font-bold leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119]">{item.name}</p>
+            <p className="m-0 line-clamp-2 flex-1 text-[15px] font-bold leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119]">
+              {item.name}
+            </p>
 
             <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
               <CalendarOutlined className="text-[11px] text-[#9a2119]" />
@@ -182,7 +248,10 @@ export default function EntranceExamPage() {
             </div>
 
             <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-              <span className="text-xs font-semibold text-[#8c6c67]">Tap to explore details</span>
+              <span className="text-xs font-semibold text-[#8c6c67]">
+                Tap to explore details
+              </span>
+
               <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
                 Explore <ArrowRightOutlined />
               </span>
@@ -191,5 +260,23 @@ export default function EntranceExamPage() {
         ))}
       </div>
     </ModuleScreen>
-  );
+
+    <UnlockRedirectModal
+      open={!!unlockModalItem}
+      title="Unlock Entrance Exam"
+      itemLabel={unlockModalItem?.title}
+      description="Free preview already used. Please purchase a subscription to continue."
+      onCancel={() => setUnlockModalItem(null)}
+      onConfirm={() => {
+        navigate(
+          `/app/subscription?returnTo=${encodeURIComponent(
+            location.pathname
+          )}`
+        );
+
+        setUnlockModalItem(null);
+      }}
+    />
+  </>
+);
 }

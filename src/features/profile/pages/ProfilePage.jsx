@@ -219,8 +219,10 @@ export default function ProfilePage() {
                 renderItem={(item) => (
                   <List.Item className="!items-start !px-0 !py-3">
                     <div className="flex flex-col">
-                      <div className="text-sm font-bold text-ink">{item.title}</div>
-                      <div className="mt-1 text-xs text-muted">{item.subtitle}</div>
+                      <div className="text-sm font-bold text-ink">{item.quizName || item.title}</div>
+                      <div className="mt-1 text-xs text-muted">
+                        {[item.score ? `Score: ${item.score}` : "", item.attemptedAt ? `Attempted: ${item.attemptedAt}` : item.subtitle].filter(Boolean).join(" • ")}
+                      </div>
                     </div>
                   </List.Item>
                 )}
@@ -239,8 +241,9 @@ export default function ProfilePage() {
                     <div className="flex w-full flex-col gap-1">
                       <div className="text-sm font-bold text-ink">{item.mentorName}</div>
                       <div className="flex w-full justify-between gap-2">
-                        <span className="text-xs italic text-muted">{item.date}</span>
-                        <Tag className="!m-0 !text-[10px]">{item.time}</Tag>
+                        <span className="text-xs italic text-muted">{item.timeSlot || item.time}</span>
+                        <span className="text-xs italic text-muted">{item.mentorFee ? `Fee: Rs ${item.mentorFee}` : item.date}</span>
+                        <Tag className="!m-0 !text-[10px]">{item.status}</Tag>
                       </div>
                     </div>
                   </List.Item>
@@ -254,7 +257,7 @@ export default function ProfilePage() {
       <Row>
         <Col span={24}>
           <SectionCard title={<Space><CreditCardOutlined className="text-brand" /> Subscription Plan</Space>}>
-            {hasActiveSubscription ? (
+            {subscriptionRecords.length > 0 ? (
               <List
                 dataSource={subscriptionRecords}
                 className="w-full"
@@ -266,21 +269,25 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <span className="block text-xs font-black uppercase tracking-[0.18em] text-brand">
-                          {item.planName}
+                          {item.subscriptionName || item.planName}
                         </span>
-                        <span className="text-sm font-bold text-ink">Active Subscription</span>
+                        <span className="text-sm font-bold text-ink">{item.amount !== "" && item.amount != null ? `Rs ${item.amount}` : item.price}</span>
                       </div>
                     </div>
                     <div className="text-left md:text-right">
-                      <span className="block text-xs font-bold uppercase text-muted">Expiry Date</span>
-                      <span className="font-bold text-ink">{item.expiryDate}</span>
+                      <span className="block text-xs font-bold uppercase text-muted">Validity</span>
+                      <span className="font-bold text-ink">{item.validity || item.expiryDate}</span>
                     </div>
                     <Tag color="green" className="!m-0 !rounded-full !px-4 !font-bold uppercase">
-                      Active
+                      {item.status || "Active"}
                     </Tag>
                   </div>
                 )}
               />
+            ) : hasActiveSubscription ? (
+              <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gray-50 p-6 md:flex-row md:items-center">
+                <p className="m-0 text-sm text-muted">Subscription data is loading.</p>
+              </div>
             ) : (
               <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gray-50 p-6 md:flex-row md:items-center">
                 <p className="m-0 text-sm text-muted">You are currently on the Free Tier</p>

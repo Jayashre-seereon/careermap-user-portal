@@ -17,14 +17,18 @@ import {
   TrophyOutlined,
   UnlockOutlined,
 } from "@ant-design/icons";
-import { useEffect, useMemo, useState } from "react";
+
+import { useEffect, useMemo, useState,useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { Empty } from "antd";
 import { getCareerLibraryCategoriesByStream, getCareerLibraryNext, getCareerLibraryStreams } from "../../../api/careerLibraryApi";
 import { careerLibrary, palette } from "../../../data/careermapData";
 import { ModuleScreen, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { PremiumGate, UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import {
+  checkModuleAccess
+} from "../../../api/moduleAccessApi";
 const streamIcons = {
   Science: <ExperimentOutlined />,
   Commerce: <CreditCardOutlined />,
@@ -189,6 +193,72 @@ function normalizeSalaryRanges(value) {
   return [{ label: String(value) }];
 }
 
+function normalizeTextItems(value) {
+  return toList(value)
+    .flatMap((item) => {
+      if (!item) {
+        return [];
+      }
+
+      if (typeof item === "string") {
+        return [stripHtml(item)];
+      }
+
+      return [
+        stripHtml(item?.name || item?.title || item?.examname || item?.label || item?.value || ""),
+      ];
+    })
+    .filter(Boolean);
+}
+
+function normalizeInstituteItems(value) {
+  return toList(value).map((item, index) => {
+    if (typeof item === "string") {
+      return {
+        id: `institution-${index}`,
+        name: item,
+        state: "",
+        city: "",
+        location: item,
+        isTop: false,
+        raw: item,
+      };
+    }
+
+    const city = item?.city || "";
+    const state = item?.state || "";
+    const country = item?.countruy || item?.country || "";
+    const location = [city, state, country].filter(Boolean).join(", ") || item?.location || "Location not available";
+
+    return {
+      id: item?.id ?? `institution-${index}`,
+      name: item?.name || "Unnamed Institute",
+      state,
+      city,
+      location,
+      isTop: Boolean(item?.is_top ?? item?.isTop),
+      raw: item,
+    };
+  });
+}
+
+function groupInstitutesByTopStatus(value) {
+  const institutes = normalizeInstituteItems(value);
+  const topInstitutes = institutes.filter((item) => item.isTop);
+  const outsideInstitutes = institutes.filter((item) => !item.isTop);
+  const referenceState =
+    topInstitutes.find((item) => item.state)?.state ||
+    outsideInstitutes.find((item) => item.state)?.state ||
+    "";
+
+  return {
+    institutes,
+    topInstitutes,
+    outsideInstitutes,
+    referenceState,
+  };
+}
+
 function formatSalaryAmount(value) {
   const numericValue = Number(value);
 
@@ -217,6 +287,29 @@ function formatSalaryRange(salary) {
   return "Salary not available";
 }
 
+function formatDetailEducation(item) {
+  const parts = [
+    item?.subcategory?.description,
+    item?.subcategory?.specialization,
+    item?.subcategory?.importandt_facts,
+    item?.secondcategory?.description,
+    item?.secondcategory?.specialization,
+    item?.secondcategory?.importandt_facts,
+    item?.category?.description,
+    item?.category?.specialization,
+    item?.category?.importandt_facts,
+    item?.education,
+    item?.qualification,
+    item?.studyPath,
+    item?.about,
+    item?.overview,
+    item?.description,
+    item?.detail,
+  ];
+
+  return parts.map(stripHtml).filter(Boolean).join("\n");
+}
+
 function normalizeDetailItem(item, index = 0, sourceItem = null) {
   const title = getDetailTitle(item) || getItemTitle(sourceItem) || `Career Detail ${index + 1}`;
 
@@ -225,20 +318,20 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
     title,
     overview: stripHtml(
       item?.overview ||
-        item?.description ||
-        item?.about ||
-        item?.detail ||
-        sourceItem?.overview ||
-        sourceItem?.description ||
-        ""
+      item?.description ||
+      item?.about ||
+      item?.detail ||
+      sourceItem?.overview ||
+      sourceItem?.description ||
+      ""
     ),
-    path: toList(item?.path || item?.careerPath || item?.steps || sourceItem?.path || sourceItem?.steps),
-    education: stripHtml(item?.education || item?.qualification || item?.studyPath || sourceItem?.education || ""),
-    exams: toList(item?.exams || item?.entranceExams || item?.exam || sourceItem?.exams || []),
+    path: normalizeTextItems(item?.path || item?.careerPath || item?.careerpaths || item?.careerPaths || item?.steps || sourceItem?.path || sourceItem?.steps),
+    education: formatDetailEducation(item || sourceItem),
+    exams: normalizeTextItems(item?.entranceexams || item?.entranceExams || item?.exams || item?.exam || sourceItem?.entranceexams || sourceItem?.entranceExams || sourceItem?.exams || []),
     jobs: toList(item?.jobs || item?.jobScope || item?.job_scope || sourceItem?.jobs || sourceItem?.jobScope || []),
     salary: stripHtml(item?.salary || item?.salaryRange || sourceItem?.salary || ""),
     salaryRanges: normalizeSalaryRanges(item?.salaryRanges || item?.salary_ranges || sourceItem?.salaryRanges || []),
-    institutes: toList(item?.institutes || item?.topInstitutes || item?.colleges || sourceItem?.institutes || []),
+    institutes: normalizeInstituteItems(item?.institutions || item?.institutes || item?.topInstitutes || item?.colleges || sourceItem?.institutions || sourceItem?.institutes || []),
   };
 }
 
@@ -351,9 +444,19 @@ export default function LibraryPage() {
   const [detailReturnLevel, setDetailReturnLevel] = useState("streams");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
   const [unlockModalItem, setUnlockModalItem] = useState(null);
-  const [claimedFreeKey, setClaimedFreeKey] = useState(null);
-  const hasSubscriptionAccess = isUnlocked("career-library");
+    const pageLocation = useLocation();
+
+const accessStatus =
+  pageLocation.state?.accessStatus ||
+  "preview";
+
+  const [moduleStatus, setModuleStatus] =
+  useState(accessStatus);
+  // const [claimedFreeKey, setClaimedFreeKey] = useState(null);
+  const hasSubscriptionAccess =  accessStatus === "unlocked";
+
 
   useEffect(() => {
     let active = true;
@@ -389,25 +492,28 @@ export default function LibraryPage() {
     };
   }, []);
 
-  const detailKey = selectedDetailSource?.id != null ? String(selectedDetailSource.id) : null;
-  const detailUnlocked = hasSubscriptionAccess || claimedFreeKey === null || detailKey === claimedFreeKey;
+  // const detailKey = selectedDetailSource?.id != null ? String(selectedDetailSource.id) : null;
+  // const detailUnlocked = hasSubscriptionAccess || claimedFreeKey === null || detailKey === claimedFreeKey;
 
-  function getAccessKey(item) {
-    return String(item?.id ?? getItemTitle(item) ?? "");
-  }
+  // function getAccessKey(item) {
+  //   return String(item?.id ?? getItemTitle(item) ?? "");
+  // }
 
-  function isItemFree(item) {
-    if (hasSubscriptionAccess) {
-      return true;
-    }
+  // function isItemFree(item) {
+  //   if (hasSubscriptionAccess) {
+  //     return true;
+  //   }
 
-    if (claimedFreeKey === null) {
-      return true;
-    }
+  //   if (claimedFreeKey === null) {
+  //     return true;
+  //   }
 
-    return getAccessKey(item) === claimedFreeKey;
-  }
+  //   return getAccessKey(item) === claimedFreeKey;
+  // }
 
+  const detailUnlocked =
+  hasSubscriptionAccess ||
+  moduleStatus !== "locked";
   const pageTitle = useMemo(() => {
     if (currentLevel === "streams") {
       return "Career Library";
@@ -548,6 +654,11 @@ export default function LibraryPage() {
         setSelectedDetailSource(item);
         setDetails(detailItems);
         setCurrentLevel("details");
+        if (!hasSubscriptionAccess) {
+
+  setModuleStatus("locked");
+
+}
         if (item?.id != null) {
           registerFreeDetailAccess("career-library", String(item.id));
         }
@@ -560,11 +671,20 @@ export default function LibraryPage() {
   }
 
   function handleBack() {
-    if (currentLevel === "details") {
-      setCurrentLevel(detailReturnLevel);
-      setSelectedDetailSource(null);
-      return;
-    }
+  if (currentLevel === "details") {
+
+  if (!hasSubscriptionAccess) {
+
+    setModuleStatus("locked");
+
+  }
+
+  setCurrentLevel(detailReturnLevel);
+
+  setSelectedDetailSource(null);
+
+  return;
+}
 
     if (currentLevel === "subcategory") {
       setCurrentLevel("secondcategory");
@@ -587,21 +707,30 @@ export default function LibraryPage() {
     goToDashboard();
   }
 
-  function handleLockedCareerClick(item, type) {
-    const unlockedItem = isItemFree(item);
+function handleLockedCareerClick(
+  item,
+  type
+) {
 
-    if (!unlockedItem) {
-      setUnlockModalItem({ item, type });
-      return;
-    }
+  if (
+    moduleStatus === "locked" &&
+    !hasSubscriptionAccess
+  ) {
 
-    if (!hasSubscriptionAccess && claimedFreeKey === null) {
-      setClaimedFreeKey(getAccessKey(item));
-    }
+    setUnlockModalItem({
+      item,
+      type,
+    });
 
-    handleClick(type, item?.id, item);
+    return;
   }
 
+  handleClick(
+    type,
+    item?.id,
+    item
+  );
+}
   function handleGoToPlans() {
     const returnTo = buildReturnTo();
     setUnlockModalItem(null);
@@ -641,7 +770,8 @@ export default function LibraryPage() {
     return (
       <div className="flex flex-col gap-3">
         {items.map((item, index) => {
-          const unlockedItem = isItemFree(item);
+          const unlockedItem =
+  moduleStatus !== "locked";
 
           return (
             <button
@@ -678,7 +808,8 @@ export default function LibraryPage() {
     return (
       <div className="flex flex-col gap-3">
         {items.map((item, index) => {
-          const unlockedItem = isItemFree(item);
+         const unlockedItem =
+  moduleStatus !== "locked";
 
           return (
             <button
@@ -712,6 +843,7 @@ export default function LibraryPage() {
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
     const isSaved = savedCareers.includes(title);
+    const instituteGroups = groupInstitutesByTopStatus(detail?.institutes);
 
     return (
       <div key={`detail-${detail?.id ?? index}`} className="mb-4">
@@ -725,16 +857,7 @@ export default function LibraryPage() {
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => toggleSavedCareer(title)}
-          className={`mb-4 flex w-full items-center justify-center gap-2 rounded-[14px] border px-4 py-3 transition-colors ${
-            isSaved ? "border-brand bg-brand text-white" : "border-[#eedad4] bg-white text-brand"
-          }`}
-        >
-          {isSaved ? <HeartFilled /> : <HeartOutlined />}
-          <Text className={`text-[13px] font-extrabold ${isSaved ? "text-white" : "text-brand"}`}>{isSaved ? "Saved to Wishlist" : "Save to Wishlist"}</Text>
-        </button>
+        
 
         {detailUnlocked ? (
           <div className="mb-3 rounded-[12px] px-3 py-3" style={{ backgroundColor: `${palette.green}14` }}>
@@ -782,11 +905,28 @@ export default function LibraryPage() {
         </div>
 
         <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <BookOutlined style={{ color: palette.primary }} />
-            <Text className="text-[14px] font-bold text-ink">Education</Text>
+          <SectionHeader icon={<TeamOutlined />} title="Career Path" />
+          <div className="p-1 pt-3">
+            {detail?.path?.length > 0 ? (
+              detail.path.map((step, stepIndex) => (
+                <div key={`${step}-${stepIndex}`} className="flex items-start gap-3">
+                  <div className="flex flex-col items-center shrink-0">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#f0e4e2] bg-[#fdf0ee] text-[10px] font-bold text-[#9a2119]">
+                      {stepIndex + 1}
+                    </span>
+                    {stepIndex < detail.path.length - 1 ? <span className="h-6 w-px bg-[#f0e4e2]" /> : null}
+                  </div>
+                  <Text className={`m-0 pb-3 text-sm ${stepIndex === detail.path.length - 1 ? "font-bold text-[#9a2119]" : "text-muted"}`}>
+                    {step}
+                  </Text>
+                </div>
+              ))
+            ) : (
+              <Text className="text-[13px] text-muted">Career path details not available.</Text>
+            )}
+
+           
           </div>
-          <Text className="text-[13px] leading-6 text-muted">{detail?.education || "Education details not available."}</Text>
         </div>
 
         <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
@@ -807,17 +947,56 @@ export default function LibraryPage() {
 
         <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
           <SectionHeader icon={<TrophyOutlined />} title="Top Institutes" />
-          <div className="flex flex-wrap gap-2 p-1 pt-3">
-            {toList(detail?.institutes).length > 0 ? (
-              toList(detail?.institutes).map((inst, instIndex) => (
-                <span key={`${inst}-${instIndex}`} className="inline-flex items-center gap-1.5 rounded-lg border border-[#f0e4e2] bg-[#fdf9f9] px-3 py-1.5 text-xs font-semibold text-[#1a0a09]">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#9a2119]" />
-                  {inst}
-                </span>
-              ))
-            ) : (
+          <div className="space-y-4 p-1 pt-3">
+            {instituteGroups.topInstitutes.length > 0 ? (
+              <div>
+                <Text className="mb-2 block text-[12px] font-black uppercase tracking-widest text-[#9a2119]">
+                  {instituteGroups.referenceState ? `Top Institutes of ${instituteGroups.referenceState}` : "Top Institutes"}
+                </Text>
+                <div className="space-y-2">
+                  {instituteGroups.topInstitutes.map((inst) => (
+                    <div key={inst.id} className="rounded-[14px] border border-[#f0e4e2] bg-[#fdf9f9] px-3 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <Text className="block text-[14px] font-bold text-[#1a0a09]">{inst.name}</Text>
+                          <Text className="mt-1 block text-xs text-muted">{inst.location}</Text>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-[#fce9e5] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">
+                          Top
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {instituteGroups.outsideInstitutes.length > 0 ? (
+              <div>
+                <Text className="mb-2 block text-[12px] font-black uppercase tracking-widest text-[#9a2119]">
+                  {instituteGroups.referenceState ? `Top Institutes Outside ${instituteGroups.referenceState}` : "Top Institutes Outside State"}
+                </Text>
+                <div className="space-y-2">
+                  {instituteGroups.outsideInstitutes.map((inst) => (
+                    <div key={inst.id} className="rounded-[14px] border border-[#f0e4e2] bg-white px-3 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <Text className="block text-[14px] font-bold text-[#1a0a09]">{inst.name}</Text>
+                          <Text className="mt-1 block text-xs text-muted">{inst.location}</Text>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-[#f8ede8] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">
+                          Outside
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {!instituteGroups.topInstitutes.length && !instituteGroups.outsideInstitutes.length ? (
               <Text className="text-[13px] text-muted">Top institutes not available.</Text>
-            )}
+            ) : null}
           </div>
         </div>
 
