@@ -7,7 +7,7 @@ import { masterClasses as fallbackMasterClasses } from "../../../data/careermapD
 import { ModuleScreen, PageHero, SoftTag } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import { useLocation } from "react-router-dom";
 function formatViews(views) {
   if (!views) {
     return "New class";
@@ -107,10 +107,18 @@ function TextBadge({ locked }) {
 }
 
 export default function LearnPage() {
-  const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { canAccessFreeDetail, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
-  const unlocked = isUnlocked("master-class");
+const pageLocation =
+  useLocation();
+
+const accessStatus =
+  pageLocation.state?.accessStatus ||
+  "preview";
+
+const unlocked =
+  accessStatus === "unlocked";
   const [items, setItems] = useState(fallbackMasterClasses);
   const [error, setError] = useState("");
   const [videoType, setVideoType] = useState("All");

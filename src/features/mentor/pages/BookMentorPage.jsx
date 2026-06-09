@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { ArrowRightOutlined, LockOutlined, StarFilled } from "@ant-design/icons";
 import { Modal } from "antd";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   createMentorOrder,
   getBookedMentorSlots,
@@ -184,10 +184,22 @@ function MentorCard({ mentor, isFree, onClick }) {
 
 export default function BookMentorPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess, addBooking } = useAppState();
-  const { navigate, location, goToDashboard } = usePortalNavigation();
-  const [params] = useSearchParams();
+ const { navigate, location, goToDashboard } =
+  usePortalNavigation();
 
-  const unlocked = isUnlocked("book-mentor");
+const pageLocation = useLocation();
+
+const [params] = useSearchParams();
+
+const accessStatus =
+  pageLocation.state?.accessStatus || "preview";
+
+const frontendUnlocked =
+  isUnlocked("book-mentor");
+
+const unlocked =
+  accessStatus === "unlocked" ||
+  frontendUnlocked;
   const [mentorList, setMentorList] = useState(fallbackMentors);
   const [selectedMentorId, setSelectedMentorId] = useState("");
   const [selectedMentor, setSelectedMentor] = useState(null);
@@ -573,7 +585,8 @@ handler: async function (response) {
           <PageHero backOnly onBack={() => setSelectedMentorId("")} className="shrink-0" />
         </div>
 
-        {!unlocked ? (
+     {accessStatus !== "unlocked" &&
+ !unlocked ? (
           <div className="inline-flex self-start rounded-full bg-green-50 px-3 py-2 text-[12px] font-extrabold text-green-700">
             {detailUnlocked ? "1 free mentor detail unlocked" : "Subscribe to unlock more mentor profiles"}
           </div>
@@ -747,21 +760,35 @@ handler: async function (response) {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {mentorList.map((mentor, index) => {
-          const mentorFree = unlocked || canAccessFreeDetail("book-mentor", mentor.name);
-
+         const mentorFree =
+  accessStatus === "unlocked"
+    ? true
+    : unlocked ||
+      canAccessFreeDetail(
+        "book-mentor",
+        mentor.name
+      );
           return (
             <MentorCard
               key={mentor.id || mentor.name}
               mentor={mentor}
               isFree={mentorFree}
               onClick={() => {
-                if (!unlocked && !mentorFree) {
-                  setUnlockModalItem(mentor.name);
-                  return;
-                }
+               if (
+  accessStatus !== "unlocked" &&
+  !unlocked &&
+  !mentorFree
+) {
+  setUnlockModalItem(mentor.name);
+  return;
+}
 
-                registerFreeDetailAccess("book-mentor", mentor.name);
-                setSelectedMentorId(String(mentor.id || index));
+             if (accessStatus !== "unlocked") {
+  registerFreeDetailAccess(
+    "book-mentor",
+    mentor.name
+  );
+}     setSelectedMentorId(String(mentor.id || index));
                 setSelectedMentor(mentor);
               }}
             />

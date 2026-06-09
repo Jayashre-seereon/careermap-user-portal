@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { notifications as notificationItems } from "../data/careermapData";
 import { useAuthStore } from "../store/authStore";
 import { getNotifications } from "../api/notificationApi";
+import { getMentorBookings, getSubscriptions, getTestHistory } from "../api/profile";
 
 const STORAGE_KEY = "careermap-userportal-state";
 const LEGACY_DEMO_EMAIL = "aarav.sharma@email.com";
@@ -63,6 +64,7 @@ const initialState = {
     { id: "1", mentorName: "Dr. Priya Sharma", date: "12 Apr 2026", time: "4:00 PM", status: "Confirmed" },
     { id: "2", mentorName: "Prof. Rahul Verma", date: "15 Apr 2026", time: "6:30 PM", status: "Upcoming" },
   ],
+  subscriptionRecords: [],
   freeAccessUsage: {
     "career-library": null,
     "master-class": null,
@@ -115,6 +117,182 @@ function readInitialState() {
   }
 }
 
+function extractResponseItems(response) {
+  const candidates = [
+    response?.data?.data,
+    response?.data?.results,
+    response?.data,
+    response?.results,
+    response,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) {
+      return candidate.filter(Boolean);
+    }
+  }
+
+  return [];
+}
+
+function formatDateLabel(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatValidityDays(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const numericValue = Number(value);
+  if (!Number.isNaN(numericValue) && String(value).trim() !== "") {
+    return `${numericValue} days`;
+  }
+
+  return formatDateLabel(value);
+}
+
+function mapTestHistoryItem(item, index = 0) {
+  const title = item?.title || item?.testName || item?.quizName || item?.name || `Test ${index + 1}`;
+  const statusText = item?.status || item?.result || item?.attemptStatus || "";
+  const dateText = formatDateLabel(item?.completedAt || item?.completed_at || item?.createdAt || item?.created_at || item?.date);
+  const scoreText = item?.score != null ? `Score: ${item.score}` : "";
+  const subtitle = [statusText ? `Status: ${statusText}` : "", dateText ? `Date: ${dateText}` : "", scoreText].filter(Boolean).join(" • ");
+
+  return {
+    id: String(item?.id ?? `test-${index}`),
+    title,
+    subtitle: subtitle || item?.subtitle || "Test history item",
+    status: statusText || "Completed",
+  };
+}
+
+function mapBookingItem(item, index = 0) {
+  const mentorName = item?.mentorName || item?.mentor?.name || item?.mentor?.fullName || item?.mentor?.mentorName || `Mentor Booking ${index + 1}`;
+  const date = formatDateLabel(item?.date || item?.bookingDate || item?.appointmentDate || item?.scheduledAt || item?.slotDate);
+  const time = item?.time || item?.slotTime || item?.startTime || item?.appointmentTime || item?.slot || "";
+
+  return {
+    id: String(item?.id ?? `booking-${index}`),
+    mentorName,
+    date: date || "Date not available",
+    time: time || "Time not available",
+    status: item?.status || item?.bookingStatus || "Confirmed",
+  };
+}
+
+function mapSubscriptionItem(item, index = 0) {
+  const planName = item?.planName || item?.plan_name || item?.plan?.name || item?.plan || `Subscription ${index + 1}`;
+  const expiryDate = formatDateLabel(item?.expiryDate || item?.expiry_date || item?.endDate || item?.validUntil || item?.renewalDate);
+  const transactionId = item?.transactionId || item?.transaction_id || item?.transaction || item?.reference || "";
+  const price = item?.price != null ? `Rs ${item.price}` : item?.amount != null ? `Rs ${item.amount}` : "";
+
+  return {
+    id: String(item?.id ?? `subscription-${index}`),
+    planName,
+    price: price || "Subscription active",
+    expiryDate: expiryDate || "Expiry date not available",
+    transactionId: transactionId || "Transaction not available",
+    status: item?.status || "Active",
+  };
+}
+
+function getPlanIdFromSubscription(item) {
+  const planText = String(item?.planName || item?.plan_name || item?.plan?.name || item?.plan || "").toLowerCase();
+
+  if (planText.includes("psychometric") && planText.includes("counsell")) {
+    return "premium";
+  }
+
+  if (planText.includes("psychometric")) {
+    return "psychometric";
+  }
+
+  if (planText.includes("infocentre") || planText.includes("info centre")) {
+    return "infocentre";
+  }
+
+  if (planText.includes("abroad")) {
+    return "abroad";
+  }
+
+  if (planText.includes("premium")) {
+    return "premium";
+  }
+
+  return "";
+}
+
+function normalizeTestHistoryItems(items = []) {
+  return items.map((item, index) => {
+    const mapped = mapTestHistoryItem(item, index);
+    const quizName = item?.quiz?.title || item?.quizName || item?.quiz_name || item?.testName || item?.test_name || mapped.title;
+    const attemptedAtRaw = item?.attemptedAt || item?.attempted_at || item?.submittedAt || item?.submitted_at || item?.completedAt || item?.completed_at || item?.createdAt || item?.created_at || item?.date || "";
+    const attemptedAt = formatDateLabel(attemptedAtRaw);
+    const score = item?.score != null ? String(item.score) : item?.correctAnswers != null && item?.totalQuestions != null ? `${item.correctAnswers}/${item.totalQuestions}` : item?.marks != null ? String(item.marks) : mapped.score || "";
+
+    return {
+      ...mapped,
+      title: quizName,
+      quizName,
+      score,
+      attemptedAt,
+      attemptedAtRaw,
+    };
+  });
+}
+
+function normalizeBookingItems(items = []) {
+  return items.map((item, index) => {
+    const mapped = mapBookingItem(item, index);
+    const mentorFee = item?.mentor?.mentor_fees ?? item?.mentorFee ?? item?.fee ?? item?.amount ?? item?.payment?.amount ?? item?.price ?? item?.mentor?.fee ?? mapped.mentorFee ?? "";
+    const timeSlot = item?.timeSlot || item?.slot || item?.payment?.timeSlot || mapped.timeSlot || mapped.time || "";
+    const mentorName = item?.mentor?.name || item?.mentorName || item?.mentor?.fullName || item?.mentor?.mentorName || mapped.mentorName;
+
+    return {
+      ...mapped,
+      mentorName,
+      mentorFee,
+      timeSlot,
+      date: formatDateLabel(item?.date || item?.bookingDate || item?.appointmentDate || item?.scheduledAt || item?.slotDate || mapped.date),
+    };
+  });
+}
+
+function normalizeSubscriptionItems(items = []) {
+  return items.map((item, index) => {
+    const mapped = mapSubscriptionItem(item, index);
+    const subscriptionName = item?.plan?.name || item?.subscriptionName || item?.subscription_name || item?.planName || mapped.planName;
+    const amount = item?.amount != null ? item.amount : item?.plan?.price != null ? item.plan.price : item?.price != null ? item.price : mapped.amount || "";
+    const validity = formatValidityDays(item?.plan?.validity ?? item?.validity ?? item?.validityDays ?? item?.daysValid ?? item?.subscriptionValidity ?? mapped.validity);
+    const expiryDate = formatDateLabel(item?.endDate || item?.expiryDate || item?.expiry_date || item?.validUntil || item?.renewalDate);
+
+    return {
+      ...mapped,
+      planName: subscriptionName,
+      subscriptionName,
+      amount,
+      validity: validity || mapped.validity,
+      expiryDate: expiryDate || mapped.expiryDate,
+      price: amount !== "" ? `Rs ${amount}` : mapped.price,
+    };
+  });
+}
+
 export function AppStateProvider({ children }) {
   const [state, setState] = useState(readInitialState);
   const accessToken = useAuthStore((current) => current.accessToken);
@@ -138,6 +316,75 @@ export function AppStateProvider({ children }) {
     }
 
     loadNotifications();
+    return () => {
+      active = false;
+    };
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setState((current) => ({
+        ...current,
+        testHistory: initialState.testHistory,
+        bookings: initialState.bookings,
+        subscriptionRecords: initialState.subscriptionRecords,
+      }));
+      return undefined;
+    }
+
+    let active = true;
+
+    async function loadProfileSections() {
+      try {
+        const [testResponse, bookingResponse, subscriptionResponse] = await Promise.all([
+          getTestHistory().catch(() => null),
+          getMentorBookings().catch(() => null),
+          getSubscriptions().catch(() => null),
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        const testItems = extractResponseItems(testResponse);
+        const bookingItems = extractResponseItems(bookingResponse);
+        const subscriptionItems = extractResponseItems(subscriptionResponse);
+
+        setState((current) => {
+          const nextState = { ...current };
+
+          nextState.testHistory = testItems.length > 0 ? normalizeTestHistoryItems(testItems) : initialState.testHistory;
+          nextState.bookings = bookingItems.length > 0 ? normalizeBookingItems(bookingItems) : initialState.bookings;
+
+          if (subscriptionItems.length > 0) {
+            nextState.subscriptionRecords = normalizeSubscriptionItems(subscriptionItems);
+
+            const activeSubscriptionIndex = subscriptionItems.findIndex((item) => String(item?.status || "").toLowerCase() === "active");
+            const activeSubscription = activeSubscriptionIndex >= 0 ? subscriptionItems[activeSubscriptionIndex] : subscriptionItems[0];
+            const derivedPlanId = getPlanIdFromSubscription(activeSubscription);
+
+            if (derivedPlanId && !current.activePlanId) {
+              nextState.activePlanId = derivedPlanId;
+            }
+          }
+
+          return nextState;
+        });
+      } catch {
+        if (!active) {
+          return;
+        }
+
+        setState((current) => ({
+          ...current,
+          testHistory: initialState.testHistory,
+          bookings: initialState.bookings,
+          subscriptionRecords: initialState.subscriptionRecords,
+        }));
+      }
+    }
+
+    loadProfileSections();
     return () => {
       active = false;
     };
@@ -296,27 +543,29 @@ export function AppStateProvider({ children }) {
           preferences: current.preferences,
         }));
       },
-      subscriptionRecords: activePlanIds.map((planId) => ({
-        id: planId,
-        planName:
-          planId === "psychometric"
-            ? "Psychometric Test"
-            : planId === "premium"
-              ? "Psychometric + Counselling"
-              : planId === "infocentre"
-                ? "Infocentre Access"
-                : "Study Abroad Access",
-        price:
-          planId === "psychometric"
-            ? "Rs 1,500"
-            : planId === "premium"
-              ? "Rs 3,000"
-              : planId === "infocentre"
-                ? "Rs 5,000"
-                : "Rs 2,500",
-        expiryDate: "10 Apr 2027",
-        transactionId: `TXN-${planId.toUpperCase()}-2401`,
-      })),
+      subscriptionRecords: state.subscriptionRecords?.length
+        ? state.subscriptionRecords
+        : activePlanIds.map((planId) => ({
+            id: planId,
+            planName:
+              planId === "psychometric"
+                ? "Psychometric Test"
+                : planId === "premium"
+                  ? "Psychometric + Counselling"
+                  : planId === "infocentre"
+                    ? "Infocentre Access"
+                    : "Study Abroad Access",
+            price:
+              planId === "psychometric"
+                ? "Rs 1,500"
+                : planId === "premium"
+                  ? "Rs 3,000"
+                  : planId === "infocentre"
+                    ? "Rs 5,000"
+                    : "Rs 2,500",
+            expiryDate: "10 Apr 2027",
+            transactionId: `TXN-${planId.toUpperCase()}-2401`,
+          })),
     };
   }, [state]);
 
