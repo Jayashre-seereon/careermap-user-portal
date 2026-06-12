@@ -768,36 +768,47 @@ function handleLockedCareerClick(
 
   function renderCategoryGrid(items) {
     return (
-      <div className="flex flex-col gap-3">
-        {items.map((item, index) => {
+      <div className="grid gap-4 
+     grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">    {items.map((item, index) => {
           const unlockedItem =
   moduleStatus !== "locked";
 
           return (
-            <button
-              key={`category-${item?.id ?? index}`}
-              type="button"
-              onClick={() => handleLockedCareerClick(item, "category")}
-              className="group flex w-full items-center gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-3 py-3.5 text-left transition-all duration-200 hover:border-[#9a2119] hover:shadow-md hover:shadow-[#9a2119]/10"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#ffeceb] text-[#9a2119] transition-colors group-hover:bg-[#9a2119] group-hover:text-white">
-                <FolderOpenOutlined />
-              </span>
-              <div className="min-w-0 flex-1">
-                <Text className="block text-[14px] font-bold text-ink group-hover:text-brand">{getItemTitle(item)}</Text>
-                {item?.description ? <Text className="mt-0.5 block text-xs leading-4 text-muted">{item.description}</Text> : null}
-              </div>
-              <div className="items-end gap-2">
-                {!hasSubscriptionAccess ? (
-                  <div className={`rounded-full px-2 py-1 ${unlockedItem ? "bg-green-100" : "bg-[#f8e8d8]"}`}>
-                    <Text className="text-[10px] font-black" style={{ color: unlockedItem ? palette.green : palette.primary }}>
-                      {unlockedItem ? "FREE" : "LOCK"}
-                    </Text>
-                  </div>
-                ) : null}
-              </div>
-              <ArrowRightOutlined className="text-[#9a2119] opacity-30 transition-opacity group-hover:opacity-100" />
-            </button>
+          <button
+  key={`category-${item?.id ?? index}`}
+  type="button"
+  onClick={() => handleLockedCareerClick(item, "category")}
+  className="group flex flex-col justify-between 
+  rounded-2xl border border-gray-200 
+  bg-white p-4 text-left 
+  hover:shadow-lg hover:-translate-y-1 transition"
+>
+ <div className="flex items-center gap-2 mb-2">
+  
+  <div className="w-10 h-10 flex items-center justify-center rounded-lg 
+                  bg-gray-100 
+                  group-hover:bg-[#9a2119] 
+                  transition">
+    <FolderOpenOutlined className="text-lg text-[#9a2119] group-hover:text-white" />
+  </div>
+   <span className="font-semibold text-sm line-clamp-2 group-hover:text-[#9a2119] transition">    {getItemTitle(item)}
+    </span>
+  </div>
+
+  <p className="text-xs text-gray-500 line-clamp-3">
+    {item?.description || "Explore this category"}
+  </p>
+
+  <div className="mt-3 flex justify-between items-center">
+    {!hasSubscriptionAccess && (
+      <span className="text-[10px] px-2 py-1 rounded-full bg-green-100 text-green-600">
+        FREE
+      </span>
+    )}
+
+    <ArrowRightOutlined className="text-xs opacity-50 group-hover:opacity-100" />
+  </div>
+</button>
           );
         })}
       </div>
@@ -806,7 +817,7 @@ function handleLockedCareerClick(
 
   function renderStepList(items, type) {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => {
          const unlockedItem =
   moduleStatus !== "locked";
