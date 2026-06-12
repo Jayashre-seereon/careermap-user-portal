@@ -160,6 +160,7 @@ function normalizeStreamItem(item, index = 0) {
     desc: stripHtml(item?.description || item?.desc || item?.about || fallback?.desc || ""),
     icon: getStreamIcon(title),
     tone: getStreamTone(title),
+    image: item?.image || null,
     raw: item,
   };
 }
@@ -171,6 +172,8 @@ function normalizeStepItem(item, index = 0, type = "category") {
     id: item?.id ?? item?.categoryId ?? item?.secondCategoryId ?? item?.subCategoryId ?? `${type}-${index}`,
     name: title,
     description: stripHtml(item?.description || item?.desc || item?.about || item?.specialization || item?.path || ""),
+     coverImage: item?.coverImage || null,
+
     icon: getStepIcon(type, item),
     tone: palette.primary,
     raw: item,
@@ -741,26 +744,45 @@ function handleLockedCareerClick(
     return (
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => (
-          <button
-            key={`stream-${item?.id ?? index}`}
-            type="button"
-            onClick={() => handleClick("stream", item?.id, item)}
-            className="group flex flex-col gap-3 rounded-2xl border border-[#f0e4e2] bg-white p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-lg transition-colors group-hover:bg-[#9a2119] group-hover:text-white"
-                style={{ backgroundColor: `${item?.tone || getStreamTone(item?.name)}15`, color: item?.tone || getStreamTone(item?.name) }}
-              >
-                {streamIcons[item?.name] || <BookOutlined />}
-              </span>
-              <Text className="m-0 text-base font-bold text-ink group-hover:text-brand">{item?.name}</Text>
-            </div>
-            <Text className="m-0 flex-1 text-xs leading-relaxed text-muted">{item?.desc || "Explore this stream."}</Text>
-            <div className="mt-auto flex items-center gap-1 text-xs font-semibold text-brand">
-              Explore <ArrowRightOutlined className="text-[10px]" />
-            </div>
-          </button>
+       <button
+  key={`category-${item?.id ?? index}`}
+  type="button"
+  onClick={() => handleClick("category", item?.id, item)}
+  className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
+>
+  {/* ✅ IMAGE (NO OVERLAY) */}
+  <div className="h-40 w-full overflow-hidden bg-gray-100">
+    {item?.image ? (
+      <img
+        src={item.image}
+        alt={item.name}
+        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+      />
+    ) : (
+      <div className="h-full w-full flex items-center justify-center text-3xl text-[#9a2119]">
+        <BookOutlined />
+      </div>
+    )}
+  </div>
+
+  {/* ✅ TEXT BELOW IMAGE */}
+  <div className="p-4 flex flex-col gap-2">
+ <h3 className="text-sm font-semibold text-[#9a2119] line-clamp-2">
+  {item?.name}
+</h3>
+
+    <p className="text-xs text-gray-500 line-clamp-2">
+      {item?.desc || "Explore categories and discover more options."}
+    </p>
+
+    <div className="flex items-center justify-between mt-2">
+      <span className="text-xs font-semibold text-[#9a2119]">
+        View
+      </span>
+      <ArrowRightOutlined className="text-xs opacity-60 group-hover:translate-x-1 transition" />
+    </div>
+  </div>
+</button>
         ))}
       </div>
     );
@@ -774,39 +796,46 @@ function handleLockedCareerClick(
   moduleStatus !== "locked";
 
           return (
-          <button
+       <button
   key={`category-${item?.id ?? index}`}
   type="button"
   onClick={() => handleLockedCareerClick(item, "category")}
-  className="group flex flex-col justify-between 
-  rounded-2xl border border-gray-200 
-  bg-white p-4 text-left 
-  hover:shadow-lg hover:-translate-y-1 transition"
+  className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
 >
- <div className="flex items-center gap-2 mb-2">
-  
-  <div className="w-10 h-10 flex items-center justify-center rounded-lg 
-                  bg-gray-100 
-                  group-hover:bg-[#9a2119] 
-                  transition">
-    <FolderOpenOutlined className="text-lg text-[#9a2119] group-hover:text-white" />
-  </div>
-   <span className="font-semibold text-sm line-clamp-2 group-hover:text-[#9a2119] transition">    {getItemTitle(item)}
-    </span>
-  </div>
-
-  <p className="text-xs text-gray-500 line-clamp-3">
-    {item?.description || "Explore this category"}
-  </p>
-
-  <div className="mt-3 flex justify-between items-center">
-    {!hasSubscriptionAccess && (
-      <span className="text-[10px] px-2 py-1 rounded-full bg-green-100 text-green-600">
-        FREE
-      </span>
+  {/* ✅ COVER IMAGE ONLY */}
+  <div className="h-44 w-full overflow-hidden bg-gray-100">
+    {item?.coverImage ? (
+      <img
+        src={item.coverImage}
+        alt={item.name}
+        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    ) : (
+      <div className="h-full w-full flex items-center justify-center text-sm text-gray-400">
+        No Image
+      </div>
     )}
+  </div>
 
-    <ArrowRightOutlined className="text-xs opacity-50 group-hover:opacity-100" />
+  {/* ✅ TEXT BELOW */}
+  <div className="p-4 flex flex-col gap-2">
+    <h3 className="text-sm font-semibold !text-[#9a2119] line-clamp-2">
+      {item.name}
+    </h3>
+
+    <p className="text-xs text-gray-500 line-clamp-2">
+      {item.description || "Explore this category"}
+    </p>
+
+    <div className="flex items-center justify-between mt-2">
+      <span className="text-xs font-semibold text-[#9a2119]">
+        View
+      </span>
+      <ArrowRightOutlined className="text-xs opacity-60 group-hover:translate-x-1 transition" />
+    </div>
   </div>
 </button>
           );
@@ -1093,12 +1122,12 @@ function handleLockedCareerClick(
         </div>
       ) : currentLevel === "secondcategory" ? (
         <div className="space-y-3">
-          {renderStepList(secondCategories, "second")}
+        {renderCategoryGrid(secondCategories)}
           {!loading && secondCategories.length === 0 ? <Empty description="No next steps available." /> : null}
         </div>
       ) : currentLevel === "subcategory" ? (
         <div className="space-y-3">
-          {renderStepList(subCategories, "sub")}
+          {renderCategoryGrid(subCategories)}
           {!loading && subCategories.length === 0 ? <Empty description="No specializations available." /> : null}
         </div>
       ) : (
