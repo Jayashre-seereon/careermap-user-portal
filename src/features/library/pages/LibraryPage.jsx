@@ -21,7 +21,7 @@ import {
 import { useEffect, useMemo, useState,useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { Empty } from "antd";
-import { getCareerLibraryCategoriesByStream, getCareerLibraryNext, getCareerLibraryStreams } from "../../../api/careerLibraryApi";
+import { getCareerLibraryCategoriesByStream, getCareerLibraryNext, getCareerLibraryStreams, } from "../../../api/careerLibraryApi";
 import { careerLibrary, palette } from "../../../data/careermapData";
 import { ModuleScreen, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
@@ -568,104 +568,97 @@ const accessStatus =
     setSelectedDetailSource(null);
 
     try {
-      if (type === "stream") {
-        setSelectedStream(item);
-        setSelectedCategory(null);
-        setSelectedSecondCategory(null);
-        setSelectedSubCategory(null);
-        setSecondCategories([]);
-        setSubCategories([]);
-        setDetails([]);
-        setDetailReturnLevel("streams");
+     if (type === "stream") {
+  setSelectedStream(item);
+  setSelectedCategory(null);
+  setSelectedSecondCategory(null);
+  setSelectedSubCategory(null);
+  setSecondCategories([]);
+  setSubCategories([]);
+  setDetails([]);
+  setDetailReturnLevel("streams");
 
-        const response = await getCareerLibraryCategoriesByStream(id);
-        const items = Array.isArray(response?.data) && response.data.length > 0 ? response.data : getFallbackNextItems("stream", item);
+  try {
+    const response = await getCareerLibraryCategoriesByStream(id);
 
-        setCategories(normalizeStepItems(items, "category"));
-        setCurrentLevel("categories");
-        return;
-      }
+    const items =
+      Array.isArray(response?.data) && response.data.length > 0
+        ? response.data
+        : [];
 
-      if (type === "category") {
-        setSelectedCategory(item);
-        setSelectedSecondCategory(null);
-        setSelectedSubCategory(null);
-        setDetails([]);
-        setSubCategories([]);
-        setDetailReturnLevel("categories");
+    setCategories(normalizeStepItems(items, "category"));
+    setCurrentLevel("categories");
+  } catch (err) {
+    setCategories([]);
+    setCurrentLevel("categories");
+  }
 
-        const response = await getCareerLibraryNext(type, id);
-        const data = response ?? {};
-        const items = Array.isArray(data?.data) && data.data.length > 0 ? data.data : getFallbackNextItems("category", item);
-
-        if (String(data?.type || "").toLowerCase() === "details") {
-          const detailItems = normalizeDetailItems(items.length > 0 ? items : getFallbackNextItems("sub", item), item);
-          setSelectedDetailSource(item);
-          setDetails(detailItems);
-          setCurrentLevel("details");
-          if (item?.id != null) {
-            registerFreeDetailAccess("career-library", String(item.id));
-          }
-          return;
-        }
-
-        setSecondCategories(normalizeStepItems(items, "second"));
-        setCurrentLevel("secondcategory");
-        return;
-      }
-
-      if (type === "second") {
-        setSelectedSecondCategory(item);
-        setSelectedSubCategory(null);
-        setDetails([]);
-        setDetailReturnLevel("secondcategory");
-
-        const response = await getCareerLibraryNext(type, id);
-        const data = response ?? {};
-        const items = Array.isArray(data?.data) && data.data.length > 0 ? data.data : getFallbackNextItems("second", item);
-
-        if (String(data?.type || "").toLowerCase() === "details") {
-          const detailItems = normalizeDetailItems(items.length > 0 ? items : getFallbackNextItems("sub", item), item);
-          setSelectedDetailSource(item);
-          setDetails(detailItems);
-          setCurrentLevel("details");
-          if (item?.id != null) {
-            registerFreeDetailAccess("career-library", String(item.id));
-          }
-          return;
-        }
-
-        setSubCategories(normalizeStepItems(items, "sub"));
-        setCurrentLevel("subcategory");
-        return;
-      }
-
-      if (type === "sub") {
-        setSelectedSubCategory(item);
-        setDetailReturnLevel("subcategory");
-
-        const response = await getCareerLibraryNext(type, id);
-        const data = response ?? {};
-        const items =
-          Array.isArray(data?.data) && data.data.length > 0
-            ? data.data
-            : Array.isArray(data?.details) && data.details.length > 0
-              ? data.details
-              : getFallbackNextItems("sub", item);
-
-        const detailItems = normalizeDetailItems(items, item);
-        setSelectedDetailSource(item);
-        setDetails(detailItems);
-        setCurrentLevel("details");
-        if (!hasSubscriptionAccess) {
-
-  setModuleStatus("locked");
-
+  return;
 }
-        if (item?.id != null) {
-          registerFreeDetailAccess("career-library", String(item.id));
-        }
-      }
+
+    if (type === "category") {
+  setSelectedCategory(item);
+
+  const response = await getCareerLibraryNext(type, id);
+  const data = response ?? {};
+
+  const items = Array.isArray(data?.data)
+    ? data.data
+    : getFallbackNextItems("category", item);
+
+  if (data?.type === "details") {
+    setSelectedDetailSource(item);
+    setDetails(normalizeDetailItems(items, item));
+    setCurrentLevel("details");
+    return;
+  }
+
+  setSecondCategories(normalizeStepItems(items, "second"));
+  setCurrentLevel("secondcategory");
+  return;
+}
+
+   if (type === "second") {
+  setSelectedSecondCategory(item);
+
+  const response = await getCareerLibraryNext(type, id);
+  const data = response ?? {};
+
+  const items = Array.isArray(data?.data)
+    ? data.data
+    : getFallbackNextItems("second", item);
+
+  if (data?.type === "details") {
+    setSelectedDetailSource(item);
+    setDetails(normalizeDetailItems(items, item));
+    setCurrentLevel("details");
+    return;
+  }
+
+  setSubCategories(normalizeStepItems(items, "sub"));
+  setCurrentLevel("subcategory");
+  return;
+}
+     if (type === "sub") {
+  setSelectedSubCategory(item);
+
+  const response = await getCareerLibraryNext(type, id);
+  const data = response ?? {};
+
+  const items = Array.isArray(data?.data)
+    ? data.data
+    : getFallbackNextItems("sub", item);
+
+  setSelectedDetailSource(item);
+  setDetails(normalizeDetailItems(items, item));
+  setCurrentLevel("details");
+
+  if (item?.id != null) {
+    registerFreeDetailAccess("career-library", String(item.id));
+  }
+
+  return;
+}
     } catch (_fetchError) {
       setError("Unable to load the next step. Please try again.");
     } finally {
@@ -745,9 +738,9 @@ function handleLockedCareerClick(
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => (
        <button
-  key={`category-${item?.id ?? index}`}
+  key={`stream-${item?.id ?? index}`}
   type="button"
-  onClick={() => handleClick("category", item?.id, item)}
+ onClick={() => handleClick("stream", item?.id, item)}
   className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
 >
   {/* ✅ IMAGE (NO OVERLAY) */}
