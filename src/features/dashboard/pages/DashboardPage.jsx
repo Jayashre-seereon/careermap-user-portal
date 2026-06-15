@@ -1,5 +1,5 @@
 import { Avatar } from "antd";
-import { BankOutlined, BellOutlined, RightOutlined, TrophyOutlined } from "@ant-design/icons";
+import { BankOutlined, BellOutlined, RightOutlined, TrophyFilled,CreditCardOutlined,HistoryOutlined,TrophyOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../../api/dashboardApi";
 import { personalityQuestions, personalityTypes, palette } from "../../../data/careermapData";
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[15px] font-black text-ink">{mentor.name}</div>
               <div className="mt-1 text-[12px] font-bold text-brand">{mentor.specialty}</div>
-              <div className="mt-2 text-[12px] text-muted">{mentor.rating} rank | {mentor.experience}</div>
+              <div className="mt-2 text-[12px] text-muted"> <TrophyFilled style={{ color: "#d4a017" }} /> {mentor.rating} rank | {mentor.experience}</div>
             </button>
           ))}
         </div>
@@ -210,25 +210,44 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-[24px] border border-[#eaded9] bg-white p-5 shadow-sm">
-        <div className="mb-3 text-[14px] font-black uppercase tracking-[0.5px] text-ink">Quick Actions</div>
-        <div className="space-y-2">
-          {[
-            { label: "View Subscription Plans", path: "/app/subscription" },
-            { label: "Your Test History", path: "/app/profile" },
-          ].map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              className="flex w-full items-center justify-between rounded-[16px] px-1 py-2 text-left"
-              onClick={() => navigate(item.path)}
-            >
-              <div className="text-[14px] font-bold text-ink">{item.label}</div>
-              <RightOutlined style={{ color: palette.muted }} />
-            </button>
-          ))}
+     <section className="rounded-[24px] border border-[#eaded9] bg-white p-5 shadow-sm">
+  <div className="mb-3 text-[14px] font-black uppercase tracking-[0.5px] text-ink">
+    Quick Actions
+  </div>
+
+  <div className="space-y-2">
+    {[
+      {
+        label: "View Subscription Plans",
+        path: "/app/subscription",
+        icon: <CreditCardOutlined style={{ color: "#ba1414", fontSize: 18 }} />,
+      },
+      {
+        label: "Your Test History",
+        path: "/app/profile",
+        icon: <HistoryOutlined style={{ color: "#52c41a", fontSize: 18 }} />,
+      },
+    ].map((item) => (
+      <button
+        key={item.label}
+        type="button"
+        className="flex w-full items-center justify-between rounded-[16px] px-1 py-2 text-left"
+        onClick={() => navigate(item.path)}
+      >
+        {/* LEFT SIDE */}
+        <div className="flex items-center gap-2">
+          {item.icon}
+          <div className="text-[14px] font-bold text-ink">
+            {item.label}
+          </div>
         </div>
-      </section>
+
+        {/* RIGHT ARROW */}
+        <RightOutlined style={{ color: palette.muted }} />
+      </button>
+    ))}
+  </div>
+</section>
     </div>
   );
 }

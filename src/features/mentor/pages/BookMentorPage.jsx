@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, LockOutlined, StarFilled } from "@ant-design/icons";
+import { ArrowRightOutlined, LockOutlined, TrophyOutlined } from "@ant-design/icons";
 import { Modal } from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -151,7 +151,7 @@ function MentorCard({ mentor, isFree, onClick }) {
 
       <div className="mb-4 flex items-center gap-2">
         <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-          <StarFilled style={{ color: "#d4a017" }} />
+          <TrophyOutlined style={{ color: "#d4a017" }} />
           {mentor.rating}
         </span>
         <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
@@ -610,7 +610,7 @@ handler: async function (response) {
 
               <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
-                  <StarFilled style={{ color: "#d4a017" }} /> {activeMentor.rating} rating
+                  <TrophyOutlined style={{ color: "#d4a017" }} /> {activeMentor.rating} rank
                 </span>
                 <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
                   {activeMentor.experience}
