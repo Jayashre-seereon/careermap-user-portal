@@ -121,6 +121,7 @@ export function buildDashboardModules(modules = []) {
         lockTitle: matchedCard?.title || module.title,
         tone: matchedCard?.tone || palette.primary,
         accessStatus: module.accessStatus,
+        image: module.image || null,
       };
     })
     .filter(Boolean);
