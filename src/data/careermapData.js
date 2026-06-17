@@ -163,7 +163,7 @@ export const studyAbroadCountries = [
 ];
 
 export const onboardingOptions = {
-  studentClassOptions: ["Class 8", "Class 9", "Class 10", "Class 11", "Class 12", "Graduate", "Post Graduate", "Working Professional", "Other"],
+  studentClassOptions: ["Class 8", "Class 9", "Class 10", "Class 11", "Class 12", "Graduate", "Post Graduate", "Other"],
   streamOptions: ["Science", "Commerce", "Arts", "Other"],
   interestOptions: ["Science & Tech", "Problem Solving", "Research & Discovery", "Art & Literature", "Business", "Sports", "Creativity & Design", "Dance & Music", "Helping People", "Public Speaking"],
   clarityOptions: ["Clear on my goal, need the right path", "Choosing between a few options", "Confused between my choice and parents' expectations", "I keep changing my options", "I have limited awareness of options", "I have no idea what to do"],

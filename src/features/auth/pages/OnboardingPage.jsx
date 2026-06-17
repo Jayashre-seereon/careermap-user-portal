@@ -40,33 +40,51 @@ export default function OnboardingPage() {
 
   function canContinue() {
     if (step === 0) return Boolean(form.userType);
-    if (step === 2) return Boolean(form.name.trim());
-    if (step === 3 && form.userType === "student") return Boolean(form.selectedClass) && (form.selectedClass !== "Other" || Boolean(form.otherClass.trim()));
-    if (step === 3 && form.userType === "parent") return Boolean(form.childName.trim());
-    if (step === 4 && form.userType === "student") return Boolean(form.selectedStream) && (form.selectedStream !== "Other" || Boolean(form.otherStream.trim()));
+  if (step === 2) return Boolean(form.name.trim());
+
+if (step === 3 && form.userType === "parent")
+  return Boolean(form.childName.trim());
+
+if (step === 3 && form.userType === "student")
+  return Boolean(form.selectedClass) &&
+    (form.selectedClass !== "Other" || Boolean(form.otherClass.trim()));   if (step === 4 && form.userType === "student") return Boolean(form.selectedStream) && (form.selectedStream !== "Other" || Boolean(form.otherStream.trim()));
     if (step === 4 && form.userType === "parent") return Boolean(form.selectedClass) && (form.selectedClass !== "Other" || Boolean(form.otherClass.trim()));
     if (step === 5 && form.userType === "student") return form.selectedInterests.length > 0;
     if (step === 5 && form.userType === "parent") return Boolean(form.selectedStream) && (form.selectedStream !== "Other" || Boolean(form.otherStream.trim()));
-    if (step === 6) return Boolean(form.selectedClarity);
-    if (step === 7) return form.selectedStrengths.length > 0;
-    if (step === 8) return form.selectedPriorities.length > 0;
-    return true;
+    if (step === 6 && form.userType === "parent")
+  return form.selectedPriorities.length > 0;
+   if (step === 6 && form.userType === "student")
+  return Boolean(form.selectedClarity);
+
+if (step === 7 && form.userType === "student")
+  return form.selectedStrengths.length > 0;
+
+if (step === 8 && form.userType === "student")
+  return form.selectedPriorities.length > 0;   return true;
   }
 
-  function next() {
-    if (step === 8) {
+ function next() {
+  if (form.userType === "parent") {
+    if (step === 6) {
       saveOnboarding({ ...form, selectedGuidance: "" });
-      setStep(9);
+      setStep(9); // Go directly to success screen
       return;
     }
-
-    if (step === 9) {
-      navigate("/login");
-      return;
-    }
-
-    setStep((current) => current + 1);
   }
+
+  if (step === 8) {
+    saveOnboarding({ ...form, selectedGuidance: "" });
+    setStep(9);
+    return;
+  }
+
+  if (step === 9) {
+    navigate("/login");
+    return;
+  }
+
+  setStep((current) => current + 1);
+}
 
   const multiGrid = (items, key) => (
     <div className="cm-grid-btn" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
@@ -102,50 +120,80 @@ export default function OnboardingPage() {
     </div>
   );
 
-  const stepLabels = ["Role", "Name", "Class", "Stream", "Interests", "Clarity", "Strengths", "Priorities"];
+  const getTitle = () => {
+  if (form.userType === "parent") {
+    switch (step) {
+      case 2: return "Name";
+      case 3: return "Child Name";
+      case 4: return "Child Class";
+      case 5: return "Stream";
+      case 6: return "Priority";
+      default: return "";
+    }
+  }
 
+  switch (step) {
+    case 2: return "Name";
+    case 3: return "Class";
+    case 4: return "Stream";
+    case 5: return "Interests";
+    case 6: return "Clarity";
+    case 7: return "Strengths";
+    case 8: return "Priority";
+    default: return "";
+  }
+};
+
+const getQuestion = () => {
+  if (form.userType === "parent") {
+    switch (step) {
+      case 2: return "What's your name?";
+      case 3: return "What is your child's name?";
+      case 4: return "Which class is your child currently studying in?";
+      case 5: return "What stream is your child interested in?";
+      case 6: return "What matters most for your child's career?";
+      default: return "";
+    }
+  }
+
+  switch (step) {
+    case 2: return "What's your name?";
+    case 3: return "Which class are you in?";
+    case 4: return "What is your preferred stream?";
+    case 5: return "What are your interests?";
+    case 6: return "How clear are you about your direction?";
+    case 7: return "What are your core strengths?";
+    case 8: return "What matters most to you in a career?";
+    default: return "";
+  }
+};
   return (
     <AuthShell title="Choose Your Roadmap" subtitle="Tell us a little about yourself so we can personalize the full portal experience." backTo="/auth-entry">
-      <div style={{ overflowX: "auto", marginBottom: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "4px", minWidth: "max-content" }}>
-          {stepLabels.map((label, index) => {
-            const visibleStep = Math.max(0, Math.min(step === 1 ? 1 : step === 9 ? 7 : step - 1, 7));
-            const status = index < visibleStep ? "done" : index === visibleStep ? "active" : "pending";
-            return (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <div
-                    className={`cm-step-${status}`}
-                    style={{
-                      width: "28px",
-                      height: "28px",
-                      borderRadius: "50%",
-                      border: "2px solid",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {index + 1}
-                  </div>
-                  <div style={{ fontSize: "11px", fontWeight: "700", color: status !== "pending" ? "#9a2119" : "#bbb", whiteSpace: "nowrap" }}>{label}</div>
-                </div>
-                {index < 7 ? <div style={{ width: "14px", height: "2px", borderRadius: "2px", background: "#f0e8e6", flexShrink: 0 }} /> : null}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+<h3
+  style={{
+    fontWeight: "700",
+    textAlign: "center",
+    color: "#9a2119",
+    marginBottom: "8px",
+  }}
+>
+  {getTitle()}
+</h3>
 
+<div
+  style={{
+    fontSize: "14px",
+    fontWeight: "600",
+    color: "#595656",
+    marginBottom: "12px",
+  }}
+>
+  {getQuestion()}
+</div>
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         {step === 0 ? (
           <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <Title level={4} style={{ color: "#1a0a09", marginBottom: 0, fontFamily: "'Georgia', serif" }}>
-              Who are you exploring for?
-            </Title>
+           
             <div style={{ display: "grid", gap: "10px" }}>
               {[
                 ["student", <ReadOutlined />, "I'm a Student"],
@@ -193,18 +241,14 @@ export default function OnboardingPage() {
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             <div
               style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "24px",
-                background: "linear-gradient(135deg, #9a2119, #c0392b)",
+               
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 margin: "0 auto 20px",
-                boxShadow: "0 8px 24px rgba(154,33,25,0.25)",
-              }}
+                     }}
             >
-              <img src={Bee} alt="Bee" style={{ width: "52px", height: "52px", objectFit: "contain" }} />
+              <img src={Bee} alt="Bee" style={{ width: "100px", height: "100px", objectFit: "contain" }} />
             </div>
             <div style={{ fontSize: "20px", fontWeight: "800", color: "#1a0a09", marginBottom: "8px", fontFamily: "'Georgia', serif" }}>
               {form.userType === "parent"
@@ -225,7 +269,7 @@ export default function OnboardingPage() {
 
         {step === 2 ? (
           <Form layout="vertical" className="cm-form-label">
-            <Form.Item label={form.userType === "parent" ? "Parent Name" : "Full Name"}>
+            <Form.Item >
               <Input
                 className="cm-input-field"
                 prefix={<UserOutlined style={{ color: "#9a2119" }} />}
@@ -253,7 +297,7 @@ export default function OnboardingPage() {
 
         {step === 3 && form.userType === "parent" ? (
           <Form layout="vertical" className="cm-form-label">
-            <Form.Item label="Child's Name">
+            <Form.Item >
               <Input
                 className="cm-input-field"
                 prefix={<UserOutlined style={{ color: "#9a2119" }} />}
@@ -307,10 +351,18 @@ export default function OnboardingPage() {
           </div>
         ) : null}
 
-        {step === 6 ? singleGrid(onboardingOptions.clarityOptions, "selectedClarity") : null}
-        {step === 7 ? multiGrid(onboardingOptions.strengthOptions, "selectedStrengths") : null}
-        {step === 8 ? multiGrid(onboardingOptions.priorityOptions, "selectedPriorities") : null}
+      {step === 6 && form.userType === "student"
+  ? singleGrid(onboardingOptions.clarityOptions, "selectedClarity")
+  : null}
 
+{step === 7 && form.userType === "student"
+  ? multiGrid(onboardingOptions.strengthOptions, "selectedStrengths")
+  : null}
+
+{(step === 8 && form.userType === "student") ||
+ (step === 6 && form.userType === "parent")
+  ? multiGrid(onboardingOptions.priorityOptions, "selectedPriorities")
+  : null}
         {step === 9 ? (
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             <div
@@ -357,8 +409,14 @@ export default function OnboardingPage() {
           
             style={{ borderRadius: "10px", fontWeight: "700", minWidth: "100px", background: "linear-gradient(135deg, #9a2119, #c0392b)", borderColor: "#9a2119" }}
           >
-            {step === 9 ? "Continue" : step === 8 ? "Finish" : "Next"}
-          </Button>
+           {
+  step === 9
+    ? "Continue"
+    : (form.userType === "parent" && step === 6) ||
+      (form.userType === "student" && step === 8)
+    ? "Finish"
+    : "Next"
+} </Button>
         </div>
       </div>
     </AuthShell>
