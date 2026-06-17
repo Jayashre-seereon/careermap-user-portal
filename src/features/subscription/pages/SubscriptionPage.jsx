@@ -1,17 +1,75 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Col, List, Row } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
-import { subscriptions } from "../../../data/careermapData";
+import { getPlans,createOrder, verifyPayment } from "../../../api/subscriptionApi";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import { loadRazorpayScript } from "../../../utils/razorpay.js";
 export default function SubscriptionPage() {
   const { activePlanIds } = useAppState();
   const { navigate } = usePortalNavigation();
   const [params] = useSearchParams();
   const returnTo = params.get("returnTo");
+
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPlans() {
+      try {
+        const data = await getPlans();
+        setPlans(data);
+      } catch (err) {
+        console.error("Failed to load plans", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPlans();
+  }, []);
+
+  // handle payment button click
+  const handleSelectPlan = async (planId) => {
+    // try loading razor pay sdk script. if fails, show error toast
+    const script = await loadRazorpayScript();
+
+    if(!script) {
+      alert("Failed to load payment gateway. Please check your connection and try again.");
+      return;
+    }
+
+
+
+    // order create
+    const orderResponse = await createOrder(planId);
+    // response - order id.
+    const { order, key } = orderResponse || {};
+    if(!order.id || !key) {
+      alert("Failed to initiate payment. Please try again.");
+      return;
+    }
+
+    // razor pay sdk -> orderid and open payment modal
+    const options = {
+      key: key,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.id,
+      handler: async function (response) {
+        alert("Payment successful! Transaction ID: " + response.razorpay_payment_id);
+        // on successful payment, navigate to success page with transaction id and plan id as query params
+      // verify the payment 
+      // verify-payment 
+       await verifyPayment({ planId, ...response });
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  }
 
   return (
     <ModuleScreen className="space-y-6">
@@ -25,7 +83,7 @@ export default function SubscriptionPage() {
 
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}
       <Row gutter={[16, 16]} justify="center">
-        {subscriptions.map((plan) => {
+      {plans.map((plan) => {
           const isSelected = activePlanIds.includes(plan.id);
           const ribbonLabel = plan.highestseller ? "Best Seller" : plan.recommended ? "Recommended" : null;
           const ribbonClass = plan.highestseller
@@ -66,26 +124,32 @@ export default function SubscriptionPage() {
                     </div>
                   </div>
                   
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-brand">{plan.price}</span>
-                    <span className="text-muted text-[10px] font-medium">/mo</span>
-                  </div>
+                 <div className="flex items-baseline gap-1">
+  <span className="text-3xl font-black text-brand">
+    ₹{plan.price}
+  </span>
+  <span className="text-muted text-[10px] font-medium">
+    /{plan.validity}
+  </span>
+</div>
                 </div>
 
                 {/* Features Area */}
                 <div className="p-5 flex-grow">
-                  <List
-                    split={false}
-                    dataSource={plan.features}
-                    renderItem={(item) => (
-                      <List.Item className="!border-none !px-0 !py-1.5">
-                        <div className="flex items-start gap-2">
-                          <CheckOutlined className="text-brand text-[12px] mt-1 flex-shrink-0" />
-                          <span className="text-[13px] text-ink/80 leading-snug">{item}</span>
-                        </div>
-                      </List.Item>
-                    )}
-                  />
+<List
+  split={false}
+  dataSource={plan.modules.length ? plan.modules : ["No modules available"]}
+  renderItem={(item) => (
+    <List.Item className="!border-none !px-0 !py-1.5">
+      <div className="flex items-start gap-2">
+        <CheckOutlined className="text-brand text-[12px] mt-1 flex-shrink-0" />
+        <span className="text-[13px] text-ink/80 leading-snug">
+          {item}
+        </span>
+      </div>
+    </List.Item>
+  )}
+/>
                 </div>
 
                 {/* Footer Button */}
@@ -98,7 +162,7 @@ export default function SubscriptionPage() {
                     className={`!h-11 !rounded-xl !text-sm !font-bold transition-transform active:scale-95 ${
                       isSelected ? "!bg-gray-100 !text-gray-400 !border-transparent" : "shadow-md"
                     }`}
-                    onClick={() => navigate(`/checkout?planId=${plan.id}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ""}`)}
+                    onClick={() => handleSelectPlan(plan.id)}
                   >
                     {isSelected ? "Subscribed" : "Select"}
                   </Button>

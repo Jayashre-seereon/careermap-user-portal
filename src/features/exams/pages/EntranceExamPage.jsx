@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button, Select } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, Button, Select } from "antd";
 import {
   GlobalOutlined,
   CalendarOutlined,
@@ -12,213 +12,246 @@ import {
   TrophyOutlined,
   ArrowRightOutlined,
 } from "@ant-design/icons";
-import { entranceExams } from "../../../data/careermapData";
+import { useLocation, useNavigate } from "react-router-dom";
+import { UnlockRedirectModal } from "../../portal/components/portalPageShared";
+import { getEntranceExams } from "../../../api/entranceExamApi";
+import { entranceExams as fallbackEntranceExams } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 
 export default function EntranceExamPage() {
-  const { navigate, goToDashboard } = usePortalNavigation();
+
+  const { goToDashboard } = usePortalNavigation();
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const accessStatus =
+    location.state?.accessStatus || "preview";
+
+  const isSubscribed =
+    accessStatus === "unlocked";
+
+  const [previewUsed, setPreviewUsed] =
+    useState(false);
+
+  const [unlockModalItem, setUnlockModalItem] =
+    useState(null);
   const [selected, setSelected] = useState(null);
   const [typeFilter, setTypeFilter] = useState("All");
-  const [catFilter, setCatFilter] = useState("All");
+  const [items, setItems] = useState(fallbackEntranceExams);
+  const [error, setError] = useState("");
 
-  const filtered = entranceExams.filter(
-    (item) =>
-      (typeFilter === "All" || item.type === typeFilter) &&
-      (catFilter === "All" || item.category === catFilter)
+  useEffect(() => {
+    let active = true;
+
+    async function loadExams() {
+      try {
+        setError("");
+        const response = await getEntranceExams();
+        if (active && response.length) {
+          setItems(response);
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(loadError?.response?.data?.message || loadError?.message || "Failed to load entrance exams.");
+        }
+      }
+    }
+
+    loadExams();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filtered = useMemo(
+    () =>
+      items.filter(
+        (item) => typeFilter === "All" || item.type === typeFilter
+      ),
+    [items, typeFilter]
   );
 
-  /* ── DETAIL VIEW ── */
+  const typeOptions = useMemo(() => ["All", ...Array.from(new Set(items.map((item) => item.type).filter(Boolean)))], [items]);
+
   if (selected) {
     return (
       <ModuleScreen className="space-y-4">
+        {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
         <PageHero backOnly onBack={() => setSelected(null)} />
 
-        {/* Profile header */}
-        <div className="motion-item bg-white rounded-r-2xl border border-[#f0e4e2] border-l-4 border-l-[#9a2119] p-5">
-          <div className="flex flex-wrap justify-between items-start gap-4">
+        <div className="motion-item rounded-r-2xl border border-[#f0e4e2] border-l-4 border-l-[#9a2119] bg-white p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-black text-[#1a0a09] leading-snug m-0">
-                {selected.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-2 mt-2">
+              <h1 className="m-0 text-2xl font-black leading-snug text-[#1a0a09]">{selected.name}</h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="flex items-center gap-1 text-xs text-gray-500">
-                  <CalendarOutlined className="text-[#9a2119] text-xs" />
+                  <CalendarOutlined className="text-xs text-[#9a2119]" />
                   {selected.date}
                 </span>
-                <span className="w-px h-3 bg-[#f0e4e2]" />
-                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2.5 py-0.5 bg-[#fdf0ee] text-[#9a2119]">
-                  {selected.type}
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wide rounded-full px-2.5 py-0.5 bg-amber-50 text-amber-800">
-                  {selected.category}
-                </span>
+                {selected.issueDate ? (
+                  <span className="rounded-full bg-[#fdf0ee] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#9a2119]">
+                    Issue Date: {selected.issueDate}
+                  </span>
+                ) : null}
+                {selected.lastDate ? (
+                  <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+                    Last Date: {selected.lastDate}
+                  </span>
+                ) : null}
               </div>
             </div>
-            <Button
-              type="primary"
-              icon={<GlobalOutlined />}
-              href={selected.website}
-              target="_blank"
-              className="!rounded-full !bg-[#9a2119] !border-[#9a2119] !font-semibold !text-sm hover:!bg-[#7a1a13]"
-            >
+            <Button type="primary" icon={<GlobalOutlined />} href={selected.website} target="_blank" className="!rounded-full !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]">
               Apply Now
             </Button>
           </div>
         </div>
 
-        {/* Snapshot */}
-        <div className="motion-item bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
-            <TrophyOutlined className="text-[#9a2119] text-sm" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
-              Exam Snapshot
-            </span>
+        <div className="motion-item overflow-hidden rounded-2xl border border-[#f0e4e2] bg-white">
+          <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
+            <TrophyOutlined className="text-sm text-[#9a2119]" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Exam Snapshot</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {[
-              { label: "Authority",   value: selected.authority,   icon: <BankOutlined />        },
-              { label: "Eligibility", value: selected.eligibility, icon: <UserOutlined />        },
-              { label: "Mode",        value: selected.mode,        icon: <FileTextOutlined />    },
-              { label: "Duration",    value: selected.duration,    icon: <ClockCircleOutlined /> },
-              { label: "Subjects",    value: selected.subjects,    icon: <BookOutlined />        },
-              { label: "Total Marks", value: selected.totalMarks,  icon: <CheckCircleOutlined /> },
-            ].map((stat, i) => (
-              <div key={i} className="p-4 border-r border-b border-[#f9f0ef]">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e] mb-1">
+              { label: "Authority", value: selected.authority, icon: <BankOutlined /> },
+              { label: "Eligibility", value: selected.eligibility, icon: <UserOutlined /> },
+              { label: "Mode", value: selected.mode, icon: <FileTextOutlined /> },
+              { label: "Duration", value: selected.duration, icon: <ClockCircleOutlined /> },
+              { label: "Subjects", value: selected.subjects, icon: <BookOutlined /> },
+              { label: "Total Marks", value: selected.totalMarks, icon: <CheckCircleOutlined /> },
+            ].map((stat, index) => (
+              <div key={index} className="border-r border-b border-[#f9f0ef] p-4">
+                <p className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
                   <span className="text-[#9a2119]">{stat.icon}</span>
                   {stat.label}
                 </p>
-                <p className="text-sm font-bold text-[#1a0a09] leading-snug m-0">
-                  {stat.value}
-                </p>
+                <p className="m-0 text-sm font-bold leading-snug text-[#1a0a09]">{stat.value}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Exam Pattern + Top Colleges — equal height */}
-        <div className="content-stagger grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
-
-          {/* Exam Pattern */}
-          <div className="motion-item bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden flex flex-col">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
-              <FileTextOutlined className="text-[#9a2119] text-sm" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
-                Exam Pattern
-              </span>
+        <div className="content-stagger grid grid-cols-1 items-stretch gap-3 lg:grid-cols-2">
+          <div className="motion-item flex flex-col overflow-hidden rounded-2xl border border-[#f0e4e2] bg-white">
+            <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
+              <FileTextOutlined className="text-sm text-[#9a2119]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Exam Pattern</span>
             </div>
-            <div className="px-5 py-2 flex-1">
-              {selected.examPattern.map((item, i) => (
-                <div
-                  key={i}
-                  className={`flex items-start gap-2.5 py-2.5 ${
-                    i < selected.examPattern.length - 1 ? "border-b border-[#fdf0ee]" : ""
-                  }`}
-                >
-                  <ArrowRightOutlined className="text-[#9a2119] text-[10px] mt-1 shrink-0" />
-                  <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
+            <div className="flex-1 px-5 py-2">
+              {selected.examPattern.map((item, index) => (
+                <div key={index} className={`flex items-start gap-2.5 py-2.5 ${index < selected.examPattern.length - 1 ? "border-b border-[#fdf0ee]" : ""}`}>
+                  <ArrowRightOutlined className="mt-1 shrink-0 text-[10px] text-[#9a2119]" />
+                  <span className="text-sm leading-relaxed text-gray-600">{item}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Top Colleges */}
-          <div className="motion-item bg-white rounded-2xl border border-[#f0e4e2] overflow-hidden flex flex-col">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#f0e4e2]">
-              <BankOutlined className="text-[#9a2119] text-sm" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
-                Top Participating Colleges
-              </span>
+          <div className="motion-item flex flex-col overflow-hidden rounded-2xl border border-[#f0e4e2] bg-white">
+            <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
+              <BankOutlined className="text-sm text-[#9a2119]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Top Participating Colleges</span>
             </div>
-            <div className="p-5 flex flex-wrap gap-2 flex-1">
-              {selected.topColleges.map((college, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#1a0a09] bg-[#fdf9f9] border border-[#f0e4e2] rounded-lg px-3 py-1.5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#9a2119] shrink-0" />
+            <div className="flex flex-1 flex-wrap gap-2 p-5">
+              {selected.topColleges.map((college, index) => (
+                <span key={index} className="inline-flex items-center gap-1.5 rounded-lg border border-[#f0e4e2] bg-[#fdf9f9] px-3 py-1.5 text-xs font-semibold text-[#1a0a09]">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#9a2119]" />
                   {college}
                 </span>
               ))}
             </div>
           </div>
-
         </div>
       </ModuleScreen>
     );
   }
 
-  /* ── LIST VIEW ── */
-  return (
+return (
+  <>
     <ModuleScreen className="space-y-4">
+      {error ? (
+        <Alert
+          type="warning"
+          title={error}
+          showIcon
+          style={{ borderRadius: 16 }}
+        />
+      ) : null}
+
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1a0a09] m-0">Entrance Exams</h1>
-          <p className="text-xs text-[#b8837e] mt-1">
+          <h1 className="m-0 text-2xl font-black text-[#1a0a09]">
+            Entrance Exams
+          </h1>
+
+          <p className="mt-1 text-xs text-[#b8837e]">
             {filtered.length} exams available across streams and authorities.
           </p>
         </div>
+
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <div className="inline-flex items-center bg-white border border-[#f0e4e2] rounded-full px-3 py-1 gap-0">
+          <div className="inline-flex items-center gap-0 rounded-full border border-[#f0e4e2] bg-white px-3 py-1">
             <Select
               variant="borderless"
               value={typeFilter}
               onChange={setTypeFilter}
               className="w-28 text-xs font-semibold"
-              options={["All", "Central", "State", "Private"].map((v) => ({ label: v, value: v }))}
-            />
-            <span className="w-px h-4 bg-[#f0e4e2] shrink-0" />
-            <Select
-              variant="borderless"
-              value={catFilter}
-              onChange={setCatFilter}
-              className="w-36 text-xs font-semibold"
-              options={["All", "Engineering", "Medical", "Business", "Law", "Design"].map((v) => ({ label: v, value: v }))}
+              options={typeOptions.map((value) => ({
+                label: value,
+                value,
+              }))}
             />
           </div>
-          <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
+
+          <PageHero
+            backOnly
+            onBack={goToDashboard}
+            className="shrink-0"
+          />
         </div>
       </div>
 
-      {/* Equal-size card grid */}
       <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => (
           <div
-            key={item.name}
-            onClick={() => setSelected(item)}
-            className="group bg-white rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] p-4 cursor-pointer flex flex-col gap-2.5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
-          >
-            {/* authority row */}
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
-                {item.authority}
-              </span>
-              <span className="w-2 h-2 rounded-full bg-[#9a2119] opacity-20 group-hover:opacity-100 transition-opacity" />
-            </div>
+            key={item.id || item.name}
+            onClick={() => {
+              // subscribed user
+              if (isSubscribed) {
+                setSelected(item);
+                return;
+              }
 
-            {/* name */}
-            <p className="text-[15px] font-bold text-[#1a0a09] leading-snug flex-1 m-0 group-hover:text-[#9a2119] transition-colors line-clamp-2">
+              // first preview
+              if (!previewUsed) {
+                setSelected(item);
+                setPreviewUsed(true);
+                return;
+              }
+
+              // lock
+              setUnlockModalItem({
+                title: item.name,
+              });
+            }}
+            className="group flex cursor-pointer flex-col gap-2.5 rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
+          >
+            <p className="m-0 line-clamp-2 flex-1 text-[15px] font-bold leading-snug text-[#1a0a09] transition-colors group-hover:text-[#9a2119]">
               {item.name}
             </p>
 
-            {/* date */}
             <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-              <CalendarOutlined className="text-[#9a2119] text-[11px]" />
-              {item.date}
-            </div>
-
-            <div className="flex gap-1.5 pt-1">
-              <span className="text-[10px] font-bold rounded-md px-2 py-0.5 bg-gray-100 text-gray-500">
-                {item.type}
-              </span>
-              <span className="text-[10px] font-bold rounded-md px-2 py-0.5 bg-[#fdf0ee] text-[#9a2119]">
-                {item.category}
-              </span>
+              <CalendarOutlined className="text-[11px] text-[#9a2119]" />
+              Exam Date {item.date}
             </div>
 
             <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-              <span className="text-xs font-semibold text-[#8c6c67]">Tap to explore details</span>
+              <span className="text-xs font-semibold text-[#8c6c67]">
+                Tap to explore details
+              </span>
+
               <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
                 Explore <ArrowRightOutlined />
               </span>
@@ -226,7 +259,24 @@ export default function EntranceExamPage() {
           </div>
         ))}
       </div>
-
     </ModuleScreen>
-  );
+
+    <UnlockRedirectModal
+      open={!!unlockModalItem}
+      title="Unlock Entrance Exam"
+      itemLabel={unlockModalItem?.title}
+      description="Free preview already used. Please purchase a subscription to continue."
+      onCancel={() => setUnlockModalItem(null)}
+      onConfirm={() => {
+        navigate(
+          `/app/subscription?returnTo=${encodeURIComponent(
+            location.pathname
+          )}`
+        );
+
+        setUnlockModalItem(null);
+      }}
+    />
+  </>
+);
 }

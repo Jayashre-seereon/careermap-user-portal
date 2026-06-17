@@ -1,9 +1,11 @@
 import { EyeInvisibleOutlined, EyeTwoTone, LockOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
 import { Alert, Button, Form, Input, Space, Typography } from "antd";
-import { useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { existingUsers } from "../../../data/careermapData";
+import { useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { getApiErrorMessage, loginWithPassword, sendOtp } from "../../../api/authApi";
 import { useAppState } from "../../../state/AppStateContext";
+import { useAuthStore } from "../../../store/authStore";
+import { formatOtpMobile, isValidEmail, isValidMobileNumber, isValidPassword, mapApiUserToProfile, normalizeMobile } from "../../../utils/auth";
 import { AuthShell } from "../components/AuthShell";
 import { authPrimaryButtonStyle } from "../components/authShared";
 
@@ -12,94 +14,127 @@ const { Text } = Typography;
 export default function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { authenticate } = useAppState();
-  const [mode, setMode] = useState("mobile");
-  const [status, setStatus] = useState(null);
-  const [values, setValues] = useState({ mobile: "", coupon: "", email: "", password: "" });
+  const location = useLocation();
+  const navState = location.state || null;
+  const { onboarding, saveUserProfile } = useAppState();
+  const setSignupForm = useAuthStore((state) => state.setSignupForm);
+  const setOnboardingData = useAuthStore((state) => state.setOnboardingData);
+  const setAuthSession = useAuthStore((state) => state.setAuthSession);
+  const clearAuthFlow = useAuthStore((state) => state.clearAuthFlow);
   const isExistingUser = params.get("userType") === "existing";
+  const initialMode = isExistingUser && params.get("mode") === "email" ? "email" : "mobile";
 
-  const knownMobileUser = useMemo(() => existingUsers.find((item) => item.mobile === values.mobile), [values.mobile]);
-  const knownCouponUser = useMemo(() => existingUsers.find((item) => item.coupon === values.coupon.trim().toUpperCase()), [values.coupon]);
-  const knownEmailUser = useMemo(
-    () => existingUsers.find((item) => item.email.toLowerCase() === values.email.trim().toLowerCase()),
-    [values.email],
-  );
+  const [mode, setMode] = useState(initialMode);
+  const [status, setStatus] = useState(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+  const [values, setValues] = useState({ mobile: "", email: "", password: "" });
+  const mobileError = values.mobile && !isValidMobileNumber(values.mobile) ? "Enter a valid 10 digit mobile number." : "";
+  const emailError = isExistingUser && mode === "email" && values.email && !isValidEmail(values.email)
+    ? "Enter a valid email address."
+    : "";
+  const passwordError = isExistingUser && mode === "email" && values.password && !isValidPassword(values.password)
+    ? "Password must be at least 6 characters."
+    : "";
 
   function update(key, value) {
     setValues((current) => ({ ...current, [key]: value }));
     setStatus(null);
   }
 
-  function goAfterAuth() {
-    if (isExistingUser) {
-      authenticate();
-      navigate("/app/dashboard");
-      return;
+  function completeLogin(response) {
+    setAuthSession({
+      accessToken: response.accessToken || "",
+      refreshToken: response.refreshToken || "",
+      user: response.user || null,
+    });
+
+    const profile = mapApiUserToProfile(response.user);
+    if (profile) {
+      saveUserProfile(profile);
     }
 
-    navigate("/profile-setup");
-  }
-
-  function sendOtp() {
-    if (isExistingUser && !knownMobileUser) {
-      setStatus({ type: "error", message: "User not exist with this mobile number." });
-      return;
-    }
-
-    navigate(`/otp-verify?next=${encodeURIComponent(isExistingUser ? "/app/dashboard" : "/profile-setup")}&identifier=${values.mobile}`);
-  }
-
-  function loginCoupon() {
-    if (isExistingUser && !knownCouponUser) {
-      setStatus({ type: "error", message: "User not exist with this coupon code." });
-      return;
-    }
-
-    goAfterAuth();
-  }
-
-  function loginEmail() {
-    if (!knownEmailUser) {
-      setStatus({ type: "error", message: "User not exist with this email." });
-      return;
-    }
-
-    if (knownEmailUser.password !== values.password) {
-      setStatus({ type: "error", message: "Incorrect password." });
-      return;
-    }
-
-    authenticate();
+    clearAuthFlow();
     navigate("/app/dashboard");
+  }
+
+  async function handleSendOtp() {
+    const normalizedMobile = normalizeMobile(values.mobile);
+
+    if (!isValidMobileNumber(normalizedMobile)) {
+      setStatus({ type: "error", message: "Enter a valid 10 digit mobile number." });
+      return;
+    }
+
+    const formattedMobile = formatOtpMobile(normalizedMobile);
+
+    try {
+      setIsSendingOtp(true);
+      setStatus(null);
+
+      if (isExistingUser) {
+        await sendOtp(formattedMobile, "login");
+        navigate(
+          `/otp-verify?next=${encodeURIComponent("/app/dashboard")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`
+        );
+        return;
+      }
+
+      await sendOtp(formattedMobile, "signup");
+      setOnboardingData(onboarding);
+      setSignupForm({ mobile: normalizedMobile });
+      navigate(
+        `/otp-verify?next=${encodeURIComponent("/profile-setup")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=signup`
+      );
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: getApiErrorMessage(error, "Failed to send OTP."),
+      });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  }
+
+  async function handleEmailLogin() {
+    if (!isValidEmail(values.email)) {
+      setStatus({ type: "error", message: "Enter a valid email address." });
+      return;
+    }
+
+    if (!isValidPassword(values.password)) {
+      setStatus({ type: "error", message: "Password must be at least 6 characters." });
+      return;
+    }
+
+    try {
+      setIsSubmittingEmail(true);
+      setStatus(null);
+      const response = await loginWithPassword(values.email.trim(), values.password);
+      completeLogin(response);
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: getApiErrorMessage(error, "Failed to login with email and password."),
+      });
+    } finally {
+      setIsSubmittingEmail(false);
+    }
   }
 
   return (
     <AuthShell
       title={isExistingUser ? "Welcome Back" : "Continue Your Journey"}
-      subtitle={isExistingUser ? "Choose how you'd like to log in." : "Use OTP or coupon to continue."}
+      subtitle={isExistingUser ? "Choose how you'd like to log in." : "Use OTP to continue."}
       backTo="/auth-entry"
     >
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        {isExistingUser ? (
-          <div
-            style={{
-              borderRadius: "12px",
-              padding: "12px 16px",
-              background: "#fdf5f4",
-              border: "1px solid rgba(154,33,25,0.2)",
-              fontSize: "12px",
-              color: "#5a2a27",
-              lineHeight: "1.7",
-            }}
-          >
-            <strong style={{ color: "#9a2119" }}>Example existing user</strong>
-            <br />
-            Mobile: 9876543210 | Email: jaya@email.com | Password: Jaya@123 | Coupon: CAREER2026
-          </div>
+      <Space orientation="vertical" size="large" style={{ width: "100%" }}>
+        {navState?.passwordResetSuccess ? (
+          <Alert type="success" message={navState.passwordResetSuccess} showIcon style={{ borderRadius: "10px" }} />
         ) : null}
 
         <div style={{ display: "flex", gap: "6px", background: "#f7ece8", borderRadius: "12px", padding: "4px" }}>
-          {(isExistingUser ? ["mobile", "coupon", "email"] : ["mobile", "coupon"]).map((item) => (
+          {["mobile", ...(isExistingUser ? ["email"] : [])].map((item) => (
             <button
               key={item}
               type="button"
@@ -118,7 +153,7 @@ export default function LoginPage() {
                 boxShadow: mode === item ? "0 2px 8px rgba(154,33,25,0.25)" : "none",
               }}
             >
-              {item === "mobile" ? "Mobile OTP" : item === "coupon" ? "Coupon" : "Email"}
+              {item === "mobile" ? "Mobile OTP" : "Email"}
             </button>
           ))}
         </div>
@@ -130,30 +165,23 @@ export default function LoginPage() {
                 className="cm-input-field"
                 prefix={<PhoneOutlined style={{ color: "#9a2119" }} />}
                 value={values.mobile}
-                onChange={(event) => update("mobile", event.target.value.replace(/\D/g, "").slice(0, 10))}
+                onChange={(event) => update("mobile", normalizeMobile(event.target.value))}
                 size="large"
                 style={{ borderRadius: "10px" }}
+                inputMode="numeric"
+                autoComplete="tel"
               />
+              {mobileError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{mobileError}</div> : null}
             </Form.Item>
-            <Button type="primary" block size="large" disabled={values.mobile.length !== 10} onClick={sendOtp} style={{ ...authPrimaryButtonStyle, width: "100%" }}>
-              Send OTP
-            </Button>
-          </Form>
-        ) : null}
-
-        {mode === "coupon" ? (
-          <Form layout="vertical" className="cm-form-label">
-            <Form.Item label="Institution Coupon Code">
-              <Input
-                className="cm-input-field"
-                value={values.coupon}
-                onChange={(event) => update("coupon", event.target.value.toUpperCase())}
-                size="large"
-                style={{ borderRadius: "10px", fontWeight: "700", letterSpacing: "2px" }}
-              />
-            </Form.Item>
-            <Button type="primary" block size="large" disabled={values.coupon.length < 3} onClick={loginCoupon} style={{ ...authPrimaryButtonStyle, width: "100%" }}>
-              {isExistingUser ? "Login with Coupon" : "Continue with Coupon"}
+            <Button
+              type="primary"
+              block
+              size="large"
+              disabled={!isValidMobileNumber(values.mobile) || isSendingOtp}
+              onClick={handleSendOtp}
+              style={{ ...authPrimaryButtonStyle, width: "100%" }}
+            >
+              {isSendingOtp ? "Sending OTP..." : "Send OTP"}
             </Button>
           </Form>
         ) : null}
@@ -168,7 +196,9 @@ export default function LoginPage() {
                 onChange={(event) => update("email", event.target.value)}
                 size="large"
                 style={{ borderRadius: "10px" }}
+                autoComplete="email"
               />
+              {emailError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{emailError}</div> : null}
             </Form.Item>
             <Form.Item label="Password">
               <Input.Password
@@ -179,10 +209,19 @@ export default function LoginPage() {
                 iconRender={(visible) => (visible ? <EyeTwoTone twoToneColor="#9a2119" /> : <EyeInvisibleOutlined />)}
                 size="large"
                 style={{ borderRadius: "10px" }}
+                autoComplete="current-password"
               />
+              {passwordError ? <div style={{ marginTop: "6px", fontSize: "12px", color: "#c62828" }}>{passwordError}</div> : null}
             </Form.Item>
-            <Button type="primary" block size="large" onClick={loginEmail} style={{ ...authPrimaryButtonStyle, width: "100%" }}>
-              Login with Email
+            <Button
+              type="primary"
+              block
+              size="large"
+              disabled={!isValidEmail(values.email) || !isValidPassword(values.password) || isSubmittingEmail}
+              onClick={handleEmailLogin}
+              style={{ ...authPrimaryButtonStyle, width: "100%" }}
+            >
+              {isSubmittingEmail ? "Logging in..." : "Login with Email"}
             </Button>
             <div style={{ marginTop: "10px" }}>
               <Link to="/forgot-password" style={{ fontSize: "13px", fontWeight: "700", color: "#9a2119" }}>
@@ -192,7 +231,7 @@ export default function LoginPage() {
           </Form>
         ) : null}
 
-        {status ? <Alert type={status.type} message={status.message} style={{ borderRadius: "10px" }} /> : null}
+        {status ? <Alert type={status.type} title={status.message} style={{ borderRadius: "10px" }} /> : null}
 
         <div style={{ textAlign: "center", fontSize: "13px", paddingTop: "4px" }}>
           <div style={{ marginBottom: "6px" }}>
@@ -206,7 +245,9 @@ export default function LoginPage() {
               </Link>
             )}
           </div>
-          <Text style={{ fontSize: "11px", color: "#bbb" }}>By continuing, you agree to Career Map&apos;s Terms of Service and Privacy Policy.</Text>
+          <Text style={{ fontSize: "11px", color: "#bbb" }}>
+            By continuing, you agree to Career Map&apos;s Terms of Service and Privacy Policy.
+          </Text>
         </div>
       </Space>
     </AuthShell>
