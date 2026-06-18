@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import Bee from "../../../asset/bee.png";
 import Logo from "../../../asset/logo_white.png";
+
 export function AuthShell({ children, title, subtitle, backTo }) {
+  const [loaded, setLoaded] = useState(false);
   return (
     <div style={{ minHeight: "100vh", display: "flex", background: "#faf8f7" }}>
       <div
@@ -11,8 +13,8 @@ export function AuthShell({ children, title, subtitle, backTo }) {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          width: "42%",
-          background: "linear-gradient(160deg, #9a2119 0%, #c0392b 55%, #7b1a13 100%)",
+          width: "50%",
+        
           padding: "48px 40px",
           position: "relative",
           overflow: "hidden",
@@ -28,6 +30,7 @@ export function AuthShell({ children, title, subtitle, backTo }) {
             key={index}
             style={{
               position: "absolute",
+              
               top: top !== null ? top : undefined,
               bottom: bottom !== null ? bottom : undefined,
               right: right !== null ? right : undefined,
@@ -40,58 +43,27 @@ export function AuthShell({ children, title, subtitle, backTo }) {
           />
         ))}
 
-        <div
-          style={{
-            width: "100px",
-            height: "100px",
-            borderRadius: "28px",
-            background: "rgba(255,255,255,0.15)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.25)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "24px",
-            boxShadow: "0 12px 40px rgba(0,0,0,0.2)",
-          }}
-        >
-          <img src={Bee} alt="Career Map" style={{ width: "84px", height: "84px", objectFit: "contain" }} />
-        </div>
-
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div style={{ fontFamily: "'Georgia', serif", fontSize: "26px", fontWeight: "700", color: "#fff", marginBottom: "10px", letterSpacing: "-0.5px" }}>
-            Career Map
-          </div>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.72)", lineHeight: "1.6", maxWidth: "220px" }}>
-            Discover your future with personalised guidance tailored just for you.
-          </div>
-        </div>
-
-        {[
-          ["*", "500+ Career Options"],
-          ["*", "Expert Mentors"],
-          ["*", "Scholarships & Exams"],
-        ].map(([icon, label]) => (
-          <div
-            key={label}
-            style={{
-              width: "100%",
-              background: "rgba(255,255,255,0.10)",
-              border: "1px solid rgba(255,255,255,0.16)",
-              borderRadius: "10px",
-              padding: "10px 16px",
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.88)",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              marginBottom: "8px",
-            }}
-          >
-            <span style={{ color: "#ffb3ae" }}>{icon}</span>
-            {label}
-          </div>
-        ))}
+    <video
+  src="https://www.thecareermap.in/banner_videos/1758201830_7C6lAI_Journeyvideo.mp4"
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="auto"
+  onLoadedData={() => setLoaded(true)}   // ✅ detect load
+  style={{
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    zIndex: 0,
+    opacity: loaded ? 1 : 0,   // ✅ hide until ready
+    transition: "opacity 0.4s ease",
+    background: "#000",
+  }}
+/>
       </div>
 
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 20px" }}>
@@ -124,12 +96,10 @@ export function AuthShell({ children, title, subtitle, backTo }) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-              <div
-               
-              >
+              <div>
                 <img src={Logo} alt="" style={{ width: "100px", height: "32px", objectFit: "contain" }} />
               </div>
-               </div>
+            </div>
 
             {title ? (
               <div style={{ marginBottom: "24px" }}>
