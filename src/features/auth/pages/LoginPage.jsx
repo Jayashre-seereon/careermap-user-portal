@@ -179,7 +179,7 @@ export default function LoginPage() {
               size="large"
               disabled={!isValidMobileNumber(values.mobile) || isSendingOtp}
               onClick={handleSendOtp}
-              style={{ ...authPrimaryButtonStyle, width: "100%" }}
+              style={{ ...authPrimaryButtonStyle, width: "100%" ,color:"#fff"}}
             >
               {isSendingOtp ? "Sending OTP..." : "Send OTP"}
             </Button>
