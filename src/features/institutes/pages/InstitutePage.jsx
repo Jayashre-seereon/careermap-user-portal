@@ -27,11 +27,12 @@ function getAccent(name = "") {
 
 export default function InstitutePage() {
   const { goToDashboard } = usePortalNavigation();
-  const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
   const [items, setItems] = useState(fallbackInstitutes);
   const [error, setError] = useState("");
-
+const [category, setCategory] = useState();
+const [secondCategory, setSecondCategory] = useState();
+const [subCategory, setSubCategory] = useState();
   useEffect(() => {
     let active = true;
 
@@ -54,7 +55,9 @@ export default function InstitutePage() {
       active = false;
     };
   }, []);
-
+const categoryOptions = [...new Map(items.map(i => [i.category?.id, i.category])).values()];
+const secondCategoryOptions = [...new Map(items.map(i => [i.secondcategory?.id, i.secondcategory])).values()];
+const subCategoryOptions = [...new Map(items.map(i => [i.subcategory?.id, i.subcategory])).values()];
   const filtered = useMemo(
     () =>
       items.filter(
@@ -67,73 +70,7 @@ export default function InstitutePage() {
     [items, search]
   );
 
-  if (selected) {
-    return (
-      <ModuleScreen className="space-y-4">
-        <PageHero backOnly onBack={() => setSelected(null)} />
-
-        <div className="motion-item overflow-hidden rounded-2xl border bg-white shadow">
-          <div className="flex">
-            <div className="flex w-24 flex-col items-center justify-center bg-[#9a2119] py-6">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white/20">
-                {selected.logo ? (
-                  <img src={selected.logo} alt={selected.name} className="h-full w-full object-cover" loading="lazy" />
-                ) : (
-                  <BankOutlined className="text-lg text-white" />
-                )}
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="font-bold text-white">{selected.rank}</span>
-              </div>
-            </div>
-
-            <div className="flex-1 space-y-3 p-5">
-              <span className="rounded-full bg-[#fdf0ee] px-2 py-1 text-xs text-[#9a2119]">{selected.type}</span>
-              <h1 className="text-lg font-bold">{selected.name}</h1>
-              <p className="flex items-center gap-1 text-sm text-gray-500">
-                <EnvironmentOutlined /> {selected.location}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="content-stagger space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Card title="Type">
-              <p className="m-0 text-base font-bold text-[#9a2119]">{selected.type}</p>
-            </Card>
-            <Card title="Courses">
-              <p className="m-0 text-base font-bold text-[#1f1a1b]">{selected.courses?.length || 0} available</p>
-            </Card>
-          </div>
-
-          {selected.tentativeDate ? (
-            <Card title="Tentative Date">
-              <p className="m-0 text-base font-bold text-[#1f1a1b]">{selected.tentativeDate}</p>
-            </Card>
-          ) : null}
-
-          <Card title="About">
-            <p className="text-sm text-gray-500">{selected.about}</p>
-          </Card>
-
-          <Card title="Courses Offered">
-            <div className="flex flex-wrap gap-2">
-              {selected.courses?.length ? selected.courses.map((course) => (
-                <span key={course} className="rounded-lg bg-[#fdf0ee] px-3 py-1 text-xs text-[#9a2119]">
-                  {course}
-                </span>
-              )) : <span className="text-sm text-gray-500">No course list available.</span>}
-            </div>
-          </Card>
-
-          <Button type="primary" href={selected.website} target="_blank" block className="motion-item !h-12 !rounded-xl !border-[#9a2119] !bg-[#9a2119]">
-            Visit Website
-          </Button>
-        </div>
-      </ModuleScreen>
-    );
-  }
+ 
 
   return (
     <ModuleScreen className="space-y-5">
@@ -166,7 +103,6 @@ export default function InstitutePage() {
           return (
             <div
               key={item.id || item.name}
-              onClick={() => setSelected(item)}
               className="group cursor-pointer overflow-hidden rounded-[28px] border border-[#e8dfda] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#d7c3bc] hover:shadow-xl"
             >
               <div className={`h-24 bg-gradient-to-r ${accent} p-5`}>
@@ -203,9 +139,19 @@ export default function InstitutePage() {
                   <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#aa8a83]">
                     View Details
                   </span>
-                  <span className="flex items-center gap-2 text-[14px] font-bold text-[#b22b1f] transition-transform duration-200 group-hover:translate-x-1">
-                    Explore <RightOutlined />
-                  </span>
+     {(item.url || item.website) ? (
+  <a
+    href={item.url || item.website}
+    target="_blank"
+    rel="noopener noreferrer"
+    onClick={(e) => e.stopPropagation()}
+    className="flex items-center gap-2 text-[14px] font-bold text-[#b22b1f]"
+  >
+    Explore <RightOutlined />
+  </a>
+) : (
+  <span>No Website</span>
+)}
                 </div>
                 {item.tentativeDate ? <div className="mt-2 text-[11px] font-semibold text-[#8b7f7b]">Tentative: {item.tentativeDate}</div> : null}
               </div>
