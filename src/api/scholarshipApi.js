@@ -26,6 +26,21 @@ function formatDeadline(deadline) {
   });
 }
 
+function getDaysRemaining(deadline) {
+  if (!deadline) {
+    return null;
+  }
+
+  const parsedDate = new Date(deadline);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  const diffMs = parsedDate.getTime() - Date.now();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
 function getScholarshipStatus(deadline) {
   if (!deadline) {
     return "Active";
@@ -67,13 +82,20 @@ function mapScholarshipItem(item, index) {
     name: item?.name || "Unnamed Scholarship",
     eligibility: stripHtml(item?.eligibility) || "Eligibility not available",
     amount: formatAmount(item?.price),
+    rawPrice: item?.price || "",
     deadline: formatDeadline(item?.deadline),
+    daysRemaining: getDaysRemaining(item?.deadline),
     tag: scholarshipType,
     status: getScholarshipStatus(item?.deadline),
     provider: scholarshipType,
     description: stripHtml(item?.description) || "Scholarship details are not available right now.",
     requirements: formatRequirements(item?.requirement),
     link: item?.url || "#",
+    image: item?.image || null,
+    // Raw category objects, preserved for dropdown filtering on the page.
+    categoryObj: item?.category || null,
+    secondcategoryObj: item?.secondcategory || null,
+    subcategoryObj: item?.subcategory || null,
   };
 }
 

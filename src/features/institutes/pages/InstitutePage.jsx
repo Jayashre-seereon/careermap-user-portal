@@ -30,9 +30,11 @@ export default function InstitutePage() {
   const [search, setSearch] = useState("");
   const [items, setItems] = useState(fallbackInstitutes);
   const [error, setError] = useState("");
-const [category, setCategory] = useState();
-const [secondCategory, setSecondCategory] = useState();
-const [subCategory, setSubCategory] = useState();
+
+  const [category, setCategory] = useState("");
+  const [secondCategory, setSecondCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+
   useEffect(() => {
     let active = true;
 
@@ -55,22 +57,58 @@ const [subCategory, setSubCategory] = useState();
       active = false;
     };
   }, []);
-const categoryOptions = [...new Map(items.map(i => [i.category?.id, i.category])).values()];
-const secondCategoryOptions = [...new Map(items.map(i => [i.secondcategory?.id, i.secondcategory])).values()];
-const subCategoryOptions = [...new Map(items.map(i => [i.subcategory?.id, i.subcategory])).values()];
+
+  const categoryOptions = useMemo(
+    () => [...new Map(items.filter((i) => i.category).map((i) => [i.category.id, i.category])).values()],
+    [items]
+  );
+
+  const secondCategoryOptions = useMemo(() => {
+    const source = category
+      ? items.filter((i) => String(i.category?.id) === String(category))
+      : items;
+    return [...new Map(source.filter((i) => i.secondcategory).map((i) => [i.secondcategory.id, i.secondcategory])).values()];
+  }, [items, category]);
+
+  const subCategoryOptions = useMemo(() => {
+    let source = items;
+    if (category) {
+      source = source.filter((i) => String(i.category?.id) === String(category));
+    }
+    if (secondCategory) {
+      source = source.filter((i) => String(i.secondcategory?.id) === String(secondCategory));
+    }
+    return [...new Map(source.filter((i) => i.subcategory).map((i) => [i.subcategory.id, i.subcategory])).values()];
+  }, [items, category, secondCategory]);
+
+  function handleCategoryChange(value) {
+    setCategory(value);
+    setSecondCategory("");
+    setSubCategory("");
+  }
+
+  function handleSecondCategoryChange(value) {
+    setSecondCategory(value);
+    setSubCategory("");
+  }
+
   const filtered = useMemo(
     () =>
-      items.filter(
-        (item) =>
+      items.filter((item) => {
+        const matchesSearch =
           !search ||
           item.name?.toLowerCase().includes(search.toLowerCase()) ||
           item.location?.toLowerCase().includes(search.toLowerCase()) ||
-          item.type?.toLowerCase().includes(search.toLowerCase())
-      ),
-    [items, search]
-  );
+          item.type?.toLowerCase().includes(search.toLowerCase());
 
- 
+        const matchesCategory = !category || String(item.category?.id) === String(category);
+        const matchesSecondCategory = !secondCategory || String(item.secondcategory?.id) === String(secondCategory);
+        const matchesSubCategory = !subCategory || String(item.subcategory?.id) === String(subCategory);
+
+        return matchesSearch && matchesCategory && matchesSecondCategory && matchesSubCategory;
+      }),
+    [items, search, category, secondCategory, subCategory]
+  );
 
   return (
     <ModuleScreen className="space-y-5">
@@ -86,19 +124,81 @@ const subCategoryOptions = [...new Map(items.map(i => [i.subcategory?.id, i.subc
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#eedad4] bg-white p-4 shadow-sm">
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search institutes by name, location, or type"
-          className="w-full rounded-xl border border-[#eaded9] px-4 py-3 text-sm outline-none transition focus:border-[#9a2119]"
-        />
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <select
+            value={category}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="appearance-none rounded-full border border-[#eaded9] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#d7c3bc] focus:border-[#9a2119]"
+          >
+            <option value="">All Categories</option>
+            {categoryOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.title}
+              </option>
+            ))}
+          </select>
+          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#aa8a83]" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <div className="relative">
+          <select
+            value={secondCategory}
+            onChange={(e) => handleSecondCategoryChange(e.target.value)}
+            className="appearance-none rounded-full border border-[#eaded9] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#d7c3bc] focus:border-[#9a2119]"
+          >
+            <option value="">All Second Categories</option>
+            {secondCategoryOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </select>
+          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#aa8a83]" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <div className="relative">
+          <select
+            value={subCategory}
+            onChange={(e) => setSubCategory(e.target.value)}
+            className="appearance-none rounded-full border border-[#eaded9] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#d7c3bc] focus:border-[#9a2119]"
+          >
+            <option value="">All Sub Categories</option>
+            {subCategoryOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.title}
+              </option>
+            ))}
+          </select>
+          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#aa8a83]" viewBox="0 0 12 12" fill="none">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        {(category || secondCategory || subCategory) ? (
+          <button
+            type="button"
+            onClick={() => {
+              setCategory("");
+              setSecondCategory("");
+              setSubCategory("");
+            }}
+            className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
 
       <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item) => {
           const accent = getAccent(item.name);
           const initials = getInitials(item.name);
+          const websiteUrl = item.url || item.website;
 
           return (
             <div
@@ -117,7 +217,7 @@ const subCategoryOptions = [...new Map(items.map(i => [i.subcategory?.id, i.subc
               </div>
 
               <div className="relative px-5 pb-5 pt-0">
-              <div className={`-mt-8 flex h-[64px] w-[64px] items-center justify-center rounded-[20px] border-4 border-white bg-gradient-to-br ${accent} text-[20px] font-black text-white shadow-md`}>
+                <div className={`-mt-8 flex h-[64px] w-[64px] items-center justify-center rounded-[20px] border-4 border-white bg-gradient-to-br ${accent} text-[20px] font-black text-white shadow-md`}>
                   {item.logo ? (
                     <img src={item.logo} alt={item.name} className="h-full w-full rounded-[16px] object-cover" loading="lazy" />
                   ) : (
@@ -139,21 +239,21 @@ const subCategoryOptions = [...new Map(items.map(i => [i.subcategory?.id, i.subc
                   <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#aa8a83]">
                     View Details
                   </span>
-     {(item.url || item.website) ? (
-  <a
-    href={item.url || item.website}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-    className="flex items-center gap-2 text-[14px] font-bold text-[#b22b1f]"
-  >
-    Explore <RightOutlined />
-  </a>
-) : (
-  <span>No Website</span>
-)}
+                  {websiteUrl ? (
+                    <a
+                      href={websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-2 text-[14px] font-bold text-[#b22b1f]"
+                    >
+                      Explore <RightOutlined />
+                    </a>
+                  ) : (
+                    <span>No Website</span>
+                  )}
                 </div>
-                {item.tentativeDate ? <div className="mt-2 text-[11px] font-semibold text-[#8b7f7b]">Tentative: {item.tentativeDate}</div> : null}
+                
               </div>
             </div>
           );
@@ -162,14 +262,5 @@ const subCategoryOptions = [...new Map(items.map(i => [i.subcategory?.id, i.subc
 
       {filtered.length === 0 ? <div className="py-10 text-center text-gray-500">No results found</div> : null}
     </ModuleScreen>
-  );
-}
-
-function Card({ title, children }) {
-  return (
-    <div className="motion-item rounded-xl border bg-white p-4">
-      <h3 className="mb-2 font-semibold">{title}</h3>
-      {children}
-    </div>
   );
 }
