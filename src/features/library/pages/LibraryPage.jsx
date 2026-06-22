@@ -3,6 +3,7 @@ import {
   BankOutlined,
   BookOutlined,
   BranchesOutlined,
+  BranchesOutlined as BranchesOutlinedAlias,
   CreditCardOutlined,
   DollarOutlined,
   ExperimentOutlined,
@@ -222,6 +223,7 @@ function normalizeInstituteItems(value) {
         name: item,
         state: "",
         city: "",
+        logo: null,
         location: item,
         isTop: false,
         raw: item,
@@ -240,6 +242,7 @@ function normalizeInstituteItems(value) {
       state,
       city,
       location,
+      logo: item?.logo || null, 
       isTop: Boolean(item?.is_top ?? item?.isTop),
       raw: item,
     };
@@ -356,6 +359,7 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
         sourceItem?.institutes ||
         []
     ),
+    raw: item,
   };
 }
 
@@ -453,6 +457,86 @@ function SectionHeader({ icon, title }) {
   );
 }
 
+// ─── InstituteCard ────────────────────────────────────────────────────────────
+function InstituteCard({ inst, badge }) {
+  const isTop = badge === "Top";
+  const typeLabel = inst?.raw?.institute_type || (isTop ? "Government" : "Private");
+  const isGovt = typeLabel?.toLowerCase().includes("gov");
+  const logo = inst?.logo || null;
+  const url = inst?.raw?.url || null;
+  const admissionProcess = inst?.raw?.admission_process || null;
+  const tentativeDate = inst?.raw?.tentative_date
+    ? new Date(inst.raw.tentative_date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+  return (
+    <div className="relative rounded-2xl border border-[#f0e4e2] bg-white overflow-hidden hover:shadow-md transition-shadow">
+      {/* Type badge top-left */}
+      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+        <span className={`h-2 w-2 rounded-full ${isGovt ? "bg-green-500" : "bg-green-400"}`} />
+        <span className="text-xs text-gray-500">{isGovt ? "Goverment" : "Private"}</span>
+      </div>
+      {/* External link top-right */}
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-full border border-[#f0e4e2] text-gray-400 hover:text-[#9a2119] hover:border-[#9a2119] transition-colors text-xs font-bold"
+        >
+          ↗
+        </a>
+      ) : null}
+
+      {/* Logo */}
+      <div className="mt-10 mb-3 flex items-center justify-center h-16">
+        {logo ? (
+  <img
+    src={logo}
+    alt={inst.name}
+    className="h-14 w-14 object-contain"
+    onError={(e) => {
+      e.currentTarget.style.display = "none";
+    }}
+  />
+) : (
+  <div className="h-14 w-14 rounded-full bg-[#fdf0ee] flex items-center justify-center text-2xl text-[#9a2119]">
+    🏛️
+  </div>
+)}
+      </div>
+
+      {/* Name */}
+      <p className="text-center text-sm font-bold text-[#1a0a09] px-4 leading-snug mb-3">
+        {inst.name}
+      </p>
+
+      {/* Admission + Tentative date */}
+      {(admissionProcess || tentativeDate) ? (
+        <div className="flex justify-between items-start border-t border-[#f7eeec] px-4 py-3 gap-2">
+          {admissionProcess ? (
+            <div>
+              <p className="text-[10px] text-gray-400 mb-0.5">Admission via</p>
+              <p className="text-xs font-semibold text-[#1a0a09]">{admissionProcess}</p>
+            </div>
+          ) : null}
+          {tentativeDate ? (
+            <div className="text-right">
+              <p className="text-[10px] text-gray-400 mb-0.5">Tentative Date</p>
+              <p className="text-xs font-semibold text-[#1a0a09]">{tentativeDate}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function LibraryPage() {
   const { isUnlocked, registerFreeDetailAccess, savedCareers, toggleSavedCareer } =
     useAppState();
@@ -545,11 +629,6 @@ export default function LibraryPage() {
     );
   }
 
-  // ─── API type strings ──────────────────────────────────────────────────────
-  // The backend accepts: "category", "second", "sub"
-  // These match the internal type values used throughout the component.
-  // ──────────────────────────────────────────────────────────────────────────
-
   async function handleClick(type, id, item) {
     setLoading(true);
     setError("");
@@ -557,7 +636,7 @@ export default function LibraryPage() {
     setSelectedDetailSource(null);
 
     try {
-      // ── STREAM ─────────────────────────────────────────────────────────────
+      // ── STREAM ──────────────────────────────────────────────────────────────
       if (type === "stream") {
         setSelectedStream(item);
         setSelectedCategory(null);
@@ -583,14 +662,13 @@ export default function LibraryPage() {
         return;
       }
 
-      // ── CATEGORY ───────────────────────────────────────────────────────────
-      // API call: /careerlibrary/next/category/<id>
+      // ── CATEGORY ────────────────────────────────────────────────────────────
       if (type === "category") {
         setSelectedCategory(item);
 
         const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
-        const nextType = data?.type;   // e.g. "secondcategory" or "details"
+        const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
 
         if (nextType === "secondcategory") {
@@ -616,20 +694,18 @@ export default function LibraryPage() {
           return;
         }
 
-        // fallback: show empty secondcategory level
         setSecondCategories([]);
         setCurrentLevel("secondcategory");
         return;
       }
 
-      // ── SECOND CATEGORY ────────────────────────────────────────────────────
-      // API call: /careerlibrary/next/second/<id>
+      // ── SECOND CATEGORY ─────────────────────────────────────────────────────
       if (type === "second") {
         setSelectedSecondCategory(item);
 
         const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
-        const nextType = data?.type;   // e.g. "subcategory" or "details"
+        const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
 
         if (nextType === "subcategory") {
@@ -658,10 +734,7 @@ export default function LibraryPage() {
         return;
       }
 
-      // ── SUB CATEGORY ───────────────────────────────────────────────────────
-      // API call: /careerlibrary/next/sub/<id>
-      // If next returns type "details" but data is empty,
-      // fall back to the dedicated /subcategory/<id>/details endpoint
+      // ── SUB CATEGORY ────────────────────────────────────────────────────────
       if (type === "sub") {
         setSelectedSubCategory(item);
 
@@ -785,8 +858,6 @@ export default function LibraryPage() {
     );
   }
 
-  // FIX: renderCategoryGrid now accepts a `type` param so it passes the correct
-  // type when items at different levels are clicked.
   function renderCategoryGrid(items, type = "category") {
     return (
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -883,215 +954,314 @@ export default function LibraryPage() {
     );
   }
 
+  // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
-    const isSaved = savedCareers.includes(title);
     const instituteGroups = groupInstitutesByTopStatus(detail?.institutes);
+    const careerpaths = detail?.raw?.careerpaths || [];
+    const entranceexams = detail?.raw?.entranceexams || [];
+    const jobs = toList(detail?.jobs || detail?.jobScope);
+    const salaryRanges = detail?.salaryRanges || [];
+    const description = getDetailDescription(detail);
+    const stateLabel = instituteGroups.referenceState || "State";
+
+    const sidebarSections = [
+      { id: `desc-${index}`, label: "Description" },
+      { id: `path-${index}`, label: "Path" },
+      { id: `exams-${index}`, label: "Entrance Exams" },
+      { id: `jobs-${index}`, label: "Job Scopes" },
+      { id: `salary-${index}`, label: "Salary Range" },
+      { id: `top-in-${index}`, label: `Top Institutes In ${stateLabel}` },
+      { id: `top-out-${index}`, label: `Top Institutes Outside ${stateLabel}` },
+    ];
+
+    function scrollTo(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
     return (
-      <div key={`detail-${detail?.id ?? index}`} className="mb-4">
-        <div className="mb-3 flex items-start gap-3">
-          <div className="flex h-[56px] w-[56px] items-center justify-center rounded-[18px] bg-[#ffecef] text-[#9a2119]">
-            <RocketOutlined />
-          </div>
-          <div className="flex-1">
-            <Text className="block text-[20px] font-black text-ink">{title}</Text>
-            {getDetailDescription(detail) ? (
-              <Text className="mt-1 block text-xs leading-5 text-muted">
-                {getDetailDescription(detail)}
-              </Text>
-            ) : null}
+      <div key={`detail-${detail?.id ?? index}`} className="flex gap-6 items-start">
+
+        {/* ── Sticky Sidebar ── */}
+        <div className="hidden lg:block sticky top-4 w-60 shrink-0">
+          <div className="rounded-2xl border border-[#f0e4e2] bg-white overflow-hidden shadow-sm">
+            {sidebarSections.map((sec, i) => (
+              <button
+                key={sec.id}
+                type="button"
+                onClick={() => scrollTo(sec.id)}
+                className={`w-full text-left px-5 py-3.5 text-sm font-medium text-[#1a0a09] transition-colors hover:bg-[#fdf0ee] hover:text-[#9a2119]
+                  ${i < sidebarSections.length - 1 ? "border-b border-[#f7eeec]" : ""}`}
+              >
+                {sec.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {detailUnlocked ? (
-          <div
-            className="mb-3 rounded-[12px] px-3 py-3"
-            style={{ backgroundColor: `${palette.green}14` }}
-          >
-            <Text
-              className="text-[12px] font-semibold"
-              style={{ color: palette.green }}
-            >
-              <UnlockOutlined className="mr-1" /> You have access to view this
-              career detail for free.
-            </Text>
-          </div>
-        ) : null}
+        {/* ── Main Content ── */}
+        <div className="flex-1 min-w-0 space-y-10">
 
-        <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <BankOutlined style={{ color: palette.primary }} />
-            <Text className="text-[14px] font-bold text-ink">Job Scope</Text>
-          </div>
-          {toList(detail?.jobs || detail?.jobScope).length > 0 ? (
-            toList(detail?.jobs || detail?.jobScope).map((scope) => (
-              <div key={scope} className="mb-2 flex items-start">
-                <span className="mr-2 mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#cb9c48]" />
-                <Text className="flex-1 text-[13px] leading-5 text-muted">
-                  {scope}
-                </Text>
+          {/* Description */}
+          {description ? (
+            <section id={`desc-${index}`} className="scroll-mt-4">
+              <h2 className="text-xl font-bold text-[#9a2119] mb-3">Description</h2>
+              <p className="text-sm text-gray-700 leading-relaxed text-justify">{description}</p>
+            </section>
+          ) : null}
+
+          {/* Career Path Table */}
+          <section id={`path-${index}`} className="scroll-mt-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">🗺️</span>
+              <h2 className="text-xl font-bold text-[#1a0a09]">
+                How to Build a Career in{" "}
+                <span className="text-[#9a2119]">{title} ?</span>
+              </h2>
+            </div>
+            {careerpaths.length > 0 ? (
+              <div className="overflow-x-auto rounded-xl border border-[#f0e4e2]">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-[#fdf7f6]">
+                      {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map(
+                        (col) => (
+                          <th
+                            key={col}
+                            className="px-4 py-3 text-left font-bold text-[#1a0a09] border-b border-[#f0e4e2] whitespace-nowrap"
+                          >
+                            {col}
+                          </th>
+                        )
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {careerpaths.map((cp, cpIdx) => (
+                      <tr
+                        key={cp?.id ?? cpIdx}
+                        className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}
+                      >
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600 whitespace-nowrap">
+                          {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
+                          {detail?.raw?.stream?.name || "—"}
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
+                          {cp?.graduation || "—"}
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
+                          {cp?.aftergraduation || "—"}
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
+                          {cp?.afterpostgraduation || "—"}
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
+                          {cp?.anyother || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))
-          ) : (
-            <Text className="text-[13px] text-muted">Job scope not available.</Text>
-          )}
-        </div>
-
-        <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <DollarOutlined style={{ color: palette.primary }} />
-            <Text className="text-[14px] font-bold text-ink">Salary Range</Text>
-          </div>
-          {detail?.salaryRanges?.length > 0 ? (
-            detail.salaryRanges.map((salary, salaryIndex) => (
-              <div key={salary?.id ?? salaryIndex} className="mb-2">
-                <Text className="text-[15px] font-bold text-brand">
-                  {formatSalaryRange(salary)}
-                </Text>
+            ) : detail?.path?.length > 0 ? (
+              <div className="overflow-x-auto rounded-xl border border-[#f0e4e2]">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-[#fdf7f6]">
+                      {["Step", "Description"].map((col) => (
+                        <th key={col} className="px-4 py-3 text-left font-bold text-[#1a0a09] border-b border-[#f0e4e2]">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.path.map((step, si) => (
+                      <tr key={si} className={si % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] font-semibold text-[#9a2119] whitespace-nowrap">
+                          Step {si + 1}
+                        </td>
+                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">{step}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))
-          ) : detail?.salary ? (
-            <Text className="text-[15px] font-bold text-brand">{detail.salary}</Text>
-          ) : (
-            <Text className="text-[13px] text-muted">
-              Salary details not available.
-            </Text>
-          )}
-        </div>
+            ) : (
+              <p className="text-sm text-gray-400">Career path details not available.</p>
+            )}
+          </section>
 
-        <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
-          <SectionHeader icon={<TeamOutlined />} title="Career Path" />
-          <div className="p-1 pt-3">
-            {detail?.path?.length > 0 ? (
-              detail.path.map((step, stepIndex) => (
-                <div key={`${step}-${stepIndex}`} className="flex items-start gap-3">
-                  <div className="flex flex-col items-center shrink-0">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#f0e4e2] bg-[#fdf0ee] text-[10px] font-bold text-[#9a2119]">
-                      {stepIndex + 1}
-                    </span>
-                    {stepIndex < detail.path.length - 1 ? (
-                      <span className="h-6 w-px bg-[#f0e4e2]" />
-                    ) : null}
-                  </div>
-                  <Text
-                    className={`m-0 pb-3 text-sm ${
-                      stepIndex === detail.path.length - 1
-                        ? "font-bold text-[#9a2119]"
-                        : "text-muted"
-                    }`}
+          {/* Entrance Exams */}
+          <section id={`exams-${index}`} className="scroll-mt-4">
+            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">Entrance Exams</h2>
+            {entranceexams.length > 0 ? (
+              <div className="space-y-3">
+                {entranceexams.map((exam, ei) => (
+                  <div
+                    key={exam?.id ?? ei}
+                    className="flex items-stretch gap-4 rounded-xl border border-[#f0e4e2] bg-white p-4 hover:shadow-sm transition-shadow"
                   >
-                    {step}
-                  </Text>
-                </div>
-              ))
+                    {/* Icon */}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-white text-base mt-0.5">
+                      <SolutionOutlined />
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 mb-0.5">Exam Name:</p>
+                      <p className="text-sm font-semibold text-[#1a0a09] leading-snug">
+                        {exam?.examname || "—"}
+                      </p>
+                      {exam?.about && exam.about !== "Nothing" ? (
+                        <p className="mt-1 text-xs text-gray-500 line-clamp-2">{exam.about}</p>
+                      ) : null}
+                    </div>
+                    {/* Dates */}
+                    <div className="shrink-0 text-right space-y-2">
+                      <div>
+                        <p className="text-xs text-gray-400">Form Issue Date:</p>
+                        <p className="text-xs font-semibold text-[#1a0a09]">
+                          {exam?.issuedate
+                            ? new Date(exam.issuedate)
+                                .toLocaleDateString("en-IN", { day: "2-digit", month: "long" })
+                                .toUpperCase()
+                            : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Last Date:</p>
+                        <p className="text-xs font-semibold text-[#1a0a09]">
+                          {exam?.lastdate
+                            ? new Date(exam.lastdate)
+                                .toLocaleDateString("en-IN", { day: "2-digit", month: "long" })
+                                .toUpperCase()
+                            : "—"}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Arrow */}
+                    <div className="flex items-center shrink-0 pl-2">
+                      {exam?.url ? (
+                        <a
+                          href={exam.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] hover:bg-[#fdf0ee] transition-colors font-bold"
+                        >
+                          →
+                        </a>
+                      ) : (
+                        <span className="flex h-8 w-8 items-center justify-center text-gray-300 font-bold">→</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : toList(detail?.exams).length > 0 ? (
+              <div className="space-y-3">
+                {toList(detail.exams).map((exam, ei) => (
+                  <div key={ei} className="flex items-center gap-3 rounded-xl border border-[#f0e4e2] bg-white p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-white text-sm">
+                      <SolutionOutlined />
+                    </div>
+                    <p className="text-sm text-[#1a0a09] font-medium">{exam}</p>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <Text className="text-[13px] text-muted">
-                Career path details not available.
-              </Text>
+              <p className="text-sm text-gray-400">Entrance exam details not available.</p>
             )}
-          </div>
-        </div>
+          </section>
 
-        <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
-          <SectionHeader icon={<SolutionOutlined />} title="Entrance Exams" />
-          <div className="px-1 py-2">
-            {toList(detail?.exams).length > 0 ? (
-              toList(detail?.exams).map((exam, examIndex) => (
-                <div
-                  key={`${exam}-${examIndex}`}
-                  className={`flex items-center gap-2.5 py-2.5 ${
-                    examIndex < toList(detail?.exams).length - 1
-                      ? "border-b border-[#fdf0ee]"
-                      : ""
-                  }`}
-                >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#9a2119]" />
-                  <Text className="text-sm text-muted">{exam}</Text>
-                </div>
-              ))
+          {/* Job Scopes */}
+          <section id={`jobs-${index}`} className="scroll-mt-4">
+            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">Job Scopes</h2>
+            {jobs.length > 0 ? (
+              <ul className="space-y-2">
+                {jobs.map((scope, ji) => (
+                  <li key={ji} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#cb9c48]" />
+                    {scope}
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <Text className="text-[13px] text-muted">
-                Entrance exam details not available.
-              </Text>
+              <p className="text-sm text-gray-400">Job scope not available.</p>
             )}
-          </div>
-        </div>
+          </section>
 
-        <div className="mb-4 rounded-[20px] border border-[#f0e4e2] bg-white p-4">
-          <SectionHeader icon={<TrophyOutlined />} title="Top Institutes" />
-          <div className="space-y-4 p-1 pt-3">
+          {/* Salary Range */}
+          <section id={`salary-${index}`} className="scroll-mt-4">
+            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">Salary Range</h2>
+            {salaryRanges.length > 0 ? (
+              <ul className="space-y-2">
+                {salaryRanges.map((salary, si) => (
+                  <li key={salary?.id ?? si} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#9a2119]" />
+                    <span className="font-semibold">{formatSalaryRange(salary)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : detail?.salary ? (
+              <p className="text-sm font-semibold text-[#9a2119]">{detail.salary}</p>
+            ) : (
+              <p className="text-sm text-gray-400">Salary details not available.</p>
+            )}
+          </section>
+
+          {/* Top Institutes In State */}
+          <section id={`top-in-${index}`} className="scroll-mt-4">
+            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">
+              Top Institutes in {stateLabel}
+            </h2>
             {instituteGroups.topInstitutes.length > 0 ? (
-              <div>
-                <Text className="mb-2 block text-[12px] font-black uppercase tracking-widest text-[#9a2119]">
-                  {instituteGroups.referenceState
-                    ? `Top Institutes of ${instituteGroups.referenceState}`
-                    : "Top Institutes"}
-                </Text>
-                <div className="space-y-2">
-                  {instituteGroups.topInstitutes.map((inst) => (
-                    <div
-                      key={inst.id}
-                      className="rounded-[14px] border border-[#f0e4e2] bg-[#fdf9f9] px-3 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <Text className="block text-[14px] font-bold text-[#1a0a09]">
-                            {inst.name}
-                          </Text>
-                          <Text className="mt-1 block text-xs text-muted">
-                            {inst.location}
-                          </Text>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-[#fce9e5] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">
-                          Top
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {instituteGroups.topInstitutes.map((inst) => (
+                  <InstituteCard key={inst.id} inst={inst} badge="Top" />
+                ))}
               </div>
-            ) : null}
+            ) : (
+              <p className="text-sm text-gray-400">No top institutes found for this state.</p>
+            )}
+          </section>
 
+          {/* Top Institutes Outside State */}
+          <section id={`top-out-${index}`} className="scroll-mt-4">
+            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">
+              Top Institutes outside {stateLabel}
+            </h2>
             {instituteGroups.outsideInstitutes.length > 0 ? (
-              <div>
-                <Text className="mb-2 block text-[12px] font-black uppercase tracking-widest text-[#9a2119]">
-                  {instituteGroups.referenceState
-                    ? `Top Institutes Outside ${instituteGroups.referenceState}`
-                    : "Top Institutes Outside State"}
-                </Text>
-                <div className="space-y-2">
-                  {instituteGroups.outsideInstitutes.map((inst) => (
-                    <div
-                      key={inst.id}
-                      className="rounded-[14px] border border-[#f0e4e2] bg-white px-3 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <Text className="block text-[14px] font-bold text-[#1a0a09]">
-                            {inst.name}
-                          </Text>
-                          <Text className="mt-1 block text-xs text-muted">
-                            {inst.location}
-                          </Text>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-[#f8ede8] px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">
-                          Outside
-                        </span>
-                      </div>
+              <>
+                {/* Filters */}
+                <div className="mb-5 flex flex-wrap gap-4 items-end">
+                  <span className="text-sm text-gray-500 font-medium self-end pb-1">Filters :</span>
+                  {[
+                    { label: "Country", placeholder: "Choose Country" },
+                    { label: "State", placeholder: "Choose State" },
+                    { label: "Institution Type", placeholder: "Choose Institution Type" },
+                  ].map((f) => (
+                    <div key={f.label} className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500">{f.label} :</span>
+                      <select className="rounded-xl border border-[#e5d5d3] bg-white px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-[#9a2119] min-w-[160px]">
+                        <option value="">{f.placeholder}</option>
+                      </select>
                     </div>
                   ))}
                 </div>
-              </div>
-            ) : null}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {instituteGroups.outsideInstitutes.map((inst) => (
+                    <InstituteCard key={inst.id} inst={inst} badge="Outside" />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">No institutes found outside this state.</p>
+            )}
+          </section>
 
-            {!instituteGroups.topInstitutes.length &&
-            !instituteGroups.outsideInstitutes.length ? (
-              <Text className="text-[13px] text-muted">
-                Top institutes not available.
-              </Text>
-            ) : null}
-          </div>
         </div>
       </div>
     );
@@ -1174,7 +1344,6 @@ export default function LibraryPage() {
       ) : currentLevel === "categories" ? (
         <div className="space-y-3">
           {categories.length > 0 ? (
-            // type="category" → API call will be /next/category/<id>
             renderCategoryGrid(categories, "category")
           ) : !loading ? (
             <Empty description="No categories available for this stream." />
@@ -1182,7 +1351,6 @@ export default function LibraryPage() {
         </div>
       ) : currentLevel === "secondcategory" ? (
         <div className="space-y-3">
-          {/* type="second" → toApiType maps to "secondcategory" → API call /next/secondcategory/<id> */}
           {renderCategoryGrid(secondCategories, "second")}
           {!loading && secondCategories.length === 0 ? (
             <Empty description="No next steps available." />
@@ -1190,14 +1358,13 @@ export default function LibraryPage() {
         </div>
       ) : currentLevel === "subcategory" ? (
         <div className="space-y-3">
-          {/* type="sub" → toApiType maps to "subcategory" → API call /next/subcategory/<id> */}
           {renderCategoryGrid(subCategories, "sub")}
           {!loading && subCategories.length === 0 ? (
             <Empty description="No specializations available." />
           ) : null}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {!detailUnlocked ? (
             <PremiumGate
               title="Unlock Career Library"

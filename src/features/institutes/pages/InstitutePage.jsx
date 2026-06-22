@@ -207,9 +207,9 @@ export default function InstitutePage() {
             >
               <div className={`h-24 bg-gradient-to-r ${accent} p-5`}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white/90">
-                    Institute
-                  </div>
+                 <div className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white/90">
+  {item.type}
+</div>
                   <div className="rounded-full bg-white px-3 py-1 text-[12px] font-bold text-[#9a2119] shadow-sm">
                     {item.rank}
                   </div>

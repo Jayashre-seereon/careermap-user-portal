@@ -35,7 +35,7 @@ function mapInstituteItem(item, index) {
 return {
   id: String(item?.id ?? `institute-${index}`),
   name: item?.name || "Unnamed Institute",
-  location: buildLocation(city, state),
+ location: item?.address,
   courses,
   type: instituteType,
   state,
