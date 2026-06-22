@@ -65,7 +65,10 @@ export default function DashboardPage() {
   const dashboardMentors = useMemo(() => buildDashboardMentors(dashboardData?.mentors || []), [dashboardData?.mentors]);
   const dashboardScholarships = useMemo(() => buildDashboardScholarships(dashboardData?.scholarships || []), [dashboardData?.scholarships]);
   const dashboardInstitutes = useMemo(() => buildDashboardInstitutes(dashboardData?.institutions || []), [dashboardData?.institutions]);
-
+  const dashboardPlans = useMemo(
+  () => dashboardData?.plans || [],
+  [dashboardData?.plans]
+);
   if (showPersonality && !complete) {
     return (
       <PersonalityQuizQuestion
@@ -112,7 +115,7 @@ export default function DashboardPage() {
             See all
           </button>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {dashboardMentors.map((mentor) => (
             <button
               key={mentor.id || mentor.name}
@@ -137,7 +140,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[15px] font-black text-ink">{mentor.name}</div>
               <div className="mt-1 text-[12px] font-bold text-brand">{mentor.specialty}</div>
-              <div className="mt-2 text-[12px] text-muted"> <TrophyFilled style={{ color: "#d4a017" }} /> {mentor.rating} rank | {mentor.experience}</div>
+              <div className="mt-2 text-[12px] text-muted"> <TrophyFilled style={{ color: "#d4a017" }} /> {mentor.rating} Air/State rank </div>
             </button>
           ))}
         </div>
@@ -181,7 +184,7 @@ export default function DashboardPage() {
             See all
           </button>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {dashboardInstitutes.map((item) => (
             <button
               key={item.id || item.name}
@@ -204,48 +207,92 @@ export default function DashboardPage() {
               <div className="min-h-[52px] text-[15px] font-black text-ink">{item.name}</div>
               <div className="mt-1 text-[12px] font-bold text-brand">{item.location}</div>
               <div className="mt-2 text-[12px] text-muted">{item.type}</div>
-              {item.tentativeDate ? <div className="mt-1 text-[11px] font-semibold text-muted">Tentative: {item.tentativeDate}</div> : null}
+             
             </button>
           ))}
         </div>
       </section>
 
-     <section className="rounded-[24px] border border-[#eaded9] bg-white p-5 shadow-sm">
-  <div className="mb-3 text-[14px] font-black uppercase tracking-[0.5px] text-ink">
-    Quick Actions
+  <section>
+  {/* Header */}
+  <div className="mb-6 flex items-center justify-between">
+    <h2 className="display-font text-2xl font-extrabold tracking-tight text-ink">
+      Explore Plans
+    </h2>
+
+    <button
+      type="button"
+      className="text-sm font-semibold text-brand hover:underline"
+      onClick={() => navigate("/app/subscription")}
+    >
+      See all →
+    </button>
   </div>
 
-  <div className="space-y-2">
-    {[
-      {
-        label: "View Subscription Plans",
-        path: "/app/subscription",
-        icon: <CreditCardOutlined style={{ color: "#ba1414", fontSize: 18 }} />,
-      },
-      {
-        label: "Your Test History",
-        path: "/app/profile",
-        icon: <HistoryOutlined style={{ color: "#52c41a", fontSize: 18 }} />,
-      },
-    ].map((item) => (
-      <button
-        key={item.label}
-        type="button"
-        className="flex w-full items-center justify-between rounded-[16px] px-1 py-2 text-left"
-        onClick={() => navigate(item.path)}
-      >
-        {/* LEFT SIDE */}
-        <div className="flex items-center gap-2">
-          {item.icon}
-          <div className="text-[14px] font-bold text-ink">
-            {item.label}
-          </div>
-        </div>
+  {/* Cards */}
+  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    {dashboardPlans.map((plan) => {
+      // Determine ribbon color based on type
+      const isBestSeller = plan.plan_type?.toUpperCase() === "BEST SELLER";
+      const isRecommended = plan.plan_type?.toUpperCase() === "RECOMMENDED";
+      
+      const ribbonBgColor = isBestSeller 
+        ? "bg-[#d4af37] text-white"   // Golden ribbon
+        : isRecommended 
+          ? "bg-[#991b1b] text-white " // Crimson/Red ribbon
+          : "bg-brand text-white";
 
-        {/* RIGHT ARROW */}
-        <RightOutlined style={{ color: palette.muted }} />
-      </button>
-    ))}
+      return (
+        <button
+          key={plan.id}
+          type="button"
+          onClick={() => navigate("/app/subscription")}
+          className="group relative rounded-2xl border border-[#eee] bg-white p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden"
+        >
+          {/* Top Glow Effect */}
+          <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-brand opacity-80"></div>
+
+          {/* Corner Ribbon Tag */}
+          {plan.plan_type && (
+            <div className="absolute top-0 right-0 h-16 w-16 overflow-hidden pointer-events-none">
+              <div className={`absolute transform rotate-45 text-center font-bold text-[6px] tracking-wider py-1 uppercase left-[-18px] top-[18px] w-[110px] shadow-sm ${ribbonBgColor}`}>
+                {plan.plan_type}
+              </div>
+            </div>
+          )}
+
+          {/* Name */}
+          <h3 className="text-[17px] font-bold text-ink leading-snug">
+            {plan.name}
+          </h3>
+
+          {/* Price */}
+          <div className="mt-3 flex items-end gap-1">
+            <span className="text-2xl font-extrabold text-brand">
+              ₹{plan.price}
+            </span>
+            <span className="text-xs text-muted mb-1">/plan</span>
+          </div>
+
+          {/* Divider */}
+          <div className="my-3 h-[1px] w-full bg-gray-100"></div>
+
+          {/* Validity */}
+          <p className="text-[12px] text-muted">
+            Valid for{" "}
+            <span className="font-semibold text-ink">
+              {plan.validity} days
+            </span>
+          </p>
+
+          {/* CTA */}
+          <div className="mt-4 flex items-center justify-between text-sm font-semibold text-brand">
+            <span className="group-hover:underline">View Details</span>
+            <RightOutlined className="transition-transform group-hover:translate-x-1" />
+          </div>
+        </button>
+      );
+    })}
   </div>
 </section>
     </div>

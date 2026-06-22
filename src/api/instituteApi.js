@@ -32,20 +32,23 @@ function mapInstituteItem(item, index) {
   const instituteType = item?.institute_type || "Institute";
   const courses = Array.isArray(item?.course_offered) ? item.course_offered.filter(Boolean) : [];
 
-  return {
-    id: String(item?.id ?? `institute-${index}`),
-    name: item?.name || "Unnamed Institute",
-    location: buildLocation(city, state),
-    courses,
-    type: instituteType,
-    state,
-    city,
-    about: stripHtml(item?.about) || "About information is not available right now.",
-    website: item?.url || "#",
-    rank: item?.rank || "Top",
-    logo: item?.logo || null,
-    tentativeDate: formatDateDDMMYYYY(item?.tentative_date || item?.tentativeDate || ""),
-  };
+return {
+  id: String(item?.id ?? `institute-${index}`),
+  name: item?.name || "Unnamed Institute",
+ location: item?.address,
+  courses,
+  type: instituteType,
+  state,
+  city,
+  about: stripHtml(item?.about) || "About information is not available right now.",
+  website: item?.url || "#",
+  rank: item?.rank || "Top",
+  logo: item?.logo || null,
+  tentativeDate: formatDateDDMMYYYY(item?.tentative_date || item?.tentativeDate || ""),
+  category: item?.category || null,
+  secondcategory: item?.secondcategory || null,
+  subcategory: item?.subcategory || null,
+};
 }
 
 export async function getInstitutes() {
