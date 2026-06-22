@@ -1,5 +1,5 @@
-import { ArrowRightOutlined, UserOutlined,TeamOutlined,ReadOutlined, BackwardOutlined, ArrowLeftOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Space, Typography } from "antd";
+import { ArrowRightOutlined, UserOutlined,TeamOutlined,ReadOutlined, BackwardOutlined, ArrowLeftOutlined,SmileOutlined } from "@ant-design/icons";
+import { Button, Form, Input, Space, Typography ,Select} from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Bee from "../../../asset/bee.png";
@@ -16,6 +16,7 @@ export default function OnboardingPage() {
   const [form, setForm] = useState({
     userType: "",
     name: "",
+    gender: "", 
     childName: "",
     selectedClass: "",
     selectedStream: "",
@@ -40,7 +41,7 @@ export default function OnboardingPage() {
 
   function canContinue() {
     if (step === 0) return Boolean(form.userType);
-  if (step === 2) return Boolean(form.name.trim());
+  if (step === 2) return Boolean(form.name.trim()) && Boolean(form.gender);
 
 if (step === 3 && form.userType === "parent")
   return Boolean(form.childName.trim());
@@ -279,6 +280,23 @@ const getQuestion = () => {
                 style={{ borderRadius: "10px" }}
               />
             </Form.Item>
+             <Form.Item label="Gender">
+      <Select
+       className="cm-input-field"
+        prefix={<SmileOutlined style={{ color: "#9a2119" }} />}
+        value={form.gender}
+        onChange={(value) => update("gender", value)}
+        size="large"
+        style={{ borderRadius: "10px" }}
+        placeholder="Select gender"
+        style={{ borderRadius: "10px" }}
+        options={[
+          { label: "Male", value: "male" },
+          { label: "Female", value: "female" },
+          { label: "Other", value: "other" },
+        ]}
+      />
+    </Form.Item>
           </Form>
         ) : null}
 
@@ -407,7 +425,7 @@ const getQuestion = () => {
             onClick={next}
             disabled={!canContinue()}
           
-            style={{ borderRadius: "10px", fontWeight: "700", minWidth: "100px", background: "linear-gradient(135deg, #9a2119, #c0392b)", borderColor: "#9a2119" }}
+            style={{ borderRadius: "10px", fontWeight: "700", minWidth: "100px", background: "linear-gradient(135deg, #9a2119, #c0392b)", borderColor: "#9a2119" ,color:"#fff"}}
           >
            {
   step === 9

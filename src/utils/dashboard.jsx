@@ -172,7 +172,7 @@ export function buildDashboardInstitutes(items = []) {
   return items.map((item) => ({
     id: item.id,
     name: item.name || "",
-    location: item.state || "",
+    location: item.address || "",
     type: item.institute_type || "",
     logo: item.logo || null,
     tentativeDate: formatDateDDMMYYYY(item.tentative_date || item.tentativeDate || ""),

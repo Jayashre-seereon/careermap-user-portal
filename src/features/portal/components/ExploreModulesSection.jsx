@@ -70,7 +70,7 @@ export function ExploreModulesSection({ modules = [] }) {
                   onClick={() => handleModuleClick(card)}
                 >
                   <div
-                    className="dashboard-module-media relative h-28 overflow-hidden"
+                    className="dashboard-module-media relative  overflow-hidden"
                     style={!card.image ? { background: art.background } : {}}
                   >
                     {card.image ? (
@@ -99,7 +99,7 @@ export function ExploreModulesSection({ modules = [] }) {
                       </div>
                     </div>
                     <div
-                      className="mt-auto flex items-center justify-between gap-3 pt-4"
+                      className="mt-auto flex items-center justify-between gap-3 "
                       style={{ color: art.actionBg }}
                     >
                       <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">

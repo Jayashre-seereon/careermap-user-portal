@@ -152,32 +152,40 @@ function MentorCard({ mentor, isFree, onClick }) {
       <div className="mb-4 flex items-center gap-2">
         <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
           <TrophyOutlined style={{ color: "#d4a017" }} />
-          {mentor.rating}
+         Rank( Air/State) - {mentor.rating}
         </span>
-        <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-          {mentor.experience}
-        </span>
+        {/* <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
+        Experience - {mentor.experience}
+        </span> */}
         <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
           {mentor.price}
         </span>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {(mentor.tags || []).map((tag) => (
-          <span key={tag} className="rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]">
-            {tag}
-          </span>
-        ))}
-      </div>
+      
 
-      <div className="border-t border-[#f0e4e2] pt-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-[#8c6c67]">Tap to view mentor</span>
-          <span className="text-sm font-bold text-[#9a2119]">
-            Explore <ArrowRightOutlined />
-          </span>
-        </div>
-      </div>
+     <div className="border-t border-[#f0e4e2] pt-3">
+  <div className="flex items-center justify-between">
+    
+    {/* Scrollable Tags */}
+    <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide max-w-[70%]">
+      {(mentor.tags || []).map((tag) => (
+        <span
+          key={tag}
+          className="inline-block rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+
+    {/* Explore */}
+    <span className="text-sm font-bold text-[#9a2119] whitespace-nowrap">
+      Explore <ArrowRightOutlined />
+    </span>
+
+  </div>
+</div>
     </button>
   );
 }
@@ -211,6 +219,9 @@ const unlocked =
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [category, setCategory] = useState("");
+const [secondCategory, setSecondCategory] = useState("");
+const [subCategory, setSubCategory] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [paymentValues, setPaymentValues] = useState({
     upiId: "",
@@ -610,11 +621,11 @@ handler: async function (response) {
 
               <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
-                  <TrophyOutlined style={{ color: "#d4a017" }} /> {activeMentor.rating} rank
+                  <TrophyOutlined style={{ color: "#d4a017" }} />  Rank( Air/State) - {activeMentor.rating} 
                 </span>
-                <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
-                  {activeMentor.experience}
-                </span>
+                {/* <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
+                 Experience - {activeMentor.experience}
+                </span> */}
                 <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#9a2119]">
                   {activeMentor.price}
                 </span>

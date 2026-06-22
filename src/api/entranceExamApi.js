@@ -89,6 +89,10 @@ function mapEntranceExam(item, index) {
     examPattern: formatPattern(item?.exam_pattern),
     topColleges: formatTopColleges(item?.top_institution),
     website: item?.url || "#",
+    // Raw category objects, preserved for dropdown filtering on the page.
+    categoryObj: item?.category || null,
+    secondcategoryObj: item?.secondcategory || null,
+    subcategoryObj: item?.subcategory || null,
   };
 }
 
