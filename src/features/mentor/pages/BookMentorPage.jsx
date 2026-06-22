@@ -219,6 +219,9 @@ const unlocked =
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [category, setCategory] = useState("");
+const [secondCategory, setSecondCategory] = useState("");
+const [subCategory, setSubCategory] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [paymentValues, setPaymentValues] = useState({
     upiId: "",
