@@ -16,6 +16,7 @@ export default function OtpVerifyPage() {
   const signupForm = useAuthStore((state) => state.signupForm);
   const setTempToken = useAuthStore((state) => state.setTempToken);
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
+  const setPendingInstituteOnboarding = useAuthStore((state) => state.setPendingInstituteOnboarding);
   const clearAuthFlow = useAuthStore((state) => state.clearAuthFlow);
   const flowType = params.get("otpType") === "login" ? "login" : "signup";
   const next = params.get("next") || "/profile-setup";
@@ -39,6 +40,8 @@ export default function OtpVerifyPage() {
       const response = await verifyOtp(mobileNumber, otp, flowType);
 
       if (flowType === "login") {
+        const requiresInstituteOnboarding = Boolean(response?.user?.isInstituteStudent);
+
         setAuthSession({
           accessToken: response.accessToken || "",
           refreshToken: response.refreshToken || "",
@@ -50,8 +53,9 @@ export default function OtpVerifyPage() {
           saveUserProfile(profile);
         }
 
+        setPendingInstituteOnboarding(requiresInstituteOnboarding);
         clearAuthFlow();
-        navigate(next, { replace: true });
+        navigate(requiresInstituteOnboarding ? "/onboarding" : next, { replace: true });
         return;
       }
 
