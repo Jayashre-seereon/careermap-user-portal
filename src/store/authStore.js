@@ -29,6 +29,7 @@ export const useAuthStore = create(
     (set) => ({
       signupForm: initialSignupForm,
       onboardingData: initialOnboardingData,
+      pendingInstituteOnboarding: false,
       tempToken: "",
       accessToken: "",
       refreshToken: "",
@@ -45,6 +46,11 @@ export const useAuthStore = create(
       setOnboardingData: (data) =>
         set(() => ({
           onboardingData: data,
+        })),
+
+      setPendingInstituteOnboarding: (pendingInstituteOnboarding) =>
+        set(() => ({
+          pendingInstituteOnboarding,
         })),
 
       setTempToken: (tempToken) => set(() => ({ tempToken })),
@@ -77,6 +83,7 @@ export const useAuthStore = create(
         set(() => ({
           signupForm: initialSignupForm,
           onboardingData: initialOnboardingData,
+          pendingInstituteOnboarding: false,
           tempToken: "",
           accessToken: "",
           refreshToken: "",
@@ -88,6 +95,7 @@ export const useAuthStore = create(
       partialize: (state) => ({
         signupForm: state.signupForm,
         onboardingData: state.onboardingData,
+        pendingInstituteOnboarding: state.pendingInstituteOnboarding,
         tempToken: state.tempToken,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,

@@ -5,13 +5,16 @@ import { useNavigate } from "react-router-dom";
 import Bee from "../../../asset/bee.png";
 import { onboardingOptions } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
+import { useAuthStore } from "../../../store/authStore";
 import { AuthShell } from "../components/AuthShell";
 
 const { Title } = Typography;
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { saveOnboarding } = useAppState();
+  const { authenticated, saveOnboarding } = useAppState();
+  const pendingInstituteOnboarding = useAuthStore((state) => state.pendingInstituteOnboarding);
+  const setPendingInstituteOnboarding = useAuthStore((state) => state.setPendingInstituteOnboarding);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     userType: "",
@@ -80,6 +83,12 @@ if (step === 8 && form.userType === "student")
   }
 
   if (step === 9) {
+    if (pendingInstituteOnboarding || authenticated) {
+      setPendingInstituteOnboarding(false);
+      navigate("/app/dashboard", { replace: true });
+      return;
+    }
+
     navigate("/login");
     return;
   }
