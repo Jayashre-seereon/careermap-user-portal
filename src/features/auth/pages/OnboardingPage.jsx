@@ -1,7 +1,7 @@
 import { ArrowRightOutlined, UserOutlined,TeamOutlined,ReadOutlined, BackwardOutlined, ArrowLeftOutlined,SmileOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Space, Typography ,Select} from "antd";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import Bee from "../../../asset/bee.png";
 import { onboardingOptions } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
@@ -12,9 +12,11 @@ const { Title } = Typography;
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { authenticated, saveOnboarding } = useAppState();
   const pendingInstituteOnboarding = useAuthStore((state) => state.pendingInstituteOnboarding);
   const setPendingInstituteOnboarding = useAuthStore((state) => state.setPendingInstituteOnboarding);
+  const canEnterFromAuthEntry = searchParams.get("source") === "auth-entry";
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     userType: "",
@@ -40,6 +42,10 @@ export default function OnboardingPage() {
       ...current,
       [key]: current[key].includes(value) ? current[key].filter((item) => item !== value) : [...current[key], value],
     }));
+  }
+
+  if (!pendingInstituteOnboarding && !canEnterFromAuthEntry) {
+    return <Navigate to={authenticated ? "/app/dashboard" : "/auth-entry"} replace />;
   }
 
   function canContinue() {
