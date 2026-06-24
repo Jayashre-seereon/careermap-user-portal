@@ -145,7 +145,7 @@ function MentorCard({ mentor, isFree, onClick }) {
       <div className="mb-4 flex items-center gap-2">
         <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
           <TrophyOutlined style={{ color: "#d4a017" }} />
-          Rank (Air/State) - {mentor.rating}
+          {mentor.rating} Air/State
         </span>
         <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
           {mentor.price}
@@ -615,7 +615,7 @@ export default function BookMentorPage() {
               <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
                   <TrophyOutlined style={{ color: "#d4a017" }} />
-                  Rank (Air/State) - {activeMentor.rating}
+                {activeMentor.rating} Air/State
                 </span>
                 <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#9a2119]">
                   {activeMentor.price}
@@ -760,18 +760,7 @@ export default function BookMentorPage() {
         <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
-      <div className="rounded-[28px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
-        <div className="inline-flex rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
-          Mentor Booking
-        </div>
-        <h2 className="mt-4 text-[24px] font-black text-[#1a0a09]">
-          Choose a mentor and open the profile view
-        </h2>
-        <p className="mt-2 text-[14px] leading-7 text-[#6f6663]">
-          Tap a mentor to see ratings, about information, available dates, and time slots exactly
-          in the booking flow.
-        </p>
-      </div>
+      
 
       {/* ── Filter dropdowns ── */}
       <div className="flex flex-wrap items-center gap-2">
