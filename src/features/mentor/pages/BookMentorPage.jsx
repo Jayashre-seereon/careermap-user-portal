@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, TrophyOutlined } from "@ant-design/icons";
-import { Modal } from "antd";
+import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled} from "@ant-design/icons";
+import { Modal,Rate } from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
   createMentorOrder,
@@ -150,6 +150,10 @@ function MentorCard({ mentor, isFree, onClick }) {
         <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
           {mentor.price}
         </span>
+                  <StarFilled style={{ color: "#d4a017" }} />
+  <span className="text-sm font-semibold text-[#1a0a09]">
+    {Number(mentor.rating).toFixed(1)}
+  </span>
       </div>
 
       <div className="border-t border-[#f0e4e2] pt-3">
@@ -617,9 +621,14 @@ export default function BookMentorPage() {
                   <TrophyOutlined style={{ color: "#d4a017" }} />
                 {activeMentor.rating} Air/State
                 </span>
+                 <StarFilled style={{ color: "#d4a017" }} />
+  <span className="text-sm font-semibold text-[#1a0a09]">
+   {Number(activeMentor.rating).toFixed(1)}
+  </span>
                 <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#9a2119]">
                   {activeMentor.price}
                 </span>
+                
               </div>
               <div className="flex flex-wrap justify-center gap-2 pt-1">
                 {(activeMentor.tags || []).map((tag) => (

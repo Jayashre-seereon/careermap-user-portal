@@ -1,7 +1,8 @@
-import { Avatar } from "antd";
-import { BankOutlined, BellOutlined, RightOutlined, TrophyFilled,CreditCardOutlined,HistoryOutlined,TrophyOutlined } from "@ant-design/icons";
+import { Avatar, Button, Modal, Rate, Input, message } from "antd";
+import { BankOutlined, BellOutlined, RightOutlined, TrophyFilled, CreditCardOutlined, HistoryOutlined, TrophyOutlined, CommentOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../../api/dashboardApi";
+import { createMentorReview } from "../../../api/mentorApi";
 import { personalityQuestions, personalityTypes, palette } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
 import {
@@ -15,7 +16,7 @@ import { ExploreModulesSection } from "../../portal/components/ExploreModulesSec
 import { PersonalityQuizQuestion, PersonalityQuizResults } from "../../portal/components/PersonalityQuizSections";
 
 export default function DashboardPage() {
-  const { isUnlocked, onboarding, unreadNotificationsCount, userProfile } = useAppState();
+  const { isUnlocked, onboarding, unreadNotificationsCount, userProfile, dashboardData: globalDashboardData } = useAppState();
   const { navigate } = usePortalNavigation();
   const [showPersonality, setShowPersonality] = useState(false);
   const [personalityStep, setPersonalityStep] = useState(0);
@@ -23,6 +24,21 @@ export default function DashboardPage() {
   const [complete, setComplete] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [error, setError] = useState("");
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [reviewedMentorBookings, setReviewedMentorBookings] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = window.localStorage.getItem("careermap-reviewed-mentor-bookings");
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const personalityResult = useMemo(() => {
     const counts = [0, 0, 0, 0, 0];
@@ -55,6 +71,15 @@ export default function DashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(
+        "careermap-reviewed-mentor-bookings",
+        JSON.stringify(reviewedMentorBookings)
+      );
+    }
+  }, [reviewedMentorBookings]);
+
   const dashboardUserName = useMemo(() => {
     const firstName = dashboardData?.user?.firstName?.trim();
     const lastName = dashboardData?.user?.lastName?.trim();
@@ -69,6 +94,60 @@ export default function DashboardPage() {
   () => dashboardData?.plans || [],
   [dashboardData?.plans]
 );
+  const pendingMentorReviews = useMemo(
+    () => (dashboardData?.pendingMentorReviews || globalDashboardData?.pendingMentorReviews || []).filter(
+      (item) => item?.canReview && !reviewedMentorBookings.includes(String(item.bookingId))
+    ),
+    [dashboardData?.pendingMentorReviews, globalDashboardData?.pendingMentorReviews, reviewedMentorBookings]
+  );
+
+  const activeReview = pendingMentorReviews[0] || null;
+
+  useEffect(() => {
+    if (activeReview) {
+      setReviewOpen(true);
+      setReviewError("");
+      setReviewRating(5);
+      setReviewText("");
+    } else {
+      setReviewOpen(false);
+    }
+  }, [activeReview?.bookingId]);
+
+  async function submitReview() {
+    if (!activeReview) return;
+
+    if (!reviewRating) {
+      setReviewError("Please select a star rating.");
+      return;
+    }
+
+    if (!reviewText.trim()) {
+      setReviewError("Please write a short review.");
+      return;
+    }
+
+    try {
+      setReviewSubmitting(true);
+      setReviewError("");
+      await createMentorReview({
+        bookingId: activeReview.bookingId,
+        rating: reviewRating,
+        review: reviewText.trim(),
+      });
+      setReviewedMentorBookings((current) => [...current, String(activeReview.bookingId)]);
+      message.success("Mentor review submitted");
+      setReviewOpen(false);
+    } catch (reviewSubmitError) {
+      setReviewError(
+        reviewSubmitError?.response?.data?.message ||
+          reviewSubmitError?.message ||
+          "Failed to submit review."
+      );
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
   if (showPersonality && !complete) {
     return (
       <PersonalityQuizQuestion
@@ -294,7 +373,66 @@ export default function DashboardPage() {
       );
     })}
   </div>
-</section>
+      </section>
+
+      <Modal
+  open={reviewOpen}
+  centered
+  footer={null}
+  closable={false}
+  maskClosable={false}
+  keyboard={false}
+  width={360}
+  className="[&_.ant-modal-content]:!rounded-2xl [&_.ant-modal-content]:!p-5"
+>
+  <div className="space-y-4">
+
+    {/* Heading */}
+    <div className="text-center">
+      <div className="text-lg font-semibold text-[#1a0a09]">
+        How was your session?
+      </div>
+      <div className="text-xs text-[#8f7d79] mt-1">
+        with {activeReview?.mentorName || "your mentor"}
+      </div>
+    </div>
+
+    {/* Rating */}
+    <div className="flex justify-center">
+      <Rate value={reviewRating} onChange={setReviewRating} />
+    </div>
+
+    {/* Review Input */}
+    <Input.TextArea
+      value={reviewText}
+      onChange={(e) => setReviewText(e.target.value)}
+      rows={3}
+      maxLength={200}
+      placeholder="Write your review..."
+      className="!rounded-lg !text-sm"
+    />
+
+    {/* Error */}
+    {reviewError && (
+      <div className="text-xs text-red-600 text-center font-medium">
+        {reviewError}
+      </div>
+    )}
+
+    {/* Submit Button */}
+    <Button
+      block
+      type="primary"
+      loading={reviewSubmitting}
+      onClick={submitReview}
+      disabled={!reviewRating} // 👈 prevents empty rating
+      className="!h-10 !rounded-lg !bg-[#9a2119] !border-none !font-semibold"
+    >
+      Submit Review
+    </Button>
+
+  </div>
+</Modal>
     </div>
   );
 }
