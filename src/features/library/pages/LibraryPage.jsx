@@ -7,9 +7,12 @@ import {
   CreditCardOutlined,
   DollarOutlined,
   ExperimentOutlined,
+  EnvironmentOutlined,
   FolderOpenOutlined,
   HeartFilled,
   HeartOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
   RightOutlined,
   ReadOutlined,
   RocketOutlined,
@@ -85,13 +88,14 @@ function getDetailTitle(detail) {
 
 function getDetailDescription(detail) {
   return stripHtml(
-    detail?.subcategory?.description ||
+      detail?.description ||
+      detail?.overview ||
+      detail?.subcategory?.description ||
       detail?.secondcategory?.description ||
       detail?.category?.description ||
       detail?.subcategory?.specialization ||
       detail?.secondcategory?.specialization ||
       detail?.category?.specialization ||
-      detail?.description ||
       ""
   );
 }
@@ -230,7 +234,7 @@ function normalizeInstituteItems(value) {
       };
     }
     const city = item?.city || "";
-    const state = item?.state || "";
+    const state = item?.state || item?.stateName || item?.province || item?.region || "";
     const country = item?.countruy || item?.country || "";
     const location =
       [city, state, country].filter(Boolean).join(", ") ||
@@ -249,15 +253,20 @@ function normalizeInstituteItems(value) {
   });
 }
 
-function groupInstitutesByTopStatus(value) {
+function normalizeStateName(value = "") {
+  return String(value).trim().toLowerCase();
+}
+
+function groupInstitutesByTopStatus(value, targetState = "Odisha") {
   const institutes = normalizeInstituteItems(value);
-  const topInstitutes = institutes.filter((item) => item.isTop);
-  const outsideInstitutes = institutes.filter((item) => !item.isTop);
-  const referenceState =
-    topInstitutes.find((item) => item.state)?.state ||
-    outsideInstitutes.find((item) => item.state)?.state ||
-    "";
-  return { institutes, topInstitutes, outsideInstitutes, referenceState };
+  const normalizedTargetState = normalizeStateName(targetState);
+  const topInstitutes = institutes.filter(
+    (item) => normalizeStateName(item.state) === normalizedTargetState
+  );
+  const outsideInstitutes = institutes.filter(
+    (item) => normalizeStateName(item.state) !== normalizedTargetState
+  );
+  return { institutes, topInstitutes, outsideInstitutes, targetState };
 }
 
 function formatSalaryAmount(value) {
@@ -274,6 +283,36 @@ function formatSalaryRange(salary) {
   }
   if (salary?.label || salary?.value) return salary.label || salary.value;
   return "Salary not available";
+}
+
+function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
+  return (
+    <section id={id} className={`scroll-mt-4 rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm ${className}`}>
+      <div className="flex items-start gap-3 border-b border-[#f7eeec] px-5 py-4">
+        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h2 className="m-0 text-[18px] font-black text-[#1a0a09]">{title}</h2>
+          {subtitle ? (
+            <p className="m-0 mt-1 text-[12px] leading-5 text-[#8f7d79]">{subtitle}</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="px-5 py-5">{children}</div>
+    </section>
+  );
+}
+
+function DetailPill({ icon, label, tone = "#9a2119", className = "" }) {
+  return (
+    <div className={`inline-flex items-center gap-2 rounded-full border border-[#f0e4e2] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#4f4347] ${className}`}>
+      <span className="text-[12px]" style={{ color: tone }}>
+        {icon}
+      </span>
+      <span>{label}</span>
+    </div>
+  );
 }
 
 function formatDetailEducation(item) {
@@ -306,6 +345,11 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
   return {
     id: item?.id ?? sourceItem?.id ?? `${title}-${index}`,
     title,
+    description: stripHtml(
+      item?.description ||
+        sourceItem?.description ||
+        ""
+    ),
     overview: stripHtml(
       item?.overview ||
         item?.description ||
@@ -459,9 +503,7 @@ function SectionHeader({ icon, title }) {
 
 // ─── InstituteCard ────────────────────────────────────────────────────────────
 function InstituteCard({ inst, badge }) {
-  const isTop = badge === "Top";
-  const typeLabel = inst?.raw?.institute_type || (isTop ? "Government" : "Private");
-  const isGovt = typeLabel?.toLowerCase().includes("gov");
+  const isOdisha = badge === "Odisha";
   const logo = inst?.logo || null;
   const url = inst?.raw?.url || null;
   const admissionProcess = inst?.raw?.admission_process || null;
@@ -472,64 +514,90 @@ function InstituteCard({ inst, badge }) {
         year: "numeric",
       })
     : null;
+  const stateName = inst?.state || inst?.raw?.state || "";
+  const isGovt = String(inst?.raw?.institute_type || "").toLowerCase().includes("gov");
 
   return (
-    <div className="relative rounded-2xl border border-[#f0e4e2] bg-white overflow-hidden hover:shadow-md transition-shadow">
-      {/* Type badge top-left */}
-      <div className="absolute top-3 left-3 flex items-center gap-1.5">
-        <span className={`h-2 w-2 rounded-full ${isGovt ? "bg-green-500" : "bg-green-400"}`} />
-        <span className="text-xs text-gray-500">{isGovt ? "Goverment" : "Private"}</span>
+    <div className="group overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#d7c3bc] hover:shadow-lg hover:shadow-[#9a2119]/10">
+      <div className="flex items-center justify-between gap-3 border-b border-[#f7eeec] px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className={`h-2.5 w-2.5 rounded-full ${isGovt ? "bg-[#2f9367]" : "bg-[#c9a11d]"}`} />
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a5847c]">
+            {isGovt ? "Government" : "Private"}
+          </span>
+        </div>
+        {badge ? (
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+              isOdisha ? "bg-[#eaf7ef] text-[#2f9367]" : "bg-[#fdf0ee] text-[#9a2119]"
+            }`}
+          >
+            {badge}
+          </span>
+        ) : null}
       </div>
-      {/* External link top-right */}
+
+      <div className="flex items-start gap-3 px-4 py-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border border-[#f0e4e2] bg-[#fffaf8]">
+          {logo ? (
+            <img
+              src={logo}
+              alt={inst.name}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <BankOutlined className="text-[20px] text-[#9a2119]" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="m-0 line-clamp-2 text-[16px] font-black leading-snug text-[#1a0a09]">
+            {inst.name}
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {stateName ? (
+              <DetailPill icon={<EnvironmentOutlined />} label={stateName} tone="#0f8a7c" />
+            ) : null}
+            {inst.city ? (
+              <DetailPill icon={<ReadOutlined />} label={inst.city} tone="#9a2119" />
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 border-t border-[#f7eeec] px-4 py-4 sm:grid-cols-2">
+        {admissionProcess ? (
+          <div className="rounded-[16px] bg-[#fff8f4] px-3 py-2.5">
+            <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">
+              Admission Via
+            </p>
+            <p className="m-0 mt-1 text-[12px] font-semibold text-[#1a0a09]">{admissionProcess}</p>
+          </div>
+        ) : null}
+        {tentativeDate ? (
+          <div className="rounded-[16px] bg-[#f7fbff] px-3 py-2.5">
+            <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6c88a8]">
+              Tentative Date
+            </p>
+            <p className="m-0 mt-1 text-[12px] font-semibold text-[#1a0a09]">{tentativeDate}</p>
+          </div>
+        ) : null}
+      </div>
+
       {url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute top-3 right-3 flex h-7 w-7 items-center justify-center rounded-full border border-[#f0e4e2] text-gray-400 hover:text-[#9a2119] hover:border-[#9a2119] transition-colors text-xs font-bold"
-        >
-          ↗
-        </a>
-      ) : null}
-
-      {/* Logo */}
-      <div className="mt-10 mb-3 flex items-center justify-center h-16">
-        {logo ? (
-  <img
-    src={logo}
-    alt={inst.name}
-    className="h-14 w-14 object-contain"
-    onError={(e) => {
-      e.currentTarget.style.display = "none";
-    }}
-  />
-) : (
-  <div className="h-14 w-14 rounded-full bg-[#fdf0ee] flex items-center justify-center text-2xl text-[#9a2119]">
-    🏛️
-  </div>
-)}
-      </div>
-
-      {/* Name */}
-      <p className="text-center text-sm font-bold text-[#1a0a09] px-4 leading-snug mb-3">
-        {inst.name}
-      </p>
-
-      {/* Admission + Tentative date */}
-      {(admissionProcess || tentativeDate) ? (
-        <div className="flex justify-between items-start border-t border-[#f7eeec] px-4 py-3 gap-2">
-          {admissionProcess ? (
-            <div>
-              <p className="text-[10px] text-gray-400 mb-0.5">Admission via</p>
-              <p className="text-xs font-semibold text-[#1a0a09]">{admissionProcess}</p>
-            </div>
-          ) : null}
-          {tentativeDate ? (
-            <div className="text-right">
-              <p className="text-[10px] text-gray-400 mb-0.5">Tentative Date</p>
-              <p className="text-xs font-semibold text-[#1a0a09]">{tentativeDate}</p>
-            </div>
-          ) : null}
+        <div className="border-t border-[#f7eeec] px-4 py-3">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-[13px] font-bold text-[#9a2119] transition hover:translate-x-0.5"
+          >
+            Explore institution
+            <ArrowRightOutlined />
+          </a>
         </div>
       ) : null}
     </div>
@@ -957,22 +1025,22 @@ export default function LibraryPage() {
   // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
-    const instituteGroups = groupInstitutesByTopStatus(detail?.institutes);
+    const instituteGroups = groupInstitutesByTopStatus(detail?.institutes, "Odisha");
     const careerpaths = detail?.raw?.careerpaths || [];
     const entranceexams = detail?.raw?.entranceexams || [];
     const jobs = toList(detail?.jobs || detail?.jobScope);
     const salaryRanges = detail?.salaryRanges || [];
     const description = getDetailDescription(detail);
-    const stateLabel = instituteGroups.referenceState || "State";
+    const stateLabel = "Odisha";
 
     const sidebarSections = [
-      { id: `desc-${index}`, label: "Description" },
-      { id: `path-${index}`, label: "Path" },
-      { id: `exams-${index}`, label: "Entrance Exams" },
-      { id: `jobs-${index}`, label: "Job Scopes" },
-      { id: `salary-${index}`, label: "Salary Range" },
-      { id: `top-in-${index}`, label: `Top Institutes In ${stateLabel}` },
-      { id: `top-out-${index}`, label: `Top Institutes Outside ${stateLabel}` },
+      { id: `desc-${index}`, label: "Description", icon: <FileTextOutlined /> },
+      { id: `path-${index}`, label: "Path", icon: <BranchesOutlined /> },
+      { id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> },
+      { id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> },
+      { id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> },
+      { id: `top-in-${index}`, label: `Top Institutes in ${stateLabel}`, icon: <BankOutlined /> },
+      { id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> },
     ];
 
     function scrollTo(id) {
@@ -982,286 +1050,278 @@ export default function LibraryPage() {
 
     return (
       <div key={`detail-${detail?.id ?? index}`} className="flex gap-6 items-start">
-
-        {/* ── Sticky Sidebar ── */}
-        <div className="hidden lg:block sticky top-4 w-60 shrink-0">
-          <div className="rounded-2xl border border-[#f0e4e2] bg-white overflow-hidden shadow-sm">
-            {sidebarSections.map((sec, i) => (
-              <button
-                key={sec.id}
-                type="button"
-                onClick={() => scrollTo(sec.id)}
-                className={`w-full text-left px-5 py-3.5 text-sm font-medium text-[#1a0a09] transition-colors hover:bg-[#fdf0ee] hover:text-[#9a2119]
-                  ${i < sidebarSections.length - 1 ? "border-b border-[#f7eeec]" : ""}`}
-              >
-                {sec.label}
-              </button>
-            ))}
+        <div className="hidden lg:block sticky top-4 w-72 shrink-0">
+          <div className="overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
+            <div className="border-b border-[#f7eeec] px-5 py-4">
+              <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-[#b8837e]">Quick Jump</p>
+              <h3 className="mt-1 m-0 text-[18px] font-black text-[#1a0a09]">{title}</h3>
+            </div>
+            <div className="p-2">
+              {sidebarSections.map((sec, i) => (
+                <button
+                  key={sec.id}
+                  type="button"
+                  onClick={() => scrollTo(sec.id)}
+                  className={`flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-left transition-colors hover:bg-[#fdf7f5] hover:text-[#9a2119]
+                    ${i < sidebarSections.length - 1 ? "mb-1" : ""}`}
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+                    {sec.icon}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[14px] font-semibold text-[#1a0a09]">
+                      {sec.label}
+                    </span>
+                  </span>
+                  <RightOutlined className="text-[11px] text-[#c7aaa3]" />
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* ── Main Content ── */}
-        <div className="flex-1 min-w-0 space-y-10">
-
-          {/* Description */}
+        <div className="flex-1 min-w-0 space-y-5">
           {description ? (
-            <section id={`desc-${index}`} className="scroll-mt-4">
-              <h2 className="text-xl font-bold text-[#9a2119] mb-3">Description</h2>
-              <p className="text-sm text-gray-700 leading-relaxed text-justify">{description}</p>
-            </section>
+            <div className="rounded-[24px] border border-[#f0e4e2] bg-gradient-to-r from-[#fff7f3] to-white px-5 py-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#9a2119] text-white">
+                  <FileTextOutlined />
+                </span>
+                <div>
+                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">Description</p>
+                  <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Quick overview for this career path</p>
+                </div>
+              </div>
+              <p className="m-0 mt-3 text-[14px] leading-7 text-[#5f5658] line-clamp-3">
+                {description}
+              </p>
+            </div>
           ) : null}
 
-          {/* Career Path Table */}
-          <section id={`path-${index}`} className="scroll-mt-4">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xl">🗺️</span>
-              <h2 className="text-xl font-bold text-[#1a0a09]">
-                How to Build a Career in{" "}
-                <span className="text-[#9a2119]">{title} ?</span>
-              </h2>
-            </div>
+          {description ? (
+            <SectionCard
+              id={`desc-${index}`}
+              icon={<FileTextOutlined />}
+              title="Description"
+              subtitle="What this career is about and why it matters."
+            >
+              <p className="m-0 text-[15px] leading-8 text-[#5f5658]">{description}</p>
+            </SectionCard>
+          ) : null}
+
+          <SectionCard
+            id={`path-${index}`}
+            icon={<BranchesOutlined />}
+            title={`Career Path for ${title}`}
+            subtitle="A simple path from education to career entry."
+          >
             {careerpaths.length > 0 ? (
-              <div className="overflow-x-auto rounded-xl border border-[#f0e4e2]">
-                <table className="w-full text-sm border-collapse">
+              <div className="overflow-hidden rounded-[20px] border border-[#f0e4e2]">
+                <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-[#fdf7f6]">
-                      {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map(
-                        (col) => (
-                          <th
-                            key={col}
-                            className="px-4 py-3 text-left font-bold text-[#1a0a09] border-b border-[#f0e4e2] whitespace-nowrap"
-                          >
-                            {col}
-                          </th>
-                        )
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {careerpaths.map((cp, cpIdx) => (
-                      <tr
-                        key={cp?.id ?? cpIdx}
-                        className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}
-                      >
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600 whitespace-nowrap">
-                          {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
-                          {detail?.raw?.stream?.name || "—"}
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
-                          {cp?.graduation || "—"}
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
-                          {cp?.aftergraduation || "—"}
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
-                          {cp?.afterpostgraduation || "—"}
-                        </td>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">
-                          {cp?.anyother || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : detail?.path?.length > 0 ? (
-              <div className="overflow-x-auto rounded-xl border border-[#f0e4e2]">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-[#fdf7f6]">
-                      {["Step", "Description"].map((col) => (
-                        <th key={col} className="px-4 py-3 text-left font-bold text-[#1a0a09] border-b border-[#f0e4e2]">
+                      {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map((col) => (
+                        <th
+                          key={col}
+                          className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#1a0a09]"
+                        >
                           {col}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {detail.path.map((step, si) => (
-                      <tr key={si} className={si % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] font-semibold text-[#9a2119] whitespace-nowrap">
-                          Step {si + 1}
+                    {careerpaths.map((cp, cpIdx) => (
+                      <tr key={cp?.id ?? cpIdx} className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
+                        <td className="whitespace-nowrap border-b border-[#f7eeec] px-4 py-3 font-semibold text-[#9a2119]">
+                          {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
                         </td>
-                        <td className="px-4 py-3 border-b border-[#f7eeec] text-gray-600">{step}</td>
+                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">
+                          {detail?.raw?.stream?.name || "—"}
+                        </td>
+                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.graduation || "—"}</td>
+                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.aftergraduation || "—"}</td>
+                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.afterpostgraduation || "—"}</td>
+                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.anyother || "—"}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+            ) : detail?.path?.length > 0 ? (
+              <div className="grid gap-3">
+                {detail.path.map((step, si) => (
+                  <div
+                    key={si}
+                    className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-3"
+                  >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-[12px] font-black text-white">
+                      {si + 1}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Step {si + 1}</p>
+                      <p className="m-0 mt-1 text-[13px] leading-6 text-[#685d60]">{step}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-gray-400">Career path details not available.</p>
+              <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
             )}
-          </section>
+          </SectionCard>
 
-          {/* Entrance Exams */}
-          <section id={`exams-${index}`} className="scroll-mt-4">
-            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">Entrance Exams</h2>
+          <SectionCard
+            id={`exams-${index}`}
+            icon={<SolutionOutlined />}
+            title="Entrance Exams"
+            subtitle="Relevant exams for this career path."
+          >
             {entranceexams.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid gap-3">
                 {entranceexams.map((exam, ei) => (
                   <div
                     key={exam?.id ?? ei}
-                    className="flex items-stretch gap-4 rounded-xl border border-[#f0e4e2] bg-white p-4 hover:shadow-sm transition-shadow"
+                    className="rounded-[20px] border border-[#f0e4e2] bg-[#fffdfa] p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    {/* Icon */}
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-white text-base mt-0.5">
-                      <SolutionOutlined />
-                    </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-400 mb-0.5">Exam Name:</p>
-                      <p className="text-sm font-semibold text-[#1a0a09] leading-snug">
-                        {exam?.examname || "—"}
-                      </p>
-                      {exam?.about && exam.about !== "Nothing" ? (
-                        <p className="mt-1 text-xs text-gray-500 line-clamp-2">{exam.about}</p>
-                      ) : null}
-                    </div>
-                    {/* Dates */}
-                    <div className="shrink-0 text-right space-y-2">
-                      <div>
-                        <p className="text-xs text-gray-400">Form Issue Date:</p>
-                        <p className="text-xs font-semibold text-[#1a0a09]">
-                          {exam?.issuedate
-                            ? new Date(exam.issuedate)
-                                .toLocaleDateString("en-IN", { day: "2-digit", month: "long" })
-                                .toUpperCase()
-                            : "—"}
-                        </p>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+                            <SolutionOutlined />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">Exam Name</p>
+                            <p className="m-0 text-[16px] font-black text-[#1a0a09]">{exam?.examname || "—"}</p>
+                          </div>
+                        </div>
+                        {exam?.about && exam.about !== "Nothing" ? (
+                          <p className="m-0 mt-3 text-[13px] leading-6 text-[#675c60] line-clamp-2">{exam.about}</p>
+                        ) : null}
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Last Date:</p>
-                        <p className="text-xs font-semibold text-[#1a0a09]">
-                          {exam?.lastdate
-                            ? new Date(exam.lastdate)
-                                .toLocaleDateString("en-IN", { day: "2-digit", month: "long" })
-                                .toUpperCase()
-                            : "—"}
-                        </p>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <DetailPill
+                          icon={<BookOutlined />}
+                          label={`Issue: ${exam?.issuedate ? new Date(exam.issuedate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}`}
+                          tone="#0f8a7c"
+                        />
+                        <DetailPill
+                          icon={<CalendarOutlined />}
+                          label={`Last: ${exam?.lastdate ? new Date(exam.lastdate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}`}
+                          tone="#9a2119"
+                        />
+                        {exam?.url ? (
+                          <a
+                            href={exam.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] transition hover:bg-[#fdf0ee]"
+                          >
+                            <ArrowRightOutlined />
+                          </a>
+                        ) : null}
                       </div>
-                    </div>
-                    {/* Arrow */}
-                    <div className="flex items-center shrink-0 pl-2">
-                      {exam?.url ? (
-                        <a
-                          href={exam.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-8 w-8 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] hover:bg-[#fdf0ee] transition-colors font-bold"
-                        >
-                          →
-                        </a>
-                      ) : (
-                        <span className="flex h-8 w-8 items-center justify-center text-gray-300 font-bold">→</span>
-                      )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : toList(detail?.exams).length > 0 ? (
-              <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
                 {toList(detail.exams).map((exam, ei) => (
-                  <div key={ei} className="flex items-center gap-3 rounded-xl border border-[#f0e4e2] bg-white p-4">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-white text-sm">
-                      <SolutionOutlined />
-                    </div>
-                    <p className="text-sm text-[#1a0a09] font-medium">{exam}</p>
+                  <DetailPill key={ei} icon={<SolutionOutlined />} label={exam} />
+                ))}
+              </div>
+            ) : (
+              <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
+            )}
+          </SectionCard>
+
+          <SectionCard
+            id={`jobs-${index}`}
+            icon={<RocketOutlined />}
+            title="Job Scopes"
+            subtitle="Common roles and career directions after this path."
+          >
+            {jobs.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {jobs.map((scope, ji) => (
+                  <div
+                    key={ji}
+                    className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
+                  >
+                    <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
+                      <TrophyOutlined />
+                    </span>
+                    <p className="m-0 text-[14px] leading-6 text-[#5f5658]">{scope}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">Entrance exam details not available.</p>
+              <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
             )}
-          </section>
+          </SectionCard>
 
-          {/* Job Scopes */}
-          <section id={`jobs-${index}`} className="scroll-mt-4">
-            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">Job Scopes</h2>
-            {jobs.length > 0 ? (
-              <ul className="space-y-2">
-                {jobs.map((scope, ji) => (
-                  <li key={ji} className="flex items-start gap-2.5 text-sm text-gray-700">
-                    <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#cb9c48]" />
-                    {scope}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-gray-400">Job scope not available.</p>
-            )}
-          </section>
-
-          {/* Salary Range */}
-          <section id={`salary-${index}`} className="scroll-mt-4">
-            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">Salary Range</h2>
+          <SectionCard
+            id={`salary-${index}`}
+            icon={<DollarOutlined />}
+            title="Salary Range"
+            subtitle="Expected salary bands in the field."
+          >
             {salaryRanges.length > 0 ? (
-              <ul className="space-y-2">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {salaryRanges.map((salary, si) => (
-                  <li key={salary?.id ?? si} className="flex items-start gap-2.5 text-sm text-gray-700">
-                    <span className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-[#9a2119]" />
-                    <span className="font-semibold">{formatSalaryRange(salary)}</span>
-                  </li>
+                  <div
+                    key={salary?.id ?? si}
+                    className="rounded-[18px] border border-[#f0e4e2] bg-gradient-to-br from-[#fff8f4] to-white px-4 py-4 shadow-sm"
+                  >
+                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Salary</p>
+                    <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{formatSalaryRange(salary)}</p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : detail?.salary ? (
-              <p className="text-sm font-semibold text-[#9a2119]">{detail.salary}</p>
+              <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
+                <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
+                <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{detail.salary}</p>
+              </div>
             ) : (
-              <p className="text-sm text-gray-400">Salary details not available.</p>
+              <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
             )}
-          </section>
+          </SectionCard>
 
-          {/* Top Institutes In State */}
-          <section id={`top-in-${index}`} className="scroll-mt-4">
-            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">
-              Top Institutes in {stateLabel}
-            </h2>
+          <SectionCard
+            id={`top-in-${index}`}
+            icon={<BankOutlined />}
+            title="Top Institutes in Odisha"
+            subtitle="Institutes in Odisha highlighted from this career map data."
+          >
             {instituteGroups.topInstitutes.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {instituteGroups.topInstitutes.map((inst) => (
-                  <InstituteCard key={inst.id} inst={inst} badge="Top" />
+                  <InstituteCard key={inst.id} inst={inst} badge="Odisha" />
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No top institutes found for this state.</p>
+              <p className="m-0 text-sm text-gray-400">No Odisha institutes found for this career.</p>
             )}
-          </section>
+          </SectionCard>
 
-          {/* Top Institutes Outside State */}
-          <section id={`top-out-${index}`} className="scroll-mt-4">
-            <h2 className="text-xl font-bold text-[#1a0a09] mb-4">
-              Top Institutes outside {stateLabel}
-            </h2>
+          <SectionCard
+            id={`top-out-${index}`}
+            icon={<EnvironmentOutlined />}
+            title="Outside Odisha"
+            subtitle="All institutes from other states are shown here."
+          >
             {instituteGroups.outsideInstitutes.length > 0 ? (
-              <>
-                {/* Filters */}
-                <div className="mb-5 flex flex-wrap gap-4 items-end">
-                  <span className="text-sm text-gray-500 font-medium self-end pb-1">Filters :</span>
-                  {[
-                    { label: "Country", placeholder: "Choose Country" },
-                    { label: "State", placeholder: "Choose State" },
-                    { label: "Institution Type", placeholder: "Choose Institution Type" },
-                  ].map((f) => (
-                    <div key={f.label} className="flex flex-col gap-1">
-                      <span className="text-xs text-gray-500">{f.label} :</span>
-                      <select className="rounded-xl border border-[#e5d5d3] bg-white px-3 py-2 text-sm text-gray-600 focus:outline-none focus:border-[#9a2119] min-w-[160px]">
-                        <option value="">{f.placeholder}</option>
-                      </select>
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {instituteGroups.outsideInstitutes.map((inst) => (
-                    <InstituteCard key={inst.id} inst={inst} badge="Outside" />
-                  ))}
-                </div>
-              </>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {instituteGroups.outsideInstitutes.map((inst) => (
+                  <InstituteCard key={inst.id} inst={inst} badge="Outside Odisha" />
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-gray-400">No institutes found outside this state.</p>
+              <p className="m-0 text-sm text-gray-400">No institutes found outside Odisha.</p>
             )}
-          </section>
-
+          </SectionCard>
         </div>
       </div>
     );
