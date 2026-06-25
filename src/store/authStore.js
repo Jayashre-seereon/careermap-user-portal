@@ -29,6 +29,7 @@ export const useAuthStore = create(
     (set) => ({
       signupForm: initialSignupForm,
       onboardingData: initialOnboardingData,
+      pendingInstituteOnboarding: false,
       tempToken: "",
       accessToken: "",
       refreshToken: "",
@@ -45,6 +46,11 @@ export const useAuthStore = create(
       setOnboardingData: (data) =>
         set(() => ({
           onboardingData: data,
+        })),
+
+      setPendingInstituteOnboarding: (pendingInstituteOnboarding) =>
+        set(() => ({
+          pendingInstituteOnboarding,
         })),
 
       setTempToken: (tempToken) => set(() => ({ tempToken })),
@@ -77,6 +83,7 @@ export const useAuthStore = create(
         set(() => ({
           signupForm: initialSignupForm,
           onboardingData: initialOnboardingData,
+          pendingInstituteOnboarding: false,
           tempToken: "",
           accessToken: "",
           refreshToken: "",
@@ -85,6 +92,11 @@ export const useAuthStore = create(
     }),
     {
       name: "careermap-auth-store",
+      version: 2,
+      migrate: (persistedState) => ({
+        ...persistedState,
+        pendingInstituteOnboarding: false,
+      }),
       partialize: (state) => ({
         signupForm: state.signupForm,
         onboardingData: state.onboardingData,

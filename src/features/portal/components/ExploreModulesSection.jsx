@@ -32,7 +32,7 @@ export function ExploreModulesSection({ modules = [] }) {
 
       navFunc(card.route, {
         state: {
-          accessStatus: card.accessStatus,
+          accessStatus: "unlocked",
         },
       });
     } catch (err) {

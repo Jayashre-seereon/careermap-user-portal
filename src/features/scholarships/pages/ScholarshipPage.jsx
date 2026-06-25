@@ -11,7 +11,7 @@ import {
   TeamOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { getScholarships } from "../../../api/scholarshipApi";
 import { scholarships as fallbackScholarships } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
@@ -21,13 +21,15 @@ import { UnlockRedirectModal, usePortalNavigation } from "../../portal/component
 export default function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
+  const pageLocation = useLocation();
   const [params] = useSearchParams();
   const [items, setItems] = useState(fallbackScholarships);
   const [error, setError] = useState("");
   const [activeStatus, setActiveStatus] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
-  const unlocked = isUnlocked("scholarship");
+  const accessStatus = pageLocation.state?.accessStatus || "preview";
+  const unlocked = accessStatus === "unlocked" || isUnlocked("scholarship");
 
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
@@ -112,7 +114,9 @@ export default function ScholarshipPage() {
   }
 
   function openScholarship(item) {
-    registerFreeDetailAccess("scholarship", item.name);
+    if (accessStatus !== "unlocked") {
+      registerFreeDetailAccess("scholarship", item.name);
+    }
     setSelectedItem(item);
   }
 
@@ -254,7 +258,7 @@ export default function ScholarshipPage() {
                 >
                   Apply Now
                 </Button>
-                {!unlocked && !detailUnlocked ? (
+                {!detailUnlocked ? (
                   <Button block onClick={() => handleGoToPlans(selectedItem.name)} className="!h-12 !rounded-xl">
                     Unlock to Continue
                   </Button>

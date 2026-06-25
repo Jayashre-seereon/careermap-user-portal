@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, LockOutlined, TrophyOutlined } from "@ant-design/icons";
-import { Modal } from "antd";
+import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled} from "@ant-design/icons";
+import { Modal,Rate } from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
   createMentorOrder,
@@ -14,13 +14,12 @@ import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 import { loadRazorpayScript } from "../../../utils/razorpay.js";
+
 function formatNumericDate(value) {
   const parsed = new Date(value);
-
   if (Number.isNaN(parsed.getTime())) {
     return null;
   }
-
   return {
     key: parsed.toISOString().split("T")[0],
     day: parsed.toLocaleDateString("en-IN", { weekday: "short" }),
@@ -40,21 +39,21 @@ function normalizeSlotKey(value) {
 
 function buildFallbackAvailability() {
   const output = [];
-
   for (let index = 0; index < 6; index += 1) {
     const current = new Date();
     current.setDate(current.getDate() + index);
     const info = formatNumericDate(current);
-
     output.push({
       key: info.key,
       day: info.day,
       date: info.date,
       month: info.month,
-      slots: index % 4 === 1 ? [] : ["9:00 AM", "10:00 AM", "11:30 AM", "2:00 PM", "3:30 PM", "5:00 PM", "6:30 PM"].slice(0, 3 + (index % 3)),
+      slots:
+        index % 4 === 1
+          ? []
+          : ["9:00 AM", "10:00 AM", "11:30 AM", "2:00 PM", "3:30 PM", "5:00 PM", "6:30 PM"].slice(0, 3 + (index % 3)),
     });
   }
-
   return output;
 }
 
@@ -63,11 +62,9 @@ function normalizeAvailability(availability) {
     return availability
       .map((item) => {
         const info = formatNumericDate(item?.rawDate || item?.date);
-
         if (!info && !item?.key) {
           return null;
         }
-
         return {
           key: item?.key || info?.key || String(item?.date || ""),
           day: item?.day || info?.day || "Day",
@@ -79,13 +76,15 @@ function normalizeAvailability(availability) {
       })
       .filter(Boolean);
   }
-
   return buildFallbackAvailability();
 }
 
 function Avatar({ name, accent, avatar, image }) {
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-[22px] shadow-sm" style={{ backgroundColor: `${accent}18` }}>
+    <div
+      className="flex h-16 w-16 items-center justify-center rounded-[22px] shadow-sm"
+      style={{ backgroundColor: `${accent}18` }}
+    >
       {image ? (
         <img src={image} alt={name} className="h-full w-full rounded-[22px] object-cover" loading="lazy" />
       ) : (
@@ -106,15 +105,6 @@ function SectionCard({ title, children }) {
   );
 }
 
-function Field({ label, children }) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">{label}</span>
-      {children}
-    </div>
-  );
-}
-
 function MentorCard({ mentor, isFree, onClick }) {
   return (
     <button
@@ -124,9 +114,12 @@ function MentorCard({ mentor, isFree, onClick }) {
     >
       <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors group-hover:bg-[#9a2119]" />
 
-          <div className="mb-4 flex items-start justify-between gap-3 pt-2">
+      <div className="mb-4 flex items-start justify-between gap-3 pt-2">
         <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px]" style={{ backgroundColor: `${mentor.accent}18` }}>
+          <div
+            className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[18px]"
+            style={{ backgroundColor: `${mentor.accent}18` }}
+          >
             {mentor.image ? (
               <img src={mentor.image} alt={mentor.name} className="h-full w-full object-cover" loading="lazy" />
             ) : (
@@ -152,62 +145,61 @@ function MentorCard({ mentor, isFree, onClick }) {
       <div className="mb-4 flex items-center gap-2">
         <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
           <TrophyOutlined style={{ color: "#d4a017" }} />
-         Rank( Air/State) - {mentor.rating}
+          {mentor.rating} Air/State
         </span>
-        {/* <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-        Experience - {mentor.experience}
-        </span> */}
         <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
           {mentor.price}
         </span>
+                  <StarFilled style={{ color: "#d4a017" }} />
+  <span className="text-sm font-semibold text-[#1a0a09]">
+    {Number(mentor.rating).toFixed(1)}
+  </span>
       </div>
 
-      
-
-     <div className="border-t border-[#f0e4e2] pt-3">
-  <div className="flex items-center justify-between">
-    
-    {/* Scrollable Tags */}
-    <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide max-w-[70%]">
-      {(mentor.tags || []).map((tag) => (
-        <span
-          key={tag}
-          className="inline-block rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]"
-        >
-          {tag}
-        </span>
-      ))}
-    </div>
-
-    {/* Explore */}
-    <span className="text-sm font-bold text-[#9a2119] whitespace-nowrap">
-      Explore <ArrowRightOutlined />
-    </span>
-
-  </div>
-</div>
+      <div className="border-t border-[#f0e4e2] pt-3">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide max-w-[70%]">
+            {(mentor.tags || []).map((tag) => (
+              <span
+                key={tag}
+                className="inline-block rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <span className="text-sm font-bold text-[#9a2119] whitespace-nowrap">
+            Explore <ArrowRightOutlined />
+          </span>
+        </div>
+      </div>
     </button>
+  );
+}
+
+// Shared chevron SVG for all selects
+function ChevronDown() {
+  return (
+    <svg
+      className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]"
+      viewBox="0 0 12 12"
+      fill="none"
+    >
+      <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
 export default function BookMentorPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess, addBooking } = useAppState();
- const { navigate, location, goToDashboard } =
-  usePortalNavigation();
+  const { navigate, location, goToDashboard } = usePortalNavigation();
+  const pageLocation = useLocation();
+  const [params] = useSearchParams();
 
-const pageLocation = useLocation();
+  const accessStatus = pageLocation.state?.accessStatus || "preview";
+  const frontendUnlocked = isUnlocked("book-mentor");
+  const unlocked = accessStatus === "unlocked" || frontendUnlocked;
 
-const [params] = useSearchParams();
-
-const accessStatus =
-  pageLocation.state?.accessStatus || "preview";
-
-const frontendUnlocked =
-  isUnlocked("book-mentor");
-
-const unlocked =
-  accessStatus === "unlocked" ||
-  frontendUnlocked;
   const [mentorList, setMentorList] = useState(fallbackMentors);
   const [selectedMentorId, setSelectedMentorId] = useState("");
   const [selectedMentor, setSelectedMentor] = useState(null);
@@ -219,66 +211,129 @@ const unlocked =
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [category, setCategory] = useState("");
-const [secondCategory, setSecondCategory] = useState("");
-const [subCategory, setSubCategory] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("upi");
-  const [paymentValues, setPaymentValues] = useState({
-    upiId: "",
-    cardName: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvv: "",
-    bank: "",
-  });
   const [processing, setProcessing] = useState(false);
   const [booked, setBooked] = useState(false);
 
-  const activeMentor = useMemo(() => {
-    if (!selectedMentorId) {
-      return null;
-    }
+  // ── Filter state ─────────────────────────────────────────────────────────
+  const [category, setCategory] = useState("");
+  const [secondCategory, setSecondCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
 
+  // ── Category dropdown options ────────────────────────────────────────────
+  // category.title | secondcategory.name | subcategory.title
+  const categoryOptions = useMemo(
+    () => [
+      ...new Map(
+        mentorList
+          .filter((m) => m.categoryObj)
+          .map((m) => [m.categoryObj.id, m.categoryObj])
+      ).values(),
+    ],
+    [mentorList]
+  );
+
+  const secondCategoryOptions = useMemo(() => {
+    const source = category
+      ? mentorList.filter((m) => String(m.categoryObj?.id) === String(category))
+      : mentorList;
+    return [
+      ...new Map(
+        source
+          .filter((m) => m.secondcategoryObj)
+          .map((m) => [m.secondcategoryObj.id, m.secondcategoryObj])
+      ).values(),
+    ];
+  }, [mentorList, category]);
+
+  const subCategoryOptions = useMemo(() => {
+    let source = mentorList;
+    if (category)
+      source = source.filter((m) => String(m.categoryObj?.id) === String(category));
+    if (secondCategory)
+      source = source.filter((m) => String(m.secondcategoryObj?.id) === String(secondCategory));
+    return [
+      ...new Map(
+        source
+          .filter((m) => m.subcategoryObj)
+          .map((m) => [m.subcategoryObj.id, m.subcategoryObj])
+      ).values(),
+    ];
+  }, [mentorList, category, secondCategory]);
+
+  function handleCategoryChange(value) {
+    setCategory(value);
+    setSecondCategory("");
+    setSubCategory("");
+  }
+
+  function handleSecondCategoryChange(value) {
+    setSecondCategory(value);
+    setSubCategory("");
+  }
+
+  // ── Filtered list ────────────────────────────────────────────────────────
+  const filteredMentorList = useMemo(
+    () =>
+      mentorList.filter((m) => {
+        const matchesCategory =
+          !category || String(m.categoryObj?.id) === String(category);
+        const matchesSecondCategory =
+          !secondCategory || String(m.secondcategoryObj?.id) === String(secondCategory);
+        const matchesSubCategory =
+          !subCategory || String(m.subcategoryObj?.id) === String(subCategory);
+        return matchesCategory && matchesSecondCategory && matchesSubCategory;
+      }),
+    [mentorList, category, secondCategory, subCategory]
+  );
+
+  // ── Active mentor ────────────────────────────────────────────────────────
+  const activeMentor = useMemo(() => {
+    if (!selectedMentorId) return null;
     return (
       selectedMentor ||
-      mentorList.find((item) => String(item.id) === String(selectedMentorId) || item.name === selectedMentorId) ||
+      mentorList.find(
+        (item) =>
+          String(item.id) === String(selectedMentorId) || item.name === selectedMentorId
+      ) ||
       null
     );
   }, [mentorList, selectedMentor, selectedMentorId]);
 
   const dates = useMemo(() => normalizeAvailability(activeMentor?.availability), [activeMentor]);
-  const selectedDateInfo = useMemo(() => dates.find((item) => item.key === selectedDate) || dates[0] || null, [dates, selectedDate]);
-  const slots = useMemo(() => {
-    if (!dates.length) {
-      return [];
-    }
 
+  const selectedDateInfo = useMemo(
+    () => dates.find((item) => item.key === selectedDate) || dates[0] || null,
+    [dates, selectedDate]
+  );
+
+  const slots = useMemo(() => {
+    if (!dates.length) return [];
     const activeDate = dates.find((item) => item.key === selectedDate) || dates[0];
     return activeDate?.slots || [];
   }, [dates, selectedDate]);
+
   const bookedSlotKeys = useMemo(
     () => new Set((bookedSlots || []).map((slot) => normalizeSlotKey(slot)).filter(Boolean)),
     [bookedSlots]
   );
+
   const availableSlots = useMemo(() => slots.filter(Boolean), [slots]);
 
   function buildMentorReturnTo(mentorRef = activeMentor) {
     const mentorName = typeof mentorRef === "string" ? mentorRef : mentorRef?.name;
     const mentorId = typeof mentorRef === "object" ? mentorRef?.id : "";
     const nextParams = new URLSearchParams();
-
     if (mentorId) nextParams.set("mentorId", mentorId);
     if (mentorName) nextParams.set("mentor", mentorName);
     if (selectedDate) nextParams.set("date", selectedDate);
     if (selectedSlot) nextParams.set("time", selectedSlot);
-
     const query = nextParams.toString();
     return query ? `${location.pathname}?${query}` : location.pathname;
   }
 
+  // ── Effects ──────────────────────────────────────────────────────────────
   useEffect(() => {
     let active = true;
-
     async function loadMentors() {
       try {
         setLoadError("");
@@ -288,29 +343,23 @@ const [subCategory, setSubCategory] = useState("");
         }
       } catch (error) {
         if (active) {
-          setLoadError(error?.response?.data?.message || error?.message || "Failed to load mentor list.");
+          setLoadError(
+            error?.response?.data?.message || error?.message || "Failed to load mentor list."
+          );
           setMentorList(fallbackMentors);
         }
       }
     }
-
     loadMentors();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
     const mentorParam = params.get("mentorId") || params.get("mentor");
-    if (!mentorParam) {
-      return;
-    }
-
+    if (!mentorParam) return;
     let active = true;
-
     async function resolveMentor() {
       const numericId = /^\d+$/.test(mentorParam);
-
       if (numericId) {
         try {
           const mentor = await getMentorById(mentorParam);
@@ -320,24 +369,19 @@ const [subCategory, setSubCategory] = useState("");
             return;
           }
         } catch {
-          // Fall back to the list below.
+          // fall through to list lookup
         }
       }
-
       const mentor = mentorList.find(
         (item) => String(item.id) === String(mentorParam) || item.name === mentorParam
       );
-
       if (active && mentor) {
         setSelectedMentor(mentor);
         setSelectedMentorId(String(mentor.id || mentor.name));
       }
     }
-
     resolveMentor();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [mentorList, params]);
 
   useEffect(() => {
@@ -348,11 +392,9 @@ const [subCategory, setSubCategory] = useState("");
       setBookedSlotsError("");
       return;
     }
-
     if (!selectedDate && dates[0]) {
       setSelectedDate(dates[0].key);
     }
-
     if (selectedDate && !dates.some((item) => item.key === selectedDate)) {
       setSelectedDate(dates[0]?.key || "");
       setSelectedSlot("");
@@ -361,54 +403,41 @@ const [subCategory, setSubCategory] = useState("");
 
   useEffect(() => {
     let active = true;
-
     async function loadBookedSlots() {
       if (!activeMentor?.id || !selectedDate) {
         setBookedSlots([]);
         setBookedSlotsError("");
         return;
       }
-
       try {
         setBookedSlotsLoading(true);
         setBookedSlotsError("");
         const items = await getBookedMentorSlots(activeMentor.id, selectedDate);
-        if (active) {
-          setBookedSlots(items);
-        }
+        if (active) setBookedSlots(items);
       } catch (error) {
         if (active) {
           setBookedSlots([]);
-          setBookedSlotsError(error?.response?.data?.message || error?.message || "Failed to load booked slots.");
+          setBookedSlotsError(
+            error?.response?.data?.message || error?.message || "Failed to load booked slots."
+          );
         }
       } finally {
-        if (active) {
-          setBookedSlotsLoading(false);
-        }
+        if (active) setBookedSlotsLoading(false);
       }
     }
-
     loadBookedSlots();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [activeMentor?.id, selectedDate]);
 
   useEffect(() => {
-    if (!selectedSlot) {
-      return;
-    }
-
+    if (!selectedSlot) return;
     if (bookedSlotKeys.has(normalizeSlotKey(selectedSlot))) {
       setSelectedSlot("");
     }
   }, [bookedSlotKeys, selectedSlot]);
 
   useEffect(() => {
-    if (!processing || !activeMentor) {
-      return undefined;
-    }
-
+    if (!processing || !activeMentor) return undefined;
     const timer = setTimeout(() => {
       addBooking({
         id: `booking-${activeMentor.name}-${selectedDate}-${selectedSlot}`,
@@ -420,104 +449,59 @@ const [subCategory, setSubCategory] = useState("");
       setProcessing(false);
       setBooked(true);
     }, 1600);
-
     return () => clearTimeout(timer);
   }, [activeMentor, addBooking, processing, selectedDate, selectedSlot]);
 
-
-const handlePayment = async () => {
-  try {
-
-    console.log("PAYMENT CLICKED");
-
-    const loaded = await loadRazorpayScript();
-
-    console.log("SDK LOADED =", loaded);
-
-    if (!loaded) {
-      alert("SDK FAILED");
-      return;
-    }
-
-    const orderResponse =
-      await createMentorOrder({
+  // ── Payment ──────────────────────────────────────────────────────────────
+  const handlePayment = async () => {
+    try {
+      console.log("PAYMENT CLICKED");
+      const loaded = await loadRazorpayScript();
+      console.log("SDK LOADED =", loaded);
+      if (!loaded) {
+        alert("SDK FAILED");
+        return;
+      }
+      const orderResponse = await createMentorOrder({
         mentorId: activeMentor.id,
         date: selectedDate,
         timeSlot: selectedSlot,
       });
+      console.log("ORDER RESPONSE", orderResponse);
+      const { order, key } = orderResponse;
+      const options = {
+        key,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.id,
+        name: "CareerMap",
+        description: "Mentor Booking",
+        handler: async function (response) {
+          await verifyMentorPayment({
+            mentorId: activeMentor.id,
+            date: selectedDate,
+            timeSlot: selectedSlot,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          });
+          setBooked(true);
+        },
+        theme: { color: "#9a2119" },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.log("FULL ERROR", err);
+      alert(err?.response?.data?.message || err.message);
+    }
+  };
 
-    console.log("ORDER RESPONSE", orderResponse);
+  const detailUnlocked = activeMentor
+    ? canAccessFreeDetail("book-mentor", activeMentor.name)
+    : true;
 
-    const { order, bookingId, key } =
-      orderResponse;
-
-    const options = {
-      key: key,
-
-      amount: order.amount,
-
-      currency: order.currency,
-
-      order_id: order.id,
-
-      name: "CareerMap",
-
-      description: "Mentor Booking",
-
-handler: async function (response) {
-
-  await verifyMentorPayment({
-
-    mentorId: activeMentor.id,
-
-    date: selectedDate,
-
-    timeSlot: selectedSlot,
-
-    razorpay_order_id:
-      response.razorpay_order_id,
-
-    razorpay_payment_id:
-      response.razorpay_payment_id,
-
-    razorpay_signature:
-      response.razorpay_signature,
-  });
-
-  setBooked(true);
-},
-
-      theme: {
-        color: "#9a2119",
-      },
-    };
-
-    const rzp =
-      new window.Razorpay(options);
-
-    rzp.open();
-
-  } catch (err) {
-
-    console.log("FULL ERROR", err);
-
-    alert(
-      err?.response?.data?.message ||
-      err.message
-    );
-  }
-};
-  const detailUnlocked = activeMentor ? canAccessFreeDetail("book-mentor", activeMentor.name) : true;
-  const canPay =
-    paymentMethod === "upi"
-      ? paymentValues.upiId.includes("@") && paymentValues.upiId.length > 3
-      : paymentMethod === "card"
-        ? paymentValues.cardName.trim().length > 0 &&
-          paymentValues.cardNumber.replace(/\s/g, "").length === 16 &&
-          paymentValues.cardExpiry.trim().length > 0 &&
-          paymentValues.cardCvv.length >= 3
-        : Boolean(paymentValues.bank);
-
+  // ── Processing screen ────────────────────────────────────────────────────
   if (processing && activeMentor) {
     return (
       <ModuleScreen className="space-y-6">
@@ -528,7 +512,6 @@ handler: async function (response) {
           </div>
           <PageHero backOnly onBack={() => setProcessing(false)} className="shrink-0" />
         </div>
-
         <div className="flex min-h-[320px] items-center justify-center px-2">
           <div className="w-full max-w-[560px] rounded-[28px] border border-[#f0e4e2] bg-white px-6 py-7 text-center shadow-sm">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-4 border-[#f1d9d3] border-t-[#9a2119] animate-spin" />
@@ -548,6 +531,7 @@ handler: async function (response) {
     );
   }
 
+  // ── Booked success screen ────────────────────────────────────────────────
   if (booked && activeMentor) {
     return (
       <ModuleScreen className="space-y-6">
@@ -557,12 +541,15 @@ handler: async function (response) {
           </div>
           <h2 className="mt-4 text-2xl font-black text-[#1a0a09]">Session booked successfully</h2>
           <p className="mt-2 text-sm leading-7 text-[#6f6663]">
-            Payment successful. Your session with <strong className="text-[#1a0a09]">{activeMentor.name}</strong> is confirmed for{" "}
+            Payment successful. Your session with{" "}
+            <strong className="text-[#1a0a09]">{activeMentor.name}</strong> is confirmed for{" "}
             {selectedDateInfo?.displayDate || selectedDate} at {selectedSlot}.
           </p>
           <div className="mx-auto mt-5 max-w-md rounded-[22px] border border-[#f0e4e2] bg-[#fffaf8] p-4 text-left">
             <div className="text-sm text-[#6f6663]">Mentor: {activeMentor.name}</div>
-            <div className="mt-1 text-sm text-[#6f6663]">Date: {selectedDateInfo?.displayDate || selectedDate}</div>
+            <div className="mt-1 text-sm text-[#6f6663]">
+              Date: {selectedDateInfo?.displayDate || selectedDate}
+            </div>
             <div className="mt-1 text-sm text-[#6f6663]">Time: {selectedSlot}</div>
             <div className="mt-1 text-sm text-[#6f6663]">Price: {activeMentor.price}</div>
           </div>
@@ -585,55 +572,70 @@ handler: async function (response) {
     );
   }
 
+  // ── Mentor detail / booking view ─────────────────────────────────────────
   if (activeMentor) {
     return (
       <ModuleScreen className="space-y-6 pb-24">
         <div className="motion-item flex items-start justify-between gap-4">
           <div>
             <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
-            <p className="mt-1 mb-0 text-xs text-[#b8837e]">Profile, schedule selection, and booking flow.</p>
+            <p className="mt-1 mb-0 text-xs text-[#b8837e]">
+              Profile, schedule selection, and booking flow.
+            </p>
           </div>
           <PageHero backOnly onBack={() => setSelectedMentorId("")} className="shrink-0" />
         </div>
 
-     {accessStatus !== "unlocked" &&
- !unlocked ? (
+        {accessStatus !== "unlocked" && !unlocked ? (
           <div className="inline-flex self-start rounded-full bg-green-50 px-3 py-2 text-[12px] font-extrabold text-green-700">
-            {detailUnlocked ? "1 free mentor detail unlocked" : "Subscribe to unlock more mentor profiles"}
+            {detailUnlocked
+              ? "1 free mentor detail unlocked"
+              : "Subscribe to unlock more mentor profiles"}
           </div>
         ) : null}
 
+        {/* Profile card */}
         <div className="relative overflow-hidden rounded-[30px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
           <div className="absolute right-5 top-5 h-14 w-14 rounded-full bg-[#f9ece8]" />
           <div className="absolute left-5 top-20 h-4 w-4 rounded-full bg-[#f1d9d3]" />
           <div className="absolute bottom-6 right-6 h-3 w-3 rounded-full bg-[#f1d9d3]" />
-
           <div className="relative z-[1]">
             <div className="flex flex-col items-center gap-3 text-center">
-              <Avatar name={activeMentor.name} accent={activeMentor.accent} avatar={activeMentor.avatar} image={activeMentor.image} />
+              <Avatar
+                name={activeMentor.name}
+                accent={activeMentor.accent}
+                avatar={activeMentor.avatar}
+                image={activeMentor.image}
+              />
               <div className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
                 Mentor Profile
               </div>
-              <h2 className="m-0 text-[24px] font-black leading-tight text-[#1a0a09]">{activeMentor.name}</h2>
+              <h2 className="m-0 text-[24px] font-black leading-tight text-[#1a0a09]">
+                {activeMentor.name}
+              </h2>
               <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">
                 {activeMentor.specialty}
               </div>
-
               <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
-                  <TrophyOutlined style={{ color: "#d4a017" }} />  Rank( Air/State) - {activeMentor.rating} 
+                  <TrophyOutlined style={{ color: "#d4a017" }} />
+                {activeMentor.rating} Air/State
                 </span>
-                {/* <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
-                 Experience - {activeMentor.experience}
-                </span> */}
+                 <StarFilled style={{ color: "#d4a017" }} />
+  <span className="text-sm font-semibold text-[#1a0a09]">
+   {Number(activeMentor.rating).toFixed(1)}
+  </span>
                 <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#9a2119]">
                   {activeMentor.price}
                 </span>
+                
               </div>
-
               <div className="flex flex-wrap justify-center gap-2 pt-1">
                 {(activeMentor.tags || []).map((tag) => (
-                  <span key={tag} className="rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]">
+                  <span
+                    key={tag}
+                    className="rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]"
+                  >
                     {tag}
                   </span>
                 ))}
@@ -651,7 +653,6 @@ handler: async function (response) {
             {dates.map((date) => {
               const isActive = selectedDate === date.key;
               const hasSlots = (date.slots || []).length > 0;
-
               return (
                 <button
                   key={date.key}
@@ -681,25 +682,24 @@ handler: async function (response) {
               {availableSlots.length ? (
                 availableSlots.map((slot) => {
                   const isBooked = bookedSlotKeys.has(normalizeSlotKey(slot));
-
                   return (
                     <button
                       key={slot}
                       type="button"
                       disabled={isBooked}
                       onClick={() => setSelectedSlot(slot)}
-                      className="rounded-[12px] px-[14px] py-2.5 px-3.5 text-[12px] font-extrabold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-[12px] px-3.5 py-2.5 text-[12px] font-extrabold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
                       style={{
                         backgroundColor: isBooked
                           ? "#efe7e4"
                           : selectedSlot === slot
-                            ? "#9a2119"
-                            : "#f2ebe6",
+                          ? "#9a2119"
+                          : "#f2ebe6",
                         color: isBooked
                           ? "#a28f89"
                           : selectedSlot === slot
-                            ? "#fff"
-                            : "#1a0a09",
+                          ? "#fff"
+                          : "#1a0a09",
                       }}
                     >
                       {slot}
@@ -708,16 +708,25 @@ handler: async function (response) {
                   );
                 })
               ) : (
-                <div className="text-sm text-[#8c6c67]">No time slots available for this date.</div>
+                <div className="text-sm text-[#8c6c67]">
+                  No time slots available for this date.
+                </div>
               )}
             </div>
           ) : (
-            <div className="text-sm text-[#8c6c67]">Choose a date to see available time slots.</div>
+            <div className="text-sm text-[#8c6c67]">
+              Choose a date to see available time slots.
+            </div>
           )}
-          {bookedSlotsLoading ? <div className="mt-3 text-xs text-[#8c6c67]">Loading booked slots...</div> : null}
-          {bookedSlotsError ? <div className="mt-3 text-xs font-semibold text-[#9a2119]">{bookedSlotsError}</div> : null}
+          {bookedSlotsLoading ? (
+            <div className="mt-3 text-xs text-[#8c6c67]">Loading booked slots...</div>
+          ) : null}
+          {bookedSlotsError ? (
+            <div className="mt-3 text-xs font-semibold text-[#9a2119]">{bookedSlotsError}</div>
+          ) : null}
         </SectionCard>
 
+        {/* Sticky Book & Pay bar */}
         <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#efe4df] bg-white/95 p-4 backdrop-blur">
           <div className="mx-auto w-full max-w-5xl">
             <button
@@ -725,9 +734,7 @@ handler: async function (response) {
               disabled={!selectedDate || !selectedSlot}
               onClick={handlePayment}
               className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
-              style={{
-                background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)",
-              }}
+              style={{ background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)" }}
             >
               Book & Pay
             </button>
@@ -741,71 +748,129 @@ handler: async function (response) {
           footer={null}
           width={760}
           className="[&_.ant-modal-content]:!rounded-[28px] [&_.ant-modal-content]:!overflow-hidden"
-        >
-         
-        </Modal>
+        />
       </ModuleScreen>
     );
   }
 
+  // ── Mentor list view ─────────────────────────────────────────────────────
   return (
     <ModuleScreen className="space-y-6 pb-8">
       <div className="motion-item flex items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
-          <p className="mt-1 mb-0 text-xs text-[#b8837e]">Mentor list and booking flow adapted from the mobile app.</p>
-          {loadError ? <p className="mt-2 text-xs font-semibold text-[#9a2119]">{loadError}</p> : null}
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">
+            Mentor list and booking flow adapted from the mobile app.
+          </p>
+          {loadError ? (
+            <p className="mt-2 text-xs font-semibold text-[#9a2119]">{loadError}</p>
+          ) : null}
         </div>
         <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
       </div>
 
-      <div className="rounded-[28px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
-        <div className="inline-flex rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
-          Mentor Booking
+      
+
+      {/* ── Filter dropdowns ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Category — field: title */}
+        <div className="relative">
+          <select
+            value={category}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
+          >
+            <option value="">All Categories</option>
+            {categoryOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.title}
+              </option>
+            ))}
+          </select>
+          <ChevronDown />
         </div>
-        <h2 className="mt-4 text-[24px] font-black text-[#1a0a09]">Choose a mentor and open the profile view</h2>
-        <p className="mt-2 text-[14px] leading-7 text-[#6f6663]">
-          Tap a mentor to see ratings, about information, available dates, and time slots exactly in the booking flow.
-        </p>
+
+        {/* Second Category — field: name */}
+        <div className="relative">
+          <select
+            value={secondCategory}
+            onChange={(e) => handleSecondCategoryChange(e.target.value)}
+            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
+          >
+            <option value="">All Second Categories</option>
+            {secondCategoryOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown />
+        </div>
+
+        {/* Sub Category — field: title */}
+        <div className="relative">
+          <select
+            value={subCategory}
+            onChange={(e) => setSubCategory(e.target.value)}
+            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
+          >
+            <option value="">All Sub Categories</option>
+            {subCategoryOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.title}
+              </option>
+            ))}
+          </select>
+          <ChevronDown />
+        </div>
+
+        {(category || secondCategory || subCategory) ? (
+          <button
+            type="button"
+            onClick={() => {
+              setCategory("");
+              setSecondCategory("");
+              setSubCategory("");
+            }}
+            className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
 
+      {/* ── Mentor grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {mentorList.map((mentor, index) => {
-         const mentorFree =
-  accessStatus === "unlocked"
-    ? true
-    : unlocked ||
-      canAccessFreeDetail(
-        "book-mentor",
-        mentor.name
-      );
+        {filteredMentorList.map((mentor, index) => {
+          const mentorFree =
+            accessStatus === "unlocked"
+              ? true
+              : unlocked || canAccessFreeDetail("book-mentor", mentor.name);
+
           return (
             <MentorCard
               key={mentor.id || mentor.name}
               mentor={mentor}
               isFree={mentorFree}
               onClick={() => {
-               if (
-  accessStatus !== "unlocked" &&
-  !unlocked &&
-  !mentorFree
-) {
-  setUnlockModalItem(mentor.name);
-  return;
-}
-
-             if (accessStatus !== "unlocked") {
-  registerFreeDetailAccess(
-    "book-mentor",
-    mentor.name
-  );
-}     setSelectedMentorId(String(mentor.id || index));
+                if (accessStatus !== "unlocked" && !unlocked && !mentorFree) {
+                  setUnlockModalItem(mentor.name);
+                  return;
+                }
+                if (accessStatus !== "unlocked") {
+                  registerFreeDetailAccess("book-mentor", mentor.name);
+                }
+                setSelectedMentorId(String(mentor.id || index));
                 setSelectedMentor(mentor);
               }}
             />
           );
         })}
       </div>
+
+      {filteredMentorList.length === 0 ? (
+        <div className="py-10 text-center text-gray-500">No mentors match these filters</div>
+      ) : null}
 
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}

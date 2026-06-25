@@ -7,7 +7,7 @@ export default function AuthEntryPage() {
   return (
     <AuthShell title="Welcome to Career Map" subtitle="Choose how you want to continue into the user portal.">
       <div style={{ display: "grid", gap: "12px" }}>
-        <Link to="/onboarding" className="cm-entry-card">
+        <Link to="/onboarding?source=auth-entry" className="cm-entry-card">
           <Space size={16} align="start">
             <div
               style={{

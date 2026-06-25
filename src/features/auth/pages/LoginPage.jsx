@@ -20,6 +20,7 @@ export default function LoginPage() {
   const setSignupForm = useAuthStore((state) => state.setSignupForm);
   const setOnboardingData = useAuthStore((state) => state.setOnboardingData);
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
+  const setPendingInstituteOnboarding = useAuthStore((state) => state.setPendingInstituteOnboarding);
   const clearAuthFlow = useAuthStore((state) => state.clearAuthFlow);
   const isExistingUser = params.get("userType") === "existing";
   const initialMode = isExistingUser && params.get("mode") === "email" ? "email" : "mobile";
@@ -43,6 +44,8 @@ export default function LoginPage() {
   }
 
   function completeLogin(response) {
+    const requiresInstituteOnboarding = Boolean(response?.user?.isInstituteStudent);
+
     setAuthSession({
       accessToken: response.accessToken || "",
       refreshToken: response.refreshToken || "",
@@ -54,8 +57,9 @@ export default function LoginPage() {
       saveUserProfile(profile);
     }
 
+    setPendingInstituteOnboarding(requiresInstituteOnboarding);
     clearAuthFlow();
-    navigate("/app/dashboard");
+    navigate(requiresInstituteOnboarding ? "/onboarding" : "/app/dashboard", { replace: true });
   }
 
   async function handleSendOtp() {
@@ -236,7 +240,7 @@ export default function LoginPage() {
         <div style={{ textAlign: "center", fontSize: "13px", paddingTop: "4px" }}>
           <div style={{ marginBottom: "6px" }}>
             {isExistingUser ? (
-              <Link to="/onboarding" style={{ color: "#9a2119", fontWeight: "600" }}>
+              <Link to="/onboarding?source=auth-entry" style={{ color: "#9a2119", fontWeight: "600" }}>
                 New user? Start onboarding
               </Link>
             ) : (
