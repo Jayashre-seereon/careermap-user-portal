@@ -133,6 +133,7 @@ export function mapMentorItem(item, index = 0) {
     linkedin: item?.linkedin || "",
     facebook: item?.facebook || "",
     status: Boolean(item?.status),
+    rating: item?.averageRating || item?.rating || 0,
     image: item?.image || null,
     resume: item?.resume || null,
     categoryId: item?.categoryId ?? null,
@@ -209,4 +210,9 @@ export async function getBookedMentorSlots(mentorId, date) {
   return Array.isArray(response?.data?.data)
     ? response.data.data.filter(Boolean)
     : [];
+}
+
+export async function createMentorReview(payload) {
+  const response = await api.post("/mentorreview/", payload);
+  return response.data;
 }

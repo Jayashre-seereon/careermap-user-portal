@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { notifications as notificationItems } from "../data/careermapData";
+import { getDashboard } from "../api/dashboardApi";
 import { useAuthStore } from "../store/authStore";
 import { getNotifications } from "../api/notificationApi";
 import { getMentorBookings, getSubscriptions, getTestHistory } from "../api/profile";
@@ -65,6 +66,7 @@ const initialState = {
     { id: "2", mentorName: "Prof. Rahul Verma", date: "15 Apr 2026", time: "6:30 PM", status: "Upcoming" },
   ],
   subscriptionRecords: [],
+  dashboardData: null,
   freeAccessUsage: {
     "career-library": null,
     "master-class": null,
@@ -323,6 +325,33 @@ export function AppStateProvider({ children }) {
 
   useEffect(() => {
     if (!accessToken) {
+      setState((current) => ({ ...current, dashboardData: null }));
+      return undefined;
+    }
+
+    let active = true;
+
+    async function loadDashboardData() {
+      try {
+        const response = await getDashboard();
+        if (active && response?.success) {
+          setState((current) => ({ ...current, dashboardData: response.data || null }));
+        }
+      } catch {
+        if (active) {
+          setState((current) => ({ ...current, dashboardData: null }));
+        }
+      }
+    }
+
+    loadDashboardData();
+    return () => {
+      active = false;
+    };
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) {
       setState((current) => ({
         ...current,
         testHistory: initialState.testHistory,
@@ -566,6 +595,7 @@ export function AppStateProvider({ children }) {
             expiryDate: "10 Apr 2027",
             transactionId: `TXN-${planId.toUpperCase()}-2401`,
           })),
+      dashboardData: state.dashboardData,
     };
   }, [state]);
 

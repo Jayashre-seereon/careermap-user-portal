@@ -92,10 +92,14 @@ export const useAuthStore = create(
     }),
     {
       name: "careermap-auth-store",
+      version: 2,
+      migrate: (persistedState) => ({
+        ...persistedState,
+        pendingInstituteOnboarding: false,
+      }),
       partialize: (state) => ({
         signupForm: state.signupForm,
         onboardingData: state.onboardingData,
-        pendingInstituteOnboarding: state.pendingInstituteOnboarding,
         tempToken: state.tempToken,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,

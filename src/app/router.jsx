@@ -37,7 +37,8 @@ export const router = createBrowserRouter([
   {
     element: <RootProviders />,
     children: [
-      { path: "/", element: <SplashPage /> },
+      { path: "/", element: <Navigate to="/auth-entry" replace /> },
+      { path: "/splash", element: <SplashPage /> },
       {
         element: <PublicOnly />,
         children: [

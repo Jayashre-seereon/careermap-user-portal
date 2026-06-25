@@ -240,7 +240,7 @@ export default function LoginPage() {
         <div style={{ textAlign: "center", fontSize: "13px", paddingTop: "4px" }}>
           <div style={{ marginBottom: "6px" }}>
             {isExistingUser ? (
-              <Link to="/onboarding" style={{ color: "#9a2119", fontWeight: "600" }}>
+              <Link to="/onboarding?source=auth-entry" style={{ color: "#9a2119", fontWeight: "600" }}>
                 New user? Start onboarding
               </Link>
             ) : (
