@@ -432,3 +432,7 @@ transition:
     animation: none;
   }
 }
+
+.ckeditor-output {
+  all: revert;
+}
