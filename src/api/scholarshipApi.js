@@ -88,7 +88,7 @@ function mapScholarshipItem(item, index) {
     tag: scholarshipType,
     status: getScholarshipStatus(item?.deadline),
     provider: scholarshipType,
-    description: stripHtml(item?.description) || "Scholarship details are not available right now.",
+    description: item?.description || "Scholarship details are not available right now.",
     requirements: formatRequirements(item?.requirement),
     link: item?.url || "#",
     image: item?.image || null,
