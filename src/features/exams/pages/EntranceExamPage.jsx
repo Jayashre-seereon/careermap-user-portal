@@ -208,7 +208,7 @@ export default function EntranceExamPage() {
 
               <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
                 <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#aa8a83]">
-                    View Details
+
                   </span>
 
                 {item.website && item.website !== "#" ? (
