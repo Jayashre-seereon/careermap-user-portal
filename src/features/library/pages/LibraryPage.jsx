@@ -1309,7 +1309,7 @@ export default function LibraryPage() {
           <SectionCard
             id={`top-out-${index}`}
             icon={<EnvironmentOutlined />}
-            title="Outside Odisha"
+            title="Top  Institutes Outside Odisha"
             subtitle="All institutes from other states are shown here."
           >
             {instituteGroups.outsideInstitutes.length > 0 ? (
