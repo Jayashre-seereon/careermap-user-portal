@@ -178,7 +178,10 @@ export default function ScholarshipPage() {
                   </span>
                 </div>
                 <div className="h-px bg-[#f0e4e2]" />
-                <p className="m-0 text-sm leading-7 text-gray-500">{selectedItem.description}</p>
+              <div
+                  className="ckeditor-output"
+                  dangerouslySetInnerHTML={{ __html: selectedItem.description || "" }}
+                />
               </div>
             </div>
 

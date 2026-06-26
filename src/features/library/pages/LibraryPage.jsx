@@ -1088,13 +1088,13 @@ export default function LibraryPage() {
                   <FileTextOutlined />
                 </span>
                 <div>
-                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">Description</p>
+                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">Explore Details</p>
                   <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Quick overview for this career path</p>
                 </div>
               </div>
-              <p className="m-0 mt-3 text-[14px] leading-7 text-[#5f5658] line-clamp-3">
+              {/* <p className="m-0 mt-3 text-[14px] leading-7 text-[#5f5658] line-clamp-3">
                 {description}
-              </p>
+              </p> */}
             </div>
           ) : null}
 
