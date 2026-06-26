@@ -237,7 +237,7 @@ export default function InstitutePage() {
 
                 <div className="mt-5 flex items-center justify-between border-t border-[#efe3de] pt-4">
                   <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#aa8a83]">
-                    View Details
+                  
                   </span>
                   {websiteUrl ? (
                     <a
