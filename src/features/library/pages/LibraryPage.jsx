@@ -295,6 +295,15 @@ function formatSalaryRange(salary) {
   return "Salary not available";
 }
 
+function getMediaType(url) {
+  if (!url) return null;
+  const clean = String(url).split("?")[0].toLowerCase();
+  if (/\.(mp4|webm|mov|ogg)$/.test(clean)) return "video";
+  if (/\.(gif)$/.test(clean)) return "gif";
+  if (/\.(jpg|jpeg|png|webp|svg)$/.test(clean)) return "image";
+  return "image"; // fallback
+}
+
 function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
   return (
     <section id={id} className={`scroll-mt-4 rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm ${className}`}>
@@ -314,6 +323,57 @@ function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
   );
 }
 
+function MediaBanner({ media, title, onBack }) {
+  if (!media) return null;
+  const type = getMediaType(media);
+
+  return (
+    <div className="relative overflow-hidden rounded-[24px] border border-[#f0e4e2] shadow-sm h-56 sm:h-72">
+      {type === "video" ? (
+        <video src={media} className="h-full w-full object-cover" autoPlay muted loop playsInline />
+      ) : (
+        <img src={media} alt={title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+      )}
+      <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent px-6 py-5">
+        <div className="flex items-center gap-3">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
+            >
+              <ArrowRightOutlined className="rotate-180" />
+            </button>
+          ) : null}
+     <div>
+  <h2
+    className="m-0 text-2xl font-black"
+    style={{
+      color: "#9a2119",
+      WebkitTextFillColor: "#9a2119",
+     
+      textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+    }}
+  >
+    {title}
+  </h2>
+  <p
+    className="m-0 mt-1 text-sm font-bold"
+    style={{
+      color: "#9a2119",
+      bold: true,
+      WebkitTextFillColor: "#9a2119",
+      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+    }}
+  >
+    Career detail view.
+  </p>
+</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 function DetailPill({ icon, label, tone = "#9a2119", className = "" }) {
   return (
     <div className={`inline-flex items-center gap-2 rounded-full border border-[#f0e4e2] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#4f4347] ${className}`}>
@@ -406,6 +466,7 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
     ),
     specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
 importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
+media: item?.media || sourceItem?.media || "",
     institutes: normalizeInstituteItems(
       item?.institutions ||
         item?.institutes ||
@@ -1061,7 +1122,13 @@ export default function LibraryPage() {
     }
 
     return (
-      <div key={`detail-${detail?.id ?? index}`} className="flex gap-6 items-start">
+       <div key={`detail-${detail?.id ?? index}`} className="space-y-6">
+   {detail?.media ? (
+  <MediaBanner media={detail.media} title={title} onBack={handleBack} />
+) : null}
+
+    <div  
+      className="flex gap-6 items-start">
         <div className="hidden lg:block sticky top-4 w-72 shrink-0">
           <div className="overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
             <div className="border-b border-[#f7eeec] px-5 py-4">
@@ -1093,22 +1160,8 @@ export default function LibraryPage() {
         </div>
 
         <div className="flex-1 min-w-0 space-y-5">
-          {description ? (
-            <div className="rounded-[24px] border border-[#f0e4e2] bg-gradient-to-r from-[#fff7f3] to-white px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#9a2119] text-white">
-                  <FileTextOutlined />
-                </span>
-                <div>
-                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">Explore Details</p>
-                  <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Quick overview for this career path</p>
-                </div>
-              </div>
-              {/* <p className="m-0 mt-3 text-[14px] leading-7 text-[#5f5658] line-clamp-3">
-                {description}
-              </p> */}
-            </div>
-          ) : null}
+         
+          
 
           {description ? (
             <SectionCard
@@ -1273,46 +1326,47 @@ export default function LibraryPage() {
             )}
           </SectionCard>
 {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
-  <SectionCard
-    id={`spec-imp-${index}`}
-    icon={<TrophyOutlined />}
-    title="Specialization & Important Factors"
-    subtitle="Key specializations and things to know."
-  >
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="rounded-[18px] border border-[#f0e4e2] bg-white p-4">
-        <p className="m-0 mb-2 text-[12px] font-bold uppercase tracking-[0.15em] text-[#b8837e]">Specialization</p>
-        {detail.specializationList.length > 0 ? (
-          <ul className="m-0 list-none space-y-2 p-0">
-            {detail.specializationList.map((item, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <StarOutlined className="mt-1 text-[#9a2119]" />
-                <span className="text-[14px] text-[#5f5658]">{item}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="m-0 text-sm text-gray-400">Not available.</p>
-        )}
-      </div>
+  <div className="grid gap-5 sm:grid-cols-2">
+    <SectionCard
+      id={`spec-${index}`}
+      icon={<StarOutlined />}
+      title="Specialization"
+      subtitle="Key specializations in this field."
+    >
+      {detail.specializationList.length > 0 ? (
+        <ul className="m-0 list-none space-y-2 p-0">
+          {detail.specializationList.map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <StarOutlined className="mt-1 text-[#9a2119]" />
+              <span className="text-[14px] text-[#5f5658]">{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="m-0 text-sm text-gray-400">Not available.</p>
+      )}
+    </SectionCard>
 
-      <div className="rounded-[18px] border border-[#f0e4e2] bg-white p-4">
-        <p className="m-0 mb-2 text-[12px] font-bold uppercase tracking-[0.15em] text-[#b8837e]">Important Factors</p>
-        {detail.importantFactorList.length > 0 ? (
-          <ul className="m-0 list-none space-y-2 p-0">
-            {detail.importantFactorList.map((item, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
-                <span className="text-[14px] text-[#5f5658]">{item}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="m-0 text-sm text-gray-400">Not available.</p>
-        )}
-      </div>
-    </div>
-  </SectionCard>
+    <SectionCard
+      id={`imp-${index}`}
+      icon={<CheckCircleOutlined />}
+      title="Important Factors"
+      subtitle="Things to know before choosing this path."
+    >
+      {detail.importantFactorList.length > 0 ? (
+        <ul className="m-0 list-none space-y-2 p-0">
+          {detail.importantFactorList.map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
+              <span className="text-[14px] text-[#5f5658]">{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="m-0 text-sm text-gray-400">Not available.</p>
+      )}
+    </SectionCard>
+  </div>
 )}
           <SectionCard
             id={`salary-${index}`}
@@ -1374,6 +1428,7 @@ export default function LibraryPage() {
           </SectionCard>
         </div>
       </div>
+      </div>
     );
   }
 
@@ -1381,54 +1436,56 @@ export default function LibraryPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <LibraryBreadcrumb
-            stream={selectedStream?.name}
-            category={selectedCategory?.name}
-            secondCategory={selectedSecondCategory?.name}
-            subCategory={selectedSubCategory?.name}
-            detail={getDetailItemsLabel()}
-            level={currentLevel}
-          />
-          <div className="mb-2 flex items-center gap-3">
-            {currentLevel !== "streams" ? (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <ArrowRightOutlined className="rotate-180" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={goToDashboard}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <ArrowRightOutlined className="rotate-180" />
-              </button>
-            )}
-            <div className="min-w-0">
-              <h1 className="m-0 text-2xl font-black leading-snug text-[#1a0a09]">
-                {pageTitle}
-              </h1>
-              <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-                {currentLevel === "streams"
-                  ? "Choose a stream to begin exploring career paths."
-                  : currentLevel === "categories"
-                  ? "Select a category within this stream."
-                  : currentLevel === "secondcategory"
-                  ? "Choose the next step in this career path."
-                  : currentLevel === "subcategory"
-                  ? "Open a specialization to view full details."
-                  : "Career detail view."}
-              </p>
-            </div>
+     <div className="flex items-center justify-between gap-4">
+  <div className="min-w-0 flex-1">
+    <LibraryBreadcrumb
+      stream={selectedStream?.name}
+      category={selectedCategory?.name}
+      secondCategory={selectedSecondCategory?.name}
+      subCategory={selectedSubCategory?.name}
+      detail={getDetailItemsLabel()}
+      level={currentLevel}
+    />
+    {currentLevel !== "details" && (
+      <>
+        <div className="mb-2 flex items-center gap-3">
+          {currentLevel !== "streams" ? (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <ArrowRightOutlined className="rotate-180" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={goToDashboard}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <ArrowRightOutlined className="rotate-180" />
+            </button>
+          )}
+          <div className="min-w-0">
+            <h1 className="m-0 text-2xl font-black leading-snug text-[#9a2119]">
+              {pageTitle}
+            </h1>
+            <p className="mt-1 mb-0 text-xs text-[#9a2119]">
+              {currentLevel === "streams"
+                ? "Choose a stream to begin exploring career paths."
+                : currentLevel === "categories"
+                ? "Select a category within this stream."
+                : currentLevel === "secondcategory"
+                ? "Choose the next step in this career path."
+                : "Open a specialization to view full details."}
+            </p>
           </div>
-          <div className="mt-2 h-[3px] w-8 rounded-full bg-[#9a2119]" />
         </div>
-      </div>
+        <div className="mt-2 h-[3px] w-8 rounded-full bg-[#9a2119]" />
+      </>
+    )}
+  </div>
+</div>
 
       {loading ? (
         <p className="m-0 text-sm text-muted">
