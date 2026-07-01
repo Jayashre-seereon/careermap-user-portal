@@ -20,6 +20,8 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UnlockOutlined,
+  StarOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 
 import { useEffect, useMemo, useState, useContext } from "react";
@@ -56,7 +58,15 @@ function stripHtml(value) {
     .replace(/\s+/g, " ")
     .trim();
 }
-
+function extractListItems(html) {
+  if (!html) return [];
+  const matches = String(html).match(/<li[^>]*>([\s\S]*?)<\/li>/g) || [];
+  if (matches.length > 0) {
+    return matches.map((li) => stripHtml(li)).filter(Boolean);
+  }
+  const plain = stripHtml(html);
+  return plain ? [plain] : [];
+}
 function toList(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (!value) return [];
@@ -277,9 +287,9 @@ function formatSalaryAmount(value) {
 
 function formatSalaryRange(salary) {
   if (!salary) return "Salary not available";
-  const currency = salary?.currency ? `${salary.currency} ` : "";
+  const currency = salary?.currency || "";
   if (salary?.minSalary != null && salary?.maxSalary != null) {
-    return `${currency}${formatSalaryAmount(salary.minSalary)} - ${formatSalaryAmount(salary.maxSalary)}`;
+    return `${salary.profession ? salary.profession + " - " : ""}${currency} ${formatSalaryAmount(salary.minSalary)} to ${currency} ${formatSalaryAmount(salary.maxSalary)} /annum`;
   }
   if (salary?.label || salary?.value) return salary.label || salary.value;
   return "Salary not available";
@@ -394,6 +404,8 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
         sourceItem?.salaryRanges ||
         []
     ),
+    specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
+importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
     institutes: normalizeInstituteItems(
       item?.institutions ||
         item?.institutes ||
@@ -1260,25 +1272,63 @@ export default function LibraryPage() {
               <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
             )}
           </SectionCard>
+{(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
+  <SectionCard
+    id={`spec-imp-${index}`}
+    icon={<TrophyOutlined />}
+    title="Specialization & Important Factors"
+    subtitle="Key specializations and things to know."
+  >
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="rounded-[18px] border border-[#f0e4e2] bg-white p-4">
+        <p className="m-0 mb-2 text-[12px] font-bold uppercase tracking-[0.15em] text-[#b8837e]">Specialization</p>
+        {detail.specializationList.length > 0 ? (
+          <ul className="m-0 list-none space-y-2 p-0">
+            {detail.specializationList.map((item, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <StarOutlined className="mt-1 text-[#9a2119]" />
+                <span className="text-[14px] text-[#5f5658]">{item}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="m-0 text-sm text-gray-400">Not available.</p>
+        )}
+      </div>
 
+      <div className="rounded-[18px] border border-[#f0e4e2] bg-white p-4">
+        <p className="m-0 mb-2 text-[12px] font-bold uppercase tracking-[0.15em] text-[#b8837e]">Important Factors</p>
+        {detail.importantFactorList.length > 0 ? (
+          <ul className="m-0 list-none space-y-2 p-0">
+            {detail.importantFactorList.map((item, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
+                <span className="text-[14px] text-[#5f5658]">{item}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="m-0 text-sm text-gray-400">Not available.</p>
+        )}
+      </div>
+    </div>
+  </SectionCard>
+)}
           <SectionCard
             id={`salary-${index}`}
             icon={<DollarOutlined />}
             title="Salary Range"
             subtitle="Expected salary bands in the field."
           >
-            {salaryRanges.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {salaryRanges.map((salary, si) => (
-                  <div
-                    key={salary?.id ?? si}
-                    className="rounded-[18px] border border-[#f0e4e2] bg-gradient-to-br from-[#fff8f4] to-white px-4 py-4 shadow-sm"
-                  >
-                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Salary</p>
-                    <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{formatSalaryRange(salary)}</p>
-                  </div>
-                ))}
-              </div>
+           {salaryRanges.length > 0 ? (
+  <ul className="m-0 list-none space-y-3 p-0">
+    {salaryRanges.map((salary, si) => (
+      <li key={salary?.id ?? si} className="flex items-center gap-3">
+        <DollarOutlined className="text-[#9a2119]" />
+        <span className="text-[14px] font-semibold text-[#1a0a09]">{formatSalaryRange(salary)}</span>
+      </li>
+    ))}
+  </ul>
             ) : detail?.salary ? (
               <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
                 <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
