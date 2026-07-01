@@ -327,52 +327,50 @@ function MediaBanner({ media, title, onBack }) {
   if (!media) return null;
   const type = getMediaType(media);
 
-  return (
-    <div className="relative overflow-hidden rounded-[24px] border border-[#f0e4e2] shadow-sm h-56 sm:h-72">
-      {type === "video" ? (
-        <video src={media} className="h-full w-full object-cover" autoPlay muted loop playsInline />
-      ) : (
-        <img src={media} alt={title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-      )}
-      <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/30 to-transparent px-6 py-5">
-        <div className="flex items-center gap-3">
-          {onBack ? (
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
-            >
-              <ArrowRightOutlined className="rotate-180" />
-            </button>
-          ) : null}
-     <div>
-  <h2
-    className="m-0 text-2xl font-black"
-    style={{
-      color: "#9a2119",
-      WebkitTextFillColor: "#9a2119",
-     
-      textShadow: "0 1px 3px rgba(0,0,0,0.3)",
-    }}
-  >
-    {title}
-  </h2>
-  <p
-    className="m-0 mt-1 text-sm font-bold"
-    style={{
-      color: "#9a2119",
-      bold: true,
-      WebkitTextFillColor: "#9a2119",
-      textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-    }}
-  >
-    Career detail view.
-  </p>
-</div>
+ return (
+  <div className="relative overflow-hidden rounded-[24px] border border-[#f0e4e2] shadow-sm h-56 sm:h-72">
+    {type === "video" ? (
+      <video src={media} className="h-full w-full object-cover" autoPlay muted loop playsInline />
+    ) : (
+      <img src={media} alt={title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+    )}
+    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-6 py-5">
+      <div className="flex items-center gap-3">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
+          >
+            <ArrowRightOutlined className="rotate-180" />
+          </button>
+        ) : null}
+        <div>
+          <h2
+            className="m-0 text-2xl font-black"
+            style={{
+              color: "#ffff",
+              WebkitTextFillColor: "#ffff",
+              textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+            }}
+          >
+            {title}
+          </h2>
+          <p
+            className="m-0 mt-1 text-sm font-bold"
+            style={{
+              color: "#ffff",
+              WebkitTextFillColor: "#ffff",
+              textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+            }}
+          >
+            Career detail view.
+          </p>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 function DetailPill({ icon, label, tone = "#9a2119", className = "" }) {
   return (
