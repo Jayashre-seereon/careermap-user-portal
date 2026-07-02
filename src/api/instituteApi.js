@@ -27,19 +27,20 @@ function formatDateDDMMYYYY(value) {
 }
 
 function mapInstituteItem(item, index) {
-  const state = item?.state || "";
-  const city = item?.city || "";
-  const instituteType = item?.institute_type || "Institute";
-  const courses = Array.isArray(item?.course_offered) ? item.course_offered.filter(Boolean) : [];
+  const state = item?.state?.trim() || "";
+const city = item?.city?.trim() || "";
+const instituteType = item?.institute_type?.trim() || "Institute";
+const country = item?.countruy?.trim() || "";
+ const courses = Array.isArray(item?.course_offered) ? item.course_offered.filter(Boolean) : [];
 
 return {
   id: String(item?.id ?? `institute-${index}`),
   name: item?.name || "Unnamed Institute",
  location: item?.address,
   courses,
-  type: instituteType,
-  state,
-  city,
+ country,
+state,
+type: instituteType,
   about: stripHtml(item?.about) || "About information is not available right now.",
   website: item?.url || "#",
   rank: item?.rank || "Top",
