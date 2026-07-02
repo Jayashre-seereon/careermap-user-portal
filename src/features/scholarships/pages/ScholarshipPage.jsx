@@ -17,7 +17,12 @@ import { scholarships as fallbackScholarships } from "../../../data/careermapDat
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
 export default function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
@@ -177,23 +182,20 @@ export default function ScholarshipPage() {
                     {selectedItem.status}
                   </span>
                 </div>
-                <div className="h-px bg-[#f0e4e2]" />
-              <div
-                  className="ckeditor-output"
-                  dangerouslySetInnerHTML={{ __html: selectedItem.description || "" }}
-                />
+                
+              
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+            <div id="section-eligibility" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24 overflow-hidden rounded-[26px]">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
                 <TeamOutlined className="text-sm text-[#9a2119]" />
-                <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Eligibility</h3>
+                <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">Eligibility</h3>
               </div>
               <p className="m-0 px-5 py-4 text-sm font-medium leading-7 text-[#1a0a09]">{selectedItem.eligibility}</p>
             </div>
 
-            <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+           <div id="section-requirements" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
                 <FileTextOutlined className="text-sm text-[#9a2119]" />
                 <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Requirements</h3>
@@ -212,6 +214,26 @@ export default function ScholarshipPage() {
                 ))}
               </div>
             </div>
+
+          {selectedItem.sections?.length ? (
+              <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+                <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
+                  <FileTextOutlined className="text-sm text-[#9a2119]" />
+                  <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">Description</h3>
+                </div>
+                <div className="divide-y divide-[#f0e4e2]">
+                  {selectedItem.sections.map((section) => (
+                    <div key={section.id} id={`section-${section.id}`} className="scroll-mt-24 px-5 py-4">
+                     <h3 className="m-0 mb-2 text-[15px] " style={{ color: "#9a2119" }}>{section.title}</h3> 
+                      <div
+                        className="ckeditor-output text-sm leading-7 text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: section.description || "" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Right column: persistent apply rail */}
@@ -227,7 +249,7 @@ export default function ScholarshipPage() {
 
                 <div className="h-px bg-[#f0e4e2]" />
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 ">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fdf0ee] text-[#9a2119]">
                     <CalendarOutlined />
                   </span>
@@ -236,7 +258,17 @@ export default function ScholarshipPage() {
                     <p className="m-0 text-sm font-bold text-[#1a0a09]">{selectedItem.deadline}</p>
                   </div>
                 </div>
-
+ <div className="h-px bg-[#f0e4e2] mt-4" />
+                <Button
+                  type="primary"
+                  href={selectedItem.link}
+                  target="_blank"
+                  block
+                  icon={<ArrowRightOutlined />}
+                  className="!mt-1 !h-8  !rounded-xl !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]"
+                >
+                  Apply Now
+                </Button>
                 {showCountdown ? (
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fdf0ee] text-[#9a2119]">
@@ -250,17 +282,40 @@ export default function ScholarshipPage() {
                     </div>
                   </div>
                 ) : null}
+<div className="h-px bg-[#f0e4e2] mt-4" />
 
-                <Button
-                  type="primary"
-                  href={selectedItem.link}
-                  target="_blank"
-                  block
-                  icon={<ArrowRightOutlined />}
-                  className="!mt-1 !h-12 !rounded-xl !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]"
-                >
-                  Apply Now
-                </Button>
+<div>
+  <p className="m-0 mb-2 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">On This Page</p>
+ <div className="flex flex-col gap-0.5">
+    <button
+      type="button"
+      onClick={() => scrollToSection("section-eligibility")}
+      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+    >
+      <TeamOutlined className="text-xs" />
+      Eligibility
+    </button>
+    <button
+      type="button"
+      onClick={() => scrollToSection("section-requirements")}
+      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+    >
+      <FileTextOutlined className="text-xs" />
+      Requirements
+    </button>
+    {selectedItem.sections?.map((section) => (
+      <button
+        key={section.id}
+        type="button"
+        onClick={() => scrollToSection(`section-${section.id}`)}
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+      >
+        <FileTextOutlined className="text-xs" />
+        {section.title}
+      </button>
+    ))}
+  </div>
+</div>
                 {!detailUnlocked ? (
                   <Button block onClick={() => handleGoToPlans(selectedItem.name)} className="!h-12 !rounded-xl">
                     Unlock to Continue
