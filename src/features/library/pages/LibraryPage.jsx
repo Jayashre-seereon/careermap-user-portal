@@ -20,6 +20,8 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UnlockOutlined,
+  StarOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 
 import { useEffect, useMemo, useState, useContext } from "react";
@@ -56,7 +58,15 @@ function stripHtml(value) {
     .replace(/\s+/g, " ")
     .trim();
 }
-
+function extractListItems(html) {
+  if (!html) return [];
+  const matches = String(html).match(/<li[^>]*>([\s\S]*?)<\/li>/g) || [];
+  if (matches.length > 0) {
+    return matches.map((li) => stripHtml(li)).filter(Boolean);
+  }
+  const plain = stripHtml(html);
+  return plain ? [plain] : [];
+}
 function toList(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (!value) return [];
@@ -277,12 +287,21 @@ function formatSalaryAmount(value) {
 
 function formatSalaryRange(salary) {
   if (!salary) return "Salary not available";
-  const currency = salary?.currency ? `${salary.currency} ` : "";
+  const currency = salary?.currency || "";
   if (salary?.minSalary != null && salary?.maxSalary != null) {
-    return `${currency}${formatSalaryAmount(salary.minSalary)} - ${formatSalaryAmount(salary.maxSalary)}`;
+    return `${salary.profession ? salary.profession + " - " : ""}${currency} ${formatSalaryAmount(salary.minSalary)} to ${currency} ${formatSalaryAmount(salary.maxSalary)} /annum`;
   }
   if (salary?.label || salary?.value) return salary.label || salary.value;
   return "Salary not available";
+}
+
+function getMediaType(url) {
+  if (!url) return null;
+  const clean = String(url).split("?")[0].toLowerCase();
+  if (/\.(mp4|webm|mov|ogg)$/.test(clean)) return "video";
+  if (/\.(gif)$/.test(clean)) return "gif";
+  if (/\.(jpg|jpeg|png|webp|svg)$/.test(clean)) return "image";
+  return "image"; // fallback
 }
 
 function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
@@ -304,6 +323,55 @@ function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
   );
 }
 
+function MediaBanner({ media, title, onBack }) {
+  if (!media) return null;
+  const type = getMediaType(media);
+
+ return (
+  <div className="relative overflow-hidden rounded-[24px] border border-[#f0e4e2] shadow-sm h-56 sm:h-72">
+    {type === "video" ? (
+      <video src={media} className="h-full w-full object-cover" autoPlay muted loop playsInline />
+    ) : (
+      <img src={media} alt={title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+    )}
+    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-6 py-5">
+      <div className="flex items-center gap-3">
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
+          >
+            <ArrowRightOutlined className="rotate-180" />
+          </button>
+        ) : null}
+        <div>
+          <h2
+            className="m-0 text-2xl font-black"
+            style={{
+              color: "#ffff",
+              WebkitTextFillColor: "#ffff",
+              textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+            }}
+          >
+            {title}
+          </h2>
+          <p
+            className="m-0 mt-1 text-sm font-bold"
+            style={{
+              color: "#ffff",
+              WebkitTextFillColor: "#ffff",
+              textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+            }}
+          >
+            Career detail view.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+}
 function DetailPill({ icon, label, tone = "#9a2119", className = "" }) {
   return (
     <div className={`inline-flex items-center gap-2 rounded-full border border-[#f0e4e2] bg-white px-3 py-1.5 text-[12px] font-semibold text-[#4f4347] ${className}`}>
@@ -394,6 +462,9 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
         sourceItem?.salaryRanges ||
         []
     ),
+    specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
+importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
+media: item?.media || sourceItem?.media || "",
     institutes: normalizeInstituteItems(
       item?.institutions ||
         item?.institutes ||
@@ -912,9 +983,7 @@ export default function LibraryPage() {
               <h3 className="text-sm font-semibold text-[#9a2119] line-clamp-2">
                 {item?.name}
               </h3>
-              <p className="text-xs text-gray-500 line-clamp-2">
-                {item?.desc || "Explore categories and discover more options."}
-              </p>
+             
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs font-semibold text-[#9a2119]">View</span>
                 <ArrowRightOutlined className="text-xs opacity-60 group-hover:translate-x-1 transition" />
@@ -1049,7 +1118,13 @@ export default function LibraryPage() {
     }
 
     return (
-      <div key={`detail-${detail?.id ?? index}`} className="flex gap-6 items-start">
+       <div key={`detail-${detail?.id ?? index}`} className="space-y-6">
+   {detail?.media ? (
+  <MediaBanner media={detail.media} title={title} onBack={handleBack} />
+) : null}
+
+    <div  
+      className="flex gap-6 items-start">
         <div className="hidden lg:block sticky top-4 w-72 shrink-0">
           <div className="overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
             <div className="border-b border-[#f7eeec] px-5 py-4">
@@ -1081,22 +1156,8 @@ export default function LibraryPage() {
         </div>
 
         <div className="flex-1 min-w-0 space-y-5">
-          {description ? (
-            <div className="rounded-[24px] border border-[#f0e4e2] bg-gradient-to-r from-[#fff7f3] to-white px-5 py-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#9a2119] text-white">
-                  <FileTextOutlined />
-                </span>
-                <div>
-                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">Explore Details</p>
-                  <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Quick overview for this career path</p>
-                </div>
-              </div>
-              {/* <p className="m-0 mt-3 text-[14px] leading-7 text-[#5f5658] line-clamp-3">
-                {description}
-              </p> */}
-            </div>
-          ) : null}
+         
+          
 
           {description ? (
             <SectionCard
@@ -1260,25 +1321,64 @@ export default function LibraryPage() {
               <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
             )}
           </SectionCard>
+{(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
+  <div className="grid gap-5 sm:grid-cols-2">
+    <SectionCard
+      id={`spec-${index}`}
+      icon={<StarOutlined />}
+      title="Specialization"
+      subtitle="Key specializations in this field."
+    >
+      {detail.specializationList.length > 0 ? (
+        <ul className="m-0 list-none space-y-2 p-0">
+          {detail.specializationList.map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <StarOutlined className="mt-1 text-[#9a2119]" />
+              <span className="text-[14px] text-[#5f5658]">{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="m-0 text-sm text-gray-400">Not available.</p>
+      )}
+    </SectionCard>
 
+    <SectionCard
+      id={`imp-${index}`}
+      icon={<CheckCircleOutlined />}
+      title="Important Factors"
+      subtitle="Things to know before choosing this path."
+    >
+      {detail.importantFactorList.length > 0 ? (
+        <ul className="m-0 list-none space-y-2 p-0">
+          {detail.importantFactorList.map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
+              <span className="text-[14px] text-[#5f5658]">{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="m-0 text-sm text-gray-400">Not available.</p>
+      )}
+    </SectionCard>
+  </div>
+)}
           <SectionCard
             id={`salary-${index}`}
             icon={<DollarOutlined />}
             title="Salary Range"
             subtitle="Expected salary bands in the field."
           >
-            {salaryRanges.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {salaryRanges.map((salary, si) => (
-                  <div
-                    key={salary?.id ?? si}
-                    className="rounded-[18px] border border-[#f0e4e2] bg-gradient-to-br from-[#fff8f4] to-white px-4 py-4 shadow-sm"
-                  >
-                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Salary</p>
-                    <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{formatSalaryRange(salary)}</p>
-                  </div>
-                ))}
-              </div>
+           {salaryRanges.length > 0 ? (
+  <ul className="m-0 list-none space-y-3 p-0">
+    {salaryRanges.map((salary, si) => (
+      <li key={salary?.id ?? si} className="flex items-center gap-3">
+        <DollarOutlined className="text-[#9a2119]" />
+        <span className="text-[14px] font-semibold text-[#1a0a09]">{formatSalaryRange(salary)}</span>
+      </li>
+    ))}
+  </ul>
             ) : detail?.salary ? (
               <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
                 <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
@@ -1324,6 +1424,7 @@ export default function LibraryPage() {
           </SectionCard>
         </div>
       </div>
+      </div>
     );
   }
 
@@ -1331,54 +1432,56 @@ export default function LibraryPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <LibraryBreadcrumb
-            stream={selectedStream?.name}
-            category={selectedCategory?.name}
-            secondCategory={selectedSecondCategory?.name}
-            subCategory={selectedSubCategory?.name}
-            detail={getDetailItemsLabel()}
-            level={currentLevel}
-          />
-          <div className="mb-2 flex items-center gap-3">
-            {currentLevel !== "streams" ? (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <ArrowRightOutlined className="rotate-180" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={goToDashboard}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <ArrowRightOutlined className="rotate-180" />
-              </button>
-            )}
-            <div className="min-w-0">
-              <h1 className="m-0 text-2xl font-black leading-snug text-[#1a0a09]">
-                {pageTitle}
-              </h1>
-              <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-                {currentLevel === "streams"
-                  ? "Choose a stream to begin exploring career paths."
-                  : currentLevel === "categories"
-                  ? "Select a category within this stream."
-                  : currentLevel === "secondcategory"
-                  ? "Choose the next step in this career path."
-                  : currentLevel === "subcategory"
-                  ? "Open a specialization to view full details."
-                  : "Career detail view."}
-              </p>
-            </div>
+     <div className="flex items-center justify-between gap-4">
+  <div className="min-w-0 flex-1">
+    <LibraryBreadcrumb
+      stream={selectedStream?.name}
+      category={selectedCategory?.name}
+      secondCategory={selectedSecondCategory?.name}
+      subCategory={selectedSubCategory?.name}
+      detail={getDetailItemsLabel()}
+      level={currentLevel}
+    />
+    {currentLevel !== "details" && (
+      <>
+        <div className="mb-2 flex items-center gap-3">
+          {currentLevel !== "streams" ? (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <ArrowRightOutlined className="rotate-180" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={goToDashboard}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <ArrowRightOutlined className="rotate-180" />
+            </button>
+          )}
+          <div className="min-w-0">
+            <h1 className="m-0 text-2xl font-black leading-snug text-[#9a2119]">
+              {pageTitle}
+            </h1>
+            <p className="mt-1 mb-0 text-xs text-[#9a2119]">
+              {currentLevel === "streams"
+                ? "Choose a stream to begin exploring career paths."
+                : currentLevel === "categories"
+                ? "Select a category within this stream."
+                : currentLevel === "secondcategory"
+                ? "Choose the next step in this career path."
+                : "Open a specialization to view full details."}
+            </p>
           </div>
-          <div className="mt-2 h-[3px] w-8 rounded-full bg-[#9a2119]" />
         </div>
-      </div>
+        <div className="mt-2 h-[3px] w-8 rounded-full bg-[#9a2119]" />
+      </>
+    )}
+  </div>
+</div>
 
       {loading ? (
         <p className="m-0 text-sm text-muted">

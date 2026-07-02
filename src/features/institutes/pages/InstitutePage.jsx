@@ -30,7 +30,9 @@ export default function InstitutePage() {
   const [search, setSearch] = useState("");
   const [items, setItems] = useState(fallbackInstitutes);
   const [error, setError] = useState("");
-
+  const [country, setCountry] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
+  const [type, setType] = useState("");
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
@@ -92,24 +94,48 @@ export default function InstitutePage() {
     setSubCategory("");
   }
 
-  const filtered = useMemo(
-    () =>
-      items.filter((item) => {
-        const matchesSearch =
-          !search ||
-          item.name?.toLowerCase().includes(search.toLowerCase()) ||
-          item.location?.toLowerCase().includes(search.toLowerCase()) ||
-          item.type?.toLowerCase().includes(search.toLowerCase());
+const filtered = useMemo(
+  () =>
+    items.filter((item) => {
+      const matchesSearch =
+        !search ||
+        item.name?.toLowerCase().includes(search.toLowerCase()) ||
+        item.location?.toLowerCase().includes(search.toLowerCase()) ||
+        item.type?.toLowerCase().includes(search.toLowerCase());
 
-        const matchesCategory = !category || String(item.category?.id) === String(category);
-        const matchesSecondCategory = !secondCategory || String(item.secondcategory?.id) === String(secondCategory);
-        const matchesSubCategory = !subCategory || String(item.subcategory?.id) === String(subCategory);
+      const matchesCategory = !category || String(item.category?.id) === String(category);
+      const matchesSecondCategory = !secondCategory || String(item.secondcategory?.id) === String(secondCategory);
+      const matchesSubCategory = !subCategory || String(item.subcategory?.id) === String(subCategory);
+      const matchesCountry = !country || item.country?.trim() === country;
+      const matchesState = !stateFilter || item.state?.trim() === stateFilter;
+      const matchesType = !type || item.type?.trim() === type;
 
-        return matchesSearch && matchesCategory && matchesSecondCategory && matchesSubCategory;
-      }),
-    [items, search, category, secondCategory, subCategory]
-  );
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesSecondCategory &&
+        matchesSubCategory &&
+        matchesCountry &&
+        matchesState &&
+        matchesType
+      );
+    }),
+  [items, search, category, secondCategory, subCategory, country, stateFilter, type]
+);
+const countryOptions = useMemo(
+  () => [...new Set(items.map(i => i.country?.trim()).filter(Boolean))],
+  [items]
+);
+const stateOptions = useMemo(
+  () =>
+    [...new Set(items.map(i => i.state?.trim()).filter(Boolean))],
+  [items]
+);
 
+const typeOptions = useMemo(
+  () => [...new Set(items.map(i => i.type?.trim()).filter(Boolean))],
+  [items]
+);
   return (
     <ModuleScreen className="space-y-5">
       {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
@@ -178,6 +204,42 @@ export default function InstitutePage() {
             <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
+        <div className="relative"><select
+  value={country}
+  onChange={(e) => setCountry(e.target.value)}
+  className="appearance-none rounded-full border px-3 py-1.5 text-[12px]"
+>
+  <option value="">All Countries</option>
+  {countryOptions.map((c) => (
+    <option key={c} value={c}>
+      {c}
+    </option>
+  ))}
+</select></div>
+        <div className="relative"> <select
+  value={stateFilter}
+  onChange={(e) => setStateFilter(e.target.value)}
+  className="appearance-none rounded-full border px-3 py-1.5 text-[12px]"
+>
+  <option value="">All States</option>
+  {stateOptions.map((s) => (
+    <option key={s} value={s}>
+      {s}
+    </option>
+  ))}
+</select></div>
+        <div className="relative"><select
+  value={type}
+  onChange={(e) => setType(e.target.value)}
+  className="appearance-none rounded-full border px-3 py-1.5 text-[12px]"
+>
+  <option value="">All Types</option>
+  {typeOptions.map((t) => (
+    <option key={t} value={t}>
+      {t}
+    </option>
+  ))}
+</select></div>
 
         {(category || secondCategory || subCategory) ? (
           <button
@@ -186,6 +248,9 @@ export default function InstitutePage() {
               setCategory("");
               setSecondCategory("");
               setSubCategory("");
+              setCountry("");
+              setStateFilter("");
+              setType("");
             }}
             className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
           >

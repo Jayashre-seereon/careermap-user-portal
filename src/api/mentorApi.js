@@ -118,10 +118,11 @@ export function mapMentorItem(item, index = 0) {
     rating: item?.rank ? String(item.rank) : "0",
     experience: formatExperience(item?.experience),
     price: formatMentorPrice(item?.mentor_fees ?? item?.mentorFees ?? item?.price),
-    tags: String(item?.skill || item?.skills || "")
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean),
+   tags: [
+  item?.subcategory?.title ||
+  item?.secondcategory?.name ||
+  item?.category?.title
+].filter(Boolean),
     bio: stripHtml(item?.description) || "Mentor profile information is not available right now.",
     accent: mentorAccentPalette[index % mentorAccentPalette.length],
     avatar: buildAvatar(name),
