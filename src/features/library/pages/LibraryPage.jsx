@@ -983,9 +983,7 @@ export default function LibraryPage() {
               <h3 className="text-sm font-semibold text-[#9a2119] line-clamp-2">
                 {item?.name}
               </h3>
-              <p className="text-xs text-gray-500 line-clamp-2">
-                {item?.desc || "Explore categories and discover more options."}
-              </p>
+             
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs font-semibold text-[#9a2119]">View</span>
                 <ArrowRightOutlined className="text-xs opacity-60 group-hover:translate-x-1 transition" />
