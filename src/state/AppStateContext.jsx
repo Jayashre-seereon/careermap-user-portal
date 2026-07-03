@@ -67,6 +67,7 @@ const initialState = {
   ],
   subscriptionRecords: [],
   dashboardData: null,
+  profileIncomplete: false,
   freeAccessUsage: {
     "career-library": null,
     "master-class": null,
@@ -496,6 +497,9 @@ export function AppStateProvider({ children }) {
       saveUserProfile(data) {
         setState((current) => ({ ...current, userProfile: data }));
       },
+      setProfileIncomplete(value) {
+        setState((current) => ({ ...current, profileIncomplete: Boolean(value) }));
+      },
       updatePreferences(data) {
         setState((current) => ({
           ...current,
@@ -566,6 +570,12 @@ export function AppStateProvider({ children }) {
           profileEditRequestKey: current.profileEditRequestKey + 1,
         }));
       },
+      clearProfileEditRequest() {
+        setState((current) => ({
+          ...current,
+          profileEditRequestKey: 0,
+        }));
+      },
       resetPortalState() {
         setState((current) => ({
           ...initialState,
@@ -596,6 +606,7 @@ export function AppStateProvider({ children }) {
             transactionId: `TXN-${planId.toUpperCase()}-2401`,
           })),
       dashboardData: state.dashboardData,
+      profileIncomplete: state.profileIncomplete,
     };
   }, [state]);
 

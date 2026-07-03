@@ -74,6 +74,18 @@ function formatRequirements(requirement) {
     .filter(Boolean);
 }
 
+function formatSections(sections) {
+  if (!Array.isArray(sections)) {
+    return [];
+  }
+
+  return sections.map((section, index) => ({
+    id: String(section?.id ?? `section-${index}`),
+    title: section?.title || `Section ${index + 1}`,
+    description: section?.description || "",
+  }));
+}
+
 function mapScholarshipItem(item, index) {
   const scholarshipType = item?.type || "Scholarship";
 
@@ -92,7 +104,7 @@ function mapScholarshipItem(item, index) {
     requirements: formatRequirements(item?.requirement),
     link: item?.url || "#",
     image: item?.image || null,
-    // Raw category objects, preserved for dropdown filtering on the page.
+    sections: formatSections(item?.sections), 
     categoryObj: item?.category || null,
     secondcategoryObj: item?.secondcategory || null,
     subcategoryObj: item?.subcategory || null,

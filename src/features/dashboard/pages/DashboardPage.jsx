@@ -16,7 +16,15 @@ import { ExploreModulesSection } from "../../portal/components/ExploreModulesSec
 import { PersonalityQuizQuestion, PersonalityQuizResults } from "../../portal/components/PersonalityQuizSections";
 
 export default function DashboardPage() {
-  const { isUnlocked, onboarding, unreadNotificationsCount, userProfile, dashboardData: globalDashboardData } = useAppState();
+  const {
+    isUnlocked,
+    onboarding,
+    unreadNotificationsCount,
+    userProfile,
+    dashboardData: globalDashboardData,
+    profileIncomplete,
+    requestProfileEdit,
+  } = useAppState();
   const { navigate } = usePortalNavigation();
   const [showPersonality, setShowPersonality] = useState(false);
   const [personalityStep, setPersonalityStep] = useState(0);
@@ -25,6 +33,7 @@ export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [error, setError] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [profileReminderOpen, setProfileReminderOpen] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
@@ -104,6 +113,10 @@ export default function DashboardPage() {
   const activeReview = pendingMentorReviews[0] || null;
 
   useEffect(() => {
+    setProfileReminderOpen(Boolean(profileIncomplete));
+  }, [profileIncomplete]);
+
+  useEffect(() => {
     if (activeReview) {
       setReviewOpen(true);
       setReviewError("");
@@ -178,6 +191,17 @@ export default function DashboardPage() {
     }
 
     setShowPersonality(true);
+  }
+
+  function handleCompleteProfile() {
+    requestProfileEdit();
+    setProfileReminderOpen(false);
+    navigate("/app/profile", {
+      state: {
+        returnTo: "/app/dashboard",
+        profileCompletionPrompt: true,
+      },
+    });
   }
 
   return (
@@ -374,6 +398,49 @@ export default function DashboardPage() {
     })}
   </div>
       </section>
+
+      <Modal
+        open={profileReminderOpen}
+        centered
+        footer={null}
+        closable
+        onCancel={() => setProfileReminderOpen(false)}
+        width={440}
+        className="[&_.ant-modal-content]:!rounded-[24px] [&_.ant-modal-content]:!p-6"
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-[#9a2119]">
+              Profile Incomplete
+            </p>
+            <h3 className="m-0 mt-2 text-[22px] font-black text-[#1a0a09]">
+              Complete your profile
+            </h3>
+            <p className="m-0 mt-2 text-sm leading-7 text-[#6f6663]">
+             Login successful. A few profile details are still missing.
+Please complete your profile to continue.
+ </p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              type="primary"
+              block
+              className="!h-11 !rounded-xl !border-[#9a2119] !bg-[#9a2119] !font-semibold"
+              onClick={handleCompleteProfile}
+            >
+              Complete Profile
+            </Button>
+            <Button
+              block
+              className="!h-11 !rounded-xl !font-semibold"
+              onClick={() => setProfileReminderOpen(false)}
+            >
+              Later
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
   open={reviewOpen}

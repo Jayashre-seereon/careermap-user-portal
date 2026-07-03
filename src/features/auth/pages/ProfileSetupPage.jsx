@@ -57,7 +57,7 @@ function formatDateInput(raw) {
 
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
-  const { onboarding, saveUserProfile, userProfile } = useAppState();
+  const { onboarding, saveUserProfile, userProfile, setProfileIncomplete } = useAppState();
   const signupForm = useAuthStore((state) => state.signupForm);
   const onboardingData = useAuthStore((state) => state.onboardingData);
   const tempToken = useAuthStore((state) => state.tempToken);
@@ -185,6 +185,7 @@ export default function ProfileSetupPage() {
         mobile: "+91" + values.mobile,
         dob: isoDate, // store ISO internally
       });
+      setProfileIncomplete(false);
 
       navigate("/promo");
     } catch (error) {
