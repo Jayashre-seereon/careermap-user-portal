@@ -16,7 +16,7 @@ export default function LoginPage() {
   const [params] = useSearchParams();
   const location = useLocation();
   const navState = location.state || null;
-  const { onboarding, saveUserProfile } = useAppState();
+  const { onboarding, saveUserProfile, setProfileIncomplete } = useAppState();
   const setSignupForm = useAuthStore((state) => state.setSignupForm);
   const setOnboardingData = useAuthStore((state) => state.setOnboardingData);
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
@@ -44,7 +44,8 @@ export default function LoginPage() {
   }
 
   function completeLogin(response) {
-    const requiresInstituteOnboarding = Boolean(response?.user?.isInstituteStudent);
+    const profileIncomplete = Boolean(response?.profileIncomplete);
+    const requiresInstituteOnboarding = Boolean(response?.user?.isInstituteStudent) && !profileIncomplete;
 
     setAuthSession({
       accessToken: response.accessToken || "",
@@ -57,6 +58,7 @@ export default function LoginPage() {
       saveUserProfile(profile);
     }
 
+    setProfileIncomplete(profileIncomplete);
     setPendingInstituteOnboarding(requiresInstituteOnboarding);
     clearAuthFlow();
     navigate(requiresInstituteOnboarding ? "/onboarding" : "/app/dashboard", { replace: true });
