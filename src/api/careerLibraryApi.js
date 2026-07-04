@@ -1,5 +1,17 @@
 import api from "./axios";
+function buildPreviewHeaders(moduleId, previewSessionId) {
+  const headers = {};
 
+  if (moduleId) {
+    headers["x-module-id"] = moduleId;
+  }
+
+  if (previewSessionId) {
+    headers["x-preview-session"] = previewSessionId;
+  }
+
+  return headers;
+}
 export async function getCareerLibraryCategories() {
   const response = await api.get("/careerlibrary/categories");
   return response?.data ?? null;
@@ -15,12 +27,39 @@ export async function getCareerLibraryCategoriesByStream(streamId) {
   return response?.data ?? null;
 }
 
-export async function getCareerLibraryNext(type, id) {
-  const response = await api.get(`/careerlibrary/next/${type}/${id}`);
+export async function getCareerLibraryNext(
+  type,
+  id,
+  moduleId,
+  previewSessionId
+) {
+  const response = await api.get(
+    `/careerlibrary/next/${type}/${id}`,
+    {
+      headers: buildPreviewHeaders(
+        moduleId,
+        previewSessionId
+      ),
+    }
+  );
+
   return response?.data ?? null;
 }
 
-export async function getCareerLibraryDetails(subcategoryId) {
-  const response = await api.get(`/careerlibrary/subcategory/${subcategoryId}/details`);
+export async function getCareerLibraryDetails(
+  subcategoryId,
+  moduleId,
+  previewSessionId
+) {
+  const response = await api.get(
+    `/careerlibrary/subcategory/${subcategoryId}/details`,
+    {
+      headers: buildPreviewHeaders(
+        moduleId,
+        previewSessionId
+      ),
+    }
+  );
+
   return response?.data ?? null;
 }
