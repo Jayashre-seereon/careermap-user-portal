@@ -22,9 +22,21 @@ export async function getCareerLibraryStreams() {
   return response?.data ?? null;
 }
 
-export async function getCareerLibraryCategoriesByStream(streamId) {
-  const response = await api.get(`/categories/stream/${streamId}`);
-  return response?.data ?? null;
+export async function getCareerLibraryCategoriesByStream(
+  streamId,
+  moduleId
+) {
+  console.log("getCareerLibraryCategoriesByStream called");
+  console.log("streamId =", streamId);
+  console.log("moduleId =", moduleId);
+
+  const response = await api.get(`/categories/stream/${streamId}`, {
+    headers: {
+      "x-module-id": moduleId,
+    },
+  });
+
+  return response.data;
 }
 
 export async function getCareerLibraryNext(

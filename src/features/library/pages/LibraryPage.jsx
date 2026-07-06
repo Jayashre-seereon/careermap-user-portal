@@ -702,7 +702,7 @@ export default function LibraryPage() {
   const pageLocation = useLocation();
   const accessStatus = pageLocation.state?.accessStatus || "preview";
   const [moduleStatus, setModuleStatus] = useState(accessStatus);
-  const CAREER_LIBRARY_MODULE_ID = 4;
+  const CAREER_LIBRARY_MODULE_ID = pageLocation.state?.moduleId;
 
 const [previewSessionId, setPreviewSessionId] = useState(null);
 
@@ -847,7 +847,7 @@ useEffect(() => {
         setDetailReturnLevel("streams");
 
         try {
-          const response = await getCareerLibraryCategoriesByStream(id);
+          const response = await getCareerLibraryCategoriesByStream(id,CAREER_LIBRARY_MODULE_ID);
           const items =
             Array.isArray(response?.data) && response.data.length > 0
               ? response.data
@@ -1106,14 +1106,29 @@ const response = await getCareerLibraryNext(type, id);
     goToDashboard();
   }
 
-  function handleLockedCareerClick(item, type) {
-    if (moduleStatus === "locked" && !hasSubscriptionAccess) {
-      setUnlockModalItem({ item, type });
-      return;
-    }
-    handleClick(type, item?.id, item);
+  // function handleLockedCareerClick(item, type) {
+  //   if (moduleStatus === "locked" && !hasSubscriptionAccess) {
+  //     setUnlockModalItem({ item, type });
+  //     return;
+  //   }
+  //   handleClick(type, item?.id, item);
+  // }
+function handleLockedCareerClick(item, type) {
+
+  if (
+    type === "category" &&
+    item?.raw?.accessTier === "locked"
+  ) {
+    setUnlockModalItem({
+      item,
+      type,
+    });
+
+    return;
   }
 
+  handleClick(type, item?.id, item);
+}
   function handleGoToPlans() {
     const returnTo = buildReturnTo();
     setUnlockModalItem(null);
@@ -1167,10 +1182,10 @@ const response = await getCareerLibraryNext(type, id);
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => {
           const unlockedItem = moduleStatus !== "locked";
-            const isFree =
-    type === "category"
-      ? item.raw?.category_access
-      : true;
+        const isFree =
+  type === "category"
+    ? item.raw?.accessTier !== "locked"
+    : true;
           return (
             <button
               key={`${type}-${item?.id ?? index}`}
