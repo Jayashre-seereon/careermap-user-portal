@@ -864,22 +864,23 @@ useEffect(() => {
       // ── CATEGORY ────────────────────────────────────────────────────────────
       if (type === "category") {
         setSelectedCategory(item);
-        currentPreviewSessionId =
-  await createPreviewSession(
-    "category",
-    id,
-    item
-  );
+//         currentPreviewSessionId =
+//   await createPreviewSession(
+//     "category",
+//     id,
+//     item
+//   );
 
-if (moduleStatus === "preview" && !currentPreviewSessionId) {
-  return;
-}
-        const response = await getCareerLibraryNext(
-  type,
-  id,
-  CAREER_LIBRARY_MODULE_ID,
-  currentPreviewSessionId
-);
+// if (moduleStatus === "preview" && !currentPreviewSessionId) {
+//   return;
+// }
+//         const response = await getCareerLibraryNext(
+//   type,
+//   id,
+//   CAREER_LIBRARY_MODULE_ID,
+//   currentPreviewSessionId
+// );
+const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -921,23 +922,24 @@ if (moduleStatus === "preview" && !currentPreviewSessionId) {
       if (type === "second") {
         setSelectedSecondCategory(item);
 
-    currentPreviewSessionId =
-  await createPreviewSession(
-    "second",
-    id,
-    item
-  );
+//     currentPreviewSessionId =
+//   await createPreviewSession(
+//     "second",
+//     id,
+//     item
+//   );
 
-if (moduleStatus === "preview" && !currentPreviewSessionId) {
-  return;
-}
+// if (moduleStatus === "preview" && !currentPreviewSessionId) {
+//   return;
+// }
 
-const response = await getCareerLibraryNext(
-  type,
-  id,
-  CAREER_LIBRARY_MODULE_ID,
-  currentPreviewSessionId
-);
+// const response = await getCareerLibraryNext(
+//   type,
+//   id,
+//   CAREER_LIBRARY_MODULE_ID,
+//   currentPreviewSessionId
+// );
+const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -972,37 +974,64 @@ const response = await getCareerLibraryNext(
       if (type === "sub") {
         setSelectedSubCategory(item);
 
-       currentPreviewSessionId =
-  await createPreviewSession(
-    "sub",
-    id,
-    item
-  );
+//        currentPreviewSessionId =
+//   await createPreviewSession(
+//     "sub",
+//     id,
+//     item
+//   );
 
-if (moduleStatus === "preview" && !currentPreviewSessionId) {
-  return;
-}
+// if (moduleStatus === "preview" && !currentPreviewSessionId) {
+//   return;
+// }
 
-const response = await getCareerLibraryNext(
-  type,
-  id,
-  CAREER_LIBRARY_MODULE_ID,
-  currentPreviewSessionId
-);
+// const response = await getCareerLibraryNext(
+//   type,
+//   id,
+//   CAREER_LIBRARY_MODULE_ID,
+//   currentPreviewSessionId
+// );
+const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         let items = Array.isArray(data?.data) ? data.data : [];
 
-        if (nextType === "details" && items.length === 0) {
-          try {
-            const detailResponse = await getCareerLibraryDetails(id);
-            const detailData = detailResponse ?? {};
-            items = Array.isArray(detailData?.data) ? detailData.data : [];
-          } catch (_err) {
-            items = [];
-          }
-        }
+     if (nextType === "details") {
 
+  let previewId = null;
+
+  if (moduleStatus === "preview") {
+
+    previewId = await createPreviewSession(
+      "sub",
+      id,
+      item
+    );
+
+    if (!previewId) {
+      return;
+    }
+  }
+
+  const detailResponse =
+    await getCareerLibraryDetails(
+      id,
+      CAREER_LIBRARY_MODULE_ID,
+      previewId
+    );
+
+  const detailData = detailResponse ?? {};
+  const detailItems = Array.isArray(detailData.data)
+    ? detailData.data
+    : [];
+
+  setSelectedDetailSource(item);
+  setDetails(normalizeDetailItems(detailItems, item));
+  setDetailReturnLevel("subcategory");
+  setCurrentLevel("details");
+
+  return;
+}
         setSelectedDetailSource(item);
         setDetails(normalizeDetailItems(items, item));
         setDetailReturnLevel("subcategory");
@@ -1104,6 +1133,7 @@ const response = await getCareerLibraryNext(
             className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
           >
             <div className="h-40 w-full overflow-hidden bg-gray-100">
+              
               {item?.image ? (
                 <img
                   src={item.image}
@@ -1137,7 +1167,10 @@ const response = await getCareerLibraryNext(
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => {
           const unlockedItem = moduleStatus !== "locked";
-
+            const isFree =
+    type === "category"
+      ? item.raw?.category_access
+      : true;
           return (
             <button
               key={`${type}-${item?.id ?? index}`}
@@ -1146,6 +1179,16 @@ const response = await getCareerLibraryNext(
               className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
             >
               <div className="h-44 w-full overflow-hidden bg-gray-100">
+                
+                {isFree ? (
+  <span className="bg-green-100 text-green-700">
+    FREE
+  </span>
+) : (
+  <span className="bg-red-100 text-red-700">
+    LOCK
+  </span>
+)}
                 {item?.coverImage ? (
                   <img
                     src={item.coverImage}
