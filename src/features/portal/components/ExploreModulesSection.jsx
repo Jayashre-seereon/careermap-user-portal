@@ -30,11 +30,17 @@ export function ExploreModulesSection({ modules = [] }) {
         return;
       }
 
+      // navFunc(card.route, {
+      //   state: {
+      //     accessStatus: "unlocked",
+      //   },
+      // });
       navFunc(card.route, {
-        state: {
-          accessStatus: "unlocked",
-        },
-      });
+  state: {
+    accessStatus: response.mode, // "preview" | "full"
+     moduleId: card.id,
+  },
+});
     } catch (err) {
       console.error(err);
     }
