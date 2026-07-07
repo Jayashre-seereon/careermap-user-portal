@@ -41,16 +41,42 @@ function mapMasterclassItem(item, index) {
     views,
     career: categoryLabel,
     videoType: categoryLabel,
-    locked: true,
+    locked: item.accessTier === "locked",
+  isFree: item.previewEligible,
+  accessTier: item.accessTier,
     url: item?.video_url || "#",
   };
 }
 
-export async function getMasterClasses() {
-  const response = await api.get("/masterclass");
-  const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+export async function getMasterClasses(moduleId) {
+  const response = await api.get("/masterclass", {
+    headers: {
+      "x-module-id": moduleId,
+    },
+  });
+
+  const items = Array.isArray(response?.data?.data)
+    ? response.data.data
+    : [];
 
   return items
     .filter((item) => item?.is_active !== false)
     .map((item, index) => mapMasterclassItem(item, index));
 }
+
+// export async function getMasterClassById(
+//   id,
+//   moduleId,
+//   previewSessionId
+// ) {
+//   const response = await api.get(`/masterclass/${id}`, {
+//     headers: {
+//       "x-module-id": moduleId,
+//       ...(previewSessionId && {
+//         "x-preview-session": previewSessionId,
+//       }),
+//     },
+//   });
+
+//   return response.data;
+// }

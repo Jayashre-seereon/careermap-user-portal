@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button } from "antd";
 import { ArrowRightOutlined, LockOutlined, PlayCircleOutlined } from "@ant-design/icons";
-import { useSearchParams } from "react-router-dom";
-import { getMasterClasses } from "../../../api/masterclassApi";
+import { useSearchParams,useLocation } from "react-router-dom";
+import { getMasterClasses,
+ } from "../../../api/masterclassApi";
+ import {startPreview,} from "../../../api/moduleAccessApi";
 import { masterClasses as fallbackMasterClasses } from "../../../data/careermapData";
 import { ModuleScreen, PageHero, SoftTag } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-import { useLocation } from "react-router-dom";
+// import { useLocation } from "react-router-dom";
 function formatViews(views) {
   if (!views) {
     return "New class";
@@ -21,8 +23,10 @@ function formatViews(views) {
 }
 
 function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
+   
   const locked = item.locked && !unlocked;
   const heroTone = locked ? "#f8e8d8" : "#fdf0ee";
+
 
   return (
     <div
@@ -110,12 +114,15 @@ export default function LearnPage() {
   const { canAccessFreeDetail, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
-const pageLocation =
-  useLocation();
+const pageLocation = useLocation();
+
+const MASTERCLASS_MODULE_ID =
+  pageLocation.state?.moduleId;
 
 const accessStatus =
   pageLocation.state?.accessStatus ||
   "preview";
+
 
 const unlocked =
   accessStatus === "unlocked";
@@ -131,7 +138,9 @@ const unlocked =
     async function loadItems() {
       try {
         setError("");
-        const response = await getMasterClasses();
+        const response = await getMasterClasses(
+  MASTERCLASS_MODULE_ID
+);
         if (active && response.length) {
           setItems(response);
         }
@@ -237,7 +246,9 @@ const unlocked =
         ) : null}
 
         {filtered.map((item) => {
-          const detailUnlocked = unlocked || canAccessFreeDetail("master-class", item.title);
+  const detailUnlocked =
+  unlocked ||
+  item.isFree;
 
           return (
             <MasterClassCard
@@ -245,20 +256,21 @@ const unlocked =
               item={item}
               unlocked={unlocked}
               detailUnlocked={detailUnlocked}
-              onWatch={() => {
-                if (!unlocked && !detailUnlocked) {
-                  setUnlockModalItem(item.title);
-                  return;
-                }
+onWatch={() => {
 
-                if (item.locked) {
-                  registerFreeDetailAccess("master-class", item.title);
-                }
+  if (item.locked) {
+    setUnlockModalItem(item.title);
+    return;
+  }
 
-                if (item.url !== "#") {
-                  window.open(item.url, "_blank", "noopener,noreferrer");
-                }
-              }}
+  if (item.url !== "#") {
+    window.open(
+      item.url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+}}
             />
           );
         })}
