@@ -197,8 +197,11 @@ export default function BookMentorPage() {
   const [params] = useSearchParams();
 
   const accessStatus = pageLocation.state?.accessStatus || "preview";
+  const isModuleUnlocked =
+  accessStatus === "full" ||
+  accessStatus === "unlocked";
   const frontendUnlocked = isUnlocked("book-mentor");
-  const unlocked = accessStatus === "unlocked" || frontendUnlocked;
+  const unlocked = isModuleUnlocked || frontendUnlocked;
 
   const [mentorList, setMentorList] = useState(fallbackMentors);
   const [selectedMentorId, setSelectedMentorId] = useState("");
@@ -586,7 +589,7 @@ export default function BookMentorPage() {
           <PageHero backOnly onBack={() => setSelectedMentorId("")} className="shrink-0" />
         </div>
 
-        {accessStatus !== "unlocked" && !unlocked ? (
+        {!isModuleUnlocked && !unlocked ? (
           <div className="inline-flex self-start rounded-full bg-green-50 px-3 py-2 text-[12px] font-extrabold text-green-700">
             {detailUnlocked
               ? "1 free mentor detail unlocked"
@@ -843,7 +846,7 @@ export default function BookMentorPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredMentorList.map((mentor, index) => {
           const mentorFree =
-            accessStatus === "unlocked"
+             isModuleUnlocked
               ? true
               : unlocked || canAccessFreeDetail("book-mentor", mentor.name);
 
@@ -853,13 +856,14 @@ export default function BookMentorPage() {
               mentor={mentor}
               isFree={mentorFree}
               onClick={() => {
-                if (accessStatus !== "unlocked" && !unlocked && !mentorFree) {
-                  setUnlockModalItem(mentor.name);
-                  return;
-                }
-                if (accessStatus !== "unlocked") {
-                  registerFreeDetailAccess("book-mentor", mentor.name);
-                }
+               if (!isModuleUnlocked && !unlocked && !mentorFree) {
+  setUnlockModalItem(mentor.name);
+  return;
+}
+
+if (!isModuleUnlocked) {
+  registerFreeDetailAccess("book-mentor", mentor.name);
+}
                 setSelectedMentorId(String(mentor.id || index));
                 setSelectedMentor(mentor);
               }}
