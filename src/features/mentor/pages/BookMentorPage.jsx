@@ -13,6 +13,7 @@ import { mentors as fallbackMentors } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { checkModuleAccess } from "../../../api/moduleAccessApi";
 import { loadRazorpayScript } from "../../../utils/razorpay.js";
 
 function formatNumericDate(value) {
@@ -202,6 +203,7 @@ export default function BookMentorPage() {
   accessStatus === "unlocked";
   const frontendUnlocked = isUnlocked("book-mentor");
   const unlocked = isModuleUnlocked || frontendUnlocked;
+  const [moduleMode, setModuleMode] = useState(accessStatus);
 
   const [mentorList, setMentorList] = useState(fallbackMentors);
   const [selectedMentorId, setSelectedMentorId] = useState("");
@@ -356,6 +358,31 @@ export default function BookMentorPage() {
     loadMentors();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccessMode() {
+      const moduleId = pageLocation.state?.moduleId;
+      if (!moduleId) return;
+
+      try {
+        const response = await checkModuleAccess(moduleId);
+        if (active && response?.mode) {
+          setModuleMode(response.mode);
+        }
+      } catch {
+        if (active) {
+          setModuleMode(accessStatus);
+        }
+      }
+    }
+
+    loadAccessMode();
+    return () => {
+      active = false;
+    };
+  }, [accessStatus, pageLocation.state?.moduleId]);
 
   useEffect(() => {
     const mentorParam = params.get("mentorId") || params.get("mentor");
@@ -845,10 +872,12 @@ export default function BookMentorPage() {
       {/* ── Mentor grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredMentorList.map((mentor, index) => {
-          const mentorFree =
-             isModuleUnlocked
-              ? true
-              : unlocked || canAccessFreeDetail("book-mentor", mentor.name);
+          const isPreviewMode = moduleMode === "preview";
+          const mentorFree = isModuleUnlocked
+            ? true
+            : isPreviewMode
+              ? index < 4
+              : frontendUnlocked || canAccessFreeDetail("book-mentor", mentor.name);
 
           return (
             <MentorCard
@@ -856,14 +885,14 @@ export default function BookMentorPage() {
               mentor={mentor}
               isFree={mentorFree}
               onClick={() => {
-               if (!isModuleUnlocked && !unlocked && !mentorFree) {
-  setUnlockModalItem(mentor.name);
-  return;
-}
+                if (!mentorFree) {
+                  setUnlockModalItem(mentor.name);
+                  return;
+                }
 
-if (!isModuleUnlocked) {
-  registerFreeDetailAccess("book-mentor", mentor.name);
-}
+                if (!isModuleUnlocked && !isPreviewMode) {
+                  registerFreeDetailAccess("book-mentor", mentor.name);
+                }
                 setSelectedMentorId(String(mentor.id || index));
                 setSelectedMentor(mentor);
               }}
