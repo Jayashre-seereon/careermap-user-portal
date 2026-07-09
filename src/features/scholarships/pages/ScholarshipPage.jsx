@@ -13,11 +13,12 @@ import {
   StarOutlined,
 } from "@ant-design/icons";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { getScholarships } from "../../../api/scholarshipApi";
+import { getScholarships,  getScholarshipById, } from "../../../api/scholarshipApi";
 import { scholarships as fallbackScholarships } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { checkModuleAccess, startPreview } from "../../../api/moduleAccessApi";
 function scrollToSection(id) {
   const el = document.getElementById(id);
   if (el) {
@@ -35,8 +36,13 @@ export default function ScholarshipPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const accessStatus = pageLocation.state?.accessStatus || "preview";
-  const unlocked = accessStatus === "unlocked" || isUnlocked("scholarship");
+  const unlocked = accessStatus === "full" || isUnlocked("scholarship");
+  const SCHOLARSHIP_MODULE_ID =  pageLocation.state?.moduleId;// apna scholarship module id
+  const [moduleMode, setModuleMode] = useState(accessStatus);
 
+const [previewSessionId, setPreviewSessionId] = useState(null);
+const [previewRemaining, setPreviewRemaining] = useState(0);
+const [previewExpired, setPreviewExpired] = useState(false);
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
@@ -63,6 +69,60 @@ export default function ScholarshipPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccessMode() {
+      if (!SCHOLARSHIP_MODULE_ID) return;
+
+      try {
+        const response = await checkModuleAccess(SCHOLARSHIP_MODULE_ID);
+        if (active && response?.mode) {
+          setModuleMode(response.mode);
+        }
+      } catch {
+        if (active) {
+          setModuleMode(accessStatus);
+        }
+      }
+    }
+
+    loadAccessMode();
+    return () => {
+      active = false;
+    };
+  }, [SCHOLARSHIP_MODULE_ID, accessStatus]);
+
+  useEffect(() => {
+  if (!previewSessionId || previewExpired) return;
+
+  const timer = setInterval(() => {
+    setPreviewRemaining((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        setPreviewExpired(true);
+        return 0;
+      }
+
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [previewSessionId, previewExpired]);
+
+useEffect(() => {
+  if (previewExpired && selectedItem) {
+    setUnlockModalItem(selectedItem.name);
+  }
+}, [previewExpired, selectedItem]);
+
+useEffect(() => {
+  if (moduleMode === "preview" && selectedItem && previewRemaining === 0 && !previewExpired) {
+    setPreviewRemaining(15);
+  }
+}, [moduleMode, selectedItem, previewRemaining, previewExpired]);
 
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.categoryObj).map((i) => [i.categoryObj.id, i.categoryObj])).values()],
@@ -119,12 +179,42 @@ export default function ScholarshipPage() {
     return query ? `${location.pathname}?${query}` : location.pathname;
   }
 
-  function openScholarship(item) {
-    if (accessStatus !== "unlocked") {
+  async function openScholarship(item, index) {
+    try {
+    const isFreeItem = unlocked || item.previewEligible;
+      if (!isFreeItem) {
+        setUnlockModalItem(item.name);
+        return;
+      }
+
+      if (accessStatus === "full") {
+        const response = await getScholarshipById(item.id);
+        setSelectedItem(response);
+        return;
+      }
+
+      const preview = await startPreview({
+        moduleId: SCHOLARSHIP_MODULE_ID,
+        pageType: "scholarship",
+        pageId: item.id,
+      });
+
+      setPreviewSessionId(preview.previewSessionId);
+      setPreviewRemaining(preview.remainingSeconds ?? preview.previewDurationSeconds ?? 15);
+      setPreviewExpired(false);
+
+      const detail = await getScholarshipById(
+        item.id,
+        SCHOLARSHIP_MODULE_ID,
+        preview.previewSessionId
+      );
+
+      setSelectedItem(detail);
       registerFreeDetailAccess("scholarship", item.name);
+    } catch (err) {
+      console.error("ERROR =>", err);
     }
-    setSelectedItem(item);
-  }
+}
 
   function handleGoToPlans(itemName = unlockModalItem) {
     const returnTo = buildScholarshipReturnTo(itemName);
@@ -149,6 +239,15 @@ export default function ScholarshipPage() {
 
     return (
       <ModuleScreen className="space-y-4">
+       {moduleMode === "preview" && !previewExpired && previewRemaining > 0 ? (
+          <div className="sticky top-0 z-10 mb-4 flex justify-end">
+            <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 shadow-sm">
+              <ClockCircleOutlined />
+              Preview ends in {previewRemaining}s
+            </div>
+          </div>
+        ) : null}
+
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
         {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
 
@@ -328,6 +427,19 @@ export default function ScholarshipPage() {
             </div>
           </div>
         </div>
+        <UnlockRedirectModal
+  open={Boolean(unlockModalItem)}
+  title="Unlock Scholarship"
+  itemLabel={unlockModalItem}
+  description="Your 15 second preview has ended. Please purchase this module to continue."
+  onCancel={() => {
+    setUnlockModalItem(null);
+    setSelectedItem(null);
+  }}
+  onConfirm={() => {
+    handleGoToPlans();
+  }}
+/>
       </ModuleScreen>
     );
   }
@@ -424,18 +536,22 @@ export default function ScholarshipPage() {
 
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {
-          const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
+          const itemFree = unlocked || item.previewEligible;
+          const isPreviewAllowed = unlocked || item.previewEligible;
           const isActive = item.status === "Active";
 
           return (
             <div
               key={item.id || item.name}
-              onClick={() => {
-                if (!unlocked && !itemFree) {
+             onClick={() => {
+                const itemIndex = filtered.findIndex((current) => (current.id || current.name) === (item.id || item.name));
+
+                if (!itemFree) {
                   setUnlockModalItem(item.name);
                   return;
                 }
-                openScholarship(item);
+
+                openScholarship(item, itemIndex);
               }}
               className="group flex cursor-pointer overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10"
             >
@@ -460,11 +576,14 @@ export default function ScholarshipPage() {
                   </div>
                   {!unlocked ? (
                     <span
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"
-                        }`}
-                    >
-                      {itemFree ? <UnlockOutlined /> : <LockOutlined />}
-                    </span>
+  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-2 text-[15px] font-bold ${
+    isPreviewAllowed
+      ? "bg-green-100 text-green-700"
+      : "bg-[#fdf0ee] text-[#9a2119]"
+  }`}
+>
+  {isPreviewAllowed ? <UnlockOutlined /> : <LockOutlined />}
+</span>
                   ) : null}
                 </div>
 

@@ -108,6 +108,8 @@ function mapScholarshipItem(item, index) {
     categoryObj: item?.category || null,
     secondcategoryObj: item?.secondcategory || null,
     subcategoryObj: item?.subcategory || null,
+     previewEligible: item?.previewEligible ?? false,
+  accessTier: item?.accessTier ?? "locked",
   };
 }
 
@@ -116,4 +118,20 @@ export async function getScholarships() {
   const items = Array.isArray(response?.data?.data) ? response.data.data : [];
 
   return items.map((item, index) => mapScholarshipItem(item, index));
+}
+
+export async function getScholarshipById(
+  id,
+  moduleId,
+  previewSessionId
+) {
+   console.log("Inside getScholarshipById");
+  const response = await api.get(`/scholarship/${id}`, {
+    headers: {
+      "x-module-id": moduleId,
+      "x-preview-session": previewSessionId,
+    },
+  });
+
+  return mapScholarshipItem(response.data.data);
 }

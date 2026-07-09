@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled} from "@ant-design/icons";
+import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled,LockOutlined,UnlockOutlined} from "@ant-design/icons";
 import { Modal,Rate } from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import { mentors as fallbackMentors } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { checkModuleAccess } from "../../../api/moduleAccessApi";
 import { loadRazorpayScript } from "../../../utils/razorpay.js";
 
 function formatNumericDate(value) {
@@ -136,9 +137,9 @@ function MentorCard({ mentor, isFree, onClick }) {
           </div>
         </div>
         {!isFree ? (
-          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-500">LOCKED</span>
+       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-[11px] font-semibold text-red-500"><LockOutlined /></span>
         ) : (
-          <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700">FREE</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-[11px] font-semibold text-green-600"><UnlockOutlined /></span>
         )}
       </div>
 
@@ -197,8 +198,12 @@ export default function BookMentorPage() {
   const [params] = useSearchParams();
 
   const accessStatus = pageLocation.state?.accessStatus || "preview";
+  const isModuleUnlocked =
+  accessStatus === "full" ||
+  accessStatus === "unlocked";
   const frontendUnlocked = isUnlocked("book-mentor");
-  const unlocked = accessStatus === "unlocked" || frontendUnlocked;
+  const unlocked = isModuleUnlocked || frontendUnlocked;
+  const [moduleMode, setModuleMode] = useState(accessStatus);
 
   const [mentorList, setMentorList] = useState(fallbackMentors);
   const [selectedMentorId, setSelectedMentorId] = useState("");
@@ -353,6 +358,31 @@ export default function BookMentorPage() {
     loadMentors();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccessMode() {
+      const moduleId = pageLocation.state?.moduleId;
+      if (!moduleId) return;
+
+      try {
+        const response = await checkModuleAccess(moduleId);
+        if (active && response?.mode) {
+          setModuleMode(response.mode);
+        }
+      } catch {
+        if (active) {
+          setModuleMode(accessStatus);
+        }
+      }
+    }
+
+    loadAccessMode();
+    return () => {
+      active = false;
+    };
+  }, [accessStatus, pageLocation.state?.moduleId]);
 
   useEffect(() => {
     const mentorParam = params.get("mentorId") || params.get("mentor");
@@ -586,7 +616,7 @@ export default function BookMentorPage() {
           <PageHero backOnly onBack={() => setSelectedMentorId("")} className="shrink-0" />
         </div>
 
-        {accessStatus !== "unlocked" && !unlocked ? (
+        {!isModuleUnlocked && !unlocked ? (
           <div className="inline-flex self-start rounded-full bg-green-50 px-3 py-2 text-[12px] font-extrabold text-green-700">
             {detailUnlocked
               ? "1 free mentor detail unlocked"
@@ -842,10 +872,12 @@ export default function BookMentorPage() {
       {/* ── Mentor grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredMentorList.map((mentor, index) => {
-          const mentorFree =
-            accessStatus === "unlocked"
-              ? true
-              : unlocked || canAccessFreeDetail("book-mentor", mentor.name);
+          const isPreviewMode = moduleMode === "preview";
+          const mentorFree = isModuleUnlocked
+            ? true
+            : isPreviewMode
+              ? index < 4
+              : frontendUnlocked || canAccessFreeDetail("book-mentor", mentor.name);
 
           return (
             <MentorCard
@@ -853,11 +885,12 @@ export default function BookMentorPage() {
               mentor={mentor}
               isFree={mentorFree}
               onClick={() => {
-                if (accessStatus !== "unlocked" && !unlocked && !mentorFree) {
+                if (!mentorFree) {
                   setUnlockModalItem(mentor.name);
                   return;
                 }
-                if (accessStatus !== "unlocked") {
+
+                if (!isModuleUnlocked && !isPreviewMode) {
                   registerFreeDetailAccess("book-mentor", mentor.name);
                 }
                 setSelectedMentorId(String(mentor.id || index));

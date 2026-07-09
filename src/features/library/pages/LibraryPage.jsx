@@ -12,6 +12,7 @@ import {
   HeartFilled,
   HeartOutlined,
   FileTextOutlined,
+  ClockCircleOutlined,
   CalendarOutlined,
   RightOutlined,
   ReadOutlined,
@@ -20,6 +21,7 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UnlockOutlined,
+  LockOutlined,
   StarOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
@@ -41,7 +43,7 @@ import {
   UnlockRedirectModal,
   usePortalNavigation,
 } from "../../portal/components/portalPageShared";
-import { checkModuleAccess } from "../../../api/moduleAccessApi";
+import {  checkModuleAccess,startPreview,} from "../../../api/moduleAccessApi";
 
 const streamIcons = {
   Science: <ExperimentOutlined />,
@@ -702,6 +704,13 @@ export default function LibraryPage() {
   const pageLocation = useLocation();
   const accessStatus = pageLocation.state?.accessStatus || "preview";
   const [moduleStatus, setModuleStatus] = useState(accessStatus);
+  const CAREER_LIBRARY_MODULE_ID = pageLocation.state?.moduleId;
+
+const [previewSessionId, setPreviewSessionId] = useState(null);
+
+const [previewRemaining, setPreviewRemaining] = useState(0);
+
+const [previewExpired, setPreviewExpired] = useState(false);
   const hasSubscriptionAccess = accessStatus === "unlocked";
 
   useEffect(() => {
@@ -728,7 +737,50 @@ export default function LibraryPage() {
     loadStreams();
     return () => { active = false; };
   }, []);
+useEffect(() => {
+  if (!previewRemaining) return;
 
+  const timer = setInterval(() => {
+    setPreviewRemaining((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        setPreviewExpired(true);
+         setUnlockModalItem({
+    title: "Preview Expired",
+    description:
+      "Your 15 second preview has ended. Please purchase this module to continue.",
+  });
+        return 0;
+      }
+
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [previewRemaining]);
+
+useEffect(() => {
+  async function loadAccess() {
+    try {
+      const result = await checkModuleAccess(
+        CAREER_LIBRARY_MODULE_ID
+      );
+
+      if (result.allowed) {
+        setModuleStatus(result.mode);
+
+        if (result.mode === "preview") {
+          setPreviewExpired(false);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  loadAccess();
+}, []);
   const detailUnlocked = hasSubscriptionAccess || moduleStatus !== "locked";
 
   const pageTitle = useMemo(() => {
@@ -769,13 +821,23 @@ export default function LibraryPage() {
   }
 
   async function handleClick(type, id, item) {
+    if (previewExpired) {
+  setUnlockModalItem({
+    title: "Preview Expired",
+    description:
+      "Please purchase this module to continue.",
+  });
+
+  return;
+}
     setLoading(true);
     setError("");
     setUnlockModalItem(null);
     setSelectedDetailSource(null);
-
+    
     try {
       // ── STREAM ──────────────────────────────────────────────────────────────
+      let currentPreviewSessionId = null;
       if (type === "stream") {
         setSelectedStream(item);
         setSelectedCategory(null);
@@ -787,7 +849,7 @@ export default function LibraryPage() {
         setDetailReturnLevel("streams");
 
         try {
-          const response = await getCareerLibraryCategoriesByStream(id);
+          const response = await getCareerLibraryCategoriesByStream(id,CAREER_LIBRARY_MODULE_ID);
           const items =
             Array.isArray(response?.data) && response.data.length > 0
               ? response.data
@@ -804,8 +866,23 @@ export default function LibraryPage() {
       // ── CATEGORY ────────────────────────────────────────────────────────────
       if (type === "category") {
         setSelectedCategory(item);
+//         currentPreviewSessionId =
+//   await createPreviewSession(
+//     "category",
+//     id,
+//     item
+//   );
 
-        const response = await getCareerLibraryNext(type, id);
+// if (moduleStatus === "preview" && !currentPreviewSessionId) {
+//   return;
+// }
+//         const response = await getCareerLibraryNext(
+//   type,
+//   id,
+//   CAREER_LIBRARY_MODULE_ID,
+//   currentPreviewSessionId
+// );
+const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -821,7 +898,12 @@ export default function LibraryPage() {
           let detailItems = items;
           if (detailItems.length === 0) {
             try {
-              const detailResponse = await getCareerLibraryDetails(id);
+              const detailResponse =
+  await getCareerLibraryDetails(
+    id,
+    CAREER_LIBRARY_MODULE_ID,
+    currentPreviewSessionId
+  );
               const detailData = detailResponse ?? {};
               detailItems = Array.isArray(detailData?.data) ? detailData.data : [];
             } catch (_err) { detailItems = []; }
@@ -842,7 +924,24 @@ export default function LibraryPage() {
       if (type === "second") {
         setSelectedSecondCategory(item);
 
-        const response = await getCareerLibraryNext(type, id);
+//     currentPreviewSessionId =
+//   await createPreviewSession(
+//     "second",
+//     id,
+//     item
+//   );
+
+// if (moduleStatus === "preview" && !currentPreviewSessionId) {
+//   return;
+// }
+
+// const response = await getCareerLibraryNext(
+//   type,
+//   id,
+//   CAREER_LIBRARY_MODULE_ID,
+//   currentPreviewSessionId
+// );
+const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -877,21 +976,64 @@ export default function LibraryPage() {
       if (type === "sub") {
         setSelectedSubCategory(item);
 
-        const response = await getCareerLibraryNext(type, id);
+//        currentPreviewSessionId =
+//   await createPreviewSession(
+//     "sub",
+//     id,
+//     item
+//   );
+
+// if (moduleStatus === "preview" && !currentPreviewSessionId) {
+//   return;
+// }
+
+// const response = await getCareerLibraryNext(
+//   type,
+//   id,
+//   CAREER_LIBRARY_MODULE_ID,
+//   currentPreviewSessionId
+// );
+const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         let items = Array.isArray(data?.data) ? data.data : [];
 
-        if (nextType === "details" && items.length === 0) {
-          try {
-            const detailResponse = await getCareerLibraryDetails(id);
-            const detailData = detailResponse ?? {};
-            items = Array.isArray(detailData?.data) ? detailData.data : [];
-          } catch (_err) {
-            items = [];
-          }
-        }
+     if (nextType === "details") {
 
+  let previewId = null;
+
+  if (moduleStatus === "preview") {
+
+    previewId = await createPreviewSession(
+      "sub",
+      id,
+      item
+    );
+
+    if (!previewId) {
+      return;
+    }
+  }
+
+  const detailResponse =
+    await getCareerLibraryDetails(
+      id,
+      CAREER_LIBRARY_MODULE_ID,
+      previewId
+    );
+
+  const detailData = detailResponse ?? {};
+  const detailItems = Array.isArray(detailData.data)
+    ? detailData.data
+    : [];
+
+  setSelectedDetailSource(item);
+  setDetails(normalizeDetailItems(detailItems, item));
+  setDetailReturnLevel("subcategory");
+  setCurrentLevel("details");
+
+  return;
+}
         setSelectedDetailSource(item);
         setDetails(normalizeDetailItems(items, item));
         setDetailReturnLevel("subcategory");
@@ -908,6 +1050,32 @@ export default function LibraryPage() {
       setLoading(false);
     }
   }
+  async function createPreviewSession(pageType, pageId, item) {
+  if (moduleStatus !== "preview") {
+    return null;
+  }
+
+  try {
+    const preview = await startPreview({
+      moduleId: CAREER_LIBRARY_MODULE_ID,
+      pageType,
+      pageId,
+    });
+
+    setPreviewSessionId(preview.previewSessionId);
+    setPreviewRemaining(preview.remainingSeconds);
+    setPreviewExpired(false);
+
+    return preview.previewSessionId;
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      setUnlockModalItem(item);
+      return null;
+    }
+
+    throw err;
+  }
+}
 
   function handleBack() {
     if (currentLevel === "details") {
@@ -940,14 +1108,29 @@ export default function LibraryPage() {
     goToDashboard();
   }
 
-  function handleLockedCareerClick(item, type) {
-    if (moduleStatus === "locked" && !hasSubscriptionAccess) {
-      setUnlockModalItem({ item, type });
-      return;
-    }
-    handleClick(type, item?.id, item);
+  // function handleLockedCareerClick(item, type) {
+  //   if (moduleStatus === "locked" && !hasSubscriptionAccess) {
+  //     setUnlockModalItem({ item, type });
+  //     return;
+  //   }
+  //   handleClick(type, item?.id, item);
+  // }
+function handleLockedCareerClick(item, type) {
+
+  if (
+    type === "category" &&
+    item?.raw?.accessTier === "locked"
+  ) {
+    setUnlockModalItem({
+      item,
+      type,
+    });
+
+    return;
   }
 
+  handleClick(type, item?.id, item);
+}
   function handleGoToPlans() {
     const returnTo = buildReturnTo();
     setUnlockModalItem(null);
@@ -967,6 +1150,7 @@ export default function LibraryPage() {
             className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
           >
             <div className="h-40 w-full overflow-hidden bg-gray-100">
+              
               {item?.image ? (
                 <img
                   src={item.image}
@@ -1000,7 +1184,10 @@ export default function LibraryPage() {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => {
           const unlockedItem = moduleStatus !== "locked";
-
+        const isFree =
+  type === "category"
+    ? item.raw?.accessTier !== "locked"
+    : true;
           return (
             <button
               key={`${type}-${item?.id ?? index}`}
@@ -1008,7 +1195,10 @@ export default function LibraryPage() {
               onClick={() => handleLockedCareerClick(item, type)}
               className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
             >
-              <div className="h-44 w-full overflow-hidden bg-gray-100">
+             <div className="relative h-44 w-full overflow-hidden bg-gray-100">
+                <span className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm ${isFree ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  {isFree ? <UnlockOutlined /> : <LockOutlined />}
+                </span>
                 {item?.coverImage ? (
                   <img
                     src={item.coverImage}
@@ -1481,6 +1671,25 @@ export default function LibraryPage() {
       </>
     )}
   </div>
+ {moduleStatus === "preview" &&
+  previewRemaining > 0 &&
+  currentLevel === "details" && (
+   <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 p-3">
+      <ClockCircleOutlined className="text-green-700" />
+      <div className="m-0 font-semibold text-green-700">
+        Preview ends in {previewRemaining} seconds
+      </div>
+    </div>
+)}
+
+{previewExpired && currentLevel === "details" && (
+ <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-3">
+    <LockOutlined className="text-red-700" />
+    <div className="m-0 font-semibold text-red-700">
+      Preview expired. Please purchase a subscription.
+    </div>
+  </div>
+)}
 </div>
 
       {loading ? (
@@ -1543,12 +1752,15 @@ export default function LibraryPage() {
         </div>
       )}
 
-      <UnlockRedirectModal
+     <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
         title="Unlock Career Library"
         itemLabel={unlockModalItem ? getItemTitle(unlockModalItem.item) : ""}
         description="Your free Career Library access has already been used. Subscribe to unlock"
-        onCancel={() => setUnlockModalItem(null)}
+        onCancel={() => {
+          setUnlockModalItem(null);
+          handleBack();
+        }}
         onConfirm={handleGoToPlans}
       />
     </ModuleScreen>

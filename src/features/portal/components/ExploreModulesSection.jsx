@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Col, Row } from "antd";
+import { Col, Row, } from "antd";
 
-import { ArrowRightOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined , LockOutlined,
+  UnlockOutlined,
+  EyeOutlined,} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
   buildDashboardModules,
@@ -12,12 +14,41 @@ import { AppstoreOutlined } from "@ant-design/icons";
 import { UnlockRedirectModal } from "./portalPageShared.jsx";
 import { checkModuleAccess } from "../../../api/moduleAccessApi";
 export function ExploreModulesSection({ modules = [] }) {
+
+
   const navFunc = useNavigate();
   const curatedCards =
     modules.length && modules[0]?.route
       ? modules
       : buildDashboardModules(modules);
   const [lockedModule, setLockedModule] = useState(null);
+const getAccessBadge = (status) => {
+  switch (status) {
+    case "unlocked":
+      return {
+        label: "Unlocked",
+        icon: <UnlockOutlined />,
+        className:
+          "bg-green-100 text-green-700 border border-green-200",
+      };
+
+    case "preview":
+      return {
+        label: "Preview",
+        icon: <EyeOutlined />,
+        className:
+          "bg-blue-100 text-blue-700 border border-blue-200",
+      };
+
+    default:
+      return {
+        label: "Locked",
+        icon: <LockOutlined />,
+        className:
+          "bg-red-100 text-red-700 border border-red-200",
+      };
+  }
+};  
   const handleModuleClick = async (card) => {
     try {
       const response = await checkModuleAccess(card.id);
@@ -30,11 +61,17 @@ export function ExploreModulesSection({ modules = [] }) {
         return;
       }
 
+      // navFunc(card.route, {
+      //   state: {
+      //     accessStatus: "unlocked",
+      //   },
+      // });
       navFunc(card.route, {
-        state: {
-          accessStatus: "unlocked",
-        },
-      });
+  state: {
+    accessStatus: response.mode, // "preview" | "full"
+     moduleId: card.id,
+  },
+});
     } catch (err) {
       console.error(err);
     }
@@ -61,7 +98,7 @@ export function ExploreModulesSection({ modules = [] }) {
               card.title === "Assessment"
                 ? "Deep personality and aptitude analysis for smarter career decisions."
                 : card.subtitle;
-
+            const badge = getAccessBadge(card.accessStatus);
             return (
               <Col xs={24} sm={12} lg={8} xl={6} key={card.id || card.title}>
                 <button
@@ -70,14 +107,20 @@ export function ExploreModulesSection({ modules = [] }) {
                   onClick={() => handleModuleClick(card)}
                 >
                   <div
-                    className="dashboard-module-media relative  overflow-hidden"
+                    className="dashboard-module-media relative h-[180px] w-full overflow-hidden"
                     style={!card.image ? { background: art.background } : {}}
                   >
-                    {card.image ? (
+<span
+  className={`absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold uppercase shadow-sm ${badge.className}`}
+>
+  {badge.icon}
+  {badge.label}
+</span>
+                   {card.image ? (
                       <img
                         src={card.image}
                         alt={card.title}
-                        className="h-full w-full object-cover"
+                        className="block h-full w-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">

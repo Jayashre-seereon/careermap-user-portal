@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button } from "antd";
-import { ArrowRightOutlined, LockOutlined, PlayCircleOutlined } from "@ant-design/icons";
-import { useSearchParams } from "react-router-dom";
-import { getMasterClasses } from "../../../api/masterclassApi";
+import { ArrowRightOutlined, LockOutlined,UnlockOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { useSearchParams,useLocation } from "react-router-dom";
+import { getMasterClasses,
+ } from "../../../api/masterclassApi";
+ import {startPreview,} from "../../../api/moduleAccessApi";
 import { masterClasses as fallbackMasterClasses } from "../../../data/careermapData";
 import { ModuleScreen, PageHero, SoftTag } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-import { useLocation } from "react-router-dom";
+// import { useLocation } from "react-router-dom";
 function formatViews(views) {
   if (!views) {
-    return "New class";
+    return "New";
   }
 
   if (views < 1000) {
@@ -21,8 +23,10 @@ function formatViews(views) {
 }
 
 function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
+   
   const locked = item.locked && !unlocked;
   const heroTone = locked ? "#f8e8d8" : "#fdf0ee";
+
 
   return (
     <div
@@ -33,12 +37,7 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
 
       <div className="flex h-full flex-col gap-4 pt-2">
         <div className="flex items-start gap-3">
-          <div
-            className="flex h-[58px] w-[58px] items-center justify-center rounded-[18px]"
-            style={{ backgroundColor: heroTone }}
-          >
-            <TextBadge locked={locked} />
-          </div>
+          
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
@@ -47,8 +46,8 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
                 <div className="mt-1 truncate text-[12px] text-muted">{item.mentor}</div>
               </div>
 
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff6f2] text-brand">
-                {locked ? <LockOutlined /> : <PlayCircleOutlined />}
+             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${locked ? "bg-[#fff6f2] text-brand" : "bg-green-50 text-green-600"}`}>
+                {locked ? <LockOutlined /> : <UnlockOutlined />}
               </div>
             </div>
 
@@ -59,9 +58,7 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
               <SoftTag color="gold" className="shrink-0 whitespace-nowrap">
                 {formatViews(item.views)}
               </SoftTag>
-              <SoftTag color="default" className="shrink-0 whitespace-nowrap">
-                {item.videoType}
-              </SoftTag>
+            
             </div>
           </div>
         </div>
@@ -84,11 +81,11 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
         ) : null}
 
         <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-          <span className="text-xs font-semibold text-[#8c6c67]">Tap to watch details</span>
-          <Button
+            <Button
             type="link"
             className="!h-auto !p-0 !text-sm !font-bold !text-[#9a2119]"
             onClick={onWatch}
+            icon={<PlayCircleOutlined className="!text-base" />}
           >
             {locked && !detailUnlocked ? "Unlock More Classes" : "Watch Video"} <ArrowRightOutlined />
           </Button>
@@ -98,24 +95,21 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
   );
 }
 
-function TextBadge({ locked }) {
-  return (
-    <span className="text-[11px] font-extrabold tracking-[0.18em] text-brand-deep">
-      {locked ? "LOCK" : "PLAY"}
-    </span>
-  );
-}
+
 
 export default function LearnPage() {
   const { canAccessFreeDetail, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
   const [params] = useSearchParams();
-const pageLocation =
-  useLocation();
+const pageLocation = useLocation();
+
+const MASTERCLASS_MODULE_ID =
+  pageLocation.state?.moduleId;
 
 const accessStatus =
   pageLocation.state?.accessStatus ||
   "preview";
+
 
 const unlocked =
   accessStatus === "unlocked";
@@ -131,7 +125,9 @@ const unlocked =
     async function loadItems() {
       try {
         setError("");
-        const response = await getMasterClasses();
+        const response = await getMasterClasses(
+  MASTERCLASS_MODULE_ID
+);
         if (active && response.length) {
           setItems(response);
         }
@@ -237,7 +233,9 @@ const unlocked =
         ) : null}
 
         {filtered.map((item) => {
-          const detailUnlocked = unlocked || canAccessFreeDetail("master-class", item.title);
+  const detailUnlocked =
+  unlocked ||
+  item.isFree;
 
           return (
             <MasterClassCard
@@ -245,20 +243,21 @@ const unlocked =
               item={item}
               unlocked={unlocked}
               detailUnlocked={detailUnlocked}
-              onWatch={() => {
-                if (!unlocked && !detailUnlocked) {
-                  setUnlockModalItem(item.title);
-                  return;
-                }
+onWatch={() => {
 
-                if (item.locked) {
-                  registerFreeDetailAccess("master-class", item.title);
-                }
+  if (item.locked) {
+    setUnlockModalItem(item.title);
+    return;
+  }
 
-                if (item.url !== "#") {
-                  window.open(item.url, "_blank", "noopener,noreferrer");
-                }
-              }}
+  if (item.url !== "#") {
+    window.open(
+      item.url,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+}}
             />
           );
         })}
