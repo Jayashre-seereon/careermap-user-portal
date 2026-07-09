@@ -5,11 +5,14 @@ import {
   BookOutlined,
   RightOutlined,
   BankOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { getInstitutes } from "../../../api/instituteApi";
 import { institutes as fallbackInstitutes } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
-import { usePortalNavigation } from "../../portal/components/portalPageShared";
+import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
+import { checkModuleAccess } from "../../../api/moduleAccessApi";
 
 function getInitials(name = "") {
   return name
@@ -26,7 +29,7 @@ function getAccent(name = "") {
 }
 
 export default function InstitutePage() {
-  const { goToDashboard } = usePortalNavigation();
+  const { goToDashboard, navigate, location } = usePortalNavigation();
   const [search, setSearch] = useState("");
   const [items, setItems] = useState(fallbackInstitutes);
   const [error, setError] = useState("");
@@ -36,6 +39,8 @@ export default function InstitutePage() {
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
+  const [moduleMode, setModuleMode] = useState(location.state?.accessStatus || "preview");
 
   useEffect(() => {
     let active = true;
@@ -59,6 +64,31 @@ export default function InstitutePage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccessMode() {
+      const moduleId = location.state?.moduleId;
+      if (!moduleId) return;
+
+      try {
+        const response = await checkModuleAccess(moduleId);
+        if (active && response?.mode) {
+          setModuleMode(response.mode);
+        }
+      } catch {
+        if (active) {
+          setModuleMode(location.state?.accessStatus || "preview");
+        }
+      }
+    }
+
+    loadAccessMode();
+    return () => {
+      active = false;
+    };
+  }, [location.state?.moduleId, location.state?.accessStatus]);
 
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.category).map((i) => [i.category.id, i.category])).values()],
@@ -260,14 +290,21 @@ const typeOptions = useMemo(
       </div>
 
       <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {filtered.map((item) => {
+        {filtered.map((item, index) => {
           const accent = getAccent(item.name);
           const initials = getInitials(item.name);
           const websiteUrl = item.url || item.website;
+          const isPreviewMode = moduleMode === "preview";
+          const isFree = !isPreviewMode || index < 4;
 
           return (
             <div
               key={item.id || item.name}
+              onClick={() => {
+                if (!isFree) {
+                  setUnlockModalItem(item.name);
+                }
+              }}
               className="group cursor-pointer overflow-hidden rounded-[28px] border border-[#e8dfda] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#d7c3bc] hover:shadow-xl"
             >
               <div className={`h-24 bg-gradient-to-r ${accent} p-5`}>
@@ -275,9 +312,9 @@ const typeOptions = useMemo(
                  <div className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white/90">
   {item.type}
 </div>
-                  <div className="rounded-full bg-white px-3 py-1 text-[12px] font-bold text-[#9a2119] shadow-sm">
-                    {item.rank}
-                  </div>
+                 <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isFree ? "bg-green-50" : "bg-red-50"}`}>
+                {isFree ? <UnlockOutlined className="text-green-600" /> : <LockOutlined className="text-red-500" />}
+              </div>
                 </div>
               </div>
 
@@ -309,7 +346,13 @@ const typeOptions = useMemo(
                       href={websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isFree) {
+                          e.preventDefault();
+                          setUnlockModalItem(item.name);
+                        }
+                      }}
                       className="flex items-center gap-2 text-[14px] font-bold text-[#b22b1f]"
                     >
                       Explore <RightOutlined />
@@ -326,6 +369,18 @@ const typeOptions = useMemo(
       </div>
 
       {filtered.length === 0 ? <div className="py-10 text-center text-gray-500">No results found</div> : null}
+
+      <UnlockRedirectModal
+        open={Boolean(unlockModalItem)}
+        title="Unlock Institute"
+        itemLabel={unlockModalItem}
+        description="Your 15 second preview has ended. Please purchase this module to continue."
+        onCancel={() => setUnlockModalItem(null)}
+        onConfirm={() => {
+          setUnlockModalItem(null);
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(location.pathname)}`);
+        }}
+      />
     </ModuleScreen>
   );
 }
