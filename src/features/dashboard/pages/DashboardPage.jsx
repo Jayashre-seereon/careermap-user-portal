@@ -183,14 +183,8 @@ export default function DashboardPage() {
       />
     );
   }
-
-  function handleTestClick() {
-    if (isUnlocked("psychometric-test")) {
-      navigate("/app/psychometric-test");
-      return;
-    }
-
-    setShowPersonality(true);
+function handleTestClick() {
+    window.location.href = "/assessment/phycometrichalftest.html";
   }
 
   function handleCompleteProfile() {
