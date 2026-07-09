@@ -3,6 +3,8 @@ import { Alert } from "antd";
 import {
   CalendarOutlined,
   ArrowRightOutlined,
+   LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UnlockRedirectModal } from "../../portal/components/portalPageShared";
@@ -226,6 +228,9 @@ export default function EntranceExamPage() {
                 }
               }}
             >
+               <div className={`absolute  right-3 flex h-8 w-8 items-center justify-center rounded-full ${isFree ? "bg-green-50" : "bg-red-50"}`}>
+                {isFree ? <UnlockOutlined className="text-green-600" /> : <LockOutlined className="text-red-500" />}
+              </div>
               <p className="m-0 line-clamp-2 flex-1 text-[25px] font-bold leading-snug text-[#1a0a09]">
                 {item.name}
               </p>

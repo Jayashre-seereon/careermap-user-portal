@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled} from "@ant-design/icons";
+import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled,LockOutlined,UnlockOutlined} from "@ant-design/icons";
 import { Modal,Rate } from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -137,9 +137,9 @@ function MentorCard({ mentor, isFree, onClick }) {
           </div>
         </div>
         {!isFree ? (
-          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-500">LOCKED</span>
+       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-[11px] font-semibold text-red-500"><LockOutlined /></span>
         ) : (
-          <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700">FREE</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-[11px] font-semibold text-green-600"><UnlockOutlined /></span>
         )}
       </div>
 

@@ -181,9 +181,7 @@ useEffect(() => {
 
   async function openScholarship(item, index) {
     try {
-      const isPreviewMode = moduleMode === "preview";
-      const isFreeItem = unlocked || !isPreviewMode || index < 4;
-
+    const isFreeItem = unlocked || item.previewEligible;
       if (!isFreeItem) {
         setUnlockModalItem(item.name);
         return;
@@ -241,9 +239,12 @@ useEffect(() => {
 
     return (
       <ModuleScreen className="space-y-4">
-        {moduleMode === "preview" && !previewExpired && previewRemaining > 0 ? (
-          <div className="sticky top-0 z-10 mb-4 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 text-center font-semibold text-yellow-700 shadow-sm">
-            Preview ends in {previewRemaining}s
+       {moduleMode === "preview" && !previewExpired && previewRemaining > 0 ? (
+          <div className="sticky top-0 z-10 mb-4 flex justify-end">
+            <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 shadow-sm">
+              <ClockCircleOutlined />
+              Preview ends in {previewRemaining}s
+            </div>
           </div>
         ) : null}
 
@@ -542,12 +543,10 @@ useEffect(() => {
           return (
             <div
               key={item.id || item.name}
-              onClick={() => {
+             onClick={() => {
                 const itemIndex = filtered.findIndex((current) => (current.id || current.name) === (item.id || item.name));
-                const isPreviewMode = moduleMode === "preview";
-                const isFreeItem = unlocked || !isPreviewMode || itemIndex < 4;
 
-                if (!isFreeItem) {
+                if (!itemFree) {
                   setUnlockModalItem(item.name);
                   return;
                 }
@@ -577,7 +576,7 @@ useEffect(() => {
                   </div>
                   {!unlocked ? (
                     <span
-  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${
+  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-2 text-[15px] font-bold ${
     isPreviewAllowed
       ? "bg-green-100 text-green-700"
       : "bg-[#fdf0ee] text-[#9a2119]"

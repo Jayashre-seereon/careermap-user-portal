@@ -5,6 +5,8 @@ import {
   BookOutlined,
   RightOutlined,
   BankOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { getInstitutes } from "../../../api/instituteApi";
 import { institutes as fallbackInstitutes } from "../../../data/careermapData";
@@ -310,9 +312,9 @@ const typeOptions = useMemo(
                  <div className="rounded-full bg-white/18 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-white/90">
   {item.type}
 </div>
-                  <div className="rounded-full bg-white px-3 py-1 text-[12px] font-bold text-[#9a2119] shadow-sm">
-                    {item.rank}
-                  </div>
+                 <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isFree ? "bg-green-50" : "bg-red-50"}`}>
+                {isFree ? <UnlockOutlined className="text-green-600" /> : <LockOutlined className="text-red-500" />}
+              </div>
                 </div>
               </div>
 
