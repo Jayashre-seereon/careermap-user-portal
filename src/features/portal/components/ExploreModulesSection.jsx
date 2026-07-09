@@ -107,7 +107,7 @@ const getAccessBadge = (status) => {
                   onClick={() => handleModuleClick(card)}
                 >
                   <div
-                    className="dashboard-module-media relative  overflow-hidden"
+                    className="dashboard-module-media relative h-[180px] w-full overflow-hidden"
                     style={!card.image ? { background: art.background } : {}}
                   >
 <span
@@ -116,11 +116,11 @@ const getAccessBadge = (status) => {
   {badge.icon}
   {badge.label}
 </span>
-                    {card.image ? (
+                   {card.image ? (
                       <img
                         src={card.image}
                         alt={card.title}
-                        className="h-full w-full object-cover"
+                        className="block h-full w-full object-cover"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
