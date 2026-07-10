@@ -12,6 +12,7 @@ import {
   HeartFilled,
   HeartOutlined,
   FileTextOutlined,
+  ClockCircleOutlined,
   CalendarOutlined,
   RightOutlined,
   ReadOutlined,
@@ -20,6 +21,7 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UnlockOutlined,
+  LockOutlined,
   StarOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
@@ -1193,17 +1195,10 @@ function handleLockedCareerClick(item, type) {
               onClick={() => handleLockedCareerClick(item, type)}
               className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
             >
-              <div className="h-44 w-full overflow-hidden bg-gray-100">
-                
-                {isFree ? (
-  <span className="bg-green-100 text-green-700">
-    FREE
-  </span>
-) : (
-  <span className="bg-red-100 text-red-700">
-    LOCK
-  </span>
-)}
+             <div className="relative h-44 w-full overflow-hidden bg-gray-100">
+                <span className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm ${isFree ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  {isFree ? <UnlockOutlined /> : <LockOutlined />}
+                </span>
                 {item?.coverImage ? (
                   <img
                     src={item.coverImage}
@@ -1676,20 +1671,23 @@ function handleLockedCareerClick(item, type) {
       </>
     )}
   </div>
-  {moduleStatus === "preview" &&
-  previewRemaining > 0 && (
-    <div className="mb-4 rounded-lg bg-yellow-100 border border-yellow-300 p-3">
-      <p className="m-0 font-semibold">
+ {moduleStatus === "preview" &&
+  previewRemaining > 0 &&
+  currentLevel === "details" && (
+   <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 p-3">
+      <ClockCircleOutlined className="text-green-700" />
+      <div className="m-0 font-semibold text-green-700">
         Preview ends in {previewRemaining} seconds
-      </p>
+      </div>
     </div>
 )}
 
-{previewExpired && (
-  <div className="mb-4 rounded-lg bg-red-100 border border-red-300 p-3">
-    <p className="m-0 font-semibold text-red-700">
+{previewExpired && currentLevel === "details" && (
+ <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-3">
+    <LockOutlined className="text-red-700" />
+    <div className="m-0 font-semibold text-red-700">
       Preview expired. Please purchase a subscription.
-    </p>
+    </div>
   </div>
 )}
 </div>
@@ -1754,12 +1752,15 @@ function handleLockedCareerClick(item, type) {
         </div>
       )}
 
-      <UnlockRedirectModal
+     <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
         title="Unlock Career Library"
         itemLabel={unlockModalItem ? getItemTitle(unlockModalItem.item) : ""}
         description="Your free Career Library access has already been used. Subscribe to unlock"
-        onCancel={() => setUnlockModalItem(null)}
+        onCancel={() => {
+          setUnlockModalItem(null);
+          handleBack();
+        }}
         onConfirm={handleGoToPlans}
       />
     </ModuleScreen>

@@ -3,6 +3,8 @@ import { Alert } from "antd";
 import {
   CalendarOutlined,
   ArrowRightOutlined,
+   LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UnlockRedirectModal } from "../../portal/components/portalPageShared";
@@ -10,6 +12,7 @@ import { getEntranceExams } from "../../../api/entranceExamApi";
 import { entranceExams as fallbackEntranceExams } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
+import { checkModuleAccess } from "../../../api/moduleAccessApi";
 
 export default function EntranceExamPage() {
   const { goToDashboard } = usePortalNavigation();
@@ -19,10 +22,10 @@ export default function EntranceExamPage() {
   const accessStatus = location.state?.accessStatus || "preview";
   const isSubscribed = accessStatus === "unlocked";
 
-  const [previewUsed, setPreviewUsed] = useState(false);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [items, setItems] = useState(fallbackEntranceExams);
   const [error, setError] = useState("");
+  const [moduleMode, setModuleMode] = useState(accessStatus);
 
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
@@ -50,6 +53,31 @@ export default function EntranceExamPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccessMode() {
+      const moduleId = location.state?.moduleId;
+      if (!moduleId) return;
+
+      try {
+        const response = await checkModuleAccess(moduleId);
+        if (active && response?.mode) {
+          setModuleMode(response.mode);
+        }
+      } catch {
+        if (active) {
+          setModuleMode(accessStatus);
+        }
+      }
+    }
+
+    loadAccessMode();
+    return () => {
+      active = false;
+    };
+  }, [accessStatus, location.state?.moduleId]);
 
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.categoryObj).map((i) => [i.categoryObj.id, i.categoryObj])).values()],
@@ -186,11 +214,23 @@ export default function EntranceExamPage() {
         </div>
 
         <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {filtered.map((item) => (
+          {filtered.map((item, index) => {
+            const isPreviewMode = moduleMode === "preview";
+            const isFree = !isPreviewMode || index < 4;
+
+            return (
             <div
               key={item.id || item.name}
               className="group flex flex-col gap-2.5 rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
+              onClick={() => {
+                if (!isFree) {
+                  setUnlockModalItem({ title: item.name });
+                }
+              }}
             >
+               <div className={`absolute  right-3 flex h-8 w-8 items-center justify-center rounded-full ${isFree ? "bg-green-50" : "bg-red-50"}`}>
+                {isFree ? <UnlockOutlined className="text-green-600" /> : <LockOutlined className="text-red-500" />}
+              </div>
               <p className="m-0 line-clamp-2 flex-1 text-[25px] font-bold leading-snug text-[#1a0a09]">
                 {item.name}
               </p>
@@ -223,8 +263,7 @@ export default function EntranceExamPage() {
                         return;
                       }
 
-                      if (!previewUsed) {
-                        setPreviewUsed(true);
+                      if (isFree) {
                         return;
                       }
 
@@ -240,7 +279,8 @@ export default function EntranceExamPage() {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {filtered.length === 0 ? (

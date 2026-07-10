@@ -18,7 +18,7 @@ import { scholarships as fallbackScholarships } from "../../../data/careermapDat
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-import {checkModuleAccess, startPreview} from "../../../api/moduleAccessApi";
+import { checkModuleAccess, startPreview } from "../../../api/moduleAccessApi";
 function scrollToSection(id) {
   const el = document.getElementById(id);
   if (el) {
@@ -38,6 +38,7 @@ export default function ScholarshipPage() {
   const accessStatus = pageLocation.state?.accessStatus || "preview";
   const unlocked = accessStatus === "full" || isUnlocked("scholarship");
   const SCHOLARSHIP_MODULE_ID =  pageLocation.state?.moduleId;// apna scholarship module id
+  const [moduleMode, setModuleMode] = useState(accessStatus);
 
 const [previewSessionId, setPreviewSessionId] = useState(null);
 const [previewRemaining, setPreviewRemaining] = useState(0);
@@ -70,6 +71,30 @@ const [previewExpired, setPreviewExpired] = useState(false);
   }, []);
 
   useEffect(() => {
+    let active = true;
+
+    async function loadAccessMode() {
+      if (!SCHOLARSHIP_MODULE_ID) return;
+
+      try {
+        const response = await checkModuleAccess(SCHOLARSHIP_MODULE_ID);
+        if (active && response?.mode) {
+          setModuleMode(response.mode);
+        }
+      } catch {
+        if (active) {
+          setModuleMode(accessStatus);
+        }
+      }
+    }
+
+    loadAccessMode();
+    return () => {
+      active = false;
+    };
+  }, [SCHOLARSHIP_MODULE_ID, accessStatus]);
+
+  useEffect(() => {
   if (!previewSessionId || previewExpired) return;
 
   const timer = setInterval(() => {
@@ -92,6 +117,12 @@ useEffect(() => {
     setUnlockModalItem(selectedItem.name);
   }
 }, [previewExpired, selectedItem]);
+
+useEffect(() => {
+  if (moduleMode === "preview" && selectedItem && previewRemaining === 0 && !previewExpired) {
+    setPreviewRemaining(15);
+  }
+}, [moduleMode, selectedItem, previewRemaining, previewExpired]);
 
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.categoryObj).map((i) => [i.categoryObj.id, i.categoryObj])).values()],
@@ -148,57 +179,41 @@ useEffect(() => {
     return query ? `${location.pathname}?${query}` : location.pathname;
   }
 
-async function openScholarship(item) {
+  async function openScholarship(item, index) {
+    try {
+    const isFreeItem = unlocked || item.previewEligible;
+      if (!isFreeItem) {
+        setUnlockModalItem(item.name);
+        return;
+      }
 
-  console.log("1. function started");
+      if (accessStatus === "full") {
+        const response = await getScholarshipById(item.id);
+        setSelectedItem(response);
+        return;
+      }
 
-  try {
+      const preview = await startPreview({
+        moduleId: SCHOLARSHIP_MODULE_ID,
+        pageType: "scholarship",
+        pageId: item.id,
+      });
 
-    console.log("2. accessStatus =", accessStatus);
+      setPreviewSessionId(preview.previewSessionId);
+      setPreviewRemaining(preview.remainingSeconds ?? preview.previewDurationSeconds ?? 15);
+      setPreviewExpired(false);
 
-    if (accessStatus === "full") {
-      console.log("3. unlocked user");
+      const detail = await getScholarshipById(
+        item.id,
+        SCHOLARSHIP_MODULE_ID,
+        preview.previewSessionId
+      );
 
-      const response = await getScholarshipById(item.id);
-
-      console.log("4. detail loaded");
-
-      setSelectedItem(response);
-
-      return;
+      setSelectedItem(detail);
+      registerFreeDetailAccess("scholarship", item.name);
+    } catch (err) {
+      console.error("ERROR =>", err);
     }
-
-    console.log("5. before startPreview");
-
-  const preview = await startPreview({
-  moduleId: SCHOLARSHIP_MODULE_ID,
-  pageType: "scholarship",
-  pageId: item.id,
-});
-
-console.log("Preview Response =", preview);
-
-console.log("Calling getScholarshipById...");
-  setPreviewSessionId(preview.previewSessionId);
-setPreviewRemaining(preview.remainingSeconds);
-setPreviewExpired(false);
-
-const detail = await getScholarshipById(
-  item.id,
-  SCHOLARSHIP_MODULE_ID,
-  preview.previewSessionId
-);
-
-console.log("Detail =", detail);
-
-setSelectedItem(detail);
-
-registerFreeDetailAccess("scholarship", item.name);
-  } catch (err) {
-
-    console.error("ERROR =>", err);
-
-  }
 }
 
   function handleGoToPlans(itemName = unlockModalItem) {
@@ -224,12 +239,14 @@ registerFreeDetailAccess("scholarship", item.name);
 
     return (
       <ModuleScreen className="space-y-4">
-
-    {!unlocked && !previewExpired && previewRemaining > 0 && (
-      <div className="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 text-center font-semibold text-yellow-700">
-        Preview ends in {previewRemaining}s
-      </div>
-    )}
+       {moduleMode === "preview" && !previewExpired && previewRemaining > 0 ? (
+          <div className="sticky top-0 z-10 mb-4 flex justify-end">
+            <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 shadow-sm">
+              <ClockCircleOutlined />
+              Preview ends in {previewRemaining}s
+            </div>
+          </div>
+        ) : null}
 
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
         {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
@@ -519,17 +536,22 @@ registerFreeDetailAccess("scholarship", item.name);
 
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {
-          const itemFree =
-  unlocked || item.previewEligible;
-  const isPreviewAllowed = unlocked || item.previewEligible;
+          const itemFree = unlocked || item.previewEligible;
+          const isPreviewAllowed = unlocked || item.previewEligible;
           const isActive = item.status === "Active";
 
           return (
             <div
               key={item.id || item.name}
-              onClick={() => {
-               
-                openScholarship(item);
+             onClick={() => {
+                const itemIndex = filtered.findIndex((current) => (current.id || current.name) === (item.id || item.name));
+
+                if (!itemFree) {
+                  setUnlockModalItem(item.name);
+                  return;
+                }
+
+                openScholarship(item, itemIndex);
               }}
               className="group flex cursor-pointer overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10"
             >
@@ -554,7 +576,7 @@ registerFreeDetailAccess("scholarship", item.name);
                   </div>
                   {!unlocked ? (
                     <span
-  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${
+  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-2 text-[15px] font-bold ${
     isPreviewAllowed
       ? "bg-green-100 text-green-700"
       : "bg-[#fdf0ee] text-[#9a2119]"

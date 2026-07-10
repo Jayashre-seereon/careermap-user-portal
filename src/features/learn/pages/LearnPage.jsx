@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Button } from "antd";
-import { ArrowRightOutlined, LockOutlined, PlayCircleOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, LockOutlined,UnlockOutlined, PlayCircleOutlined } from "@ant-design/icons";
 import { useSearchParams,useLocation } from "react-router-dom";
 import { getMasterClasses,
  } from "../../../api/masterclassApi";
@@ -12,7 +12,7 @@ import { UnlockRedirectModal, usePortalNavigation } from "../../portal/component
 // import { useLocation } from "react-router-dom";
 function formatViews(views) {
   if (!views) {
-    return "New class";
+    return "New";
   }
 
   if (views < 1000) {
@@ -37,12 +37,7 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
 
       <div className="flex h-full flex-col gap-4 pt-2">
         <div className="flex items-start gap-3">
-          <div
-            className="flex h-[58px] w-[58px] items-center justify-center rounded-[18px]"
-            style={{ backgroundColor: heroTone }}
-          >
-            <TextBadge locked={locked} />
-          </div>
+          
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
@@ -51,8 +46,8 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
                 <div className="mt-1 truncate text-[12px] text-muted">{item.mentor}</div>
               </div>
 
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff6f2] text-brand">
-                {locked ? <LockOutlined /> : <PlayCircleOutlined />}
+             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${locked ? "bg-[#fff6f2] text-brand" : "bg-green-50 text-green-600"}`}>
+                {locked ? <LockOutlined /> : <UnlockOutlined />}
               </div>
             </div>
 
@@ -63,9 +58,7 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
               <SoftTag color="gold" className="shrink-0 whitespace-nowrap">
                 {formatViews(item.views)}
               </SoftTag>
-              <SoftTag color="default" className="shrink-0 whitespace-nowrap">
-                {item.videoType}
-              </SoftTag>
+            
             </div>
           </div>
         </div>
@@ -88,11 +81,11 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
         ) : null}
 
         <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-          <span className="text-xs font-semibold text-[#8c6c67]">Tap to watch details</span>
-          <Button
+            <Button
             type="link"
             className="!h-auto !p-0 !text-sm !font-bold !text-[#9a2119]"
             onClick={onWatch}
+            icon={<PlayCircleOutlined className="!text-base" />}
           >
             {locked && !detailUnlocked ? "Unlock More Classes" : "Watch Video"} <ArrowRightOutlined />
           </Button>
@@ -102,13 +95,7 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
   );
 }
 
-function TextBadge({ locked }) {
-  return (
-    <span className="text-[11px] font-extrabold tracking-[0.18em] text-brand-deep">
-      {locked ? "LOCK" : "PLAY"}
-    </span>
-  );
-}
+
 
 export default function LearnPage() {
   const { canAccessFreeDetail, registerFreeDetailAccess } = useAppState();
