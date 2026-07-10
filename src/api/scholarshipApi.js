@@ -74,6 +74,18 @@ function formatRequirements(requirement) {
     .filter(Boolean);
 }
 
+function formatSections(sections) {
+  if (!Array.isArray(sections)) {
+    return [];
+  }
+
+  return sections.map((section, index) => ({
+    id: String(section?.id ?? `section-${index}`),
+    title: section?.title || `Section ${index + 1}`,
+    description: section?.description || "",
+  }));
+}
+
 function mapScholarshipItem(item, index) {
   const scholarshipType = item?.type || "Scholarship";
 
@@ -92,10 +104,12 @@ function mapScholarshipItem(item, index) {
     requirements: formatRequirements(item?.requirement),
     link: item?.url || "#",
     image: item?.image || null,
-    // Raw category objects, preserved for dropdown filtering on the page.
+    sections: formatSections(item?.sections), 
     categoryObj: item?.category || null,
     secondcategoryObj: item?.secondcategory || null,
     subcategoryObj: item?.subcategory || null,
+     previewEligible: item?.previewEligible ?? false,
+  accessTier: item?.accessTier ?? "locked",
   };
 }
 
@@ -104,4 +118,20 @@ export async function getScholarships() {
   const items = Array.isArray(response?.data?.data) ? response.data.data : [];
 
   return items.map((item, index) => mapScholarshipItem(item, index));
+}
+
+export async function getScholarshipById(
+  id,
+  moduleId,
+  previewSessionId
+) {
+   console.log("Inside getScholarshipById");
+  const response = await api.get(`/scholarship/${id}`, {
+    headers: {
+      "x-module-id": moduleId,
+      "x-preview-session": previewSessionId,
+    },
+  });
+
+  return mapScholarshipItem(response.data.data);
 }

@@ -10,14 +10,21 @@ import {
   CalendarOutlined,
   TeamOutlined,
   ClockCircleOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { getScholarships } from "../../../api/scholarshipApi";
+import { getScholarships,  getScholarshipById, } from "../../../api/scholarshipApi";
 import { scholarships as fallbackScholarships } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import {checkModuleAccess, startPreview} from "../../../api/moduleAccessApi";
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
 export default function ScholarshipPage() {
   const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
@@ -29,8 +36,12 @@ export default function ScholarshipPage() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const accessStatus = pageLocation.state?.accessStatus || "preview";
-  const unlocked = accessStatus === "unlocked" || isUnlocked("scholarship");
+  const unlocked = accessStatus === "full" || isUnlocked("scholarship");
+  const SCHOLARSHIP_MODULE_ID =  pageLocation.state?.moduleId;// apna scholarship module id
 
+const [previewSessionId, setPreviewSessionId] = useState(null);
+const [previewRemaining, setPreviewRemaining] = useState(0);
+const [previewExpired, setPreviewExpired] = useState(false);
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
@@ -57,6 +68,30 @@ export default function ScholarshipPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+  if (!previewSessionId || previewExpired) return;
+
+  const timer = setInterval(() => {
+    setPreviewRemaining((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        setPreviewExpired(true);
+        return 0;
+      }
+
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [previewSessionId, previewExpired]);
+
+useEffect(() => {
+  if (previewExpired && selectedItem) {
+    setUnlockModalItem(selectedItem.name);
+  }
+}, [previewExpired, selectedItem]);
 
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.categoryObj).map((i) => [i.categoryObj.id, i.categoryObj])).values()],
@@ -113,12 +148,58 @@ export default function ScholarshipPage() {
     return query ? `${location.pathname}?${query}` : location.pathname;
   }
 
-  function openScholarship(item) {
-    if (accessStatus !== "unlocked") {
-      registerFreeDetailAccess("scholarship", item.name);
+async function openScholarship(item) {
+
+  console.log("1. function started");
+
+  try {
+
+    console.log("2. accessStatus =", accessStatus);
+
+    if (accessStatus === "full") {
+      console.log("3. unlocked user");
+
+      const response = await getScholarshipById(item.id);
+
+      console.log("4. detail loaded");
+
+      setSelectedItem(response);
+
+      return;
     }
-    setSelectedItem(item);
+
+    console.log("5. before startPreview");
+
+  const preview = await startPreview({
+  moduleId: SCHOLARSHIP_MODULE_ID,
+  pageType: "scholarship",
+  pageId: item.id,
+});
+
+console.log("Preview Response =", preview);
+
+console.log("Calling getScholarshipById...");
+  setPreviewSessionId(preview.previewSessionId);
+setPreviewRemaining(preview.remainingSeconds);
+setPreviewExpired(false);
+
+const detail = await getScholarshipById(
+  item.id,
+  SCHOLARSHIP_MODULE_ID,
+  preview.previewSessionId
+);
+
+console.log("Detail =", detail);
+
+setSelectedItem(detail);
+
+registerFreeDetailAccess("scholarship", item.name);
+  } catch (err) {
+
+    console.error("ERROR =>", err);
+
   }
+}
 
   function handleGoToPlans(itemName = unlockModalItem) {
     const returnTo = buildScholarshipReturnTo(itemName);
@@ -143,6 +224,13 @@ export default function ScholarshipPage() {
 
     return (
       <ModuleScreen className="space-y-4">
+
+    {!unlocked && !previewExpired && previewRemaining > 0 && (
+      <div className="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 text-center font-semibold text-yellow-700">
+        Preview ends in {previewRemaining}s
+      </div>
+    )}
+
         <PageHero backOnly onBack={() => setSelectedItem(null)} />
         {error ? <Alert type="warning" title={error} showIcon style={{ borderRadius: 16 }} /> : null}
 
@@ -169,31 +257,27 @@ export default function ScholarshipPage() {
                     </h1>
                   </div>
                   <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                      isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
-                    }`}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
+                      }`}
                   >
                     {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
                     {selectedItem.status}
                   </span>
                 </div>
-                <div className="h-px bg-[#f0e4e2]" />
-              <div
-                  className="ckeditor-output"
-                  dangerouslySetInnerHTML={{ __html: selectedItem.description || "" }}
-                />
+
+
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+            <div id="section-eligibility" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24 overflow-hidden rounded-[26px]">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
                 <TeamOutlined className="text-sm text-[#9a2119]" />
-                <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Eligibility</h3>
+                <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">Eligibility</h3>
               </div>
               <p className="m-0 px-5 py-4 text-sm font-medium leading-7 text-[#1a0a09]">{selectedItem.eligibility}</p>
             </div>
 
-            <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+            <div id="section-requirements" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
                 <FileTextOutlined className="text-sm text-[#9a2119]" />
                 <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Requirements</h3>
@@ -202,9 +286,8 @@ export default function ScholarshipPage() {
                 {selectedItem.requirements.map((req, index) => (
                   <div
                     key={index}
-                    className={`flex items-start gap-3 py-3 ${
-                      index < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
-                    }`}
+                    className={`flex items-start gap-3 py-3 ${index < selectedItem.requirements.length - 1 ? "border-b border-[#fdf0ee]" : ""
+                      }`}
                   >
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#9a2119]" />
                     <p className="m-0 text-sm leading-7 text-gray-600">{req}</p>
@@ -212,31 +295,65 @@ export default function ScholarshipPage() {
                 ))}
               </div>
             </div>
+
+            {selectedItem.sections?.length ? (
+              <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+                <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
+                  <FileTextOutlined className="text-sm text-[#9a2119]" />
+                  <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">Description</h3>
+                </div>
+                <div className="divide-y divide-[#f0e4e2]">
+                  {selectedItem.sections.map((section) => (
+                    <div key={section.id} id={`section-${section.id}`} className="scroll-mt-24 px-5 py-4">
+                      <div className="m-0 mb-2 text-[15px]" style={{ fontWeight: "bold", color: "#9a2119" }}>
+                        {section.title}
+                      </div>
+                      <div
+                        className="ckeditor-output text-sm leading-7 text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: section.description || "" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Right column: persistent apply rail */}
           <div className="space-y-4 lg:sticky lg:top-4">
             <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
               <div className="space-y-4 p-5">
-                <div>
-                  <p className="m-0 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
-                    Award Amount
-                  </p>
-                  <p className="m-0 mt-1 text-3xl font-black leading-none text-[#92702c]">{selectedItem.amount}</p>
-                </div>
+                <p className="m-0 text-sm font-bold text-[#92702c]">
+  <span className="text-[10px] uppercase tracking-widest text-[#b8837e] mr-2">
+    Award Amount:
+  </span>
+  {selectedItem.amount}
+</p>
 
                 <div className="h-px bg-[#f0e4e2]" />
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 ">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fdf0ee] text-[#9a2119]">
                     <CalendarOutlined />
                   </span>
-                  <div>
-                    <p className="m-0 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">Deadline</p>
-                    <p className="m-0 text-sm font-bold text-[#1a0a09]">{selectedItem.deadline}</p>
-                  </div>
+                 <p className="m-0 text-sm font-bold text-[#1a0a09]">
+  <span className="text-[10px] uppercase tracking-widest text-[#b8837e] mr-2">
+    Deadline:
+  </span>
+  {selectedItem.deadline}
+</p>
                 </div>
-
+                <div className="h-px bg-[#f0e4e2] " />
+                <Button
+                  type="primary"
+                  href={selectedItem.link}
+                  target="_blank"
+                  block
+                  icon={<ArrowRightOutlined />}
+                  className="!mt-1 !h-9  !mt-4 !rounded-xl !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]"
+                >
+                  Apply Now
+                </Button>
                 {showCountdown ? (
                   <div className="flex items-center gap-2.5">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fdf0ee] text-[#9a2119]">
@@ -250,17 +367,40 @@ export default function ScholarshipPage() {
                     </div>
                   </div>
                 ) : null}
+                <div className="h-px bg-[#f0e4e2] mt-4" />
 
-                <Button
-                  type="primary"
-                  href={selectedItem.link}
-                  target="_blank"
-                  block
-                  icon={<ArrowRightOutlined />}
-                  className="!mt-1 !h-12 !rounded-xl !border-[#9a2119] !bg-[#9a2119] !text-sm !font-semibold hover:!bg-[#7a1a13]"
-                >
-                  Apply Now
-                </Button>
+                <div>
+                  <p className="m-0 mb-2 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">On This Page</p>
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => scrollToSection("section-eligibility")}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+                    >
+                      <TeamOutlined className="text-xs" />
+                      Eligibility
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToSection("section-requirements")}
+                      className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+                    >
+                      <FileTextOutlined className="text-xs" />
+                      Requirements
+                    </button>
+                    {selectedItem.sections?.map((section) => (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => scrollToSection(`section-${section.id}`)}
+                        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+                      >
+                        <StarOutlined className="text-xs" />
+                        {section.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {!detailUnlocked ? (
                   <Button block onClick={() => handleGoToPlans(selectedItem.name)} className="!h-12 !rounded-xl">
                     Unlock to Continue
@@ -270,6 +410,19 @@ export default function ScholarshipPage() {
             </div>
           </div>
         </div>
+        <UnlockRedirectModal
+  open={Boolean(unlockModalItem)}
+  title="Unlock Scholarship"
+  itemLabel={unlockModalItem}
+  description="Your 15 second preview has ended. Please purchase this module to continue."
+  onCancel={() => {
+    setUnlockModalItem(null);
+    setSelectedItem(null);
+  }}
+  onConfirm={() => {
+    handleGoToPlans();
+  }}
+/>
       </ModuleScreen>
     );
   }
@@ -366,26 +519,24 @@ export default function ScholarshipPage() {
 
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {
-          const itemFree = unlocked || canAccessFreeDetail("scholarship", item.name);
+          const itemFree =
+  unlocked || item.previewEligible;
+  const isPreviewAllowed = unlocked || item.previewEligible;
           const isActive = item.status === "Active";
 
           return (
             <div
               key={item.id || item.name}
               onClick={() => {
-                if (!unlocked && !itemFree) {
-                  setUnlockModalItem(item.name);
-                  return;
-                }
+               
                 openScholarship(item);
               }}
               className="group flex cursor-pointer overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10"
             >
               {/* Amount rail: leads with the number, not an icon */}
               <div
-                className={`flex w-[92px] shrink-0 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${
-                  isActive ? "bg-[#fdf8f3]" : "bg-gray-50"
-                }`}
+                className={`flex w-[92px] shrink-0 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${isActive ? "bg-[#fdf8f3]" : "bg-gray-50"
+                  }`}
               >
                 <span className="text-[9px] font-bold uppercase tracking-widest text-[#b8837e]">Award</span>
                 <span className={`text-[15px] font-black leading-tight ${isActive ? "text-[#92702c]" : "text-gray-400"}`}>
@@ -403,20 +554,21 @@ export default function ScholarshipPage() {
                   </div>
                   {!unlocked ? (
                     <span
-                      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                        itemFree ? "bg-green-100 text-green-700" : "bg-[#fdf0ee] text-[#9a2119]"
-                      }`}
-                    >
-                      {itemFree ? <UnlockOutlined /> : <LockOutlined />}
-                    </span>
+  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold ${
+    isPreviewAllowed
+      ? "bg-green-100 text-green-700"
+      : "bg-[#fdf0ee] text-[#9a2119]"
+  }`}
+>
+  {isPreviewAllowed ? <UnlockOutlined /> : <LockOutlined />}
+</span>
                   ) : null}
                 </div>
 
                 <div className="mt-auto flex items-center justify-between gap-2 border-t border-[#f0e4e2] pt-3">
                   <span
-                    className={`inline-flex items-center gap-1 text-[11px] font-bold ${
-                      isActive ? "text-green-700" : "text-gray-400"
-                    }`}
+                    className={`inline-flex items-center gap-1 text-[11px] font-bold ${isActive ? "text-green-700" : "text-gray-400"
+                      }`}
                   >
                     {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
                     {item.deadline}

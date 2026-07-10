@@ -16,13 +16,16 @@ import { updateUserProfile } from "../../../api/userApi";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { buildUsername, isValidDateInput, mapApiUserToProfile, splitFullName } from "../../../utils/auth";
+import { useLocation } from "react-router-dom";
 
 export default function ProfilePage() {
   const {
     bookings,
     hasActiveSubscription,
     onboarding,
+    clearProfileEditRequest,
     profileEditRequestKey,
+    setProfileIncomplete,
     savedCareers,
     saveUserProfile,
     subscriptionRecords,
@@ -31,6 +34,8 @@ export default function ProfilePage() {
   } = useAppState();
 
   const { navigate } = usePortalNavigation();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo || "";
   const [editOpen, setEditOpen] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isLoadingProfileData, setIsLoadingProfileData] = useState(false);
@@ -44,6 +49,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profileEditRequestKey > 0) {
       setEditOpen(true);
+      clearProfileEditRequest();
     }
   }, [profileEditRequestKey]);
 
@@ -136,11 +142,16 @@ export default function ProfilePage() {
       }
 
       setEditOpen(false);
+      setProfileIncomplete(false);
       message.success(response?.message || "Profile updated successfully");
       setStatus({
         type: "success",
         message: response?.message || "Profile updated successfully.",
       });
+
+      if (returnTo) {
+        navigate(returnTo, { replace: true, state: { profileCompleted: true } });
+      }
     } catch (error) {
       setStatus({
         type: "error",

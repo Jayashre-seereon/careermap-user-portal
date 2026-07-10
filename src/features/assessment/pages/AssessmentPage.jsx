@@ -1,183 +1,19 @@
-import { useState } from "react";
-import {
-  ArrowRightOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExperimentOutlined,
-  FileProtectOutlined,
-  LockOutlined,
-  SafetyCertificateOutlined,
-  SolutionOutlined,
-  UnlockOutlined,
-} from "@ant-design/icons";
-import { Button } from "antd";
-import { ModuleScreen, PageHero } from "../../../components/ui";
-import { assessmentFeatures, assessmentPolicies } from "../../../data/careermapData";
-import { useAppState } from "../../../state/AppStateContext";
-import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-
-const featureIcons = [
-  <SolutionOutlined key="domains" />,
-  <FileProtectOutlined key="report" />,
-  <ClockCircleOutlined key="time" />,
-  <CheckCircleOutlined key="history" />,
-];
-
-const policyIcons = [
-  <SolutionOutlined key="attempt" />,
-  <SafetyCertificateOutlined key="private" />,
-  <ClockCircleOutlined key="retake" />,
-  <LockOutlined key="encrypted" />,
-];
-
-function InfoPanel({ title, icon, items, itemIcons }) {
-  return (
-    <div className="overflow-hidden rounded-3xl border border-[rgba(120,74,62,0.16)] bg-white shadow-[0_8px_24px_rgba(53,26,20,0.05)]">
-      <div className="flex items-center gap-3.5 px-5 pb-3.5 pt-4.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf3f0] text-lg text-[#b12d1f]">
-          {icon}
-        </div>
-        <div className="text-base font-bold text-[#231815]">{title}</div>
-      </div>
-      <div className="h-px bg-[rgba(120,74,62,0.14)]" />
-      <div className="px-5 pb-4 pt-3.5">
-        {items.map((item, index) => (
-          <div key={item} className="flex items-start gap-3 py-2.5 text-sm leading-6 text-[#4e433f]">
-            <span className="mt-0.5 shrink-0 text-[15px] text-[#b12d1f]">
-              {itemIcons[index] || <CheckCircleOutlined />}
-            </span>
-            <span>{item}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import React,{useEffect} from "react";
 
 export default function AssessmentPage() {
-  const { activePlanId, isUnlocked } = useAppState();
-  const { navigate, location } = usePortalNavigation();
-  const testUnlocked = isUnlocked("psychometric-test");
-  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
-
+  useEffect(() => {
+    localStorage.setItem(
+      "API_BASE_URL",
+      import.meta.env.VITE_API_BASE_URL
+    );
+  }, []);
   return (
-    <ModuleScreen className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1>Assessment</h1>
-          <p className="mt-1">Take your psychometric assessment and review your test access details.</p>
-        </div>
-        <PageHero backOnly onBack={() => navigate("/app/dashboard", { replace: true })} className="shrink-0" />
-      </div>
-
-      <div className="mb-[18px] flex flex-col gap-[18px] rounded-3xl border border-[rgba(120,74,62,0.16)] bg-white px-[26px] py-6 shadow-[0_8px_24px_rgba(53,26,20,0.05)] md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-center gap-[18px]">
-          <div className="flex h-[58px] w-[58px] shrink-0 items-center justify-center rounded-[18px] border border-[rgba(177,45,31,0.12)] bg-[#fdf3f0] text-[26px] text-[#b12d1f]">
-            <SolutionOutlined />
-          </div>
-          <div>
-            <p className="mb-1.5 text-xl font-bold leading-tight text-[#231815]">Psychometric Assessment</p>
-            <p className="text-[13px] leading-[1.65] text-[#65544f]">
-              Complete 6 guided modules with 5 questions each and get a downloadable report.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2.5 md:items-end">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(177,45,31,0.14)] bg-[#fdf3f0] px-3.5 py-[9px] text-[13px] font-semibold text-[#b12d1f]">
-            {testUnlocked ? <UnlockOutlined /> : <LockOutlined />}
-            {testUnlocked ? "Unlocked" : "Locked"}
-          </div>
-          {testUnlocked ? (
-            <Button
-              type="primary"
-              size="large"
-              icon={<ExperimentOutlined />}
-              className="!h-11 !rounded-xl !border-0 !bg-[#b12d1f] !px-5 !font-semibold hover:!bg-[#922316]"
-              onClick={() => navigate("/app/psychometric-test")}
-            >
-              Take Full Psychometric Test <ArrowRightOutlined />
-            </Button>
-          ) : (
-            <Button
-              type="primary"
-              size="large"
-              className="!h-11 !rounded-xl !border-0 !bg-[#b12d1f] !px-5 !font-semibold hover:!bg-[#922316]"
-              onClick={() => setUnlockModalOpen(true)}
-            >
-              Unlock Test <ArrowRightOutlined />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="mb-[18px] grid grid-cols-1 gap-3.5 md:grid-cols-2">
-        <InfoPanel
-          title="Test Features"
-          icon={<CheckCircleOutlined />}
-          items={assessmentFeatures}
-          itemIcons={featureIcons}
-        />
-        <InfoPanel
-          title="Test Policy"
-          icon={<FileProtectOutlined />}
-          items={assessmentPolicies}
-          itemIcons={policyIcons}
-        />
-      </div>
-
-      {!testUnlocked && (
-        <div className="rounded-[28px] border border-[#f0e4e2] bg-white px-5 py-5 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#b12d1f]">
-                <LockOutlined />
-              </div>
-              <div>
-                <div className="text-base font-black text-[#231815]">Unlock Assessment</div>
-                <p className="m-0 mt-1 text-sm leading-7 text-[#65544f]">
-                  Subscribe to the Psychometric Test plan to take the full assessment and unlock the report flow.
-                </p>
-              </div>
-            </div>
-            <Button
-              type="primary"
-              className="!h-11 !rounded-xl !bg-[#b12d1f] !border-[#b12d1f] !px-5 !font-semibold"
-              onClick={() => setUnlockModalOpen(true)}
-            >
-              Unlock Now
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div className="rounded-3xl border border-[rgba(120,74,62,0.16)] bg-white px-5 pb-[18px] pt-4 shadow-[0_8px_24px_rgba(53,26,20,0.05)]">
-        <div className="flex items-start gap-3.5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[rgba(177,45,31,0.12)] bg-[#fdf3f0] text-lg text-[#b12d1f]">
-            {activePlanId ? <CheckCircleOutlined /> : <LockOutlined />}
-          </div>
-          <div>
-            <div className="mb-1 text-sm font-bold text-[#b12d1f]">Plan status</div>
-            <p className="text-[13px] leading-[1.65] text-[#4e433f]">
-              {activePlanId
-                ? "Your subscription is active. You can proceed with the psychometric flow and view updated results in your profile history."
-                : "No active test plan yet. Choose a plan to unlock one full psychometric attempt and the related career report."}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <UnlockRedirectModal
-        open={unlockModalOpen}
-        title="Unlock Assessment"
-        itemLabel="Psychometric Test"
-        description="Your current access does not include this module. Subscribe to unlock"
-        onCancel={() => setUnlockModalOpen(false)}
-        onConfirm={() => {
-          setUnlockModalOpen(false);
-          navigate(`/app/subscription?returnTo=${encodeURIComponent(location.pathname)}`);
-        }}
+    <div className="h-screen w-full bg-white">
+      <iframe
+       src="/assessment/phycometricfulltest.html"
+        title="Psychometric Assessment"
+        className="h-full w-full border-0"
       />
-    </ModuleScreen>
+    </div>
   );
 }

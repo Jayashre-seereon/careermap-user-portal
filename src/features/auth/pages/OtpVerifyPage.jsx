@@ -11,7 +11,7 @@ import { authPrimaryButtonStyle } from "../components/authShared";
 
 export default function OtpVerifyPage() {
   const navigate = useNavigate();
-  const { saveUserProfile } = useAppState();
+  const { saveUserProfile, setProfileIncomplete } = useAppState();
   const [params] = useSearchParams();
   const signupForm = useAuthStore((state) => state.signupForm);
   const setTempToken = useAuthStore((state) => state.setTempToken);
@@ -40,7 +40,8 @@ export default function OtpVerifyPage() {
       const response = await verifyOtp(mobileNumber, otp, flowType);
 
       if (flowType === "login") {
-        const requiresInstituteOnboarding = Boolean(response?.user?.isInstituteStudent);
+        const profileIncomplete = Boolean(response?.profileIncomplete);
+        const requiresInstituteOnboarding = Boolean(response?.user?.isInstituteStudent) && !profileIncomplete;
 
         setAuthSession({
           accessToken: response.accessToken || "",
@@ -53,6 +54,7 @@ export default function OtpVerifyPage() {
           saveUserProfile(profile);
         }
 
+        setProfileIncomplete(profileIncomplete);
         setPendingInstituteOnboarding(requiresInstituteOnboarding);
         clearAuthFlow();
         navigate(requiresInstituteOnboarding ? "/onboarding" : next, { replace: true });
