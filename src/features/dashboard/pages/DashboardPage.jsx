@@ -17,6 +17,7 @@ import { PersonalityQuizQuestion, PersonalityQuizResults } from "../../portal/co
 
 export default function DashboardPage() {
   const {
+    activePlanIds,
     isUnlocked,
     onboarding,
     unreadNotificationsCount,
@@ -103,6 +104,7 @@ export default function DashboardPage() {
   () => dashboardData?.plans || [],
   [dashboardData?.plans]
 );
+  const activePlanIdSet = useMemo(() => new Set((activePlanIds || []).map((id) => String(id))), [activePlanIds]);
   const pendingMentorReviews = useMemo(
     () => (dashboardData?.pendingMentorReviews || globalDashboardData?.pendingMentorReviews || []).filter(
       (item) => item?.canReview && !reviewedMentorBookings.includes(String(item.bookingId))
@@ -183,14 +185,8 @@ export default function DashboardPage() {
       />
     );
   }
-
-  function handleTestClick() {
-    if (isUnlocked("psychometric-test")) {
-      navigate("/app/psychometric-test");
-      return;
-    }
-
-    setShowPersonality(true);
+function handleTestClick() {
+    window.location.href = "/assessment/phycometrichalftest.html";
   }
 
   function handleCompleteProfile() {
@@ -220,31 +216,67 @@ export default function DashboardPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {dashboardMentors.map((mentor) => (
-            <button
-              key={mentor.id || mentor.name}
-              type="button"
-              className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              onClick={() => navigate("/app/book-mentor")}
-            >
-              <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px]" style={{ backgroundColor: `${mentor.accent}15` }}>
-                {mentor.image ? (
-                  <Avatar
-                    src={mentor.image}
-                    size={52}
-                    shape="square"
-                    className="!flex !items-center !justify-center !bg-transparent"
-                    style={{ borderRadius: 18 }}
-                  />
-                ) : (
-                  <span className="text-[18px] font-black" style={{ color: mentor.accent }}>
-                    {mentor.avatar}
-                  </span>
-                )}
-              </div>
-              <div className="text-[15px] font-black text-ink">{mentor.name}</div>
-              <div className="mt-1 text-[12px] font-bold text-brand">{mentor.specialty}</div>
-              <div className="mt-2 text-[12px] text-muted"> <TrophyFilled style={{ color: "#d4a017" }} /> {mentor.rating} Air/State rank </div>
-            </button>
+         <button
+  key={mentor.id || mentor.name}
+  type="button"
+  className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+  onClick={() => navigate("/app/book-mentor")}
+>
+  {/* Row Layout */}
+  <div className="flex items-start gap-4">
+    
+    {/* Avatar */}
+    <div
+      className="flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px]"
+      style={{ backgroundColor: `${mentor.accent}15` }}
+    >
+      {mentor.image ? (
+        <Avatar
+          src={mentor.image}
+          size={52}
+          shape="square"
+          className="!flex !items-center !justify-center !bg-transparent"
+          style={{ borderRadius: 18 }}
+        />
+      ) : (
+        <span
+          className="text-[18px] font-black"
+          style={{ color: mentor.accent }}
+        >
+          {mentor.avatar}
+        </span>
+      )}
+    </div>
+
+    {/* Right Side Content */}
+    <div className="flex-1">
+      {/* Name */}
+      <div className="text-[15px] font-black text-ink">
+        {mentor.name}
+      </div>
+
+      {/* Specialty */}
+      <div className="mt-1 text-[12px] font-bold text-brand">
+        {mentor.specialty}
+      </div>
+      
+    </div>
+    
+  </div>
+  <div className="mt-2 pt-2 ">
+        <Rate
+          disabled
+          allowHalf
+          value={Number(mentor.rating)}
+          style={{ fontSize: 12 }}
+        />
+         
+        <span className="ml-1 text-[11px] text-muted">
+        {mentor.rating} ({mentor.totalReviews}) • 🎓 {mentor.experience}
+       
+        </span>
+      </div>
+</button>
           ))}
         </div>
       </section>
@@ -335,6 +367,7 @@ export default function DashboardPage() {
   {/* Cards */}
   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
     {dashboardPlans.map((plan) => {
+      const isCurrentPlan = activePlanIdSet.has(String(plan.id));
       // Determine ribbon color based on type
       const isBestSeller = plan.plan_type?.toUpperCase() === "BEST SELLER";
       const isRecommended = plan.plan_type?.toUpperCase() === "RECOMMENDED";
@@ -349,8 +382,15 @@ export default function DashboardPage() {
         <button
           key={plan.id}
           type="button"
-          onClick={() => navigate("/app/subscription")}
-          className="group relative rounded-2xl border border-[#eee] bg-white p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden"
+          onClick={() => {
+            if (!isCurrentPlan) {
+              navigate("/app/subscription");
+            }
+          }}
+          disabled={isCurrentPlan}
+          className={`group relative rounded-2xl border border-[#eee] bg-white p-5 text-left shadow-sm transition-all duration-300 overflow-hidden ${
+            isCurrentPlan ? "cursor-not-allowed opacity-75" : "hover:-translate-y-1 hover:shadow-xl"
+          }`}
         >
           {/* Top Glow Effect */}
           <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-brand opacity-80"></div>
@@ -390,8 +430,10 @@ export default function DashboardPage() {
 
           {/* CTA */}
           <div className="mt-4 flex items-center justify-between text-sm font-semibold text-brand">
-            <span className="group-hover:underline">View Details</span>
-            <RightOutlined className="transition-transform group-hover:translate-x-1" />
+            <span className={isCurrentPlan ? "text-gray-400" : "group-hover:underline"}>
+              {isCurrentPlan ? "Current Plan" : "View Details"}
+            </span>
+            <RightOutlined className={isCurrentPlan ? "text-gray-300" : "transition-transform group-hover:translate-x-1"} />
           </div>
         </button>
       );

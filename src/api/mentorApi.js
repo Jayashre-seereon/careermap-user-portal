@@ -115,14 +115,14 @@ export function mapMentorItem(item, index = 0) {
     id: String(item?.id ?? `mentor-${index}`),
     name,
     specialty: item?.designation || item?.specialty || "Career Guidance",
-    rating: item?.rank ? String(item.rank) : "0",
+    rank: item?.rank ?? "N/A",                              // ← add this, own key
     experience: formatExperience(item?.experience),
     price: formatMentorPrice(item?.mentor_fees ?? item?.mentorFees ?? item?.price),
-   tags: [
-  item?.subcategory?.title ||
-  item?.secondcategory?.name ||
-  item?.category?.title
-].filter(Boolean),
+    tags: [
+      item?.subcategory?.title ||
+      item?.secondcategory?.name ||
+      item?.category?.title
+    ].filter(Boolean),
     bio: stripHtml(item?.description) || "Mentor profile information is not available right now.",
     accent: mentorAccentPalette[index % mentorAccentPalette.length],
     avatar: buildAvatar(name),
@@ -134,14 +134,12 @@ export function mapMentorItem(item, index = 0) {
     linkedin: item?.linkedin || "",
     facebook: item?.facebook || "",
     status: Boolean(item?.status),
-    rating: item?.averageRating || item?.rating || 0,
+    rating: item?.averageRating ?? item?.rating ?? 0,        // ← only ONE rating key now
     image: item?.image || null,
     resume: item?.resume || null,
     categoryId: item?.categoryId ?? null,
     subCategoryId: item?.subCategoryId ?? null,
     availability,
-    // API keys: "category", "secondcategory", "subcategory"
-    // category.title, secondcategory.name, subcategory.title
     categoryObj: item?.category ?? null,
     secondcategoryObj: item?.secondcategory ?? null,
     subcategoryObj: item?.subcategory ?? null,

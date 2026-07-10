@@ -21,7 +21,9 @@ import { Avatar, Badge, Button, Divider, Dropdown, Empty, Input, Popover, Space,
 import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../api/authApi";
+import { checkModuleAccess } from "../../api/moduleAccessApi";
 import { useAppState } from "../../state/AppStateContext";
+import { UnlockRedirectModal } from "../../features/portal/components/portalPageShared";
 import { buildDashboardModules } from "../../utils/dashboard";
 import BrandMark from "../branding/BrandMark";
 
@@ -96,13 +98,14 @@ export default function WebsiteNavbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [lockedModule, setLockedModule] = useState(null);
   const { unreadNotificationsCount, userProfile, logout, notifications, dashboardData } = useAppState();
   const previewNotifications = (notifications || []).slice(0, 3);
 
-  const moduleMenu = {
+ const moduleMenu = {
     items: moduleItems.map((item) => ({ key: item.key, icon: item.icon, label: item.label })),
     selectedKeys: [location.pathname],
-    onClick: ({ key }) => navigate(key),
+    onClick: ({ key }) => handleModuleNavClick(key),
     className: "!grid !grid-cols-2 !gap-0 !min-w-[320px] !rounded-2xl !p-1.5 !shadow-lg md:!min-w-[360px]",
   };
 
@@ -143,7 +146,7 @@ export default function WebsiteNavbar() {
       .slice(0, 8);
   }, [searchEntries, searchQuery]);
 
-  const searchGroups = useMemo(() => {
+ const searchGroups = useMemo(() => {
     return searchResults.reduce((acc, item) => {
       const bucket = acc[item.type] || [];
       bucket.push(item);
@@ -152,6 +155,37 @@ export default function WebsiteNavbar() {
     }, {});
   }, [searchResults]);
 
+ async function handleModuleNavClick(routePath) {
+    const curated = buildDashboardModules(dashboardData?.modules || []);
+    const matchedModule = curated.find((card) => card.route === routePath);
+
+    if (!matchedModule?.id) {
+      navigate(routePath);
+      return;
+    }
+
+    try {
+      const response = await checkModuleAccess(matchedModule.id);
+
+      if (!response?.allowed) {
+        setLockedModule({
+          title: matchedModule.title,
+          message: response?.message,
+        });
+        return;
+      }
+
+      navigate(routePath, {
+        state: {
+          accessStatus: response.mode,
+          moduleId: matchedModule.id,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      navigate(routePath);
+    }
+  }
   function handleSearchSelect(item) {
     setSearchQuery("");
     setSearchOpen(false);
@@ -389,8 +423,22 @@ export default function WebsiteNavbar() {
               </button>
             </Dropdown>
           </div>
-        </div>
+ </div>
       </div>
+      <UnlockRedirectModal
+        open={!!lockedModule}
+        title={`Unlock ${lockedModule?.title || "Module"}`}
+        itemLabel={lockedModule?.title}
+        description={
+          lockedModule?.message ||
+          "Free preview already used. Please purchase a subscription to continue accessing this module."
+        }
+        onCancel={() => setLockedModule(null)}
+        onConfirm={() => {
+          navigate(`/app/subscription?returnTo=${encodeURIComponent(location.pathname)}`);
+          setLockedModule(null);
+        }}
+      />
     </header>
   );
 }
