@@ -214,31 +214,67 @@ function handleTestClick() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {dashboardMentors.map((mentor) => (
-            <button
-              key={mentor.id || mentor.name}
-              type="button"
-              className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              onClick={() => navigate("/app/book-mentor")}
-            >
-              <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px]" style={{ backgroundColor: `${mentor.accent}15` }}>
-                {mentor.image ? (
-                  <Avatar
-                    src={mentor.image}
-                    size={52}
-                    shape="square"
-                    className="!flex !items-center !justify-center !bg-transparent"
-                    style={{ borderRadius: 18 }}
-                  />
-                ) : (
-                  <span className="text-[18px] font-black" style={{ color: mentor.accent }}>
-                    {mentor.avatar}
-                  </span>
-                )}
-              </div>
-              <div className="text-[15px] font-black text-ink">{mentor.name}</div>
-              <div className="mt-1 text-[12px] font-bold text-brand">{mentor.specialty}</div>
-              <div className="mt-2 text-[12px] text-muted"> <TrophyFilled style={{ color: "#d4a017" }} /> {mentor.rating} Air/State rank </div>
-            </button>
+         <button
+  key={mentor.id || mentor.name}
+  type="button"
+  className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+  onClick={() => navigate("/app/book-mentor")}
+>
+  {/* Row Layout */}
+  <div className="flex items-start gap-4">
+    
+    {/* Avatar */}
+    <div
+      className="flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px]"
+      style={{ backgroundColor: `${mentor.accent}15` }}
+    >
+      {mentor.image ? (
+        <Avatar
+          src={mentor.image}
+          size={52}
+          shape="square"
+          className="!flex !items-center !justify-center !bg-transparent"
+          style={{ borderRadius: 18 }}
+        />
+      ) : (
+        <span
+          className="text-[18px] font-black"
+          style={{ color: mentor.accent }}
+        >
+          {mentor.avatar}
+        </span>
+      )}
+    </div>
+
+    {/* Right Side Content */}
+    <div className="flex-1">
+      {/* Name */}
+      <div className="text-[15px] font-black text-ink">
+        {mentor.name}
+      </div>
+
+      {/* Specialty */}
+      <div className="mt-1 text-[12px] font-bold text-brand">
+        {mentor.specialty}
+      </div>
+      
+    </div>
+    
+  </div>
+  <div className="mt-2 pt-2 ">
+        <Rate
+          disabled
+          allowHalf
+          value={Number(mentor.rating)}
+          style={{ fontSize: 12 }}
+        />
+         
+        <span className="ml-1 text-[11px] text-muted">
+        {mentor.rating} ({mentor.totalReviews}) • 🎓 {mentor.experience}
+       
+        </span>
+      </div>
+</button>
           ))}
         </div>
       </section>

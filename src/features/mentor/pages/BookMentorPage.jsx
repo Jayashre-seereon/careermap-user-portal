@@ -143,19 +143,40 @@ function MentorCard({ mentor, isFree, onClick }) {
         )}
       </div>
 
-      <div className="mb-4 flex items-center gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-          <TrophyOutlined style={{ color: "#d4a017" }} />
-          {mentor.rating} Air/State
-        </span>
-        <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
-          {mentor.price}
-        </span>
-                  <StarFilled style={{ color: "#d4a017" }} />
-  <span className="text-sm font-semibold text-[#1a0a09]">
-    {Number(mentor.rating).toFixed(1)}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+  
+  {/* Rank */}
+  <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
+        <TrophyOutlined style={{ color: "#d4a017" }} />
+        {mentor.rank} Rank
+      </span>
+
+  {/* Experience */}
+  <span className="inline-flex items-center gap-1 rounded-full bg-[#f4f8ff] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
+    🎓 {mentor.experience} 
   </span>
+
+  {/* Price */}
+  <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
+    {mentor.price}
+  </span>
+
+  {/* Rating */}
+   <div className="mt-2 pt-2 ">
+        <Rate
+          disabled
+          allowHalf
+          value={Number(mentor.rating)}
+          style={{ fontSize: 12 }}
+        />
+         
+        <span className="ml-1 text-[11px] text-muted">
+        {mentor.rating} ({mentor.totalReviews}) 
+       
+        </span>
       </div>
+
+</div>
 
       <div className="border-t border-[#f0e4e2] pt-3">
         <div className="flex items-center justify-between">

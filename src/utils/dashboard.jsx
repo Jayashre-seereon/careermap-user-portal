@@ -129,18 +129,19 @@ export function buildDashboardModules(modules = []) {
 
 export function buildDashboardMentors(mentors = []) {
   if (!mentors.length) {
-    return featuredMentors;
+    return [];
   }
 
-  return mentors.map((mentor, index) => ({
-    ...featuredMentors[index % featuredMentors.length],
+  return mentors.map((mentor) => ({
     id: mentor.id,
-    name: mentor.name || featuredMentors[index % featuredMentors.length].name,
-    specialty: mentor.designation || featuredMentors[index % featuredMentors.length].specialty,
-    rating: mentor.rank || featuredMentors[index % featuredMentors.length].rating,
-    experience: mentor.experience ? `${mentor.experience} yrs` : featuredMentors[index % featuredMentors.length].experience,
+    name: mentor.name || "Mentor",
+    specialty: mentor.designation || "",
+    rank: mentor.rank ?? "N/A",          // ← add this
+    rating: Number(mentor.averageRating ?? 0).toFixed(1),
+    totalReviews: mentor.totalReviews ?? 0,
+    experience: mentor.experience ? `${mentor.experience} yrs` : "0 yrs",
     image: mentor.image || null,
-    avatar: buildInitials(mentor.name || featuredMentors[index % featuredMentors.length].name),
+    avatar: buildInitials(mentor.name || "M"),
   }));
 }
 
