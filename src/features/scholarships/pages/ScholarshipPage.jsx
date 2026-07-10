@@ -124,6 +124,14 @@ useEffect(() => {
   }
 }, [moduleMode, selectedItem, previewRemaining, previewExpired]);
 
+  function isScholarshipLocked(item) {
+    if (moduleMode === "full") {
+      return false;
+    }
+
+    return String(item?.accessTier || "locked").toLowerCase() === "locked";
+  }
+
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.categoryObj).map((i) => [i.categoryObj.id, i.categoryObj])).values()],
     [items]
@@ -181,13 +189,12 @@ useEffect(() => {
 
   async function openScholarship(item, index) {
     try {
-    const isFreeItem = unlocked || item.previewEligible;
-      if (!isFreeItem) {
+      if (isScholarshipLocked(item)) {
         setUnlockModalItem(item.name);
         return;
       }
 
-      if (accessStatus === "full") {
+      if (moduleMode === "full") {
         const response = await getScholarshipById(item.id);
         setSelectedItem(response);
         return;
@@ -536,9 +543,8 @@ useEffect(() => {
 
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {
-          const itemFree = unlocked || item.previewEligible;
-          const isPreviewAllowed = unlocked || item.previewEligible;
           const isActive = item.status === "Active";
+          const isLocked = isScholarshipLocked(item);
 
           return (
             <div
@@ -546,7 +552,7 @@ useEffect(() => {
              onClick={() => {
                 const itemIndex = filtered.findIndex((current) => (current.id || current.name) === (item.id || item.name));
 
-                if (!itemFree) {
+                if (isLocked) {
                   setUnlockModalItem(item.name);
                   return;
                 }
@@ -574,17 +580,13 @@ useEffect(() => {
                       {item.name}
                     </p>
                   </div>
-                  {!unlocked ? (
-                    <span
-  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-2 text-[15px] font-bold ${
-    isPreviewAllowed
-      ? "bg-green-100 text-green-700"
-      : "bg-[#fdf0ee] text-[#9a2119]"
-  }`}
->
-  {isPreviewAllowed ? <UnlockOutlined /> : <LockOutlined />}
-</span>
-                  ) : null}
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-2 text-[15px] font-bold ${
+                      isLocked ? "bg-[#fdf0ee] text-[#9a2119]" : "bg-green-100 text-green-700"
+                    }`}
+                  >
+                    {isLocked ? <LockOutlined /> : <UnlockOutlined />}
+                  </span>
                 </div>
 
                 <div className="mt-auto flex items-center justify-between gap-2 border-t border-[#f0e4e2] pt-3">
@@ -595,8 +597,8 @@ useEffect(() => {
                     {isActive ? <CheckCircleOutlined /> : <MinusCircleOutlined />}
                     {item.deadline}
                   </span>
-                  <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-[#9a2119]">
-                    Explore <ArrowRightOutlined />
+                  <span className={`flex shrink-0 items-center gap-1 text-xs font-bold ${isLocked ? "text-[#9a2119]" : "text-green-700"}`}>
+                    {isLocked ? "Unlock" : "Explore"} <ArrowRightOutlined />
                   </span>
                 </div>
               </div>
