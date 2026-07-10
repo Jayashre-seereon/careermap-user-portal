@@ -430,7 +430,7 @@ function handleTestClick() {
 
           {/* CTA */}
           <div className="mt-4 flex items-center justify-between text-sm font-semibold text-brand">
-            <span className={isCurrentPlan ? "text-gray-400" : "group-hover:underline"}>
+            <span className={isCurrentPlan ? "text-green-400" : "group-hover:underline"}>
               {isCurrentPlan ? "Current Plan" : "View Details"}
             </span>
             <RightOutlined className={isCurrentPlan ? "text-gray-300" : "transition-transform group-hover:translate-x-1"} />
