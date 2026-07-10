@@ -17,6 +17,7 @@ import { PersonalityQuizQuestion, PersonalityQuizResults } from "../../portal/co
 
 export default function DashboardPage() {
   const {
+    activePlanIds,
     isUnlocked,
     onboarding,
     unreadNotificationsCount,
@@ -103,6 +104,7 @@ export default function DashboardPage() {
   () => dashboardData?.plans || [],
   [dashboardData?.plans]
 );
+  const activePlanIdSet = useMemo(() => new Set((activePlanIds || []).map((id) => String(id))), [activePlanIds]);
   const pendingMentorReviews = useMemo(
     () => (dashboardData?.pendingMentorReviews || globalDashboardData?.pendingMentorReviews || []).filter(
       (item) => item?.canReview && !reviewedMentorBookings.includes(String(item.bookingId))
@@ -365,6 +367,7 @@ function handleTestClick() {
   {/* Cards */}
   <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
     {dashboardPlans.map((plan) => {
+      const isCurrentPlan = activePlanIdSet.has(String(plan.id));
       // Determine ribbon color based on type
       const isBestSeller = plan.plan_type?.toUpperCase() === "BEST SELLER";
       const isRecommended = plan.plan_type?.toUpperCase() === "RECOMMENDED";
@@ -379,8 +382,15 @@ function handleTestClick() {
         <button
           key={plan.id}
           type="button"
-          onClick={() => navigate("/app/subscription")}
-          className="group relative rounded-2xl border border-[#eee] bg-white p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden"
+          onClick={() => {
+            if (!isCurrentPlan) {
+              navigate("/app/subscription");
+            }
+          }}
+          disabled={isCurrentPlan}
+          className={`group relative rounded-2xl border border-[#eee] bg-white p-5 text-left shadow-sm transition-all duration-300 overflow-hidden ${
+            isCurrentPlan ? "cursor-not-allowed opacity-75" : "hover:-translate-y-1 hover:shadow-xl"
+          }`}
         >
           {/* Top Glow Effect */}
           <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-brand opacity-80"></div>
@@ -420,8 +430,10 @@ function handleTestClick() {
 
           {/* CTA */}
           <div className="mt-4 flex items-center justify-between text-sm font-semibold text-brand">
-            <span className="group-hover:underline">View Details</span>
-            <RightOutlined className="transition-transform group-hover:translate-x-1" />
+            <span className={isCurrentPlan ? "text-gray-400" : "group-hover:underline"}>
+              {isCurrentPlan ? "Current Plan" : "View Details"}
+            </span>
+            <RightOutlined className={isCurrentPlan ? "text-gray-300" : "transition-transform group-hover:translate-x-1"} />
           </div>
         </button>
       );

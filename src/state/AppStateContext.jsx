@@ -207,6 +207,7 @@ function mapSubscriptionItem(item, index = 0) {
   return {
     id: String(item?.id ?? `subscription-${index}`),
     planName,
+    planId: item?.planId ?? item?.plan_id ?? item?.plan?.id ?? null,
     price: price || "Subscription active",
     expiryDate: expiryDate || "Expiry date not available",
     transactionId: transactionId || "Transaction not available",
@@ -215,6 +216,11 @@ function mapSubscriptionItem(item, index = 0) {
 }
 
 function getPlanIdFromSubscription(item) {
+  const rawPlanId = item?.planId ?? item?.plan_id ?? item?.plan?.id ?? null;
+  if (rawPlanId !== null && rawPlanId !== undefined && rawPlanId !== "") {
+    return String(rawPlanId);
+  }
+
   const planText = String(item?.planName || item?.plan_name || item?.plan?.name || item?.plan || "").toLowerCase();
 
   if (planText.includes("psychometric") && planText.includes("counsell")) {
@@ -283,9 +289,11 @@ function normalizeSubscriptionItems(items = []) {
     const amount = item?.amount != null ? item.amount : item?.plan?.price != null ? item.plan.price : item?.price != null ? item.price : mapped.amount || "";
     const validity = formatValidityDays(item?.plan?.validity ?? item?.validity ?? item?.validityDays ?? item?.daysValid ?? item?.subscriptionValidity ?? mapped.validity);
     const expiryDate = formatDateLabel(item?.endDate || item?.expiryDate || item?.expiry_date || item?.validUntil || item?.renewalDate);
+    const planId = item?.planId ?? item?.plan_id ?? item?.plan?.id ?? mapped.planId ?? null;
 
     return {
       ...mapped,
+      planId,
       planName: subscriptionName,
       subscriptionName,
       amount,
@@ -393,8 +401,11 @@ export function AppStateProvider({ children }) {
             const activeSubscription = activeSubscriptionIndex >= 0 ? subscriptionItems[activeSubscriptionIndex] : subscriptionItems[0];
             const derivedPlanId = getPlanIdFromSubscription(activeSubscription);
 
-            if (derivedPlanId && !current.activePlanId) {
+            if (derivedPlanId) {
               nextState.activePlanId = derivedPlanId;
+              nextState.activePlanIds = current.activePlanIds?.length
+                ? Array.from(new Set([...current.activePlanIds.map(String), derivedPlanId]))
+                : [derivedPlanId];
             }
           }
 

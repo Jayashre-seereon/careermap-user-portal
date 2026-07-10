@@ -15,6 +15,7 @@ export default function SubscriptionPage() {
 
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const activePlanIdSet = new Set((activePlanIds || []).map((id) => String(id)));
 
   useEffect(() => {
     async function fetchPlans() {
@@ -33,6 +34,10 @@ export default function SubscriptionPage() {
 
   // handle payment button click
   const handleSelectPlan = async (planId) => {
+    if (activePlanIdSet.has(String(planId))) {
+      return;
+    }
+
     // try loading razor pay sdk script. if fails, show error toast
     const script = await loadRazorpayScript();
 
@@ -84,7 +89,7 @@ export default function SubscriptionPage() {
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}
       <Row gutter={[16, 16]} justify="center">
       {plans.map((plan) => {
-          const isSelected = activePlanIds.includes(plan.id);
+          const isSelected = activePlanIdSet.has(String(plan.id));
           const ribbonLabel = plan.highestseller ? "Best Seller" : plan.recommended ? "Recommended" : null;
           const ribbonClass = plan.highestseller
             ? "bg-[#d4a63a] text-[#fffaf0]"
@@ -160,11 +165,11 @@ export default function SubscriptionPage() {
                     disabled={isSelected}
                     size="large"
                     className={`!h-11 !rounded-xl !text-sm !font-bold transition-transform active:scale-95 ${
-                      isSelected ? "!bg-gray-100 !text-gray-400 !border-transparent" : "shadow-md"
+                      isSelected ? "!bg-green-50 !text-green-400 !border-transparent !cursor-not-allowed" : "shadow-md"
                     }`}
                     onClick={() => handleSelectPlan(plan.id)}
                   >
-                    {isSelected ? "Subscribed" : "Select"}
+                    {isSelected ? "Current Plan" : "Choose Plan"}
                   </Button>
                 </div>
               </Card>
