@@ -86,35 +86,16 @@ export const onboardingOptions = {
 };
 
 export const personalityQuestions = [
-  { q: "When faced with a problem, I prefer to:", options: ["Analyze data systematically", "Brainstorm creative solutions", "Discuss with others", "Act quickly on instinct"] },
-  { q: "In my free time, I enjoy:", options: ["Reading or researching", "Creating art or music", "Socializing with friends", "Physical activities or sports"] },
-  { q: "I work best when:", options: ["I have a clear plan", "I can be spontaneous", "I collaborate with a team", "I work independently"] },
-  { q: "I am most motivated by:", options: ["Achieving goals", "Expressing myself", "Helping others", "Learning new skills"] },
-  { q: "My ideal workspace is:", options: ["Organized and quiet", "Colorful and inspiring", "Open and collaborative", "Flexible and mobile"] },
-  { q: "When making decisions, I rely on:", options: ["Logic and facts", "Intuition and feelings", "Advice from others", "Past experiences"] },
-];
+ ];
 
 export const personalityTypes = [
-  { type: "The Analytical Thinker", desc: "You thrive in structured environments and enjoy solving complex problems.", careers: ["Engineering", "Data Science", "Finance", "Research"] },
-  { type: "The Creative Visionary", desc: "You bring imagination and originality to everything you work on.", careers: ["Design", "Architecture", "Media", "Marketing"] },
-  { type: "The Empathetic Helper", desc: "You naturally connect with people and do well in support-centered roles.", careers: ["Psychology", "Teaching", "Medicine", "HR"] },
-  { type: "The Dynamic Explorer", desc: "You enjoy variety, energy, and fast-moving environments.", careers: ["Business", "Travel", "Sports", "Entrepreneurship"] },
-];
+ ];
 
 export const quizCatalog = [
-  { title: "Engineering Career Quiz", description: "Test your engineering knowledge", questions: 5, emoji: "ENG" },
-  { title: "Medical Career Quiz", description: "Explore medical career paths", questions: 5, emoji: "MED" },
-  { title: "Business Aptitude Quiz", description: "Assess your business acumen", questions: 5, emoji: "BIZ" },
-  { title: "Technology Trends Quiz", description: "Stay updated with tech trends", questions: 5, emoji: "TECH" },
-];
+ ];
 
 export const sampleQuizQuestions = [
-  { q: "Which programming language is most used in AI?", options: ["Python", "Java", "C++", "Ruby"], correct: 0 },
-  { q: "What does CPU stand for?", options: ["Central Process Unit", "Central Processing Unit", "Computer Personal Unit", "Central Program Unit"], correct: 1 },
-  { q: "HTML is a programming language.", options: ["True", "False", "Sometimes", "Depends"], correct: 1 },
-  { q: "Which company created React?", options: ["Google", "Microsoft", "Meta", "Amazon"], correct: 2 },
-  { q: "RAM stands for?", options: ["Random Access Memory", "Read Access Memory", "Run Access Memory", "Random Assign Memory"], correct: 0 },
-];
+ ];
 
 export const careerLibrary = {
   streams: [
@@ -131,12 +112,7 @@ export const careerLibrary = {
 };
 
 export const quickPsychometricQuestions = [
-  { q: "I enjoy working with numbers and data.", options: ["Strongly Agree", "Agree", "Neutral", "Disagree"] },
-  { q: "I prefer creative tasks over analytical ones.", options: ["Strongly Agree", "Agree", "Neutral", "Disagree"] },
-  { q: "I like helping and mentoring others.", options: ["Strongly Agree", "Agree", "Neutral", "Disagree"] },
-  { q: "I am interested in how businesses operate.", options: ["Strongly Agree", "Agree", "Neutral", "Disagree"] },
-  { q: "I enjoy learning about technology and gadgets.", options: ["Strongly Agree", "Agree", "Neutral", "Disagree"] },
-];
+ ];
 
 export const moduleArtPresets = {
   "Career Library": {
