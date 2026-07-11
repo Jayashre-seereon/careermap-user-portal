@@ -748,7 +748,7 @@ useEffect(() => {
          setUnlockModalItem({
     title: "Preview Expired",
     description:
-      "Your 15 second preview has ended. Please purchase this module to continue.",
+      "Your free career library access has already been used. Subscribe to unlock .",
   });
         return 0;
       }

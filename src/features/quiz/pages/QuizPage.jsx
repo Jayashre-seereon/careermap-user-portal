@@ -362,7 +362,7 @@ export default function QuizPage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-2xl font-black tracking-tight text-[#1a0a09]">Choose your quiz</h1>
-          <p className="mt-1 mb-0 text-xs text-[#b8837e]">Live quizzes loaded from the same backend as the mobile app.</p>
+          <p className="mt-1 mb-0 text-xs text-[#b8837e]">Quizzes Not Available</p>
         </div>
         <PageHero backOnly onBack={() => navigate(-1)} className="shrink-0" />
       </div>
