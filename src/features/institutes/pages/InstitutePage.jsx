@@ -374,7 +374,7 @@ const typeOptions = useMemo(
         open={Boolean(unlockModalItem)}
         title="Unlock Institute"
         itemLabel={unlockModalItem}
-        description="Your 15 second preview has ended. Please purchase this module to continue."
+        description="Your free institute access has already been used. Subscribe to unlock "
         onCancel={() => setUnlockModalItem(null)}
         onConfirm={() => {
           setUnlockModalItem(null);
