@@ -14,8 +14,8 @@ const socialLinks = [
 ];
 
 const contactItems = [
-  { Icon: MailOutlined,  label: "Email",  value: "support@careermap.local" },
-  { Icon: PhoneOutlined, label: "Phone",  value: "+91 97768 08179  ·  +91 94372 08179" },
+  { Icon: MailOutlined,  label: "Email",  value: "connect@careermap.in" },
+  { Icon: PhoneOutlined, label: "Phone",  value: "+91 97768 08179, +91 94372 08179" },
   { Icon: TeamOutlined,  label: "For",    value: "Students & parent career guidance" },
 ];
 
