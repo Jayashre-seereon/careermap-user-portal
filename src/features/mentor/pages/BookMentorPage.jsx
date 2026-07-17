@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled,LockOutlined,UnlockOutlined} from "@ant-design/icons";
+import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled} from "@ant-design/icons";
 import { Modal,Rate } from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -13,7 +13,6 @@ import { mentors as fallbackMentors } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
-import { checkModuleAccess } from "../../../api/moduleAccessApi";
 import { loadRazorpayScript } from "../../../utils/razorpay.js";
 
 function formatNumericDate(value) {
@@ -137,46 +136,25 @@ function MentorCard({ mentor, isFree, onClick }) {
           </div>
         </div>
         {!isFree ? (
-       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-[11px] font-semibold text-red-500"><LockOutlined /></span>
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-500">LOCKED</span>
         ) : (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 text-[11px] font-semibold text-green-600"><UnlockOutlined /></span>
+          <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-700">FREE</span>
         )}
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-  
-  {/* Rank */}
-  <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-        <TrophyOutlined style={{ color: "#d4a017" }} />
-        {mentor.rank} Rank
-      </span>
-
-  {/* Experience */}
-  <span className="inline-flex items-center gap-1 rounded-full bg-[#f4f8ff] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-    🎓 {mentor.experience} 
-  </span>
-
-  {/* Price */}
-  <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
-    {mentor.price}
-  </span>
-
-  {/* Rating */}
-   <div className="mt-2 pt-2 ">
-        <Rate
-          disabled
-          allowHalf
-          value={Number(mentor.rating)}
-          style={{ fontSize: 12 }}
-        />
-         
-        <span className="ml-1 text-[11px] text-muted">
-        {mentor.rating} ({mentor.totalReviews}) 
-       
+      <div className="mb-4 flex items-center gap-2">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
+          <TrophyOutlined style={{ color: "#d4a017" }} />
+          {mentor.rating} Air/State
         </span>
+        <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
+          {mentor.price}
+        </span>
+                  <StarFilled style={{ color: "#d4a017" }} />
+  <span className="text-sm font-semibold text-[#1a0a09]">
+    {Number(mentor.rating).toFixed(1)}
+  </span>
       </div>
-
-</div>
 
       <div className="border-t border-[#f0e4e2] pt-3">
         <div className="flex items-center justify-between">
@@ -224,7 +202,6 @@ export default function BookMentorPage() {
   accessStatus === "unlocked";
   const frontendUnlocked = isUnlocked("book-mentor");
   const unlocked = isModuleUnlocked || frontendUnlocked;
-  const [moduleMode, setModuleMode] = useState(accessStatus);
 
   const [mentorList, setMentorList] = useState(fallbackMentors);
   const [selectedMentorId, setSelectedMentorId] = useState("");
@@ -379,31 +356,6 @@ export default function BookMentorPage() {
     loadMentors();
     return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadAccessMode() {
-      const moduleId = pageLocation.state?.moduleId;
-      if (!moduleId) return;
-
-      try {
-        const response = await checkModuleAccess(moduleId);
-        if (active && response?.mode) {
-          setModuleMode(response.mode);
-        }
-      } catch {
-        if (active) {
-          setModuleMode(accessStatus);
-        }
-      }
-    }
-
-    loadAccessMode();
-    return () => {
-      active = false;
-    };
-  }, [accessStatus, pageLocation.state?.moduleId]);
 
   useEffect(() => {
     const mentorParam = params.get("mentorId") || params.get("mentor");
@@ -893,30 +845,39 @@ export default function BookMentorPage() {
       {/* ── Mentor grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredMentorList.map((mentor, index) => {
-          const isPreviewMode = moduleMode === "preview";
-          const mentorFree = isModuleUnlocked
-            ? true
-            : isPreviewMode
-              ? index < 4
-              : frontendUnlocked || canAccessFreeDetail("book-mentor", mentor.name);
+          const mentorFree =
+             isModuleUnlocked
+              ? true
+              : unlocked || canAccessFreeDetail("book-mentor", mentor.name);
 
           return (
             <MentorCard
               key={mentor.id || mentor.name}
               mentor={mentor}
               isFree={mentorFree}
-              onClick={() => {
-                if (!mentorFree) {
-                  setUnlockModalItem(mentor.name);
-                  return;
-                }
+             onClick={async () => {
+  if (!isModuleUnlocked && !unlocked && !mentorFree) {
+    setUnlockModalItem(mentor.name);
+    return;
+  }
 
-                if (!isModuleUnlocked && !isPreviewMode) {
-                  registerFreeDetailAccess("book-mentor", mentor.name);
-                }
-                setSelectedMentorId(String(mentor.id || index));
-                setSelectedMentor(mentor);
-              }}
+  if (!isModuleUnlocked) {
+    registerFreeDetailAccess("book-mentor", mentor.name);
+  }
+
+  try {
+    const mentorDetails = await getMentorById(mentor.id);
+
+    setSelectedMentorId(String(mentor.id));
+    setSelectedMentor(mentorDetails);
+  } catch (err) {
+    console.error(err);
+
+    // Agar API fail ho jaye to old data dikha do
+    setSelectedMentorId(String(mentor.id));
+    setSelectedMentor(mentor);
+  }
+}}
             />
           );
         })}
