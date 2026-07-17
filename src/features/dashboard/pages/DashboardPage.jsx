@@ -15,6 +15,102 @@ import { DashboardHeroSection } from "../../portal/components/DashboardHeroSecti
 import { ExploreModulesSection } from "../../portal/components/ExploreModulesSection";
 import { PersonalityQuizQuestion, PersonalityQuizResults } from "../../portal/components/PersonalityQuizSections";
 
+function parseDateForReview(value) {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "number") {
+    const numericDate = new Date(value);
+    return Number.isNaN(numericDate.getTime()) ? null : numericDate;
+  }
+
+  const rawValue = String(value).trim();
+  if (!rawValue) {
+    return null;
+  }
+
+  const isoDate = new Date(rawValue);
+  if (!Number.isNaN(isoDate.getTime())) {
+    return isoDate;
+  }
+
+  const match = rawValue.match(/^(\d{1,2})\s([A-Za-z]{3})\s(\d{4})$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, day, monthLabel, year] = match;
+  const monthMap = {
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11,
+  };
+  const monthIndex = monthMap[monthLabel];
+  if (monthIndex === undefined) {
+    return null;
+  }
+
+  const parsedDate = new Date(Number(year), monthIndex, Number(day));
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+}
+
+function parseSlotEndTime(timeSlot) {
+  if (!timeSlot) {
+    return null;
+  }
+
+  const rawValue = String(timeSlot).trim();
+  if (!rawValue) {
+    return null;
+  }
+
+  const rangePart = rawValue.split("-").pop()?.trim() || rawValue;
+  const twentyFourHourMatch = rangePart.match(/^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$/);
+  if (!twentyFourHourMatch) {
+    return null;
+  }
+
+  let hours = Number(twentyFourHourMatch[1]);
+  const minutes = Number(twentyFourHourMatch[2]);
+  const period = twentyFourHourMatch[3]?.toUpperCase() || "";
+
+  if (period === "PM" && hours < 12) {
+    hours += 12;
+  }
+  if (period === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return { hours, minutes };
+}
+
+function getReviewEligibleAt(item) {
+  const date = parseDateForReview(item?.date || item?.bookingDate || item?.appointmentDate || item?.scheduledAt || item?.slotDate);
+  const endTime = parseSlotEndTime(item?.timeSlot || item?.slot || item?.time || item?.slotTime || item?.appointmentTime || item?.startTime);
+
+  if (!date || !endTime) {
+    return null;
+  }
+
+  const eligibleAt = new Date(date);
+  eligibleAt.setHours(endTime.hours, endTime.minutes, 0, 0);
+  return eligibleAt;
+}
+
 export default function DashboardPage() {
   const {
     activePlanIds,
@@ -39,6 +135,7 @@ export default function DashboardPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [reviewError, setReviewError] = useState("");
+  const [now, setNow] = useState(() => Date.now());
   const [reviewedMentorBookings, setReviewedMentorBookings] = useState(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -90,6 +187,14 @@ export default function DashboardPage() {
     }
   }, [reviewedMentorBookings]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+    }, 30000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   const dashboardUserName = useMemo(() => {
     const firstName = dashboardData?.user?.firstName?.trim();
     const lastName = dashboardData?.user?.lastName?.trim();
@@ -106,10 +211,19 @@ export default function DashboardPage() {
 );
   const activePlanIdSet = useMemo(() => new Set((activePlanIds || []).map((id) => String(id))), [activePlanIds]);
   const pendingMentorReviews = useMemo(
-    () => (dashboardData?.pendingMentorReviews || globalDashboardData?.pendingMentorReviews || []).filter(
-      (item) => item?.canReview && !reviewedMentorBookings.includes(String(item.bookingId))
-    ),
-    [dashboardData?.pendingMentorReviews, globalDashboardData?.pendingMentorReviews, reviewedMentorBookings]
+    () => (dashboardData?.pendingMentorReviews || globalDashboardData?.pendingMentorReviews || []).filter((item) => {
+      if (!item?.canReview || reviewedMentorBookings.includes(String(item.bookingId))) {
+        return false;
+      }
+
+      const eligibleAt = item?.reviewEligibleAt ? parseDateForReview(item.reviewEligibleAt) : getReviewEligibleAt(item);
+      if (!eligibleAt) {
+        return false;
+      }
+
+      return eligibleAt.getTime() <= now;
+    }),
+    [dashboardData?.pendingMentorReviews, globalDashboardData?.pendingMentorReviews, reviewedMentorBookings, now]
   );
 
   const activeReview = pendingMentorReviews[0] || null;

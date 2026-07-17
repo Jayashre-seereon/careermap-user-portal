@@ -37,6 +37,19 @@ function normalizeSlotKey(value) {
     .replace(/\s*(am|pm)$/i, "");
 }
 
+function getSlotEndTimeValue(timeSlot) {
+  if (!timeSlot) {
+    return "";
+  }
+
+  const rawValue = String(timeSlot).trim();
+  if (!rawValue) {
+    return "";
+  }
+
+  return rawValue.split("-").pop()?.trim() || rawValue;
+}
+
 function buildFallbackAvailability() {
   const output = [];
   for (let index = 0; index < 6; index += 1) {
@@ -442,11 +455,15 @@ export default function BookMentorPage() {
   useEffect(() => {
     if (!processing || !activeMentor) return undefined;
     const timer = setTimeout(() => {
+      const slotEndTime = getSlotEndTimeValue(selectedSlot);
       addBooking({
         id: `booking-${activeMentor.name}-${selectedDate}-${selectedSlot}`,
         mentorName: activeMentor.name,
         date: selectedDate,
         time: selectedSlot,
+        timeSlot: selectedSlot,
+        slotEndTime,
+        reviewEligibleAt: `${selectedDate} ${slotEndTime}`.trim(),
         status: "Confirmed",
       });
       setProcessing(false);
