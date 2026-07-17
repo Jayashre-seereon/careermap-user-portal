@@ -37,6 +37,43 @@ function normalizeSlotKey(value) {
     .replace(/\s*(am|pm)$/i, "");
 }
 
+function parseSlotEndDateTime(dateKey, timeSlot) {
+  if (!dateKey || !timeSlot) {
+    return null;
+  }
+
+  const date = new Date(dateKey);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const rawValue = String(timeSlot).trim();
+  if (!rawValue) {
+    return null;
+  }
+
+  const endPart = rawValue.split("-").pop()?.trim() || rawValue;
+  const match = endPart.match(/^(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?$/);
+  if (!match) {
+    return null;
+  }
+
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const period = match[3]?.toUpperCase() || "";
+
+  if (period === "PM" && hours < 12) {
+    hours += 12;
+  }
+  if (period === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  const slotDateTime = new Date(date);
+  slotDateTime.setHours(hours, minutes, 0, 0);
+  return slotDateTime;
+}
+
 function getSlotEndTimeValue(timeSlot) {
   if (!timeSlot) {
     return "";
@@ -325,7 +362,25 @@ export default function BookMentorPage() {
   const slots = useMemo(() => {
     if (!dates.length) return [];
     const activeDate = dates.find((item) => item.key === selectedDate) || dates[0];
-    return activeDate?.slots || [];
+    const allSlots = activeDate?.slots || [];
+    const now = new Date();
+
+    if (!activeDate?.key) {
+      return allSlots;
+    }
+
+    return allSlots.filter((slot) => {
+      const slotDateTime = parseSlotEndDateTime(activeDate.key, slot);
+      if (!slotDateTime) {
+        return true;
+      }
+
+      if (slotDateTime.getTime() <= now.getTime()) {
+        return false;
+      }
+
+      return true;
+    });
   }, [dates, selectedDate]);
 
   const bookedSlotKeys = useMemo(
