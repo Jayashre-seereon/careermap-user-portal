@@ -293,13 +293,13 @@ useEffect(() => {
               </div>
             </div>
 
-            <div id="section-eligibility" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24 overflow-hidden rounded-[26px]">
+            {/* <div id="section-eligibility" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24 overflow-hidden rounded-[26px]">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
                 <TeamOutlined className="text-sm text-[#9a2119]" />
                 <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#9a2119]">Eligibility</h3>
               </div>
               <p className="m-0 px-5 py-4 text-sm font-medium leading-7 text-[#1a0a09]">{selectedItem.eligibility}</p>
-            </div>
+            </div> */}
 
             <div id="section-requirements" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
@@ -396,14 +396,14 @@ useEffect(() => {
                 <div>
                   <p className="m-0 mb-2 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">On This Page</p>
                   <div className="flex flex-col gap-0.5">
-                    <button
+                    {/* <button
                       type="button"
                       onClick={() => scrollToSection("section-eligibility")}
                       className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
                     >
                       <TeamOutlined className="text-xs" />
                       Eligibility
-                    </button>
+                    </button> */}
                     <button
                       type="button"
                       onClick={() => scrollToSection("section-requirements")}

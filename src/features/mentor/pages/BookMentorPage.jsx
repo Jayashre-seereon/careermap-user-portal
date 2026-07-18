@@ -669,55 +669,86 @@ export default function BookMentorPage() {
           </div>
         ) : null}
 
-        {/* Profile card */}
-        <div className="relative overflow-hidden rounded-[30px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
-          <div className="absolute right-5 top-5 h-14 w-14 rounded-full bg-[#f9ece8]" />
-          <div className="absolute left-5 top-20 h-4 w-4 rounded-full bg-[#f1d9d3]" />
-          <div className="absolute bottom-6 right-6 h-3 w-3 rounded-full bg-[#f1d9d3]" />
-          <div className="relative z-[1]">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <Avatar
-                name={activeMentor.name}
-                accent={activeMentor.accent}
-                avatar={activeMentor.avatar}
-                image={activeMentor.image}
-              />
-              <div className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.24em] text-[#9a2119]">
-                Mentor Profile
-              </div>
-              <h2 className="m-0 text-[24px] font-black leading-tight text-[#1a0a09]">
-                {activeMentor.name}
-              </h2>
-              <div className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">
-                {activeMentor.specialty}
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#1a0a09]">
-                  <TrophyOutlined style={{ color: "#d4a017" }} />
-                {activeMentor.rating} Air/State
-                </span>
-                 <StarFilled style={{ color: "#d4a017" }} />
-  <span className="text-sm font-semibold text-[#1a0a09]">
-   {Number(activeMentor.rating).toFixed(1)}
-  </span>
-                <span className="rounded-full bg-[#fff6ef] px-3 py-1 font-semibold text-[#9a2119]">
-                  {activeMentor.price}
-                </span>
-                
-              </div>
-              <div className="flex flex-wrap justify-center gap-2 pt-1">
-                {(activeMentor.tags || []).map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[#fff0ee] px-3 py-1 text-[11px] font-semibold text-[#c13124]"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+   {/* Profile card */}
+<div className="relative overflow-hidden rounded-[32px] border border-[#f0e4e2] bg-white p-6 shadow-sm sm:p-8">
+  {/* Decorative background blobs */}
+  <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-[40%] bg-[#f3d4c8]" />
+  <div className="pointer-events-none absolute bottom-8 right-10 h-8 w-8 rounded-full bg-[#f3d4c8]/70" />
+  <div className="pointer-events-none absolute bottom-4 right-40 h-16 w-16 rounded-full border border-[#f3d4c8]" />
+<div className="pointer-events-none absolute -t-8 right-60 h-8 w-8 rounded-full bg-[#f3d4c8]/70" />
+
+  
+  <div className="relative z-[1] flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:gap-8">
+    {/* LEFT: Circular photo, overlapping card edge */}
+    <div className="relative flex-shrink-0">
+      <div className="h-44 w-44 overflow-hidden rounded-full border-4 border-white shadow-lg ring-1 ring-[#e8b8a4] sm:h-56 sm:w-56">
+        {activeMentor.image ? (
+          <img
+            src={activeMentor.image}
+            alt={activeMentor.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center text-[42px] font-black sm:text-[52px]"
+            style={{ backgroundColor: `${activeMentor.accent}18`, color: activeMentor.accent }}
+          >
+            {activeMentor.avatar || String(activeMentor.name || "M").slice(0, 2).toUpperCase()}
           </div>
-        </div>
+        )}
+      </div>
+    </div>
+
+    {/* Vertical divider, desktop only */}
+    <div className="hidden h-52 w-px bg-[#f0e4e2] sm:block" />
+
+    {/* RIGHT: Details */}
+    <div className="flex flex-1 flex-col items-center gap-3 text-center sm:items-start sm:pl-2 sm:text-left">
+      <div className="rounded-full bg-[#9a2119] px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white">
+        Mentor Profile
+      </div>
+
+      <h2 className="m-0 text-[28px] font-black leading-tight text-[#241008] sm:text-[38px]">
+        {activeMentor.name}
+      </h2>
+
+      <div className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#9a2119] sm:text-[13px]">
+        {activeMentor.specialty}
+      </div>
+
+      <div className="flex flex-wrap items-stretch justify-center gap-2.5 pt-2 text-sm sm:justify-start sm:gap-3">
+        <span className="inline-flex items-center gap-2 rounded-2xl border border-[#f0e4e2] bg-white px-4 py-2.5 font-bold text-[#241008]">
+          <TrophyOutlined style={{ color: "#9a2119" }} />
+          {activeMentor.rating} Air/State
+        </span>
+
+        <span className="inline-flex items-center gap-2 rounded-2xl border border-[#f0e4e2] bg-white px-4 py-2.5 font-bold text-[#241008]">
+          <StarFilled style={{ color: "#d4a017" }} />
+          {Number(activeMentor.rating).toFixed(1)}
+        </span>
+
+        <span className="inline-flex items-center gap-2.5 rounded-2xl bg-[#fdf0e4] px-4 py-2 font-bold text-[#241008]">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-white">
+            ₹
+          </span>
+          <span className="whitespace-nowrap text-[15px]">
+            {String(activeMentor.price || "").replace(/^rs\.?\s*/i, "")}
+          </span>
+        </span>
+
+       {(activeMentor.tags || []).map((tag) => (
+  <span
+    key={tag}
+    className="inline-flex items-center justify-center rounded-full bg-[#9a2119] px-4 py-1.5 text-center text-[12px] font-bold text-white"
+  >
+    {tag}
+  </span>
+))}
+      </div>
+    </div>
+  </div>
+</div>
 
         <SectionCard title="About">
           <p className="m-0 text-[14px] leading-7 text-[#6f6663]">{activeMentor.bio}</p>
