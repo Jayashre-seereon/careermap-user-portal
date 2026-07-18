@@ -270,7 +270,7 @@ function normalizeStateName(value = "") {
 }
 
 function groupInstitutesByTopStatus(value, targetState = "Odisha") {
-  const institutes = normalizeInstituteItems(value);
+const institutes = value || [];
   const normalizedTargetState = normalizeStateName(targetState);
   const topInstitutes = institutes.filter(
     (item) => normalizeStateName(item.state) === normalizedTargetState
@@ -570,6 +570,39 @@ function SectionHeader({ icon, title }) {
       <span className="text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">
         {title}
       </span>
+    </div>
+  );
+}
+function InstituteFilterGroup({ institutes, badge, emptyText }) {
+  const [filter, setFilter] = useState("all");
+  const filtered = institutes.filter((i) => {
+    if (filter === "all") return true;
+    const isGovt = String(i?.raw?.institute_type || "").toLowerCase().includes("gov");
+    return filter === "govt" ? isGovt : !isGovt;
+  });
+
+  return (
+    <div>
+      <div className="mb-3 flex gap-2">
+        {["all", "govt", "private"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              filter === f ? "bg-[#9a2119] text-white" : "border border-[#f0e4e2]"
+            }`}
+          >
+            {f === "govt" ? "Government" : f === "private" ? "Private" : "All"}
+          </button>
+        ))}
+      </div>
+      {filtered.length ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((inst) => <InstituteCard key={inst.id} inst={inst} badge={badge} />)}
+        </div>
+      ) : (
+        <p className="text-sm text-gray-400">{emptyText}</p>
+      )}
     </div>
   );
 }
@@ -1585,15 +1618,7 @@ function handleLockedCareerClick(item, type) {
             title="Top Institutes in Odisha"
             subtitle="Institutes in Odisha highlighted from this career map data."
           >
-            {instituteGroups.topInstitutes.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {instituteGroups.topInstitutes.map((inst) => (
-                  <InstituteCard key={inst.id} inst={inst} badge="Odisha" />
-                ))}
-              </div>
-            ) : (
-              <p className="m-0 text-sm text-gray-400">No Odisha institutes found for this career.</p>
-            )}
+           <InstituteFilterGroup institutes={instituteGroups.topInstitutes} badge="Odisha" emptyText="No Odisha institutes found." />
           </SectionCard>
 
           <SectionCard
@@ -1602,15 +1627,7 @@ function handleLockedCareerClick(item, type) {
             title="Top  Institutes Outside Odisha"
             subtitle="All institutes from other states are shown here."
           >
-            {instituteGroups.outsideInstitutes.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {instituteGroups.outsideInstitutes.map((inst) => (
-                  <InstituteCard key={inst.id} inst={inst} badge="Outside Odisha" />
-                ))}
-              </div>
-            ) : (
-              <p className="m-0 text-sm text-gray-400">No institutes found outside Odisha.</p>
-            )}
+           <InstituteFilterGroup institutes={instituteGroups.outsideInstitutes} badge="Outside Odisha" emptyText="No institutes found outside Odisha." />
           </SectionCard>
         </div>
       </div>
