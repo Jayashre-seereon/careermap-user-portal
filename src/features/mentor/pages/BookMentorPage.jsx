@@ -261,6 +261,7 @@ export default function BookMentorPage() {
   const [bookedSlots, setBookedSlots] = useState([]);
   const [bookedSlotsLoading, setBookedSlotsLoading] = useState(false);
   const [bookedSlotsError, setBookedSlotsError] = useState("");
+  const [showBookingPanel, setShowBookingPanel] = useState(false);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -508,6 +509,12 @@ export default function BookMentorPage() {
   }, [bookedSlotKeys, selectedSlot]);
 
   useEffect(() => {
+    if (!activeMentor) {
+      setShowBookingPanel(false);
+    }
+  }, [activeMentor]);
+
+  useEffect(() => {
     if (!processing || !activeMentor) return undefined;
     const timer = setTimeout(() => {
       const slotEndTime = getSlotEndTimeValue(selectedSlot);
@@ -670,7 +677,14 @@ export default function BookMentorPage() {
         ) : null}
 
    {/* Profile card */}
-<div className="relative overflow-hidden rounded-[32px] border border-[#f0e4e2] bg-white p-6 shadow-sm sm:p-8">
+      <div className="relative overflow-hidden rounded-[32px] border border-[#f0e4e2] bg-white p-6 shadow-sm sm:p-8">
+  <button
+    type="button"
+    onClick={() => setShowBookingPanel((current) => !current)}
+    className="absolute right-4 top-4 z-[2] rounded-full bg-[#9a2119] px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white shadow-lg shadow-[#9a2119]/20 transition hover:bg-[#7f1711]"
+  >
+    {showBookingPanel ? "Close booking" : "Book now"}
+  </button>
   {/* Decorative background blobs */}
   <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-[40%] bg-[#f3d4c8]" />
   <div className="pointer-events-none absolute bottom-8 right-10 h-8 w-8 rounded-full bg-[#f3d4c8]/70" />
@@ -748,104 +762,165 @@ export default function BookMentorPage() {
       </div>
     </div>
   </div>
+
+  <Modal
+    open={showBookingPanel}
+    centered
+    onCancel={() => setShowBookingPanel(false)}
+    footer={null}
+    width={760}
+    className="[&_.ant-modal-content]:!rounded-[28px] [&_.ant-modal-content]:!overflow-hidden"
+  >
+    <div className="bg-[#fffaf8] p-1 sm:p-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-[#f0e4e2] bg-white p-5">
+        <div>
+          <div className="text-[12px] font-extrabold uppercase tracking-[0.18em] text-[#9a2119]">Booking</div>
+          <h3 className="mt-1 text-[20px] font-black text-[#1a0a09]">Select date and time</h3>
+        </div>
+        <div className="rounded-full bg-[#fffaf8] px-3 py-1.5 text-[12px] font-bold text-[#6f6663] shadow-sm">
+          {selectedDateInfo?.displayDate || "Choose a date"}
+          {selectedSlot ? ` • ${selectedSlot}` : ""}
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-[24px] border border-[#f0e4e2] bg-white p-5">
+        <div className="text-[13px] font-bold text-[#1a0a09]">Select Date</div>
+        <div className="mt-3 flex flex-wrap gap-2.5">
+          {dates.map((date) => {
+            const isActive = selectedDate === date.key;
+            const hasSlots = (date.slots || []).length > 0;
+            return (
+              <button
+                key={date.key}
+                type="button"
+                disabled={!hasSlots}
+                onClick={() => {
+                  setSelectedDate(date.key);
+                  setSelectedSlot("");
+                }}
+                className="w-[88px] rounded-[16px] px-2 py-3 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-35"
+                style={{
+                  backgroundColor: isActive ? "#9a2119" : "#f2ebe6",
+                  color: isActive ? "#fff" : "#1a0a09",
+                }}
+              >
+                <div className="text-[10px] font-bold">{date.day}</div>
+                <div className="text-[12px] font-black leading-tight">{date.displayDate}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-[24px] border border-[#f0e4e2] bg-white p-5">
+        <div className="text-[13px] font-bold text-[#1a0a09]">Select Time</div>
+        {selectedDate ? (
+          <div className="mt-3 flex flex-wrap gap-2.5">
+            {availableSlots.length ? (
+              availableSlots.map((slot) => {
+                const isBooked = bookedSlotKeys.has(normalizeSlotKey(slot));
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    disabled={isBooked}
+                    onClick={() => setSelectedSlot(slot)}
+                    className="rounded-[12px] px-3.5 py-2.5 text-[12px] font-extrabold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{
+                      backgroundColor: isBooked
+                        ? "#efe7e4"
+                        : selectedSlot === slot
+                        ? "#9a2119"
+                        : "#f2ebe6",
+                      color: isBooked
+                        ? "#a28f89"
+                        : selectedSlot === slot
+                        ? "#fff"
+                        : "#1a0a09",
+                    }}
+                  >
+                    {slot}
+                    {isBooked ? " (Booked)" : ""}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="text-sm text-[#8c6c67]">
+                No time slots available for this date.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-3 text-sm text-[#8c6c67]">
+            Choose a date to see available time slots.
+          </div>
+        )}
+        {bookedSlotsLoading ? (
+          <div className="mt-3 text-xs text-[#8c6c67]">Loading booked slots...</div>
+        ) : null}
+        {bookedSlotsError ? (
+          <div className="mt-3 text-xs font-semibold text-[#9a2119]">{bookedSlotsError}</div>
+        ) : null}
+      </div>
+
+      <button
+        type="button"
+        disabled={!selectedDate || !selectedSlot}
+        onClick={handlePayment}
+        className="mt-5 w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+        style={{ background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)" }}
+      >
+        Book & Pay
+      </button>
+    </div>
+  </Modal>
 </div>
 
         <SectionCard title="About">
           <p className="m-0 text-[14px] leading-7 text-[#6f6663]">{activeMentor.bio}</p>
         </SectionCard>
 
-        <SectionCard title="Select Date">
-          <div className="flex flex-wrap gap-2.5">
-            {dates.map((date) => {
-              const isActive = selectedDate === date.key;
-              const hasSlots = (date.slots || []).length > 0;
-              return (
-                <button
-                  key={date.key}
-                  type="button"
-                  disabled={!hasSlots}
-                  onClick={() => {
-                    setSelectedDate(date.key);
-                    setSelectedSlot("");
-                  }}
-                  className="w-[88px] rounded-[16px] px-2 py-3 text-center transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-35"
-                  style={{
-                    backgroundColor: isActive ? "#9a2119" : "#f2ebe6",
-                    color: isActive ? "#fff" : "#1a0a09",
-                  }}
-                >
-                  <div className="text-[10px] font-bold">{date.day}</div>
-                  <div className="text-[12px] font-black leading-tight">{date.displayDate}</div>
-                </button>
-              );
-            })}
+        <SectionCard title="Mentor Details">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[18px] bg-[#fffaf8] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">Designation</div>
+              <div className="mt-1 text-[14px] font-semibold text-[#1a0a09]">{activeMentor.specialty || "N/A"}</div>
+            </div>
+            <div className="rounded-[18px] bg-[#fffaf8] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">Place of Work</div>
+              <div className="mt-1 text-[14px] font-semibold text-[#1a0a09]">
+                {activeMentor.placeOfWork || "N/A"}
+              </div>
+            </div>
+            <div className="rounded-[18px] bg-[#fffaf8] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">Experience</div>
+              <div className="mt-1 text-[14px] font-semibold text-[#1a0a09]">{activeMentor.experience || "N/A"}</div>
+            </div>
+            <div className="rounded-[18px] bg-[#fffaf8] p-4">
+              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">Area of Expertise</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(String(activeMentor.raw?.skill || "")
+                  .split(/\r?\n|,/)
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+                  .length
+                  ? String(activeMentor.raw?.skill || "")
+                      .split(/\r?\n|,/)
+                      .map((item) => item.trim())
+                      .filter(Boolean)
+                  : [activeMentor.raw?.skill || "N/A"]
+                ).map((skill) => (
+                  <span
+                    key={skill}
+                    className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-[#9a2119] shadow-sm"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </SectionCard>
-
-        <SectionCard title="Select Time">
-          {selectedDate ? (
-            <div className="flex flex-wrap gap-2.5">
-              {availableSlots.length ? (
-                availableSlots.map((slot) => {
-                  const isBooked = bookedSlotKeys.has(normalizeSlotKey(slot));
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      disabled={isBooked}
-                      onClick={() => setSelectedSlot(slot)}
-                      className="rounded-[12px] px-3.5 py-2.5 text-[12px] font-extrabold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40"
-                      style={{
-                        backgroundColor: isBooked
-                          ? "#efe7e4"
-                          : selectedSlot === slot
-                          ? "#9a2119"
-                          : "#f2ebe6",
-                        color: isBooked
-                          ? "#a28f89"
-                          : selectedSlot === slot
-                          ? "#fff"
-                          : "#1a0a09",
-                      }}
-                    >
-                      {slot}
-                      {isBooked ? " (Booked)" : ""}
-                    </button>
-                  );
-                })
-              ) : (
-                <div className="text-sm text-[#8c6c67]">
-                  No time slots available for this date.
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-sm text-[#8c6c67]">
-              Choose a date to see available time slots.
-            </div>
-          )}
-          {bookedSlotsLoading ? (
-            <div className="mt-3 text-xs text-[#8c6c67]">Loading booked slots...</div>
-          ) : null}
-          {bookedSlotsError ? (
-            <div className="mt-3 text-xs font-semibold text-[#9a2119]">{bookedSlotsError}</div>
-          ) : null}
-        </SectionCard>
-
-        {/* Sticky Book & Pay bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-[#efe4df] bg-white/95 p-4 backdrop-blur">
-          <div className="mx-auto w-full max-w-5xl">
-            <button
-              type="button"
-              disabled={!selectedDate || !selectedSlot}
-              onClick={handlePayment}
-              className="w-full rounded-[18px] py-3.5 text-[14px] font-extrabold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: "linear-gradient(90deg, #c72733 0%, #51154c 100%)" }}
-            >
-              Book & Pay
-            </button>
-          </div>
-        </div>
 
         <Modal
           open={paymentOpen}
