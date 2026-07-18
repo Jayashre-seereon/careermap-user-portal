@@ -301,7 +301,7 @@ useEffect(() => {
               <p className="m-0 px-5 py-4 text-sm font-medium leading-7 text-[#1a0a09]">{selectedItem.eligibility}</p>
             </div> */}
 
-            <div id="section-requirements" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24">
+            {/* <div id="section-requirements" className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm scroll-mt-24">
               <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
                 <FileTextOutlined className="text-sm text-[#9a2119]" />
                 <h3 className="m-0 text-[10px] font-black uppercase tracking-widest text-[#1a0a09]">Requirements</h3>
@@ -318,7 +318,7 @@ useEffect(() => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             {selectedItem.sections?.length ? (
               <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
@@ -404,14 +404,16 @@ useEffect(() => {
                       <TeamOutlined className="text-xs" />
                       Eligibility
                     </button> */}
-                    <button
+                    {/* <button
                       type="button"
-                      onClick={() => scrollToSection("section-requirements")}
+                      onClick={() => scrollToSection("section-Requirements not available
+
+")}
                       className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
                     >
                       <FileTextOutlined className="text-xs" />
                       Requirements
-                    </button>
+                    </button> */}
                     {selectedItem.sections?.map((section) => (
                       <button
                         key={section.id}
