@@ -2,6 +2,7 @@ import { Avatar, Button, Modal, Rate, Input, message } from "antd";
 import { BankOutlined, BellOutlined, RightOutlined, TrophyFilled, CreditCardOutlined, HistoryOutlined, TrophyOutlined, CommentOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../../api/dashboardApi";
+import { checkModuleAccess } from "../../../api/moduleAccessApi";
 import { createMentorReview } from "../../../api/mentorApi";
 import { personalityQuestions, personalityTypes, palette } from "../../../data/careermapData";
 import { useAppState } from "../../../state/AppStateContext";
@@ -9,6 +10,7 @@ import {
   buildDashboardInstitutes,
   buildDashboardMentors,
   buildDashboardScholarships,
+  normalizeModuleTitle,
 } from "../../../utils/dashboard";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { DashboardHeroSection } from "../../portal/components/DashboardHeroSection";
@@ -136,6 +138,7 @@ export default function DashboardPage() {
   const [reviewText, setReviewText] = useState("");
   const [reviewError, setReviewError] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  const [lockedSection, setLockedSection] = useState(null);
   const [reviewedMentorBookings, setReviewedMentorBookings] = useState(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -205,6 +208,37 @@ export default function DashboardPage() {
   const dashboardMentors = useMemo(() => buildDashboardMentors(dashboardData?.mentors || []), [dashboardData?.mentors]);
   const dashboardScholarships = useMemo(() => buildDashboardScholarships(dashboardData?.scholarships || []), [dashboardData?.scholarships]);
   const dashboardInstitutes = useMemo(() => buildDashboardInstitutes(dashboardData?.institutions || []), [dashboardData?.institutions]);
+  const dashboardModuleLookup = useMemo(() => {
+    const modules = Array.isArray(dashboardData?.modules) ? dashboardData.modules : [];
+    const getLookupKeys = (value = "") => {
+      const normalized = normalizeModuleTitle(value);
+      const keys = new Set([normalized]);
+
+      if (normalized === "scholarship" || normalized === "scholarships") {
+        keys.add("scholarship");
+        keys.add("scholarships");
+      }
+
+      if (normalized === "institute" || normalized === "institutes") {
+        keys.add("institute");
+        keys.add("institutes");
+      }
+
+      if (normalized === "book mentor" || normalized === "mentor" || normalized === "mentors") {
+        keys.add("book mentor");
+        keys.add("mentor");
+        keys.add("mentors");
+      }
+
+      return [...keys];
+    };
+
+    return new Map(
+      modules
+        .filter((module) => module?.id || module?.title)
+        .flatMap((module) => getLookupKeys(module.title || "").map((key) => [key, module]))
+    );
+  }, [dashboardData?.modules]);
   const dashboardPlans = useMemo(
   () => dashboardData?.plans || [],
   [dashboardData?.plans]
@@ -303,6 +337,73 @@ function handleTestClick() {
     window.location.href = "/assessment/phycometrichalftest.html";
   }
 
+  async function handleProtectedSectionClick({ route, title, moduleTitle, itemLabel }) {
+    const normalizedTitle = normalizeModuleTitle(moduleTitle || title || "");
+    const lookupKeys = new Set([normalizedTitle]);
+
+    if (normalizedTitle === "scholarship" || normalizedTitle === "scholarships") {
+      lookupKeys.add("scholarship");
+      lookupKeys.add("scholarships");
+    }
+
+    if (normalizedTitle === "institute" || normalizedTitle === "institutes") {
+      lookupKeys.add("institute");
+      lookupKeys.add("institutes");
+    }
+
+    if (normalizedTitle === "book mentor" || normalizedTitle === "mentor" || normalizedTitle === "mentors") {
+      lookupKeys.add("book mentor");
+      lookupKeys.add("mentor");
+      lookupKeys.add("mentors");
+    }
+
+    const resolvedModule = [...lookupKeys].map((key) => dashboardModuleLookup.get(key)).find(Boolean);
+    const moduleId = resolvedModule?.id;
+
+    if (!moduleId) {
+      setLockedSection({
+        title,
+        itemLabel,
+        route,
+        message: "This section is currently unavailable. Please try again later.",
+      });
+      return;
+    }
+
+    try {
+      const response = await checkModuleAccess(moduleId);
+
+      if (!response?.allowed) {
+        setLockedSection({
+          title,
+          itemLabel,
+          route,
+          message:
+            response?.message ||
+            "Free preview already used. Please purchase a subscription to continue accessing this section.",
+        });
+        return;
+      }
+
+      navigate(route, {
+        state: {
+          accessStatus: response.mode,
+          moduleId,
+        },
+      });
+    } catch (error) {
+      setLockedSection({
+        title,
+        itemLabel,
+        route,
+        message:
+          error?.response?.data?.message ||
+          error?.message ||
+          "Unable to verify access right now. Please try again.",
+      });
+    }
+  }
+
   function handleCompleteProfile() {
     requestProfileEdit();
     setProfileReminderOpen(false);
@@ -324,7 +425,17 @@ function handleTestClick() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div className="display-font text-2xl font-bold text-ink">Explore Your Mentors</div>
-          <button type="button" className="text-sm font-bold text-brand" onClick={() => navigate("/app/book-mentor")}>
+  <button
+    type="button"
+    className="text-sm font-bold text-brand"
+    onClick={() =>
+      handleProtectedSectionClick({
+        route: "/app/book-mentor",
+        title: "Mentors",
+        moduleTitle: "Book Mentor",
+      })
+    }
+  >
             See all
           </button>
         </div>
@@ -334,7 +445,14 @@ function handleTestClick() {
   key={mentor.id || mentor.name}
   type="button"
   className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-  onClick={() => navigate("/app/book-mentor")}
+  onClick={() =>
+    handleProtectedSectionClick({
+      route: "/app/book-mentor",
+      title: "Mentors",
+      moduleTitle: "Book Mentor",
+      itemLabel: mentor.name,
+    })
+  }
 >
   {/* Row Layout */}
   <div className="flex items-start gap-4">
@@ -398,7 +516,17 @@ function handleTestClick() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div className="display-font text-2xl font-bold text-ink">Explore Scholarships</div>
-          <button type="button" className="text-sm font-bold text-brand" onClick={() => navigate("/app/scholarships")}>
+          <button
+            type="button"
+            className="text-sm font-bold text-brand"
+            onClick={() =>
+              handleProtectedSectionClick({
+                route: "/app/scholarships",
+                title: "Scholarships",
+                moduleTitle: "Scholarships",
+              })
+            }
+          >
             See all
           </button>
         </div>
@@ -408,7 +536,14 @@ function handleTestClick() {
               key={item.id || item.name}
               type="button"
               className="flex w-full items-center gap-4 rounded-[22px] border border-[#eaded9] bg-white p-4 text-left shadow-sm transition hover:shadow-md"
-              onClick={() => navigate("/app/scholarships")}
+              onClick={() =>
+                handleProtectedSectionClick({
+                  route: "/app/scholarships",
+                  title: "Scholarships",
+                  moduleTitle: "Scholarships",
+                  itemLabel: item.name,
+                })
+              }
             >
               <div className="flex h-[42px] w-[42px] items-center justify-center rounded-[14px] bg-[#edf9f1]">
                 <TrophyOutlined style={{ color: palette.green, fontSize: 20 }} />
@@ -429,7 +564,17 @@ function handleTestClick() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div className="display-font text-2xl font-bold text-ink">Explore Institutes</div>
-          <button type="button" className="text-sm font-bold text-brand" onClick={() => navigate("/app/institutes")}>
+          <button
+            type="button"
+            className="text-sm font-bold text-brand"
+            onClick={() =>
+              handleProtectedSectionClick({
+                route: "/app/institutes",
+                title: "Institutes",
+                moduleTitle: "Institutes",
+              })
+            }
+          >
             See all
           </button>
         </div>
@@ -439,7 +584,14 @@ function handleTestClick() {
               key={item.id || item.name}
               type="button"
               className="rounded-[22px] border border-[#eaded9] bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              onClick={() => navigate("/app/institutes")}
+              onClick={() =>
+                handleProtectedSectionClick({
+                  route: "/app/institutes",
+                  title: "Institutes",
+                  moduleTitle: "Institutes",
+                  itemLabel: item.name,
+                })
+              }
             >
               <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center overflow-hidden rounded-[18px] bg-[#edf3ff]">
                 {item.logo ? (
@@ -656,6 +808,53 @@ Please complete your profile to continue.
 
   </div>
 </Modal>
+
+      <Modal
+        open={Boolean(lockedSection)}
+        centered
+        footer={null}
+        closable
+        onCancel={() => setLockedSection(null)}
+        width={440}
+        className="[&_.ant-modal-content]:!rounded-[24px] [&_.ant-modal-content]:!p-6"
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-[#9a2119]">
+              {lockedSection?.title || "Module Locked"}
+            </p>
+            <h3 className="m-0 mt-2 text-[22px] font-black text-[#1a0a09]">
+              Unlock access to continue
+            </h3>
+            <p className="m-0 mt-2 text-sm leading-7 text-[#6f6663]">
+              {lockedSection?.message}
+              {lockedSection?.itemLabel ? ` ${lockedSection.itemLabel}` : ""}
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              type="primary"
+              block
+              className="!h-11 !rounded-xl !border-[#9a2119] !bg-[#9a2119] !font-semibold"
+              onClick={() => {
+                const returnTo = lockedSection?.route || "/app/dashboard";
+                setLockedSection(null);
+                navigate(`/app/subscription?returnTo=${encodeURIComponent(returnTo)}`);
+              }}
+            >
+              Unlock Now
+            </Button>
+            <Button
+              block
+              className="!h-11 !rounded-xl !font-semibold"
+              onClick={() => setLockedSection(null)}
+            >
+              Later
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
