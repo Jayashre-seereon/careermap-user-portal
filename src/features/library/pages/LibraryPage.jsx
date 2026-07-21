@@ -291,7 +291,7 @@ function formatSalaryRange(salary) {
   if (!salary) return "Salary not available";
   const currency = salary?.currency || "";
   if (salary?.minSalary != null && salary?.maxSalary != null) {
-    return `${salary.profession ? salary.profession + " - " : ""}${currency} ${formatSalaryAmount(salary.minSalary)} to ${currency} ${formatSalaryAmount(salary.maxSalary)} /annum`;
+    return `${salary.profession ? salary.profession + " - " : ""}${currency} ${formatSalaryAmount(salary.minSalary)} L to ${currency} ${formatSalaryAmount(salary.maxSalary)} L /annum`;
   }
   if (salary?.label || salary?.value) return salary.label || salary.value;
   return "Salary not available";
