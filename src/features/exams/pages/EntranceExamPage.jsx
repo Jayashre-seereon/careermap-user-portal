@@ -13,7 +13,8 @@ import { entranceExams as fallbackEntranceExams } from "../../../data/careermapD
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { checkModuleAccess } from "../../../api/moduleAccessApi";
-
+import { Select } from "antd";
+const { Option } = Select;
 export default function EntranceExamPage() {
   const { goToDashboard } = usePortalNavigation();
   const location = useLocation();
@@ -30,7 +31,7 @@ export default function EntranceExamPage() {
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
-
+  const [selectedExamId, setSelectedExamId] = useState(""); 
   useEffect(() => {
     let active = true;
 
@@ -102,6 +103,11 @@ export default function EntranceExamPage() {
     return [...new Map(source.filter((i) => i.subcategoryObj).map((i) => [i.subcategoryObj.id, i.subcategoryObj])).values()];
   }, [items, category, secondCategory]);
 
+  const examOptions = useMemo(
+  () => items.map((item) => ({ value: String(item.id), label: item.name })),
+  [items]
+);
+
   function handleCategoryChange(value) {
     setCategory(value);
     setSecondCategory("");
@@ -119,10 +125,11 @@ export default function EntranceExamPage() {
         const matchesCategory = !category || String(item.categoryObj?.id) === String(category);
         const matchesSecondCategory = !secondCategory || String(item.secondcategoryObj?.id) === String(secondCategory);
         const matchesSubCategory = !subCategory || String(item.subcategoryObj?.id) === String(subCategory);
+         const matchesExam = !selectedExamId || String(item.id) === String(selectedExamId);
 
-        return matchesCategory && matchesSecondCategory && matchesSubCategory;
+        return matchesCategory && matchesSecondCategory && matchesSubCategory && matchesExam;
       }),
-    [items, category, secondCategory, subCategory]
+    [items, category, secondCategory, subCategory, selectedExamId]
   );
 
   return (
@@ -144,67 +151,70 @@ export default function EntranceExamPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <select
-              value={category}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-            >
-              <option value="">All Categories</option>
-              {categoryOptions.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.title}
-                </option>
-              ))}
-            </select>
-            <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]" viewBox="0 0 12 12" fill="none">
-              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+         <div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="Search Exam"
+    optionFilterProp="label"
+    value={selectedExamId || undefined}
+    onChange={(value) => setSelectedExamId(value || "")}
+    options={examOptions}
+    style={{ minWidth: 220 }}
+    className="pill-select"
+  />
+</div>
 
-          <div className="relative">
-            <select
-              value={secondCategory}
-              onChange={(e) => handleSecondCategoryChange(e.target.value)}
-              className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-            >
-              <option value="">All Second Categories</option>
-              {secondCategoryOptions.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.name}
-                </option>
-              ))}
-            </select>
-            <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]" viewBox="0 0 12 12" fill="none">
-              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+<div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="All Categories"
+    optionFilterProp="label"
+    value={category || undefined}
+    onChange={(value) => handleCategoryChange(value || "")}
+    options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+    style={{ minWidth: 180 }}
+    className="pill-select"
+  />
+</div>
 
-          <div className="relative">
-            <select
-              value={subCategory}
-              onChange={(e) => setSubCategory(e.target.value)}
-              className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-            >
-              <option value="">All Sub Categories</option>
-              {subCategoryOptions.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.title}
-                </option>
-              ))}
-            </select>
-            <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]" viewBox="0 0 12 12" fill="none">
-              <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+<div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="All Second Categories"
+    optionFilterProp="label"
+    value={secondCategory || undefined}
+    onChange={(value) => handleSecondCategoryChange(value || "")}
+    options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
+    style={{ minWidth: 200 }}
+    className="pill-select"
+  />
+</div>
 
-          {(category || secondCategory || subCategory) ? (
+<div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="All Sub Categories"
+    optionFilterProp="label"
+    value={subCategory || undefined}
+    onChange={(value) => setSubCategory(value || "")}
+    options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+    style={{ minWidth: 200 }}
+    className="pill-select"
+  />
+</div>
+
+          {(category || secondCategory || subCategory || selectedExamId) ? (
             <button
               type="button"
               onClick={() => {
                 setCategory("");
                 setSecondCategory("");
                 setSubCategory("");
+                setSelectedExamId("");
               }}
               className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
             >

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled,LockOutlined,UnlockOutlined} from "@ant-design/icons";
-import { Modal,Rate } from "antd";
+import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled,LockOutlined,UnlockOutlined,FileTextOutlined} from "@ant-design/icons";
+import { Modal,Rate,Button ,Select} from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
 import {
   createMentorOrder,
@@ -741,6 +741,17 @@ export default function BookMentorPage() {
           <StarFilled style={{ color: "#d4a017" }} />
           {Number(activeMentor.rating).toFixed(1)}
         </span>
+        {activeMentor.resume ? (
+  <Button
+    href={activeMentor.resume}
+    target="_blank"
+    rel="noopener noreferrer"
+    icon={<FileTextOutlined />}
+    className="!inline-flex !items-center !gap-2 !rounded-2xl !border !border-[#f0e4e2] !bg-white !px-4 !py-2 !h-auto !font-bold !text-[#9a2119] hover:!bg-[#fdf0ee] hover:!border-[#9a2119]"
+  >
+    Resume
+  </Button>
+) : null}
 
         <span className="inline-flex items-center gap-2.5 rounded-2xl bg-[#fdf0e4] px-4 py-2 font-bold text-[#241008]">
           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-white">
@@ -750,6 +761,8 @@ export default function BookMentorPage() {
             {String(activeMentor.price || "").replace(/^rs\.?\s*/i, "")}
           </span>
         </span>
+          
+
 
        {(activeMentor.tags || []).map((tag) => (
   <span
@@ -954,56 +967,50 @@ export default function BookMentorPage() {
 
       {/* ── Filter dropdowns ── */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Category — field: title */}
-        <div className="relative">
-          <select
-            value={category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-          >
-            <option value="">All Categories</option>
-            {categoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
-          <ChevronDown />
-        </div>
+       {/* Category — field: title */}
+<div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="All Categories"
+    optionFilterProp="label"
+    value={category || undefined}
+    onChange={(value) => handleCategoryChange(value || "")}
+    options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+    style={{ minWidth: 180 }}
+    className="pill-select"
+  />
+</div>
 
-        {/* Second Category — field: name */}
-        <div className="relative">
-          <select
-            value={secondCategory}
-            onChange={(e) => handleSecondCategoryChange(e.target.value)}
-            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-          >
-            <option value="">All Second Categories</option>
-            {secondCategoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown />
-        </div>
+{/* Second Category — field: name */}
+<div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="All Second Categories"
+    optionFilterProp="label"
+    value={secondCategory || undefined}
+    onChange={(value) => handleSecondCategoryChange(value || "")}
+    options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
+    style={{ minWidth: 200 }}
+    className="pill-select"
+  />
+</div>
 
-        {/* Sub Category — field: title */}
-        <div className="relative">
-          <select
-            value={subCategory}
-            onChange={(e) => setSubCategory(e.target.value)}
-            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-          >
-            <option value="">All Sub Categories</option>
-            {subCategoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
-          <ChevronDown />
-        </div>
+{/* Sub Category — field: title */}
+<div className="relative">
+  <Select
+    showSearch
+    allowClear
+    placeholder="All Sub Categories"
+    optionFilterProp="label"
+    value={subCategory || undefined}
+    onChange={(value) => setSubCategory(value || "")}
+    options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+    style={{ minWidth: 200 }}
+    className="pill-select"
+  />
+</div>
 
         {(category || secondCategory || subCategory) ? (
           <button
