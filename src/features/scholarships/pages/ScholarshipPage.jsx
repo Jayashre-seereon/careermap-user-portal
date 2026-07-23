@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button, Tabs } from "antd";
+import { Alert, Button, Tabs,Select } from "antd";
 import {
   LockOutlined,
   UnlockOutlined,
@@ -19,6 +19,7 @@ import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { UnlockRedirectModal, usePortalNavigation } from "../../portal/components/portalPageShared";
 import { checkModuleAccess, startPreview } from "../../../api/moduleAccessApi";
+
 function scrollToSection(id) {
   const el = document.getElementById(id);
   if (el) {
@@ -46,7 +47,7 @@ const [previewExpired, setPreviewExpired] = useState(false);
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
-
+const [type, setType] = useState("");
   useEffect(() => {
     let active = true;
 
@@ -155,6 +156,11 @@ useEffect(() => {
     return [...new Map(source.filter((i) => i.subcategoryObj).map((i) => [i.subcategoryObj.id, i.subcategoryObj])).values()];
   }, [items, category, secondCategory]);
 
+  const typeOptions = useMemo(
+  () => [...new Set(items.map((i) => i.tag).filter(Boolean))],
+  [items]
+);
+
   function handleCategoryChange(value) {
     setCategory(value);
     setSecondCategory("");
@@ -173,10 +179,11 @@ useEffect(() => {
         const matchesCategory = !category || String(item.categoryObj?.id) === String(category);
         const matchesSecondCategory = !secondCategory || String(item.secondcategoryObj?.id) === String(secondCategory);
         const matchesSubCategory = !subCategory || String(item.subcategoryObj?.id) === String(subCategory);
+         const matchesType = !type || item.tag === type; // add this
 
-        return matchesStatus && matchesCategory && matchesSecondCategory && matchesSubCategory;
+        return matchesStatus && matchesCategory && matchesSecondCategory && matchesSubCategory && matchesType;
       }),
-    [activeStatus, items, category, secondCategory, subCategory]
+    [activeStatus, items, category, secondCategory, subCategory, type]
   );
 
   function buildScholarshipReturnTo(itemName = selectedItem?.name) {
@@ -473,75 +480,78 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <select
-            value={category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-          >
-            <option value="">All Categories</option>
-            {categoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+     <div className="flex flex-wrap items-center gap-2">
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Categories"
+      optionFilterProp="label"
+      value={category || undefined}
+      onChange={(value) => handleCategoryChange(value || "")}
+      options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+      style={{ minWidth: 180 }}
+      className="pill-select"
+    />
+  </div>
 
-        <div className="relative">
-          <select
-            value={secondCategory}
-            onChange={(e) => handleSecondCategoryChange(e.target.value)}
-            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-          >
-            <option value="">All Second Categories</option>
-            {secondCategoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.name}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Second Categories"
+      optionFilterProp="label"
+      value={secondCategory || undefined}
+      onChange={(value) => handleSecondCategoryChange(value || "")}
+      options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
+      style={{ minWidth: 200 }}
+      className="pill-select"
+    />
+  </div>
 
-        <div className="relative">
-          <select
-            value={subCategory}
-            onChange={(e) => setSubCategory(e.target.value)}
-            className="appearance-none rounded-full border border-[#f0e4e2] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#e0c5c1] focus:border-[#9a2119]"
-          >
-            <option value="">All Sub Categories</option>
-            {subCategoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#b8837e]" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Sub Categories"
+      optionFilterProp="label"
+      value={subCategory || undefined}
+      onChange={(value) => setSubCategory(value || "")}
+      options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+      style={{ minWidth: 200 }}
+      className="pill-select"
+    />
+  </div>
 
-        {(category || secondCategory || subCategory) ? (
-          <button
-            type="button"
-            onClick={() => {
-              setCategory("");
-              setSecondCategory("");
-              setSubCategory("");
-            }}
-            className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
-          >
-            Clear
-          </button>
-        ) : null}
-      </div>
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Types"
+      optionFilterProp="label"
+      value={type || undefined}
+      onChange={(value) => setType(value || "")}
+      options={typeOptions.map((opt) => ({ value: opt, label: opt }))}
+      style={{ minWidth: 160 }}
+      className="pill-select"
+    />
+  </div>
+
+</div>
+{(category || secondCategory || subCategory || type) ? (
+  <button
+    type="button"
+    onClick={() => {
+      setCategory("");
+      setSecondCategory("");
+      setSubCategory("");
+      setType("");
+    }}
+    className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
+  >
+    Clear
+  </button>
+) : null}
 
       <div className="content-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((item) => {

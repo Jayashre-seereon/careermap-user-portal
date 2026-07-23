@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Button } from "antd";
+import { Alert, Button ,Select} from "antd";
 import {
   EnvironmentOutlined,
   BookOutlined,
@@ -182,96 +182,90 @@ const typeOptions = useMemo(
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
-          <select
-            value={category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-            className="appearance-none rounded-full border border-[#eaded9] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#d7c3bc] focus:border-[#9a2119]"
-          >
-            <option value="">All Categories</option>
-            {categoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#aa8a83]" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Categories"
+      optionFilterProp="label"
+      value={category || undefined}
+      onChange={(value) => handleCategoryChange(value || "")}
+      options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+      style={{ minWidth: 180 }}
+      className="pill-select"
+    />
+  </div>
 
-        <div className="relative">
-          <select
-            value={secondCategory}
-            onChange={(e) => handleSecondCategoryChange(e.target.value)}
-            className="appearance-none rounded-full border border-[#eaded9] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#d7c3bc] focus:border-[#9a2119]"
-          >
-            <option value="">All Second Categories</option>
-            {secondCategoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.name}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#aa8a83]" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Second Categories"
+      optionFilterProp="label"
+      value={secondCategory || undefined}
+      onChange={(value) => handleSecondCategoryChange(value || "")}
+      options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
+      style={{ minWidth: 200 }}
+      className="pill-select"
+    />
+  </div>
 
-        <div className="relative">
-          <select
-            value={subCategory}
-            onChange={(e) => setSubCategory(e.target.value)}
-            className="appearance-none rounded-full border border-[#eaded9] bg-white py-1.5 pl-3 pr-7 text-[12px] font-semibold text-[#5b5256] outline-none transition hover:border-[#d7c3bc] focus:border-[#9a2119]"
-          >
-            <option value="">All Sub Categories</option>
-            {subCategoryOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-[#aa8a83]" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-        <div className="relative"><select
-  value={country}
-  onChange={(e) => setCountry(e.target.value)}
-  className="appearance-none rounded-full border px-3 py-1.5 text-[12px]"
->
-  <option value="">All Countries</option>
-  {countryOptions.map((c) => (
-    <option key={c} value={c}>
-      {c}
-    </option>
-  ))}
-</select></div>
-        <div className="relative"> <select
-  value={stateFilter}
-  onChange={(e) => setStateFilter(e.target.value)}
-  className="appearance-none rounded-full border px-3 py-1.5 text-[12px]"
->
-  <option value="">All States</option>
-  {stateOptions.map((s) => (
-    <option key={s} value={s}>
-      {s}
-    </option>
-  ))}
-</select></div>
-        <div className="relative"><select
-  value={type}
-  onChange={(e) => setType(e.target.value)}
-  className="appearance-none rounded-full border px-3 py-1.5 text-[12px]"
->
-  <option value="">All Types</option>
-  {typeOptions.map((t) => (
-    <option key={t} value={t}>
-      {t}
-    </option>
-  ))}
-</select></div>
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Sub Categories"
+      optionFilterProp="label"
+      value={subCategory || undefined}
+      onChange={(value) => setSubCategory(value || "")}
+      options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+      style={{ minWidth: 200 }}
+      className="pill-select"
+    />
+  </div>
 
-        {(category || secondCategory || subCategory) ? (
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Countries"
+      optionFilterProp="label"
+      value={country || undefined}
+      onChange={(value) => setCountry(value || "")}
+      options={countryOptions.map((c) => ({ value: c, label: c }))}
+      style={{ minWidth: 160 }}
+      className="pill-select"
+    />
+  </div>
+
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All States"
+      optionFilterProp="label"
+      value={stateFilter || undefined}
+      onChange={(value) => setStateFilter(value || "")}
+      options={stateOptions.map((s) => ({ value: s, label: s }))}
+      style={{ minWidth: 160 }}
+      className="pill-select"
+    />
+  </div>
+
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Types"
+      optionFilterProp="label"
+      value={type || undefined}
+      onChange={(value) => setType(value || "")}
+      options={typeOptions.map((t) => ({ value: t, label: t }))}
+      style={{ minWidth: 160 }}
+      className="pill-select"
+    />
+  </div>
+
+        {(category || secondCategory || subCategory || country || stateFilter || type) ? (
           <button
             type="button"
             onClick={() => {
