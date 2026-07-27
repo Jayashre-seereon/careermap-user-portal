@@ -83,7 +83,7 @@ const getAccessBadge = (status) => {
   "Institutes",
   "Scholarship",
   "Assessment",
-  "Book Mentor",
+  "Book Your Mentor",
   "Master Class",
   "Study Abroad",
   "Quiz",

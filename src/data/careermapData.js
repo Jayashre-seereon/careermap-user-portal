@@ -37,7 +37,7 @@ export const moduleCards = [
   { title: "Master Class", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Practice tests and exam preparation guides.", route: "/app/entrance-exam", tone: palette.teal },
   { title: "Institutes", subtitle: "Browse top colleges and universities.", route: "/app/institutes", tone: palette.pink },
-  { title: "Book Mentor", subtitle: "Reserve guidance with an expert mentor.", route: "/app/book-mentor", tone: palette.secondary },
+  { title: "Book Your Mentor", subtitle: "Reserve guidance with an expert mentor.", route: "/app/book-mentor", tone: palette.secondary },
   { title: "Scholarships", subtitle: "Funding alerts and application deadlines.", route: "/app/scholarships", tone: palette.green },
   { title: "Quiz", subtitle: "Test your knowledge with fun quizzes.", route: "/app/quiz", tone: palette.blue },
   { title: "Study Abroad", subtitle: "Explore international education options.", route: "/app/abroad", tone: palette.purple },
@@ -212,7 +212,7 @@ export const moduleArtPresets = {
           <rect x="404" y="142" width="34" height="86" rx="10" fill="#dcc7be"/>
         </svg>`),
   },
-  "Book Mentor": {
+  "Book Your Mentor": {
     background: "linear-gradient(135deg, #f8f1ec 0%, #e6d7cf 100%)",
     accent: "#9a2119",
     image:

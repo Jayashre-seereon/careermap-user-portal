@@ -224,8 +224,8 @@ export default function DashboardPage() {
         keys.add("institutes");
       }
 
-      if (normalized === "book mentor" || normalized === "mentor" || normalized === "mentors") {
-        keys.add("book mentor");
+      if (normalized === "book your mentor" || normalized === "mentor" || normalized === "mentors") {
+        keys.add("book your mentor");
         keys.add("mentor");
         keys.add("mentors");
       }
@@ -351,8 +351,8 @@ function handleTestClick() {
       lookupKeys.add("institutes");
     }
 
-    if (normalizedTitle === "book mentor" || normalizedTitle === "mentor" || normalizedTitle === "mentors") {
-      lookupKeys.add("book mentor");
+    if (normalizedTitle === "book your mentor" || normalizedTitle === "mentor" || normalizedTitle === "mentors") {
+      lookupKeys.add("book your mentor");
       lookupKeys.add("mentor");
       lookupKeys.add("mentors");
     }
@@ -432,7 +432,7 @@ function handleTestClick() {
       handleProtectedSectionClick({
         route: "/app/book-mentor",
         title: "Mentors",
-        moduleTitle: "Book Mentor",
+        moduleTitle: "Book Your Mentor",
       })
     }
   >
@@ -449,7 +449,7 @@ function handleTestClick() {
     handleProtectedSectionClick({
       route: "/app/book-mentor",
       title: "Mentors",
-      moduleTitle: "Book Mentor",
+      moduleTitle: "Book Your Mentor",
       itemLabel: mentor.name,
     })
   }

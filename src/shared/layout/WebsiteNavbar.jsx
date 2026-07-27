@@ -32,7 +32,7 @@ const moduleItems = [
   { key: "/app/assessment", icon: <FundProjectionScreenOutlined />, label: "Career Assessment" },
   { key: "/app/learn", icon: <ReadOutlined />, label: "Master Class" },
   { key: "/app/entrance-exam", icon: <BulbOutlined />, label: "Entrance Exam" },
-  { key: "/app/book-mentor", icon: <TeamOutlined />, label: "Book Mentor" },
+  { key: "/app/book-mentor", icon: <TeamOutlined />, label: "Book Your Mentor" },
   { key: "/app/scholarships", icon: <TrophyOutlined />, label: "Scholarships" },
   { key: "/app/institutes", icon: <AppstoreOutlined />, label: "Institutes" },
   { key: "/app/abroad", icon: <GlobalOutlined />, label: "Study Abroad" },
