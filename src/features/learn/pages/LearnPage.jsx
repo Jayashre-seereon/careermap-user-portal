@@ -76,7 +76,7 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
           <div className="rounded-[18px] border border-[#f4e3df] bg-[#fff9f7] px-4 py-3 text-[12px] leading-5 text-muted">
             {detailUnlocked
               ? "Your first locked class is available for free."
-              : "You have already used the free master class preview."}
+              : "You have already used the free career & personality videos preview."}
           </div>
         ) : null}
 
@@ -133,7 +133,7 @@ const unlocked =
         }
       } catch (loadError) {
         if (active) {
-          setError(loadError?.response?.data?.message || loadError?.message || "Failed to load master classes.");
+          setError(loadError?.response?.data?.message || loadError?.message || "Failed to load career & personality videos.");
           setItems(fallbackMasterClasses);
         }
       }
@@ -228,7 +228,7 @@ const unlocked =
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {filtered.length === 0 ? (
           <div className="rounded-[24px] border border-[#f0e4e2] bg-white p-5 text-sm text-muted">
-            No master classes available right now.
+            No career & personality videos available right now.
           </div>
         ) : null}
 
@@ -265,9 +265,9 @@ onWatch={() => {
 
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
-        title="Unlock Master Classes"
+        title="Unlock Career & Personality Videos"
         itemLabel={unlockModalItem}
-        description="Your free master class access has already been used. Subscribe to unlock"
+        description="Your free career & personality videos access has already been used. Subscribe to unlock"
         onCancel={() => setUnlockModalItem(null)}
         onConfirm={() => {
           const returnTo = buildLearnReturnTo(unlockModalItem);

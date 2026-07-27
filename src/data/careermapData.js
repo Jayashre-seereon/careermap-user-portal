@@ -34,10 +34,10 @@ export const heroStats = [
 export const moduleCards = [
   { title: "Career Archive", subtitle: "Explore streams, roles, and college paths.", route: "/app/library", tone: palette.blue },
   { title: "Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
-  { title: "Master Class", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
+  { title: "Career & Personality Videos", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Practice tests and exam preparation guides.", route: "/app/entrance-exam", tone: palette.teal },
   { title: "Institutes", subtitle: "Browse top colleges and universities.", route: "/app/institutes", tone: palette.pink },
-  { title: "Book Your Mentor", subtitle: "Reserve guidance with an expert mentor.", route: "/app/book-mentor", tone: palette.secondary },
+  { title: "Book Your Mentor", subtitle: "Receive personalised guidance from subject matter experts.", route: "/app/book-mentor", tone: palette.secondary },
   { title: "Scholarships", subtitle: "Funding alerts and application deadlines.", route: "/app/scholarships", tone: palette.green },
   { title: "Quiz", subtitle: "Test your knowledge with fun quizzes.", route: "/app/quiz", tone: palette.blue },
   { title: "Study Abroad", subtitle: "Explore international education options.", route: "/app/abroad", tone: palette.purple },
@@ -161,7 +161,7 @@ export const moduleArtPresets = {
           <circle cx="468" cy="120" r="18" fill="#ffffff"/>
         </svg>`),
   },
-  "Master Class": {
+  "Career & Personality Videos": {
     background: "linear-gradient(135deg, #f7efe9 0%, #e6d5cb 100%)",
     accent: "#9a2119",
     image:

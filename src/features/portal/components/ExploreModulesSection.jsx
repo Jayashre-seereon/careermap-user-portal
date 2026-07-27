@@ -84,7 +84,7 @@ const getAccessBadge = (status) => {
   "Scholarship",
   "Assessment",
   "Book Your Mentor",
-  "Master Class",
+  "Career & Personality Videos",
   "Study Abroad",
   "Quiz",
 ];
