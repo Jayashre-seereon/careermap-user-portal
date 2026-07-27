@@ -38,7 +38,7 @@ function buildInitials(name = "", fallback = "M") {
 }
 
 export const moduleRouteMap = {
-  "career library": "/app/library",
+  "career archive": "/app/library",
   assessment: "/app/assessment",
   "master class": "/app/learn",
   "entrance exam": "/app/entrance-exam",
@@ -54,7 +54,7 @@ export const moduleRouteMap = {
 };
 
 export const moduleIconMap = {
-  "Career Library": <ReadOutlined style={{ color: "#c64f7a" }} />,
+  "Career Archive": <ReadOutlined style={{ color: "#c64f7a" }} />,
   Assessment: <BulbOutlined style={{ color: "#5d8f26" }} />,
   "Master Class": <TrophyOutlined style={{ color: "#4c45aa" }} />,
   "Entrance Exam": <FileDoneOutlined style={{ color: "#0f8a7c" }} />,
@@ -67,7 +67,7 @@ export const moduleIconMap = {
 };
 
 export const moduleStyleMap = {
-  "Career Library": { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.blue },
+  "Career Archive": { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.blue },
   Assessment: { background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)", actionBg: "#5d8f26", tone: palette.purple },
   "Master Class": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.orange },
   "Entrance Exam": { background: "linear-gradient(180deg, #def6f2 0%, #f0fbf9 100%)", actionBg: "#0f8a7c", tone: palette.teal },

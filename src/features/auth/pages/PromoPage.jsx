@@ -15,7 +15,7 @@ export default function PromoPage() {
         <div style={{ display: "grid", gap: "10px" }}>
           {[
             ["Psychometric Tests", "Discover strengths and ideal fit.", "PT"],
-            ["Career Library", "500+ career options across streams.", "CL"],
+            ["Career Archive", "500+ career options across streams.", "CL"],
             ["Expert Mentors", "Guidance from counsellors and experts.", "EM"],
             ["Scholarships & Exams", "Stay updated on opportunities.", "SE"],
             ["Study Abroad", "Explore international education paths.", "SA"],

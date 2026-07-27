@@ -78,7 +78,7 @@ const getAccessBadge = (status) => {
   };
 
   const moduleOrder = [
-  "Career Library",
+  "Career Archive",
   "Entrance Exam",
   "Institutes",
   "Scholarship",

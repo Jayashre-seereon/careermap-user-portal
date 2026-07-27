@@ -28,7 +28,7 @@ import { buildDashboardModules } from "../../utils/dashboard";
 import BrandMark from "../branding/BrandMark";
 
 const moduleItems = [
-  { key: "/app/library", icon: <BookOutlined />, label: "Career Library" },
+  { key: "/app/library", icon: <BookOutlined />, label: "Career Archive" },
   { key: "/app/assessment", icon: <FundProjectionScreenOutlined />, label: "Career Assessment" },
   { key: "/app/learn", icon: <ReadOutlined />, label: "Master Class" },
   { key: "/app/entrance-exam", icon: <BulbOutlined />, label: "Entrance Exam" },

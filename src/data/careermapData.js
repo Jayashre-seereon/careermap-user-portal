@@ -32,7 +32,7 @@ export const heroStats = [
 ];
 
 export const moduleCards = [
-  { title: "Career Library", subtitle: "Explore streams, roles, and college paths.", route: "/app/library", tone: palette.blue },
+  { title: "Career Archive", subtitle: "Explore streams, roles, and college paths.", route: "/app/library", tone: palette.blue },
   { title: "Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
   { title: "Master Class", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Practice tests and exam preparation guides.", route: "/app/entrance-exam", tone: palette.teal },
@@ -115,7 +115,7 @@ export const quickPsychometricQuestions = [
  ];
 
 export const moduleArtPresets = {
-  "Career Library": {
+  "Career Archive": {
     background: "linear-gradient(135deg, #f8f0eb 0%, #ead8cf 100%)",
     accent: "#9a2119",
     image:
