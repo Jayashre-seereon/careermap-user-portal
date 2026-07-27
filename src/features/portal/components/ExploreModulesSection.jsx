@@ -77,6 +77,21 @@ const getAccessBadge = (status) => {
     }
   };
 
+  const moduleOrder = [
+  "Career Library",
+  "Entrance Exam",
+  "Institutes",
+  "Scholarship",
+  "Assessment",
+  "Book Mentor",
+  "Master Class",
+  "Study Abroad",
+  "Quiz",
+];
+const sortedCards = [...curatedCards].sort(
+  (a, b) =>
+    moduleOrder.indexOf(a.title) - moduleOrder.indexOf(b.title)
+);
   return (
     <section>
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -91,7 +106,7 @@ const getAccessBadge = (status) => {
       </div>
       {curatedCards.length ? (
         <Row gutter={[14, 14]}>
-          {curatedCards.map((card) => {
+          {sortedCards.map((card) => {
             const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
 
             const description =
