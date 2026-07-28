@@ -122,6 +122,7 @@ export default function SubscriptionPage() {
 ) : null}
 
                 {/* Header Area */}
+              {/* Header Area */}
                 <div className={`p-5 ${isSelected ? "bg-brand/5" : "bg-gray-50/50"}`}>
                   <div className="flex flex-col gap-2 mb-3">
                     <div className="text-sm font-bold text-ink/40 uppercase tracking-widest">
@@ -137,9 +138,23 @@ export default function SubscriptionPage() {
     /{plan.validity}
   </span>
 </div>
+
+                  {plan.descriptionList?.length ? (
+                    <ul className="m-0 mt-3 list-none space-y-1.5 p-0">
+                      {plan.descriptionList.map((line, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <CheckOutlined className="text-brand text-[11px] mt-1 flex-shrink-0" />
+                          <span className="text-[12px] leading-snug text-ink/70">
+                            {line}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
 
-                {/* Features Area */}
+            
+  {/* Features Area */}
                 <div className="p-5 flex-grow">
 <List
   split={false}
