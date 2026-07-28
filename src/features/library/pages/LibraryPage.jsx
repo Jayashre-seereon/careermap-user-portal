@@ -320,7 +320,7 @@ function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
           ) : null}
         </div>
       </div>
-      <div className="px-5 py-5">{children}</div>
+      <div className="px-5 py-5 text-[#000000]" style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>{children}</div>
     </section>
   );
 }
@@ -632,12 +632,13 @@ function InstituteCard({ inst, badge }) {
           </span>
         </div>
         {badge ? (
-          <span
-            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${isOdisha ? "bg-[#eaf7ef] text-[#2f9367]" : "bg-[#fdf0ee] text-[#9a2119]"
-              }`}
-          >
-            {badge}
-          </span>
+         <span
+  className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
+    isOdisha ? "bg-[#eaf7ef] text-[#2f9367]" : "bg-[#fdf0ee] text-[#9a2119]"
+  }`}
+>
+  {badge}
+</span>
         ) : null}
       </div>
 
@@ -1324,7 +1325,7 @@ export default function LibraryPage() {
 
     const sidebarSections = [
       { id: `desc-${index}`, label: "Description", icon: <FileTextOutlined /> },
-      { id: `path-${index}`, label: "Path", icon: <BranchesOutlined /> },
+      { id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> },
       { id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> },
       { id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> },
       { id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> },
@@ -1386,7 +1387,7 @@ export default function LibraryPage() {
                 title="Description"
                 subtitle="What this career is about and why it matters."
               >
-                <p className="m-0 text-[15px] leading-8 text-[#5f5658]">{description}</p>
+                <p className="m-0 text-[15px] leading-8 text-[#000000]">{description}</p>
               </SectionCard>
             ) : null}
 
@@ -1397,14 +1398,14 @@ export default function LibraryPage() {
               subtitle="A simple path from education to career entry."
             >
               {careerpaths.length > 0 ? (
-                <div className="overflow-hidden rounded-[20px] border border-[#f0e4e2]">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
+               <div className="overflow-x-auto rounded-[20px] border border-[#f0e4e2]">
+  <table className="min-w-[800px] w-full border-collapse text-sm">
+         <thead>
                       <tr className="bg-[#fdf7f6]">
                         {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map((col) => (
                           <th
                             key={col}
-                            className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#1a0a09]"
+                            className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#000000]"
                           >
                             {col}
                           </th>
@@ -1440,8 +1441,8 @@ export default function LibraryPage() {
                         {si + 1}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Step {si + 1}</p>
-                        <p className="m-0 mt-1 text-[13px] leading-6 text-[#685d60]">{step}</p>
+                        <p className="m-0 text-[14px] font-semibold text-[#000000]">Step {si + 1}</p>
+                        <p className="m-0 mt-1 text-[13px] leading-6 text-[#000000]">{step}</p>
                       </div>
                     </div>
                   ))}
@@ -1472,25 +1473,16 @@ export default function LibraryPage() {
                             </div>
                             <div className="min-w-0">
                               <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">Exam Name</p>
-                              <p className="m-0 text-[16px] font-black text-[#1a0a09]">{exam?.examname || "—"}</p>
+                              <p className="m-0 text-[16px] font-black text-[#000000]">{exam?.examname || "—"}</p>
                             </div>
                           </div>
                           {exam?.about && exam.about !== "Nothing" ? (
-                            <p className="m-0 mt-3 text-[13px] leading-6 text-[#675c60] line-clamp-2">{exam.about}</p>
+                            <p className="m-0 mt-3 text-[13px] leading-6 text-[#000000] line-clamp-2">{exam.about}</p>
                           ) : null}
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                          <DetailPill
-                            icon={<BookOutlined />}
-                            label={`Issue: ${exam?.issuedate ? new Date(exam.issuedate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}`}
-                            tone="#0f8a7c"
-                          />
-                          <DetailPill
-                            icon={<CalendarOutlined />}
-                            label={`Last: ${exam?.lastdate ? new Date(exam.lastdate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}`}
-                            tone="#9a2119"
-                          />
+                          
                           {exam?.url ? (
                             <a
                               href={exam.url}
@@ -1517,30 +1509,7 @@ export default function LibraryPage() {
               )}
             </SectionCard>
 
-            <SectionCard
-              id={`jobs-${index}`}
-              icon={<RocketOutlined />}
-              title="Job Scopes"
-              subtitle="Common roles and career directions after this path."
-            >
-              {jobs.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {jobs.map((scope, ji) => (
-                    <div
-                      key={ji}
-                      className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
-                    >
-                      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
-                        <TrophyOutlined />
-                      </span>
-                      <p className="m-0 text-[14px] leading-6 text-[#5f5658]">{scope}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
-              )}
-            </SectionCard>
+        
             {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
               <div className="grid gap-5 sm:grid-cols-2">
                 <SectionCard
@@ -1554,7 +1523,7 @@ export default function LibraryPage() {
                       {detail.specializationList.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <StarOutlined className="mt-1 text-[#9a2119]" />
-                          <span className="text-[14px] text-[#5f5658]">{item}</span>
+                          <span className="text-[14px] text-[#000000]">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -1574,7 +1543,7 @@ export default function LibraryPage() {
                       {detail.importantFactorList.map((item, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
-                          <span className="text-[14px] text-[#5f5658]">{item}</span>
+                          <span className="text-[14px] text-[#000000]">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -1584,6 +1553,31 @@ export default function LibraryPage() {
                 </SectionCard>
               </div>
             )}
+
+              <SectionCard
+              id={`jobs-${index}`}
+              icon={<RocketOutlined />}
+              title="Job Scopes"
+              subtitle="Common roles and career directions after this path."
+            >
+              {jobs.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {jobs.map((scope, ji) => (
+                    <div
+                      key={ji}
+                      className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
+                    >
+                      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
+                        <TrophyOutlined />
+                      </span>
+                      <p className="m-0 text-[14px] leading-6 text-[#000000]">{scope}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
+              )}
+            </SectionCard>
             <SectionCard
               id={`salary-${index}`}
               icon={<DollarOutlined />}
@@ -1608,7 +1602,7 @@ export default function LibraryPage() {
                 <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
               )}
             </SectionCard>
-
+  
             <SectionCard
               id={`top-in-${index}`}
               icon={<BankOutlined />}

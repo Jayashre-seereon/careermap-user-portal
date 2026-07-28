@@ -32,7 +32,7 @@ export const heroStats = [
 ];
 
 export const moduleCards = [
-  { title: "Career Archive", subtitle: "Explore streams, roles, and college paths.", route: "/app/library", tone: palette.blue },
+  { title: "Career Archive", subtitle: "Explore Careers, Entry Routes & Job Scopes.", route: "/app/library", tone: palette.blue },
   { title: "Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
   { title: "Career & Personality Videos", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Explore State,National,and Private University Entrance Exams.", route: "/app/entrance-exam", tone: palette.teal },
