@@ -22,6 +22,10 @@ export function ExploreModulesSection({ modules = [] }) {
       ? modules
       : buildDashboardModules(modules);
   const [lockedModule, setLockedModule] = useState(null);
+  const isCareerPsychometricAssessment = (title = "") => {
+    const normalized = String(title).trim().toLowerCase();
+    return normalized === "career psychometric assessment" || normalized === "assessment";
+  };
 const getAccessBadge = (status) => {
   switch (status) {
     case "unlocked":
@@ -48,8 +52,26 @@ const getAccessBadge = (status) => {
           "bg-red-100 text-red-700 border border-red-200",
       };
   }
-};  
+  };  
   const handleModuleClick = async (card) => {
+    if (isCareerPsychometricAssessment(card.title)) {
+      if (card.accessStatus === "locked") {
+        setLockedModule({
+          title: card.title,
+          message: "This module is locked. Please purchase a subscription to continue accessing this module.",
+        });
+        return;
+      }
+
+      navFunc(card.route, {
+        state: {
+          accessStatus: card.accessStatus || "unlocked",
+          moduleId: card.id,
+        },
+      });
+      return;
+    }
+
     try {
       const response = await checkModuleAccess(card.id);
 
