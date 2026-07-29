@@ -35,6 +35,7 @@ import {
   getCareerLibraryNext,
   getCareerLibraryStreams,
 } from "../../../api/careerLibraryApi";
+import { Country, State } from "country-state-city";
 import { careerLibrary, palette } from "../../../data/careermapData";
 import { ModuleScreen, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
@@ -239,6 +240,7 @@ function normalizeInstituteItems(value) {
         name: item,
         state: "",
         city: "",
+        country: "",
         logo: null,
         location: item,
         isTop: false,
@@ -257,12 +259,17 @@ function normalizeInstituteItems(value) {
       name: item?.name || "Unnamed Institute",
       state,
       city,
+      country, // ← now stored so the filter can use it
       location,
       logo: item?.logo || null,
       isTop: Boolean(item?.is_top ?? item?.isTop),
       raw: item,
     };
   });
+}
+
+function normalizeCountryName(value = "") {
+  return String(value).trim().toLowerCase();
 }
 
 function normalizeStateName(value = "") {
@@ -602,23 +609,89 @@ function SectionHeader({ icon, title }) {
     </div>
   );
 }
-function InstituteFilterGroup({ institutes, badge, emptyText }) {
+function InstituteFilterGroup({ institutes, badge, emptyText, showLocationFilter = true }) {
   const [filter, setFilter] = useState("all");
+  const [country, setCountry] = useState("India");
+  const [state, setState] = useState("");
+
+  const india = Country.getCountryByCode("IN");
+  const states = State.getStatesOfCountry(india.isoCode);
+
+  // Unique states pulled from the API data for institutes outside India
+  const otherCountryStates = useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    institutes.forEach((i) => {
+      if (normalizeCountryName(i.country) === "india") return;
+      if (!i.state || seen.has(i.state)) return;
+      seen.add(i.state);
+      result.push(i.state);
+    });
+    return result;
+  }, [institutes]);
+
   const filtered = institutes.filter((i) => {
-    if (filter === "all") return true;
+    if (showLocationFilter) {
+      const isIndia = normalizeCountryName(i.country) === "india";
+      const matchesCountry = country === "India" ? isIndia : !isIndia;
+      const matchesState = !state || i.state === state;
+      if (!matchesCountry || !matchesState) return false;
+    }
+
     const isGovt = String(i?.raw?.institute_type || "").toLowerCase().includes("gov");
-    return filter === "govt" ? isGovt : !isGovt;
+    const matchesType = filter === "all" ? true : filter === "govt" ? isGovt : !isGovt;
+
+    return matchesType;
   });
 
   return (
     <div>
-      <div className="mb-3 flex gap-2">
+      <div className="mb-3 flex gap-3">
+        {showLocationFilter && (
+          <>
+            <select
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                setState("");
+              }}
+              className="border rounded px-3 py-2"
+            >
+              <option value="India">India</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <select
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className="border rounded px-3 py-2"
+            >
+              <option value="">Select State</option>
+
+              {country === "India" &&
+                states.map((s) => (
+                  <option key={s.isoCode} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+
+              {country === "Other" &&
+                otherCountryStates.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+            </select>
+          </>
+        )}
+
         {["all", "govt", "private"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1 text-xs font-bold ${filter === f ? "bg-[#9a2119] text-white" : "border border-[#f0e4e2]"
-              }`}
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              filter === f ? "bg-[#9a2119] text-white" : "border border-[#f0e4e2]"
+            }`}
           >
             {f === "govt" ? "Government" : f === "private" ? "Private" : "All"}
           </button>
@@ -626,7 +699,9 @@ function InstituteFilterGroup({ institutes, badge, emptyText }) {
       </div>
       {filtered.length ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((inst) => <InstituteCard key={inst.id} inst={inst} badge={badge} />)}
+          {filtered.map((inst) => (
+            <InstituteCard key={inst.id} inst={inst} badge={badge} />
+          ))}
         </div>
       ) : (
         <p className="text-sm text-gray-400">{emptyText}</p>
@@ -745,6 +820,9 @@ export default function LibraryPage() {
   const { location, goToDashboard, navigate } = usePortalNavigation();
 
   const [currentLevel, setCurrentLevel] = useState("streams");
+  const [selectedCountry, setSelectedCountry] = useState("India");
+const [selectedState, setSelectedState] = useState("");
+const [indiaStates, setIndiaStates] = useState([]);
   const [selectedStream, setSelectedStream] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSecondCategory, setSelectedSecondCategory] = useState(null);
@@ -773,7 +851,23 @@ export default function LibraryPage() {
 
   const [previewExpired, setPreviewExpired] = useState(false);
   const hasSubscriptionAccess = accessStatus === "unlocked";
+useEffect(() => {
 
+  if (selectedCountry === "India") {
+
+    const india = Country.getCountryByCode("IN");
+
+    const states = State.getStatesOfCountry(india.isoCode);
+
+    setIndiaStates(states);
+
+  } else {
+
+    setIndiaStates([]);
+
+  }
+
+}, [selectedCountry]);
   useEffect(() => {
     let active = true;
 
@@ -1632,23 +1726,32 @@ export default function LibraryPage() {
               )}
             </SectionCard>
   
-            <SectionCard
-              id={`top-in-${index}`}
-              icon={<BankOutlined />}
-              title="Top Institutes in Odisha"
-              subtitle="Institutes in Odisha highlighted from this career map data."
-            >
-              <InstituteFilterGroup institutes={instituteGroups.topInstitutes} badge="Odisha" emptyText="No Odisha institutes found." />
-            </SectionCard>
+          <SectionCard
+  id={`top-in-${index}`}
+  icon={<BankOutlined />}
+  title="Top Institutes in Odisha"
+  subtitle="Institutes in Odisha highlighted from this career map data."
+>
+  <InstituteFilterGroup
+    institutes={instituteGroups.topInstitutes}
+    badge="Odisha"
+    emptyText="No Odisha institutes found."
+    showLocationFilter={false}
+  />
+</SectionCard>
 
-            <SectionCard
-              id={`top-out-${index}`}
-              icon={<EnvironmentOutlined />}
-              title="Top  Institutes Outside Odisha"
-              subtitle="All institutes from other states are shown here."
-            >
-              <InstituteFilterGroup institutes={instituteGroups.outsideInstitutes} badge="Outside Odisha" emptyText="No institutes found outside Odisha." />
-            </SectionCard>
+<SectionCard
+  id={`top-out-${index}`}
+  icon={<EnvironmentOutlined />}
+  title="Top  Institutes Outside Odisha"
+  subtitle="All institutes from other states are shown here."
+>
+  <InstituteFilterGroup
+    institutes={instituteGroups.outsideInstitutes}
+    badge="Outside Odisha"
+    emptyText="No institutes found outside Odisha."
+  />
+</SectionCard>
           </div>
         </div>
       </div>
