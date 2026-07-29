@@ -179,3 +179,18 @@ export function buildDashboardInstitutes(items = []) {
     tentativeDate: formatDateDDMMYYYY(item.tentative_date || item.tentativeDate || ""),
   }));
 }
+
+export function buildDashboardEntranceExams(items = []) {
+  if (!items.length) {
+    return [];
+  }
+
+  return items.map((item) => ({
+    id: item.id,
+    name: item.examname || item.name || "Entrance Exam",
+    authority: item.authority || item.stream?.name || item.category?.title || "",
+    issueDate: formatDateDDMMYYYY(item.issuedate || item.issueDate || ""),
+    lastDate: formatDateDDMMYYYY(item.lastdate || item.lastDate || ""),
+    website: item.url || item.website || "",
+  }));
+}

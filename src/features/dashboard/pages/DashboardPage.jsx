@@ -1,5 +1,5 @@
 import { Avatar, Button, Modal, Rate, Input, message } from "antd";
-import { BankOutlined, BellOutlined, RightOutlined, TrophyFilled, CreditCardOutlined, HistoryOutlined, TrophyOutlined, CommentOutlined } from "@ant-design/icons";
+import { BankOutlined, BellOutlined, RightOutlined, TrophyFilled, CreditCardOutlined, HistoryOutlined, TrophyOutlined, CommentOutlined ,ArrowRightOutlined} from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { getDashboard } from "../../../api/dashboardApi";
 import { checkModuleAccess } from "../../../api/moduleAccessApi";
@@ -8,6 +8,7 @@ import { personalityQuestions, personalityTypes, palette } from "../../../data/c
 import { useAppState } from "../../../state/AppStateContext";
 import {
   buildDashboardInstitutes,
+  buildDashboardEntranceExams,
   buildDashboardMentors,
   buildDashboardScholarships,
   normalizeModuleTitle,
@@ -208,6 +209,10 @@ export default function DashboardPage() {
   const dashboardMentors = useMemo(() => buildDashboardMentors(dashboardData?.mentors || []), [dashboardData?.mentors]);
   const dashboardScholarships = useMemo(() => buildDashboardScholarships(dashboardData?.scholarships || []), [dashboardData?.scholarships]);
   const dashboardInstitutes = useMemo(() => buildDashboardInstitutes(dashboardData?.institutions || []), [dashboardData?.institutions]);
+  const dashboardEntranceExams = useMemo(
+    () => buildDashboardEntranceExams(dashboardData?.entranceExams || dashboardData?.entranceexams || []),
+    [dashboardData?.entranceExams, dashboardData?.entranceexams]
+  );
   const dashboardModuleLookup = useMemo(() => {
     const modules = Array.isArray(dashboardData?.modules) ? dashboardData.modules : [];
     const getLookupKeys = (value = "") => {
@@ -228,6 +233,13 @@ export default function DashboardPage() {
         keys.add("book your mentor");
         keys.add("mentor");
         keys.add("mentors");
+      }
+
+      if (normalized === "entrance exam" || normalized === "entrance exams" || normalized === "exam" || normalized === "exams") {
+        keys.add("entrance exam");
+        keys.add("entrance exams");
+        keys.add("exam");
+        keys.add("exams");
       }
 
       return [...keys];
@@ -355,6 +367,13 @@ function handleTestClick() {
       lookupKeys.add("book your mentor");
       lookupKeys.add("mentor");
       lookupKeys.add("mentors");
+    }
+
+    if (normalizedTitle === "entrance exam" || normalizedTitle === "entrance exams" || normalizedTitle === "exam" || normalizedTitle === "exams") {
+      lookupKeys.add("entrance exam");
+      lookupKeys.add("entrance exams");
+      lookupKeys.add("exam");
+      lookupKeys.add("exams");
     }
 
     const resolvedModule = [...lookupKeys].map((key) => dashboardModuleLookup.get(key)).find(Boolean);
@@ -612,6 +631,71 @@ function handleTestClick() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="display-font text-2xl font-bold text-ink">Explore Entrance Exams</div>
+          <button
+            type="button"
+            className="text-sm font-bold text-brand"
+            onClick={() =>
+              handleProtectedSectionClick({
+                route: "/app/entrance-exam",
+                title: "Entrance Exams",
+                moduleTitle: "Entrance Exam",
+              })
+            }
+          >
+            See all
+          </button>
+        </div>
+        {dashboardEntranceExams.length > 0 ? (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  {dashboardEntranceExams.map((item) => (
+    <button
+      key={item.id || item.name}
+      type="button"
+      className="group relative flex flex-col overflow-hidden rounded-[20px] bg-white p-5 text-left ring-1 ring-[#eaded9] transition-all duration-200 hover:-translate-y-1 hover:ring-2 hover:ring-brand/40 hover:shadow-lg hover:shadow-[#9a2119]/10"
+      onClick={() =>
+        handleProtectedSectionClick({
+          route: "/app/entrance-exam",
+          title: "Entrance Exams",
+          moduleTitle: "Entrance Exam",
+          itemLabel: item.name,
+        })
+      }
+    >
+      <div className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-[#fdf0ee] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf8f6] transition-colors group-hover:bg-[#dff2ee]">
+          <CreditCardOutlined style={{ color: palette.secondary, fontSize: 20 }} />
+        </div>
+        <ArrowRightOutlined className="mt-1 text-[13px] text-[#c7aaa3] opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
+      </div>
+
+      <div className="text-[15px] font-black leading-snug text-ink line-clamp-2">
+        {item.name}
+      </div>
+
+      <div className="mt-2.5 flex items-center gap-1.5">
+        {item.authority ? (
+          <span className="inline-flex w-fit items-center rounded-full bg-[#fdf0ee] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand">
+            {item.authority}
+          </span>
+        ) : (
+          <span className="text-[12px] font-medium text-muted">Entrance Exam</span>
+        )}
+      </div>
+    </button>
+  ))}
+</div>
+        ) : (
+          <div className="rounded-[22px] border border-dashed border-[#eaded9] bg-white p-5 text-sm text-muted">
+            No entrance exams available right now.
+          </div>
+        )}
       </section>
 
   <section>
