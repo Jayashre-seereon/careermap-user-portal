@@ -8,6 +8,7 @@ import {
   LockOutlined,
   UnlockOutlined,
 } from "@ant-design/icons";
+import { State, City } from "country-state-city";
 import { getInstitutes } from "../../../api/instituteApi";
 import { institutes as fallbackInstitutes } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
@@ -21,7 +22,19 @@ function getInitials(name = "") {
     .map((w) => w[0]?.toUpperCase())
     .join("");
 }
+function getAccentByType(type = "") {
+  const t = type.toLowerCase();
 
+  if (t.includes("government")) {
+    return "from-[#b42117] to-[#9a2119]"; // 🔴 RED
+  }
+
+  if (t.includes("private")) {
+    return "from-[#ff7b12] to-[#c84f15]"; // 🟠 ORANGE
+  }
+
+  return "from-gray-400 to-gray-500"; // fallback
+}
 const ACCENTS = ["from-[#9a2119] to-[#c73a2f]", "from-[#b42117] to-[#9a2119]", "from-[#c84f15] to-[#ff7b12]"];
 
 function getAccent(name = "") {
@@ -43,27 +56,37 @@ export default function InstitutePage() {
   const [moduleMode, setModuleMode] = useState(location.state?.accessStatus || "preview");
 
   useEffect(() => {
-    let active = true;
+  let active = true;
 
-    async function loadInstitutes() {
-      try {
-        setError("");
-        const response = await getInstitutes();
-        if (active && response.length) {
-          setItems(response);
-        }
-      } catch (loadError) {
-        if (active) {
-          setError(loadError?.response?.data?.message || loadError?.message || "Failed to load institutes.");
-        }
+  async function loadInstitutes() {
+    try {
+      setError("");
+      const response = await getInstitutes();
+      if (active && response.length) {
+        setItems(response);
+      }
+    } catch (loadError) {
+      if (active) {
+        setError(
+          loadError?.response?.data?.message ||
+          loadError?.message ||
+          "Failed to load institutes."
+        );
       }
     }
+  }
 
-    loadInstitutes();
-    return () => {
-      active = false;
-    };
-  }, []);
+  loadInstitutes();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
+// ✅ Correct place
+useEffect(() => {
+  setStateFilter("");
+}, [country]);
 
   useEffect(() => {
     let active = true;
@@ -136,11 +159,16 @@ const filtered = useMemo(
       const matchesCategory = !category || String(item.category?.id) === String(category);
       const matchesSecondCategory = !secondCategory || String(item.secondcategory?.id) === String(secondCategory);
       const matchesSubCategory = !subCategory || String(item.subcategory?.id) === String(subCategory);
-      const matchesCountry = !country || item.country?.trim() === country;
-      const matchesState = !stateFilter || item.state?.trim() === stateFilter;
-      const matchesType = !type || item.type?.trim() === type;
+    const matchesCountry =
+  !country ||
+  item.country?.toLowerCase() === country.toLowerCase();
 
-      return (
+const matchesState =
+  !stateFilter ||
+  item.state?.toLowerCase() === stateFilter.toLowerCase(); 
+  const matchesType =
+  !type || item.type?.trim() === type;
+    return (
         matchesSearch &&
         matchesCategory &&
         matchesSecondCategory &&
@@ -152,15 +180,31 @@ const filtered = useMemo(
     }),
   [items, search, category, secondCategory, subCategory, country, stateFilter, type]
 );
-const countryOptions = useMemo(
-  () => [...new Set(items.map(i => i.country?.trim()).filter(Boolean))],
-  [items]
-);
-const stateOptions = useMemo(
-  () =>
-    [...new Set(items.map(i => i.state?.trim()).filter(Boolean))],
-  [items]
-);
+const countryOptions = useMemo(() => {
+  const list = [...new Set(items.map(i => i.country).filter(Boolean))];
+  return list;
+}, [items]);
+const stateOptions = useMemo(() => {
+  if (!country) return [];
+
+ if (country === "india") {
+  return State.getStatesOfCountry("IN").map((s) => ({
+    value: s.name.toLowerCase(),   
+    label: s.name,
+  }));
+}
+
+  // 🌍 Other countries → your API logic
+  const states = items
+    .filter((i) => i.country === country)
+    .map((i) => i.state)
+    .filter(Boolean);
+
+  return [...new Set(states)].map((s) => ({
+    value: s,
+    label: s,
+  }));
+}, [items, country]);
 
 const typeOptions = useMemo(
   () => [...new Set(items.map(i => i.type?.trim()).filter(Boolean))],
@@ -230,26 +274,20 @@ const typeOptions = useMemo(
       placeholder="All Countries"
       optionFilterProp="label"
       value={country || undefined}
-      onChange={(value) => setCountry(value || "")}
-      options={countryOptions.map((c) => ({ value: c, label: c }))}
+     onChange={(value) => setCountry(value?.toLowerCase() || "")}  options={countryOptions.map((c) => ({ value: c, label: c }))}
       style={{ minWidth: 160 }}
       className="pill-select"
     />
   </div>
-
-  <div className="relative">
-    <Select
-      showSearch
-      allowClear
-      placeholder="All States"
-      optionFilterProp="label"
-      value={stateFilter || undefined}
-      onChange={(value) => setStateFilter(value || "")}
-      options={stateOptions.map((s) => ({ value: s, label: s }))}
-      style={{ minWidth: 160 }}
-      className="pill-select"
-    />
-  </div>
+<Select
+  showSearch
+  allowClear
+  placeholder="All States"
+  value={stateFilter || undefined}
+  onChange={(value) => setStateFilter(value || "")}
+  options={stateOptions}
+  style={{ minWidth: 160 }}
+/>
 
   <div className="relative">
     <Select
@@ -285,7 +323,7 @@ const typeOptions = useMemo(
 
       <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {filtered.map((item, index) => {
-          const accent = getAccent(item.name);
+      const accent = getAccentByType(item.type);
           const initials = getInitials(item.name);
           const websiteUrl = item.url || item.website;
           const isPreviewMode = moduleMode === "preview";
