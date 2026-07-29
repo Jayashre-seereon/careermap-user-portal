@@ -5,7 +5,15 @@ function stripHtml(value) {
   if (!value) return "";
   return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
-
+function extractListItems(html) {
+  if (!html) return [];
+  const matches = String(html).match(/<li[^>]*>([\s\S]*?)<\/li>/g) || [];
+  if (matches.length > 0) {
+    return matches.map((li) => stripHtml(li)).filter(Boolean);
+  }
+  const plain = stripHtml(html);
+  return plain ? [plain] : [];
+}
 // convert API response → UI friendly format
 function mapPlanItem(item, index) {
   return {
@@ -19,6 +27,7 @@ function mapPlanItem(item, index) {
       .filter(Boolean),
 
     description: stripHtml(item?.description),
+    descriptionList: extractListItems(item?.description),
     validity: item?.validity || "",
     price: item?.price || "0",
 

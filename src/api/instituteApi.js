@@ -27,10 +27,12 @@ function formatDateDDMMYYYY(value) {
 }
 
 function mapInstituteItem(item, index) {
-  const state = item?.state?.trim() || "";
+ const state = item?.state?.trim().toLowerCase() || "";
+const country = (item?.country || item?.countruy || "")
+  .trim()
+  .toLowerCase();
 const city = item?.city?.trim() || "";
 const instituteType = item?.institute_type?.trim() || "Institute";
-const country = item?.countruy?.trim() || "";
  const courses = Array.isArray(item?.course_offered) ? item.course_offered.filter(Boolean) : [];
 
 return {

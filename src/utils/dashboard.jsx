@@ -38,13 +38,13 @@ function buildInitials(name = "", fallback = "M") {
 }
 
 export const moduleRouteMap = {
-  "career library": "/app/library",
+  "career archive": "/app/library",
   assessment: "/app/assessment",
-  "master class": "/app/learn",
+  "career & personality videos": "/app/learn",
   "entrance exam": "/app/entrance-exam",
   institutes: "/app/institutes",
   institute: "/app/institutes",
-  "book mentor": "/app/book-mentor",
+  "book your mentor": "/app/book-mentor",
   scholarships: "/app/scholarships",
   scholarship: "/app/scholarships",
   quiz: "/app/quiz",
@@ -54,12 +54,13 @@ export const moduleRouteMap = {
 };
 
 export const moduleIconMap = {
-  "Career Library": <ReadOutlined style={{ color: "#c64f7a" }} />,
+  "Career Archive": <ReadOutlined style={{ color: "#c64f7a" }} />,
+  "Career Psychometric Assessment": <BulbOutlined style={{ color: "#5d8f26" }} />,
   Assessment: <BulbOutlined style={{ color: "#5d8f26" }} />,
-  "Master Class": <TrophyOutlined style={{ color: "#4c45aa" }} />,
+  "Career & Personality Videos": <TrophyOutlined style={{ color: "#4c45aa" }} />,
   "Entrance Exam": <FileDoneOutlined style={{ color: "#0f8a7c" }} />,
   Institutes: <BankOutlined style={{ color: "#c64f7a" }} />,
-  "Book Mentor": <TeamOutlined style={{ color: "#157f69" }} />,
+  "Book Your Mentor": <TeamOutlined style={{ color: "#157f69" }} />,
   Scholarships: <TrophyOutlined style={{ color: "#b77718" }} />,
   Quiz: <QuestionCircleOutlined style={{ color: "#2c70c9" }} />,
   "Study Abroad": <GlobalOutlined style={{ color: "#4c45aa" }} />,
@@ -67,12 +68,13 @@ export const moduleIconMap = {
 };
 
 export const moduleStyleMap = {
-  "Career Library": { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.blue },
+  "Career Archive": { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.blue },
+  "Career Psychometric Assessment": { background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)", actionBg: "#5d8f26", tone: palette.purple },
   Assessment: { background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)", actionBg: "#5d8f26", tone: palette.purple },
-  "Master Class": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.orange },
+  "Career & Personality Videos": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.orange },
   "Entrance Exam": { background: "linear-gradient(180deg, #def6f2 0%, #f0fbf9 100%)", actionBg: "#0f8a7c", tone: palette.teal },
   Institutes: { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.pink },
-  "Book Mentor": { background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)", actionBg: "#157f69", tone: palette.secondary },
+  "Book Your Mentor": { background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)", actionBg: "#157f69", tone: palette.secondary },
   Scholarships: { background: "linear-gradient(180deg, #fff0d8 0%, #fff8ee 100%)", actionBg: "#b77718", tone: palette.green },
   Quiz: { background: "linear-gradient(180deg, #e4efff 0%, #f3f8ff 100%)", actionBg: "#2c70c9", tone: palette.blue },
   "Study Abroad": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.purple },
@@ -88,6 +90,7 @@ export function resolveModuleLookupKey(value = "") {
   if (normalized === "scholarship") return "scholarships";
   if (normalized === "institute") return "institutes";
   if (normalized === "subscription") return "subscriptions";
+  if (normalized === "career psychometric assessment") return "career psychometric assessment";
   return normalized;
 }
 
@@ -177,5 +180,20 @@ export function buildDashboardInstitutes(items = []) {
     type: item.institute_type || "",
     logo: item.logo || null,
     tentativeDate: formatDateDDMMYYYY(item.tentative_date || item.tentativeDate || ""),
+  }));
+}
+
+export function buildDashboardEntranceExams(items = []) {
+  if (!items.length) {
+    return [];
+  }
+
+  return items.map((item) => ({
+    id: item.id,
+    name: item.examname || item.name || "Entrance Exam",
+    authority: item.authority || item.stream?.name || item.category?.title || "",
+    issueDate: formatDateDDMMYYYY(item.issuedate || item.issueDate || ""),
+    lastDate: formatDateDDMMYYYY(item.lastdate || item.lastDate || ""),
+    website: item.url || item.website || "",
   }));
 }

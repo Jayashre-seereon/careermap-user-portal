@@ -22,6 +22,10 @@ export function ExploreModulesSection({ modules = [] }) {
       ? modules
       : buildDashboardModules(modules);
   const [lockedModule, setLockedModule] = useState(null);
+  const isCareerPsychometricAssessment = (title = "") => {
+    const normalized = String(title).trim().toLowerCase();
+    return normalized === "career psychometric assessment" || normalized === "assessment";
+  };
 const getAccessBadge = (status) => {
   switch (status) {
     case "unlocked":
@@ -48,8 +52,26 @@ const getAccessBadge = (status) => {
           "bg-red-100 text-red-700 border border-red-200",
       };
   }
-};  
+  };  
   const handleModuleClick = async (card) => {
+    if (isCareerPsychometricAssessment(card.title)) {
+      if (card.accessStatus === "locked") {
+        setLockedModule({
+          title: card.title,
+          message: "This module is locked. Please purchase a subscription to continue accessing this module.",
+        });
+        return;
+      }
+
+      navFunc(card.route, {
+        state: {
+          accessStatus: card.accessStatus || "unlocked",
+          moduleId: card.id,
+        },
+      });
+      return;
+    }
+
     try {
       const response = await checkModuleAccess(card.id);
 
@@ -77,6 +99,21 @@ const getAccessBadge = (status) => {
     }
   };
 
+  const moduleOrder = [
+  "Career Archive",
+  "Entrance Exam",
+  "Institutes",
+  "Scholarship",
+  "Career Psychometric Assessment",
+  "Book Your Mentor",
+  "Career & Personality Videos",
+  "Study Abroad",
+  "Quiz",
+];
+const sortedCards = [...curatedCards].sort(
+  (a, b) =>
+    moduleOrder.indexOf(a.title) - moduleOrder.indexOf(b.title)
+);
   return (
     <section>
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -91,11 +128,11 @@ const getAccessBadge = (status) => {
       </div>
       {curatedCards.length ? (
         <Row gutter={[14, 14]}>
-          {curatedCards.map((card) => {
-            const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
+          {sortedCards.map((card) => {
+            const art = moduleStyleMap[card.title] || moduleStyleMap["Career Psychometric Assessment"] || moduleStyleMap.Assessment;
 
             const description =
-              card.title === "Assessment"
+              card.title === "Career Psychometric Assessment" || card.title === "Assessment"
                 ? "Deep personality and aptitude analysis for smarter career decisions."
                 : card.subtitle;
             const badge = getAccessBadge(card.accessStatus);

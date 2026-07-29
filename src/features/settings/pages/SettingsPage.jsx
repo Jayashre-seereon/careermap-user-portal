@@ -14,6 +14,7 @@ import { PageHero, SectionCard, SoftTag } from "../../../components/ui";
 import { changeUserPassword, createHelpRequest } from "../../../api/userApi";
 import { getApiErrorMessage, logoutUser } from "../../../api/authApi";
 import { isValidEmail, isValidPassword } from "../../../utils/auth";
+import { useLocation } from "react-router-dom";
 
 function SettingAction({ icon, title, description, onClick, cta = "Open" }) {
   return (
@@ -42,6 +43,7 @@ function SettingAction({ icon, title, description, onClick, cta = "Open" }) {
 export default function SettingsPage() {
   const { logout, requestProfileEdit, userProfile } = useAppState();
   const { navigate } = usePortalNavigation();
+  const location = useLocation();
   const [view, setView] = useState("menu");
   const [status, setStatus] = useState(null);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
@@ -79,6 +81,13 @@ export default function SettingsPage() {
       email: userProfile.email || current.email,
     }));
   }, [userProfile.email]);
+
+  useEffect(() => {
+    if (location.state?.openHelpCenter) {
+      setView("help");
+      navigate("/app/settings", { replace: true, state: null });
+    }
+  }, [location.state?.openHelpCenter, navigate]);
 
   const profileSummary = useMemo(
     () => ({

@@ -35,6 +35,7 @@ import {
   getCareerLibraryNext,
   getCareerLibraryStreams,
 } from "../../../api/careerLibraryApi";
+import { Country, State } from "country-state-city";
 import { careerLibrary, palette } from "../../../data/careermapData";
 import { ModuleScreen, Text } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
@@ -43,7 +44,7 @@ import {
   UnlockRedirectModal,
   usePortalNavigation,
 } from "../../portal/components/portalPageShared";
-import {  checkModuleAccess,startPreview,} from "../../../api/moduleAccessApi";
+import { checkModuleAccess, startPreview, } from "../../../api/moduleAccessApi";
 
 const streamIcons = {
   Science: <ExperimentOutlined />,
@@ -88,7 +89,33 @@ function getItemTitle(item) {
     `Item ${item?.id ?? ""}`.trim()
   );
 }
+function MergedSection({ icon, title, subtitle, children, id }) {
+  return (
+    <div id={id} className="scroll-mt-4 border-b border-[#f7eeec] px-5 py-5 last:border-b-0">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h2 className="m-0 text-[18px] font-black text-[#1a0a09]">{title}</h2>
+          {subtitle ? (
+            <p className="m-0 mt-1 text-[12px] leading-5 text-[#8f7d79]">{subtitle}</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="text-[#000000]">{children}</div>
+    </div>
+  );
+}
 
+function Wrapper({ isCompetitive, children }) {
+  if (!isCompetitive) return <>{children}</>;
+  return (
+    <div className="rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm overflow-hidden">
+      {children}
+    </div>
+  );
+}
 function getDetailTitle(detail) {
   return (
     detail?.subcategory?.title ||
@@ -100,15 +127,15 @@ function getDetailTitle(detail) {
 
 function getDetailDescription(detail) {
   return stripHtml(
-      detail?.description ||
-      detail?.overview ||
-      detail?.subcategory?.description ||
-      detail?.secondcategory?.description ||
-      detail?.category?.description ||
-      detail?.subcategory?.specialization ||
-      detail?.secondcategory?.specialization ||
-      detail?.category?.specialization ||
-      ""
+    detail?.description ||
+    detail?.overview ||
+    detail?.subcategory?.description ||
+    detail?.secondcategory?.description ||
+    detail?.category?.description ||
+    detail?.subcategory?.specialization ||
+    detail?.secondcategory?.specialization ||
+    detail?.category?.specialization ||
+    ""
   );
 }
 
@@ -186,11 +213,11 @@ function normalizeStepItem(item, index = 0, type = "category") {
     name: title,
     description: stripHtml(
       item?.description ||
-        item?.desc ||
-        item?.about ||
-        item?.specialization ||
-        item?.path ||
-        ""
+      item?.desc ||
+      item?.about ||
+      item?.specialization ||
+      item?.path ||
+      ""
     ),
     coverImage: item?.coverImage || null,
     icon: getStepIcon(type, item),
@@ -220,11 +247,11 @@ function normalizeTextItems(value) {
       return [
         stripHtml(
           item?.name ||
-            item?.title ||
-            item?.examname ||
-            item?.label ||
-            item?.value ||
-            ""
+          item?.title ||
+          item?.examname ||
+          item?.label ||
+          item?.value ||
+          ""
         ),
       ];
     })
@@ -239,6 +266,7 @@ function normalizeInstituteItems(value) {
         name: item,
         state: "",
         city: "",
+        country: "",
         logo: null,
         location: item,
         isTop: false,
@@ -257,12 +285,17 @@ function normalizeInstituteItems(value) {
       name: item?.name || "Unnamed Institute",
       state,
       city,
+      country, // ← now stored so the filter can use it
       location,
-      logo: item?.logo || null, 
+      logo: item?.logo || null,
       isTop: Boolean(item?.is_top ?? item?.isTop),
       raw: item,
     };
   });
+}
+
+function normalizeCountryName(value = "") {
+  return String(value).trim().toLowerCase();
 }
 
 function normalizeStateName(value = "") {
@@ -270,7 +303,7 @@ function normalizeStateName(value = "") {
 }
 
 function groupInstitutesByTopStatus(value, targetState = "Odisha") {
-const institutes = value || [];
+  const institutes = value || [];
   const normalizedTargetState = normalizeStateName(targetState);
   const topInstitutes = institutes.filter(
     (item) => normalizeStateName(item.state) === normalizedTargetState
@@ -320,7 +353,7 @@ function SectionCard({ icon, title, subtitle, children, id, className = "" }) {
           ) : null}
         </div>
       </div>
-      <div className="px-5 py-5">{children}</div>
+      <div className="px-5 py-5 text-[#000000]" style={{ color: "#000000", WebkitTextFillColor: "#000000" }}>{children}</div>
     </section>
   );
 }
@@ -329,50 +362,50 @@ function MediaBanner({ media, title, onBack }) {
   if (!media) return null;
   const type = getMediaType(media);
 
- return (
-  <div className="relative overflow-hidden rounded-[24px] border border-[#f0e4e2] shadow-sm h-56 sm:h-72">
-    {type === "video" ? (
-      <video src={media} className="h-full w-full object-cover" autoPlay muted loop playsInline />
-    ) : (
-      <img src={media} alt={title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-    )}
-    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-6 py-5">
-      <div className="flex items-center gap-3">
-        {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
-          >
-            <ArrowRightOutlined className="rotate-180" />
-          </button>
-        ) : null}
-        <div>
-          <h2
-            className="m-0 text-2xl font-black"
-            style={{
-              color: "#ffff",
-              WebkitTextFillColor: "#ffff",
-              textShadow: "0 1px 3px rgba(0,0,0,0.3)",
-            }}
-          >
-            {title}
-          </h2>
-          <p
-            className="m-0 mt-1 text-sm font-bold"
-            style={{
-              color: "#ffff",
-              WebkitTextFillColor: "#ffff",
-              textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-            }}
-          >
-            Career detail view.
-          </p>
+  return (
+    <div className="relative overflow-hidden rounded-[24px] border border-[#f0e4e2] shadow-sm h-56 sm:h-72">
+      {type === "video" ? (
+        <video src={media} className="h-full w-full object-cover" autoPlay muted loop playsInline />
+      ) : (
+        <img src={media} alt={title} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-6 py-5">
+        <div className="flex items-center gap-3">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur transition hover:bg-white/30"
+            >
+              <ArrowRightOutlined className="rotate-180" />
+            </button>
+          ) : null}
+          <div>
+            <h2
+              className="m-0 text-2xl font-black"
+              style={{
+                color: "#ffff",
+                WebkitTextFillColor: "#ffff",
+                textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              }}
+            >
+              {title}
+            </h2>
+            <p
+              className="m-0 mt-1 text-sm font-bold"
+              style={{
+                color: "#ffff",
+                WebkitTextFillColor: "#ffff",
+                textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+              }}
+            >
+              Career detail view.
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 function DetailPill({ icon, label, tone = "#9a2119", className = "" }) {
   return (
@@ -417,64 +450,64 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
     title,
     description: stripHtml(
       item?.description ||
-        sourceItem?.description ||
-        ""
+      sourceItem?.description ||
+      ""
     ),
     overview: stripHtml(
       item?.overview ||
-        item?.description ||
-        item?.about ||
-        item?.detail ||
-        sourceItem?.overview ||
-        sourceItem?.description ||
-        ""
+      item?.description ||
+      item?.about ||
+      item?.detail ||
+      sourceItem?.overview ||
+      sourceItem?.description ||
+      ""
     ),
     path: normalizeTextItems(
       item?.path ||
-        item?.careerPath ||
-        item?.careerpaths ||
-        item?.careerPaths ||
-        item?.steps ||
-        sourceItem?.path ||
-        sourceItem?.steps
+      item?.careerPath ||
+      item?.careerpaths ||
+      item?.careerPaths ||
+      item?.steps ||
+      sourceItem?.path ||
+      sourceItem?.steps
     ),
     education: formatDetailEducation(item || sourceItem),
     exams: normalizeTextItems(
       item?.entranceexams ||
-        item?.entranceExams ||
-        item?.exams ||
-        item?.exam ||
-        sourceItem?.entranceexams ||
-        sourceItem?.entranceExams ||
-        sourceItem?.exams ||
-        []
+      item?.entranceExams ||
+      item?.exams ||
+      item?.exam ||
+      sourceItem?.entranceexams ||
+      sourceItem?.entranceExams ||
+      sourceItem?.exams ||
+      []
     ),
     jobs: toList(
       item?.jobs ||
-        item?.jobScope ||
-        item?.job_scope ||
-        sourceItem?.jobs ||
-        sourceItem?.jobScope ||
-        []
+      item?.jobScope ||
+      item?.job_scope ||
+      sourceItem?.jobs ||
+      sourceItem?.jobScope ||
+      []
     ),
     salary: stripHtml(item?.salary || item?.salaryRange || sourceItem?.salary || ""),
     salaryRanges: normalizeSalaryRanges(
       item?.salaryRanges ||
-        item?.salary_ranges ||
-        sourceItem?.salaryRanges ||
-        []
+      item?.salary_ranges ||
+      sourceItem?.salaryRanges ||
+      []
     ),
     specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
-importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
-media: item?.media || sourceItem?.media || "",
+    importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
+    media: item?.media || sourceItem?.media || "",
     institutes: normalizeInstituteItems(
       item?.institutions ||
-        item?.institutes ||
-        item?.topInstitutes ||
-        item?.colleges ||
-        sourceItem?.institutions ||
-        sourceItem?.institutes ||
-        []
+      item?.institutes ||
+      item?.topInstitutes ||
+      item?.colleges ||
+      sourceItem?.institutions ||
+      sourceItem?.institutes ||
+      []
     ),
     raw: item,
   };
@@ -504,13 +537,42 @@ function getFallbackNextItems(type, item) {
   return [];
 }
 
+const STREAM_ORDER = [
+  "science",
+  "commerce",
+  "artsandhumanities",
+  "neutral",
+  "competitive",
+  "vocational",
+  "Career Clusters"
+].map(normalizeStreamKey);
+
+function normalizeStreamKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]/g, ""); // strips spaces, punctuation, special chars
+}
+
+function sortStreamsByPriority(items) {
+  return [...items].sort((a, b) => {
+    const aIndex = STREAM_ORDER.indexOf(normalizeStreamKey(a.name));
+    const bIndex = STREAM_ORDER.indexOf(normalizeStreamKey(b.name));
+    const aRank = aIndex === -1 ? STREAM_ORDER.length : aIndex;
+    const bRank = bIndex === -1 ? STREAM_ORDER.length : bIndex;
+    return aRank - bRank; // unranked items keep their relative order (stable sort) and land at the bottom
+  });
+}
+
 function normalizeStreamItems(items) {
   if (!Array.isArray(items) || items.length === 0) {
-    return careerLibrary.streams.map((item, index) =>
-      normalizeStreamItem(item, index)
+    return sortStreamsByPriority(
+      careerLibrary.streams.map((item, index) => normalizeStreamItem(item, index))
     );
   }
-  return items.map((item, index) => normalizeStreamItem(item, index));
+  return sortStreamsByPriority(
+    items.map((item, index) => normalizeStreamItem(item, index))
+  );
 }
 
 function normalizeStepItems(items, type) {
@@ -544,7 +606,7 @@ function LibraryBreadcrumb({
 
   return (
     <div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs text-muted">
-      <span>Career Library</span>
+      <span>Career Archive</span>
       {parts.map((part, index) => (
         <span key={`${part}-${index}`} className="flex items-center gap-1.5">
           <RightOutlined className="text-[10px] opacity-40" />
@@ -573,17 +635,82 @@ function SectionHeader({ icon, title }) {
     </div>
   );
 }
-function InstituteFilterGroup({ institutes, badge, emptyText }) {
+function InstituteFilterGroup({ institutes, badge, emptyText, showLocationFilter = true }) {
   const [filter, setFilter] = useState("all");
+  const [country, setCountry] = useState("India");
+  const [state, setState] = useState("");
+
+  const india = Country.getCountryByCode("IN");
+  const states = State.getStatesOfCountry(india.isoCode);
+
+  // Unique states pulled from the API data for institutes outside India
+  const otherCountryStates = useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    institutes.forEach((i) => {
+      if (normalizeCountryName(i.country) === "india") return;
+      if (!i.state || seen.has(i.state)) return;
+      seen.add(i.state);
+      result.push(i.state);
+    });
+    return result;
+  }, [institutes]);
+
   const filtered = institutes.filter((i) => {
-    if (filter === "all") return true;
+    if (showLocationFilter) {
+      const isIndia = normalizeCountryName(i.country) === "india";
+      const matchesCountry = country === "India" ? isIndia : !isIndia;
+      const matchesState = !state || i.state === state;
+      if (!matchesCountry || !matchesState) return false;
+    }
+
     const isGovt = String(i?.raw?.institute_type || "").toLowerCase().includes("gov");
-    return filter === "govt" ? isGovt : !isGovt;
+    const matchesType = filter === "all" ? true : filter === "govt" ? isGovt : !isGovt;
+
+    return matchesType;
   });
 
   return (
     <div>
-      <div className="mb-3 flex gap-2">
+      <div className="mb-3 flex gap-3">
+        {showLocationFilter && (
+          <>
+            <select
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                setState("");
+              }}
+              className="border rounded px-3 py-2"
+            >
+              <option value="India">India</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <select
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              className="border rounded px-3 py-2"
+            >
+              <option value="">Select State</option>
+
+              {country === "India" &&
+                states.map((s) => (
+                  <option key={s.isoCode} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+
+              {country === "Other" &&
+                otherCountryStates.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+            </select>
+          </>
+        )}
+
         {["all", "govt", "private"].map((f) => (
           <button
             key={f}
@@ -598,7 +725,9 @@ function InstituteFilterGroup({ institutes, badge, emptyText }) {
       </div>
       {filtered.length ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((inst) => <InstituteCard key={inst.id} inst={inst} badge={badge} />)}
+          {filtered.map((inst) => (
+            <InstituteCard key={inst.id} inst={inst} badge={badge} />
+          ))}
         </div>
       ) : (
         <p className="text-sm text-gray-400">{emptyText}</p>
@@ -615,10 +744,10 @@ function InstituteCard({ inst, badge }) {
   const admissionProcess = inst?.raw?.admission_process || null;
   const tentativeDate = inst?.raw?.tentative_date
     ? new Date(inst.raw.tentative_date).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
     : null;
   const stateName = inst?.state || inst?.raw?.state || "";
   const isGovt = String(inst?.raw?.institute_type || "").toLowerCase().includes("gov");
@@ -633,13 +762,13 @@ function InstituteCard({ inst, badge }) {
           </span>
         </div>
         {badge ? (
-          <span
-            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
-              isOdisha ? "bg-[#eaf7ef] text-[#2f9367]" : "bg-[#fdf0ee] text-[#9a2119]"
-            }`}
-          >
-            {badge}
-          </span>
+         <span
+  className={`rounded-full px-1.5 py-0.5 text-[9px] font-medium ${
+    isOdisha ? "bg-[#eaf7ef] text-[#2f9367]" : "bg-[#fdf0ee] text-[#9a2119]"
+  }`}
+>
+  {badge}
+</span>
         ) : null}
       </div>
 
@@ -717,6 +846,9 @@ export default function LibraryPage() {
   const { location, goToDashboard, navigate } = usePortalNavigation();
 
   const [currentLevel, setCurrentLevel] = useState("streams");
+  const [selectedCountry, setSelectedCountry] = useState("India");
+const [selectedState, setSelectedState] = useState("");
+const [indiaStates, setIndiaStates] = useState([]);
   const [selectedStream, setSelectedStream] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSecondCategory, setSelectedSecondCategory] = useState(null);
@@ -739,13 +871,29 @@ export default function LibraryPage() {
   const [moduleStatus, setModuleStatus] = useState(accessStatus);
   const CAREER_LIBRARY_MODULE_ID = pageLocation.state?.moduleId;
 
-const [previewSessionId, setPreviewSessionId] = useState(null);
+  const [previewSessionId, setPreviewSessionId] = useState(null);
 
-const [previewRemaining, setPreviewRemaining] = useState(0);
+  const [previewRemaining, setPreviewRemaining] = useState(0);
 
-const [previewExpired, setPreviewExpired] = useState(false);
+  const [previewExpired, setPreviewExpired] = useState(false);
   const hasSubscriptionAccess = accessStatus === "unlocked";
+useEffect(() => {
 
+  if (selectedCountry === "India") {
+
+    const india = Country.getCountryByCode("IN");
+
+    const states = State.getStatesOfCountry(india.isoCode);
+
+    setIndiaStates(states);
+
+  } else {
+
+    setIndiaStates([]);
+
+  }
+
+}, [selectedCountry]);
   useEffect(() => {
     let active = true;
 
@@ -770,67 +918,67 @@ const [previewExpired, setPreviewExpired] = useState(false);
     loadStreams();
     return () => { active = false; };
   }, []);
-useEffect(() => {
-  if (!previewRemaining) return;
+  useEffect(() => {
+    if (!previewRemaining) return;
 
-  const timer = setInterval(() => {
-    setPreviewRemaining((prev) => {
-      if (prev <= 1) {
-        clearInterval(timer);
-        setPreviewExpired(true);
-         setUnlockModalItem({
-    title: "Preview Expired",
-    description:
-      "Your free career library access has already been used. Subscribe to unlock .",
-  });
-        return 0;
-      }
-
-      return prev - 1;
-    });
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [previewRemaining]);
-
-useEffect(() => {
-  async function loadAccess() {
-    try {
-      const result = await checkModuleAccess(
-        CAREER_LIBRARY_MODULE_ID
-      );
-
-      if (result.allowed) {
-        setModuleStatus(result.mode);
-
-        if (result.mode === "preview") {
-          setPreviewExpired(false);
+    const timer = setInterval(() => {
+      setPreviewRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setPreviewExpired(true);
+          setUnlockModalItem({
+            title: "Preview Expired",
+            description:
+              "Your free Career Archive access has already been used. Subscribe to unlock .",
+          });
+          return 0;
         }
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }
 
-  loadAccess();
-}, []);
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [previewRemaining]);
+
+  useEffect(() => {
+    async function loadAccess() {
+      try {
+        const result = await checkModuleAccess(
+          CAREER_LIBRARY_MODULE_ID
+        );
+
+        if (result.allowed) {
+          setModuleStatus(result.mode);
+
+          if (result.mode === "preview") {
+            setPreviewExpired(false);
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    loadAccess();
+  }, []);
   const detailUnlocked = hasSubscriptionAccess || moduleStatus !== "locked";
 
   const pageTitle = useMemo(() => {
-    if (currentLevel === "streams") return "Career Library";
-    if (currentLevel === "categories") return selectedStream?.name || "Career Library";
-    if (currentLevel === "secondcategory") return selectedCategory?.name || "Career Library";
-    if (currentLevel === "subcategory") return selectedSecondCategory?.name || "Career Library";
+    if (currentLevel === "streams") return "Career Archive";
+    if (currentLevel === "categories") return selectedStream?.name || "Career Archive";
+    if (currentLevel === "secondcategory") return selectedCategory?.name || "Career Archive";
+    if (currentLevel === "subcategory") return selectedSecondCategory?.name || "Career Archive";
     if (currentLevel === "details")
       return (
         getItemTitle(
           selectedDetailSource ||
-            selectedSubCategory ||
-            selectedSecondCategory ||
-            selectedCategory
-        ) || "Career Library"
+          selectedSubCategory ||
+          selectedSecondCategory ||
+          selectedCategory
+        ) || "Career Archive"
       );
-    return "Career Library";
+    return "Career Archive";
   }, [
     currentLevel,
     selectedCategory,
@@ -847,27 +995,27 @@ useEffect(() => {
   function getDetailItemsLabel() {
     return getItemTitle(
       selectedDetailSource ||
-        selectedSubCategory ||
-        selectedSecondCategory ||
-        selectedCategory
+      selectedSubCategory ||
+      selectedSecondCategory ||
+      selectedCategory
     );
   }
 
   async function handleClick(type, id, item) {
     if (previewExpired) {
-  setUnlockModalItem({
-    title: "Preview Expired",
-    description:
-      "Please purchase this module to continue.",
-  });
+      setUnlockModalItem({
+        title: "Preview Expired",
+        description:
+          "Please purchase this module to continue.",
+      });
 
-  return;
-}
+      return;
+    }
     setLoading(true);
     setError("");
     setUnlockModalItem(null);
     setSelectedDetailSource(null);
-    
+
     try {
       // ── STREAM ──────────────────────────────────────────────────────────────
       let currentPreviewSessionId = null;
@@ -882,7 +1030,7 @@ useEffect(() => {
         setDetailReturnLevel("streams");
 
         try {
-          const response = await getCareerLibraryCategoriesByStream(id,CAREER_LIBRARY_MODULE_ID);
+          const response = await getCareerLibraryCategoriesByStream(id, CAREER_LIBRARY_MODULE_ID);
           const items =
             Array.isArray(response?.data) && response.data.length > 0
               ? response.data
@@ -899,23 +1047,23 @@ useEffect(() => {
       // ── CATEGORY ────────────────────────────────────────────────────────────
       if (type === "category") {
         setSelectedCategory(item);
-//         currentPreviewSessionId =
-//   await createPreviewSession(
-//     "category",
-//     id,
-//     item
-//   );
+        //         currentPreviewSessionId =
+        //   await createPreviewSession(
+        //     "category",
+        //     id,
+        //     item
+        //   );
 
-// if (moduleStatus === "preview" && !currentPreviewSessionId) {
-//   return;
-// }
-//         const response = await getCareerLibraryNext(
-//   type,
-//   id,
-//   CAREER_LIBRARY_MODULE_ID,
-//   currentPreviewSessionId
-// );
-const response = await getCareerLibraryNext(type, id);
+        // if (moduleStatus === "preview" && !currentPreviewSessionId) {
+        //   return;
+        // }
+        //         const response = await getCareerLibraryNext(
+        //   type,
+        //   id,
+        //   CAREER_LIBRARY_MODULE_ID,
+        //   currentPreviewSessionId
+        // );
+        const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -932,11 +1080,11 @@ const response = await getCareerLibraryNext(type, id);
           if (detailItems.length === 0) {
             try {
               const detailResponse =
-  await getCareerLibraryDetails(
-    id,
-    CAREER_LIBRARY_MODULE_ID,
-    currentPreviewSessionId
-  );
+                await getCareerLibraryDetails(
+                  id,
+                  CAREER_LIBRARY_MODULE_ID,
+                  currentPreviewSessionId
+                );
               const detailData = detailResponse ?? {};
               detailItems = Array.isArray(detailData?.data) ? detailData.data : [];
             } catch (_err) { detailItems = []; }
@@ -957,24 +1105,24 @@ const response = await getCareerLibraryNext(type, id);
       if (type === "second") {
         setSelectedSecondCategory(item);
 
-//     currentPreviewSessionId =
-//   await createPreviewSession(
-//     "second",
-//     id,
-//     item
-//   );
+        //     currentPreviewSessionId =
+        //   await createPreviewSession(
+        //     "second",
+        //     id,
+        //     item
+        //   );
 
-// if (moduleStatus === "preview" && !currentPreviewSessionId) {
-//   return;
-// }
+        // if (moduleStatus === "preview" && !currentPreviewSessionId) {
+        //   return;
+        // }
 
-// const response = await getCareerLibraryNext(
-//   type,
-//   id,
-//   CAREER_LIBRARY_MODULE_ID,
-//   currentPreviewSessionId
-// );
-const response = await getCareerLibraryNext(type, id);
+        // const response = await getCareerLibraryNext(
+        //   type,
+        //   id,
+        //   CAREER_LIBRARY_MODULE_ID,
+        //   currentPreviewSessionId
+        // );
+        const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -1009,64 +1157,64 @@ const response = await getCareerLibraryNext(type, id);
       if (type === "sub") {
         setSelectedSubCategory(item);
 
-//        currentPreviewSessionId =
-//   await createPreviewSession(
-//     "sub",
-//     id,
-//     item
-//   );
+        //        currentPreviewSessionId =
+        //   await createPreviewSession(
+        //     "sub",
+        //     id,
+        //     item
+        //   );
 
-// if (moduleStatus === "preview" && !currentPreviewSessionId) {
-//   return;
-// }
+        // if (moduleStatus === "preview" && !currentPreviewSessionId) {
+        //   return;
+        // }
 
-// const response = await getCareerLibraryNext(
-//   type,
-//   id,
-//   CAREER_LIBRARY_MODULE_ID,
-//   currentPreviewSessionId
-// );
-const response = await getCareerLibraryNext(type, id);
+        // const response = await getCareerLibraryNext(
+        //   type,
+        //   id,
+        //   CAREER_LIBRARY_MODULE_ID,
+        //   currentPreviewSessionId
+        // );
+        const response = await getCareerLibraryNext(type, id);
         const data = response ?? {};
         const nextType = data?.type;
         let items = Array.isArray(data?.data) ? data.data : [];
 
-     if (nextType === "details") {
+        if (nextType === "details") {
 
-  let previewId = null;
+          let previewId = null;
 
-  if (moduleStatus === "preview") {
+          if (moduleStatus === "preview") {
 
-    previewId = await createPreviewSession(
-      "sub",
-      id,
-      item
-    );
+            previewId = await createPreviewSession(
+              "sub",
+              id,
+              item
+            );
 
-    if (!previewId) {
-      return;
-    }
-  }
+            if (!previewId) {
+              return;
+            }
+          }
 
-  const detailResponse =
-    await getCareerLibraryDetails(
-      id,
-      CAREER_LIBRARY_MODULE_ID,
-      previewId
-    );
+          const detailResponse =
+            await getCareerLibraryDetails(
+              id,
+              CAREER_LIBRARY_MODULE_ID,
+              previewId
+            );
 
-  const detailData = detailResponse ?? {};
-  const detailItems = Array.isArray(detailData.data)
-    ? detailData.data
-    : [];
+          const detailData = detailResponse ?? {};
+          const detailItems = Array.isArray(detailData.data)
+            ? detailData.data
+            : [];
 
-  setSelectedDetailSource(item);
-  setDetails(normalizeDetailItems(detailItems, item));
-  setDetailReturnLevel("subcategory");
-  setCurrentLevel("details");
+          setSelectedDetailSource(item);
+          setDetails(normalizeDetailItems(detailItems, item));
+          setDetailReturnLevel("subcategory");
+          setCurrentLevel("details");
 
-  return;
-}
+          return;
+        }
         setSelectedDetailSource(item);
         setDetails(normalizeDetailItems(items, item));
         setDetailReturnLevel("subcategory");
@@ -1084,31 +1232,31 @@ const response = await getCareerLibraryNext(type, id);
     }
   }
   async function createPreviewSession(pageType, pageId, item) {
-  if (moduleStatus !== "preview") {
-    return null;
-  }
-
-  try {
-    const preview = await startPreview({
-      moduleId: CAREER_LIBRARY_MODULE_ID,
-      pageType,
-      pageId,
-    });
-
-    setPreviewSessionId(preview.previewSessionId);
-    setPreviewRemaining(preview.remainingSeconds);
-    setPreviewExpired(false);
-
-    return preview.previewSessionId;
-  } catch (err) {
-    if (err?.response?.status === 403) {
-      setUnlockModalItem(item);
+    if (moduleStatus !== "preview") {
       return null;
     }
 
-    throw err;
+    try {
+      const preview = await startPreview({
+        moduleId: CAREER_LIBRARY_MODULE_ID,
+        pageType,
+        pageId,
+      });
+
+      setPreviewSessionId(preview.previewSessionId);
+      setPreviewRemaining(preview.remainingSeconds);
+      setPreviewExpired(false);
+
+      return preview.previewSessionId;
+    } catch (err) {
+      if (err?.response?.status === 403) {
+        setUnlockModalItem(item);
+        return null;
+      }
+
+      throw err;
+    }
   }
-}
 
   function handleBack() {
     if (currentLevel === "details") {
@@ -1148,22 +1296,22 @@ const response = await getCareerLibraryNext(type, id);
   //   }
   //   handleClick(type, item?.id, item);
   // }
-function handleLockedCareerClick(item, type) {
+  function handleLockedCareerClick(item, type) {
 
-  if (
-    type === "category" &&
-    item?.raw?.accessTier === "locked"
-  ) {
-    setUnlockModalItem({
-      item,
-      type,
-    });
+    if (
+      type === "category" &&
+      item?.raw?.accessTier === "locked"
+    ) {
+      setUnlockModalItem({
+        item,
+        type,
+      });
 
-    return;
+      return;
+    }
+
+    handleClick(type, item?.id, item);
   }
-
-  handleClick(type, item?.id, item);
-}
   function handleGoToPlans() {
     const returnTo = buildReturnTo();
     setUnlockModalItem(null);
@@ -1183,7 +1331,7 @@ function handleLockedCareerClick(item, type) {
             className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
           >
             <div className="h-40 w-full overflow-hidden bg-gray-100">
-              
+
               {item?.image ? (
                 <img
                   src={item.image}
@@ -1200,7 +1348,7 @@ function handleLockedCareerClick(item, type) {
               <h3 className="text-sm font-semibold text-[#9a2119] line-clamp-2">
                 {item?.name}
               </h3>
-             
+
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs font-semibold text-[#9a2119]">View</span>
                 <ArrowRightOutlined className="text-xs opacity-60 group-hover:translate-x-1 transition" />
@@ -1217,10 +1365,10 @@ function handleLockedCareerClick(item, type) {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item, index) => {
           const unlockedItem = moduleStatus !== "locked";
-        const isFree =
-  type === "category"
-    ? item.raw?.accessTier !== "locked"
-    : true;
+          const isFree =
+            type === "category"
+              ? item.raw?.accessTier !== "locked"
+              : true;
           return (
             <button
               key={`${type}-${item?.id ?? index}`}
@@ -1228,7 +1376,7 @@ function handleLockedCareerClick(item, type) {
               onClick={() => handleLockedCareerClick(item, type)}
               className="group rounded-2xl overflow-hidden border border-gray-200 bg-white text-left transition hover:shadow-lg hover:-translate-y-1"
             >
-             <div className="relative h-44 w-full overflow-hidden bg-gray-100">
+              <div className="relative h-44 w-full overflow-hidden bg-gray-100">
                 <span className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm ${isFree ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                   {isFree ? <UnlockOutlined /> : <LockOutlined />}
                 </span>
@@ -1294,9 +1442,8 @@ function handleLockedCareerClick(item, type) {
               </div>
               {!hasSubscriptionAccess ? (
                 <div
-                  className={`mr-2 rounded-full px-2 py-1 ${
-                    unlockedItem ? "bg-green-100" : "bg-[#f8e8d8]"
-                  }`}
+                  className={`mr-2 rounded-full px-2 py-1 ${unlockedItem ? "bg-green-100" : "bg-[#f8e8d8]"
+                    }`}
                 >
                   <Text
                     className="text-[10px] font-black"
@@ -1315,8 +1462,14 @@ function handleLockedCareerClick(item, type) {
   }
 
   // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
+ // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
+    //competitive
+    const isCompetitive =
+      String(detail?.raw?.stream?.name || "").toLowerCase() === "competitive";
+    const Section = isCompetitive ? MergedSection : SectionCard;
+    //competitive
     const instituteGroups = groupInstitutesByTopStatus(detail?.institutes, "Odisha");
     const careerpaths = detail?.raw?.careerpaths || [];
     const entranceexams = detail?.raw?.entranceexams || [];
@@ -1327,7 +1480,7 @@ function handleLockedCareerClick(item, type) {
 
     const sidebarSections = [
       { id: `desc-${index}`, label: "Description", icon: <FileTextOutlined /> },
-      { id: `path-${index}`, label: "Path", icon: <BranchesOutlined /> },
+      { id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> },
       { id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> },
       { id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> },
       { id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> },
@@ -1341,296 +1494,296 @@ function handleLockedCareerClick(item, type) {
     }
 
     return (
-       <div key={`detail-${detail?.id ?? index}`} className="space-y-6">
-   {detail?.media ? (
-  <MediaBanner media={detail.media} title={title} onBack={handleBack} />
-) : null}
+      <div key={`detail-${detail?.id ?? index}`} className="space-y-6">
+        {detail?.media ? (
+          <MediaBanner media={detail.media} title={title} onBack={handleBack} />
+        ) : null}
 
-    <div  
-      className="flex gap-6 items-start">
-        <div className="hidden lg:block sticky top-4 w-72 shrink-0">
-          <div className="overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
-            <div className="border-b border-[#f7eeec] px-5 py-4">
-              <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-[#b8837e]">Quick Jump</p>
-              <h3 className="mt-1 m-0 text-[18px] font-black text-[#1a0a09]">{title}</h3>
-            </div>
-            <div className="p-2">
-              {sidebarSections.map((sec, i) => (
-                <button
-                  key={sec.id}
-                  type="button"
-                  onClick={() => scrollTo(sec.id)}
-                  className={`flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-left transition-colors hover:bg-[#fdf7f5] hover:text-[#9a2119]
+        <div className="flex gap-6 items-start">
+          <div className="hidden lg:block sticky top-4 w-72 shrink-0">
+            <div className="overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
+              <div className="border-b border-[#f7eeec] px-5 py-4">
+                <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-[#b8837e]">Quick Jump</p>
+                <h3 className="mt-1 m-0 text-[18px] font-black text-[#1a0a09]">{title}</h3>
+              </div>
+              <div className="p-2">
+                {sidebarSections.map((sec, i) => (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    onClick={() => scrollTo(sec.id)}
+                    className={`flex w-full items-center gap-3 rounded-[20px] px-4 py-3 text-left transition-colors hover:bg-[#fdf7f5] hover:text-[#9a2119]
                     ${i < sidebarSections.length - 1 ? "mb-1" : ""}`}
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
-                    {sec.icon}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[14px] font-semibold text-[#1a0a09]">
-                      {sec.label}
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+                      {sec.icon}
                     </span>
-                  </span>
-                  <RightOutlined className="text-[11px] text-[#c7aaa3]" />
-                </button>
-              ))}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[14px] font-semibold text-[#1a0a09]">
+                        {sec.label}
+                      </span>
+                    </span>
+                    <RightOutlined className="text-[11px] text-[#c7aaa3]" />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex-1 min-w-0 space-y-5">
-         
-          
+          <div className={isCompetitive ? "flex-1 min-w-0" : "flex-1 min-w-0 space-y-5"}>
+            <Wrapper isCompetitive={isCompetitive}>
 
-          {description ? (
-            <SectionCard
-              id={`desc-${index}`}
-              icon={<FileTextOutlined />}
-              title="Description"
-              subtitle="What this career is about and why it matters."
-            >
-              <p className="m-0 text-[15px] leading-8 text-[#5f5658]">{description}</p>
-            </SectionCard>
-          ) : null}
+              {description ? (
+                <Section
+                  id={`desc-${index}`}
+                  icon={<FileTextOutlined />}
+                  title="Description"
+                  subtitle="What this career is about and why it matters."
+                >
+                  <p className="m-0 text-[15px] leading-8 text-[#000000]">{description}</p>
+                </Section>
+              ) : null}
 
-          <SectionCard
-            id={`path-${index}`}
-            icon={<BranchesOutlined />}
-            title={`Career Path for ${title}`}
-            subtitle="A simple path from education to career entry."
-          >
-            {careerpaths.length > 0 ? (
-              <div className="overflow-hidden rounded-[20px] border border-[#f0e4e2]">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-[#fdf7f6]">
-                      {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map((col) => (
-                        <th
-                          key={col}
-                          className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#1a0a09]"
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {careerpaths.map((cp, cpIdx) => (
-                      <tr key={cp?.id ?? cpIdx} className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
-                        <td className="whitespace-nowrap border-b border-[#f7eeec] px-4 py-3 font-semibold text-[#9a2119]">
-                          {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
-                        </td>
-                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">
-                          {detail?.raw?.stream?.name || "—"}
-                        </td>
-                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.graduation || "—"}</td>
-                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.aftergraduation || "—"}</td>
-                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.afterpostgraduation || "—"}</td>
-                        <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.anyother || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : detail?.path?.length > 0 ? (
-              <div className="grid gap-3">
-                {detail.path.map((step, si) => (
-                  <div
-                    key={si}
-                    className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-3"
-                  >
-                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-[12px] font-black text-white">
-                      {si + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="m-0 text-[14px] font-semibold text-[#1a0a09]">Step {si + 1}</p>
-                      <p className="m-0 mt-1 text-[13px] leading-6 text-[#685d60]">{step}</p>
-                    </div>
+              <Section
+                id={`path-${index}`}
+                icon={<BranchesOutlined />}
+                title={`Career Path for ${title}`}
+                subtitle="A simple path from education to career entry."
+              >
+                {careerpaths.length > 0 ? (
+                  <div className="overflow-x-auto rounded-[20px] border border-[#f0e4e2]">
+                    <table className="min-w-[800px] w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-[#fdf7f6]">
+                          {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map((col) => (
+                            <th
+                              key={col}
+                              className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#000000]"
+                            >
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {careerpaths.map((cp, cpIdx) => (
+                          <tr key={cp?.id ?? cpIdx} className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
+                            <td className="whitespace-nowrap border-b border-[#f7eeec] px-4 py-3 font-semibold text-[#9a2119]">
+                              {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
+                            </td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">
+                              {detail?.raw?.stream?.name || "—"}
+                            </td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.graduation || "—"}</td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.aftergraduation || "—"}</td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.afterpostgraduation || "—"}</td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.anyother || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            id={`exams-${index}`}
-            icon={<SolutionOutlined />}
-            title="Entrance Exams"
-            subtitle="Relevant exams for this career path."
-          >
-            {entranceexams.length > 0 ? (
-              <div className="grid gap-3">
-                {entranceexams.map((exam, ei) => (
-                  <div
-                    key={exam?.id ?? ei}
-                    className="rounded-[20px] border border-[#f0e4e2] bg-[#fffdfa] p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
-                            <SolutionOutlined />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">Exam Name</p>
-                            <p className="m-0 text-[16px] font-black text-[#1a0a09]">{exam?.examname || "—"}</p>
-                          </div>
+                ) : detail?.path?.length > 0 ? (
+                  <div className="grid gap-3">
+                    {detail.path.map((step, si) => (
+                      <div
+                        key={si}
+                        className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-3"
+                      >
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-[12px] font-black text-white">
+                          {si + 1}
                         </div>
-                        {exam?.about && exam.about !== "Nothing" ? (
-                          <p className="m-0 mt-3 text-[13px] leading-6 text-[#675c60] line-clamp-2">{exam.about}</p>
-                        ) : null}
+                        <div className="min-w-0 flex-1">
+                          <p className="m-0 text-[14px] font-semibold text-[#000000]">Step {si + 1}</p>
+                          <p className="m-0 mt-1 text-[13px] leading-6 text-[#000000]">{step}</p>
+                        </div>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <DetailPill
-                          icon={<BookOutlined />}
-                          label={`Issue: ${exam?.issuedate ? new Date(exam.issuedate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}`}
-                          tone="#0f8a7c"
-                        />
-                        <DetailPill
-                          icon={<CalendarOutlined />}
-                          label={`Last: ${exam?.lastdate ? new Date(exam.lastdate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "—"}`}
-                          tone="#9a2119"
-                        />
-                        {exam?.url ? (
-                          <a
-                            href={exam.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] transition hover:bg-[#fdf0ee]"
-                          >
-                            <ArrowRightOutlined />
-                          </a>
-                        ) : null}
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : toList(detail?.exams).length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {toList(detail.exams).map((exam, ei) => (
-                  <DetailPill key={ei} icon={<SolutionOutlined />} label={exam} />
-                ))}
-              </div>
-            ) : (
-              <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
-            )}
-          </SectionCard>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
+                )}
+              </Section>
 
-          <SectionCard
-            id={`jobs-${index}`}
-            icon={<RocketOutlined />}
-            title="Job Scopes"
-            subtitle="Common roles and career directions after this path."
-          >
-            {jobs.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {jobs.map((scope, ji) => (
-                  <div
-                    key={ji}
-                    className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
+              <Section
+                id={`exams-${index}`}
+                icon={<SolutionOutlined />}
+                title="Entrance Exams"
+                subtitle="Relevant exams for this career path."
+              >
+                {entranceexams.length > 0 ? (
+                  <div className="grid gap-3">
+                    {entranceexams.map((exam, ei) => (
+                      <div
+                        key={exam?.id ?? ei}
+                        className="rounded-[20px] border border-[#f0e4e2] bg-[#fffdfa] p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+                                <SolutionOutlined />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">Exam Name</p>
+                                <p className="m-0 text-[16px] font-black text-[#000000]">{exam?.examname || "—"}</p>
+                              </div>
+                            </div>
+                            {exam?.about && exam.about !== "Nothing" ? (
+                              <p className="m-0 mt-3 text-[13px] leading-6 text-[#000000] line-clamp-2">{exam.about}</p>
+                            ) : null}
+                          </div>
+<div className="flex flex-wrap items-center gap-2">
+  <a
+  href={exam.url}
+target="_blank"
+rel="noopener noreferrer"
+className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] transition hover:bg-[#fdf0ee]">
+    <ArrowRightOutlined />
+                            </a>
+                              
+</div>
+  
+
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : toList(detail?.exams).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {toList(detail.exams).map((exam, ei) => (
+                      <DetailPill key={ei} icon={<SolutionOutlined />} label={exam} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
+                )}
+              </Section>
+
+              {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Section
+                    id={`spec-${index}`}
+                    icon={<StarOutlined />}
+                    title="Specialization"
+                    subtitle="Key specializations in this field."
                   >
-                    <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
-                      <TrophyOutlined />
-                    </span>
-                    <p className="m-0 text-[14px] leading-6 text-[#5f5658]">{scope}</p>
+                    {detail.specializationList.length > 0 ? (
+                      <ul className="m-0 list-none space-y-2 p-0">
+                        {detail.specializationList.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <StarOutlined className="mt-1 text-[#9a2119]" />
+                            <span className="text-[14px] text-[#000000]">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="m-0 text-sm text-gray-400">Not available.</p>
+                    )}
+                  </Section>
+
+                  <Section
+                    id={`imp-${index}`}
+                    icon={<CheckCircleOutlined />}
+                    title="Important Factors"
+                    subtitle="Things to know before choosing this path."
+                  >
+                    {detail.importantFactorList.length > 0 ? (
+                      <ul className="m-0 list-none space-y-2 p-0">
+                        {detail.importantFactorList.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
+                            <span className="text-[14px] text-[#000000]">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="m-0 text-sm text-gray-400">Not available.</p>
+                    )}
+                  </Section>
+                </div>
+              )}
+
+              <Section
+                id={`jobs-${index}`}
+                icon={<RocketOutlined />}
+                title="Job Scopes"
+                subtitle="Common roles and career directions after this path."
+              >
+                {jobs.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {jobs.map((scope, ji) => (
+                      <div
+                        key={ji}
+                        className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
+                      >
+                        <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
+                          <TrophyOutlined />
+                        </span>
+                        <p className="m-0 text-[14px] leading-6 text-[#000000]">{scope}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
-            )}
-          </SectionCard>
-{(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
-  <div className="grid gap-5 sm:grid-cols-2">
-    <SectionCard
-      id={`spec-${index}`}
-      icon={<StarOutlined />}
-      title="Specialization"
-      subtitle="Key specializations in this field."
-    >
-      {detail.specializationList.length > 0 ? (
-        <ul className="m-0 list-none space-y-2 p-0">
-          {detail.specializationList.map((item, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <StarOutlined className="mt-1 text-[#9a2119]" />
-              <span className="text-[14px] text-[#5f5658]">{item}</span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="m-0 text-sm text-gray-400">Not available.</p>
-      )}
-    </SectionCard>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
+                )}
+              </Section>
 
-    <SectionCard
-      id={`imp-${index}`}
-      icon={<CheckCircleOutlined />}
-      title="Important Factors"
-      subtitle="Things to know before choosing this path."
-    >
-      {detail.importantFactorList.length > 0 ? (
-        <ul className="m-0 list-none space-y-2 p-0">
-          {detail.importantFactorList.map((item, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
-              <span className="text-[14px] text-[#5f5658]">{item}</span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="m-0 text-sm text-gray-400">Not available.</p>
-      )}
-    </SectionCard>
-  </div>
-)}
-          <SectionCard
-            id={`salary-${index}`}
-            icon={<DollarOutlined />}
-            title="Salary Range"
-            subtitle="Expected salary bands in the field."
-          >
-           {salaryRanges.length > 0 ? (
-  <ul className="m-0 list-none space-y-3 p-0">
-    {salaryRanges.map((salary, si) => (
-      <li key={salary?.id ?? si} className="flex items-center gap-3">
-        <DollarOutlined className="text-[#9a2119]" />
-        <span className="text-[14px] font-semibold text-[#1a0a09]">{formatSalaryRange(salary)}</span>
-      </li>
-    ))}
-  </ul>
-            ) : detail?.salary ? (
-              <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
-                <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
-                <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{detail.salary}</p>
-              </div>
-            ) : (
-              <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
-            )}
-          </SectionCard>
+              <Section
+                id={`salary-${index}`}
+                icon={<DollarOutlined />}
+                title="Salary Range"
+                subtitle="Expected salary bands in the field."
+              >
+                {salaryRanges.length > 0 ? (
+                  <ul className="m-0 list-none space-y-3 p-0">
+                    {salaryRanges.map((salary, si) => (
+                      <li key={salary?.id ?? si} className="flex items-center gap-3">
+                        <DollarOutlined className="text-[#9a2119]" />
+                        <span className="text-[14px] font-semibold text-[#1a0a09]">{formatSalaryRange(salary)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : detail?.salary ? (
+                  <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
+                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
+                    <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{detail.salary}</p>
+                  </div>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
+                )}
+              </Section>
 
-          <SectionCard
-            id={`top-in-${index}`}
-            icon={<BankOutlined />}
-            title="Top Institutes in Odisha"
-            subtitle="Institutes in Odisha highlighted from this career map data."
-          >
-           <InstituteFilterGroup institutes={instituteGroups.topInstitutes} badge="Odisha" emptyText="No Odisha institutes found." />
-          </SectionCard>
+              <Section
+                id={`top-in-${index}`}
+                icon={<BankOutlined />}
+                title="Top Institutes in Odisha"
+                subtitle="Institutes in Odisha highlighted from this career map data."
+              >
+                <InstituteFilterGroup
+                  institutes={instituteGroups.topInstitutes}
+                  badge="Odisha"
+                  emptyText="No Odisha institutes found."
+                  showLocationFilter={false}
+                />
+              </Section>
 
-          <SectionCard
-            id={`top-out-${index}`}
-            icon={<EnvironmentOutlined />}
-            title="Top  Institutes Outside Odisha"
-            subtitle="All institutes from other states are shown here."
-          >
-           <InstituteFilterGroup institutes={instituteGroups.outsideInstitutes} badge="Outside Odisha" emptyText="No institutes found outside Odisha." />
-          </SectionCard>
+              <Section
+                id={`top-out-${index}`}
+                icon={<EnvironmentOutlined />}
+                title="Top  Institutes Outside Odisha"
+                subtitle="All institutes from other states are shown here."
+              >
+                <InstituteFilterGroup
+                  institutes={instituteGroups.outsideInstitutes}
+                  badge="Outside Odisha"
+                  emptyText="No institutes found outside Odisha."
+                />
+              </Section>
+
+            </Wrapper>
+          </div>
         </div>
-      </div>
       </div>
     );
   }
@@ -1639,83 +1792,83 @@ function handleLockedCareerClick(item, type) {
 
   return (
     <ModuleScreen className="space-y-5">
-     <div className="flex items-center justify-between gap-4">
-  <div className="min-w-0 flex-1">
-    <LibraryBreadcrumb
-      stream={selectedStream?.name}
-      category={selectedCategory?.name}
-      secondCategory={selectedSecondCategory?.name}
-      subCategory={selectedSubCategory?.name}
-      detail={getDetailItemsLabel()}
-      level={currentLevel}
-    />
-    {currentLevel !== "details" && (
-      <>
-        <div className="mb-2 flex items-center gap-3">
-          {currentLevel !== "streams" ? (
-            <button
-              type="button"
-              onClick={handleBack}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <ArrowRightOutlined className="rotate-180" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={goToDashboard}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <ArrowRightOutlined className="rotate-180" />
-            </button>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <LibraryBreadcrumb
+            stream={selectedStream?.name}
+            category={selectedCategory?.name}
+            secondCategory={selectedSecondCategory?.name}
+            subCategory={selectedSubCategory?.name}
+            detail={getDetailItemsLabel()}
+            level={currentLevel}
+          />
+          {currentLevel !== "details" && (
+            <>
+              <div className="mb-2 flex items-center gap-3">
+                {currentLevel !== "streams" ? (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <ArrowRightOutlined className="rotate-180" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={goToDashboard}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#eedad4] bg-white text-[#1a0a09] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <ArrowRightOutlined className="rotate-180" />
+                  </button>
+                )}
+                <div className="min-w-0">
+                  <h1 className="m-0 text-2xl font-black leading-snug text-[#9a2119]">
+                    {pageTitle}
+                  </h1>
+                  <p className="mt-1 mb-0 text-xs text-[#9a2119]">
+                    {currentLevel === "streams"
+                      ? "Choose a stream to begin exploring career paths."
+                      : currentLevel === "categories"
+                        ? "Select a category within this stream."
+                        : currentLevel === "secondcategory"
+                          ? "Choose the next step in this career path."
+                          : "Open a specialization to view full details."}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-2 h-[3px] w-8 rounded-full bg-[#9a2119]" />
+            </>
           )}
-          <div className="min-w-0">
-            <h1 className="m-0 text-2xl font-black leading-snug text-[#9a2119]">
-              {pageTitle}
-            </h1>
-            <p className="mt-1 mb-0 text-xs text-[#9a2119]">
-              {currentLevel === "streams"
-                ? "Choose a stream to begin exploring career paths."
-                : currentLevel === "categories"
-                ? "Select a category within this stream."
-                : currentLevel === "secondcategory"
-                ? "Choose the next step in this career path."
-                : "Open a specialization to view full details."}
-            </p>
-          </div>
         </div>
-        <div className="mt-2 h-[3px] w-8 rounded-full bg-[#9a2119]" />
-      </>
-    )}
-  </div>
- {moduleStatus === "preview" &&
-  previewRemaining > 0 &&
-  currentLevel === "details" && (
-   <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 p-3">
-      <ClockCircleOutlined className="text-green-700" />
-      <div className="m-0 font-semibold text-green-700">
-        Preview ends in {previewRemaining} seconds
-      </div>
-    </div>
-)}
+        {moduleStatus === "preview" &&
+          previewRemaining > 0 &&
+          currentLevel === "details" && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl bg-green-50 p-3">
+              <ClockCircleOutlined className="text-green-700" />
+              <div className="m-0 font-semibold text-green-700">
+                Preview ends in {previewRemaining} seconds
+              </div>
+            </div>
+          )}
 
-{previewExpired && currentLevel === "details" && (
- <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-3">
-    <LockOutlined className="text-red-700" />
-    <div className="m-0 font-semibold text-red-700">
-      Preview expired. Please purchase a subscription.
-    </div>
-  </div>
-)}
-</div>
+        {previewExpired && currentLevel === "details" && (
+          <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 p-3">
+            <LockOutlined className="text-red-700" />
+            <div className="m-0 font-semibold text-red-700">
+              Preview expired. Please purchase a subscription.
+            </div>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <p className="m-0 text-sm text-muted">
           {currentLevel === "details"
             ? "Loading details..."
             : currentLevel === "categories"
-            ? "Loading categories..."
-            : "Loading streams..."}
+              ? "Loading categories..."
+              : "Loading streams..."}
         </p>
       ) : null}
       {error ? (
@@ -1756,7 +1909,7 @@ function handleLockedCareerClick(item, type) {
         <div className="space-y-4">
           {!detailUnlocked ? (
             <PremiumGate
-              title="Unlock Career Library"
+              title="Unlock "
               description="Subscribe to more careers, salary insights, education paths, and institute details."
               returnTo={buildReturnTo()}
             />
@@ -1769,11 +1922,11 @@ function handleLockedCareerClick(item, type) {
         </div>
       )}
 
-     <UnlockRedirectModal
+      <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
-        title="Unlock Career Library"
+        title="Unlock Career Archive"
         itemLabel={unlockModalItem ? getItemTitle(unlockModalItem.item) : ""}
-        description="Your free Career Library access has already been used. Subscribe to unlock"
+        description="Your free Career Archive access has already been used. Subscribe to unlock"
         onCancel={() => {
           setUnlockModalItem(null);
           handleBack();

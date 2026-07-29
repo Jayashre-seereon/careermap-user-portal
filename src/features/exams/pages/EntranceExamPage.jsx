@@ -27,7 +27,7 @@ export default function EntranceExamPage() {
   const [items, setItems] = useState(fallbackEntranceExams);
   const [error, setError] = useState("");
   const [moduleMode, setModuleMode] = useState(accessStatus);
-
+  const [infoItem, setInfoItem] = useState(null);
   const [category, setCategory] = useState("");
   const [secondCategory, setSecondCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
@@ -229,15 +229,16 @@ export default function EntranceExamPage() {
             const isFree = !isPreviewMode || index < 4;
 
             return (
-            <div
+           <div
               key={item.id || item.name}
-              className="group flex flex-col gap-2.5 rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
+              className="group relative flex flex-col gap-2.5 rounded-2xl border border-[#f0e4e2] border-t-[3px] border-t-[#9a2119] bg-white p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#9a2119]/10"
               onClick={() => {
                 if (!isFree) {
                   setUnlockModalItem({ title: item.name });
                 }
               }}
             >
+            
                <div className={`absolute  right-3 flex h-8 w-8 items-center justify-center rounded-full ${isFree ? "bg-green-50" : "bg-red-50"}`}>
                 {isFree ? <UnlockOutlined className="text-green-600" /> : <LockOutlined className="text-red-500" />}
               </div>
@@ -255,11 +256,17 @@ export default function EntranceExamPage() {
                   Last: {item.lastDate}
                 </span>
               </div>
-
-              <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
-                <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#aa8a83]">
-
-                  </span>
+<div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoItem(item);
+                  }}
+                  className=" py-1 text-sm font-bold text-[#9a2119] "
+                >
+                  View
+                </button>
 
                 {item.website && item.website !== "#" ? (
                   <a
@@ -298,7 +305,7 @@ export default function EntranceExamPage() {
         ) : null}
       </ModuleScreen>
 
-      <UnlockRedirectModal
+   <UnlockRedirectModal
         open={!!unlockModalItem}
         title="Unlock Entrance Exam"
         itemLabel={unlockModalItem?.title}
@@ -309,6 +316,36 @@ export default function EntranceExamPage() {
           setUnlockModalItem(null);
         }}
       />
+
+  {infoItem ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setInfoItem(null)}
+        >
+          <div
+            className="w-full max-w-[1000px] rounded-[24px] bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="m-0 text-[19px] font-black text-[#1a0a09]">
+                {infoItem.name}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setInfoItem(null)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f1ee] text-[#1a0a09]"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="mt-3 max-h-[50vh] overflow-y-auto pr-1 text-[14px] leading-6 text-[#4f4347]">
+              {infoItem.about}
+            </p>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
+  
