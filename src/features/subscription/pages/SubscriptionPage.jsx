@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Col, List, Row } from "antd";
-import { CheckOutlined } from "@ant-design/icons";
+import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router-dom";
-import { getPlans,createOrder, verifyPayment } from "../../../api/subscriptionApi";
+import { getPlans, createOrder, verifyPayment } from "../../../api/subscriptionApi";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { loadRazorpayScript } from "../../../utils/razorpay.js";
+
 export default function SubscriptionPage() {
   const { activePlanIds } = useAppState();
   const { navigate } = usePortalNavigation();
@@ -41,18 +42,16 @@ export default function SubscriptionPage() {
     // try loading razor pay sdk script. if fails, show error toast
     const script = await loadRazorpayScript();
 
-    if(!script) {
+    if (!script) {
       alert("Failed to load payment gateway. Please check your connection and try again.");
       return;
     }
-
-
 
     // order create
     const orderResponse = await createOrder(planId);
     // response - order id.
     const { order, key } = orderResponse || {};
-    if(!order.id || !key) {
+    if (!order.id || !key) {
       alert("Failed to initiate payment. Please try again.");
       return;
     }
@@ -66,15 +65,20 @@ export default function SubscriptionPage() {
       handler: async function (response) {
         alert("Payment successful! Transaction ID: " + response.razorpay_payment_id);
         // on successful payment, navigate to success page with transaction id and plan id as query params
-      // verify the payment 
-      // verify-payment 
-       await verifyPayment({ planId, ...response });
-      }
+        // verify the payment
+        // verify-payment
+        await verifyPayment({ planId, ...response });
+      },
     };
 
     const rzp = new window.Razorpay(options);
     rzp.open();
-  }
+  };
+
+  // union of every feature/module across all plans, in first-seen order, for the comparison table below
+  const allFeatures = Array.from(
+    new Set(plans.flatMap((plan) => plan.modules || []))
+  );
 
   return (
     <ModuleScreen className="space-y-6">
@@ -110,7 +114,7 @@ export default function SubscriptionPage() {
 
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}
       <Row gutter={[16, 16]} justify="center">
-      {plans.map((plan) => {
+        {plans.map((plan) => {
           const isSelected = activePlanIdSet.has(String(plan.id));
           const ribbonLabel = plan.highestseller ? "Best Seller" : plan.recommended ? "Recommended" : null;
           const ribbonClass = plan.highestseller
@@ -125,73 +129,62 @@ export default function SubscriptionPage() {
                 }`}
                 bodyStyle={{ padding: "0", display: "flex", flexDirection: "column", flex: 1 }}
               >
-               {ribbonLabel ? (
-  <div className="pointer-events-none absolute right-0 top-0 z-10 h-[200px] w-[200px] overflow-hidden">
-    {/* First ribbon */}
-    {/* First ribbon */}
-<div
-  className={`absolute right-[-40px] top-[22px] w-[170px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm ${ribbonClass}`}
->
-  {ribbonLabel}
-</div>
-{/* Second ribbon (only if both flags true) */}
-{plan.highestseller && plan.recommended && (
-  <div className="absolute right-[-40px] top-[50px] w-[170px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm bg-[#9a2119] text-white">
-    Recommended
-  </div>
-)}
-  </div>
-) : null}
+                {ribbonLabel ? (
+                  <div className="pointer-events-none absolute right-0 top-0 z-10 h-[200px] w-[200px] overflow-hidden">
+                    {/* First ribbon */}
+                    <div
+                      className={`absolute right-[-40px] top-[22px] w-[170px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm ${ribbonClass}`}
+                    >
+                      {ribbonLabel}
+                    </div>
+                    {/* Second ribbon (only if both flags true) */}
+                    {plan.highestseller && plan.recommended && (
+                      <div className="absolute right-[-40px] top-[50px] w-[170px] rotate-45 whitespace-nowrap py-1.5 text-center text-[9px] font-black uppercase tracking-[0.14em] shadow-sm bg-[#9a2119] text-white">
+                        Recommended
+                      </div>
+                    )}
+                  </div>
+                ) : null}
 
                 {/* Header Area */}
-              {/* Header Area */}
                 <div className={`p-5 ${isSelected ? "bg-brand/5" : "bg-gray-50/50"}`}>
                   <div className="flex flex-col gap-2 mb-3">
                     <div className="text-sm font-bold text-ink/40 uppercase tracking-widest">
                       {plan.name}
                     </div>
                   </div>
-                  
-                 <div className="flex items-baseline gap-1">
-  <span className="text-3xl font-black text-brand">
-    ₹{plan.price}
-  </span>
-  <span className="text-muted text-[10px] font-medium">
-    /{plan.validity}
-  </span>
-</div>
+
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-brand">₹{plan.price}</span>
+                    <span className="text-muted text-[10px] font-medium">/{plan.validity}</span>
+                  </div>
 
                   {plan.descriptionList?.length ? (
                     <ul className="m-0 mt-3 list-none space-y-1.5 p-0">
                       {plan.descriptionList.map((line, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <CheckOutlined className="text-brand text-[11px] mt-1 flex-shrink-0" />
-                          <span className="text-[12px] leading-snug text-ink/70">
-                            {line}
-                          </span>
+                          <span className="text-[12px] leading-snug text-ink/70">{line}</span>
                         </li>
                       ))}
                     </ul>
                   ) : null}
                 </div>
 
-            
-  {/* Features Area */}
+                {/* Features Area */}
                 <div className="p-5 flex-grow">
-<List
-  split={false}
-  dataSource={plan.modules.length ? plan.modules : ["No modules available"]}
-  renderItem={(item) => (
-    <List.Item className="!border-none !px-0 !py-1.5">
-      <div className="flex items-start gap-2">
-        <CheckOutlined className="text-brand text-[12px] mt-1 flex-shrink-0" />
-        <span className="text-[13px] text-ink/80 leading-snug">
-          {item}
-        </span>
-      </div>
-    </List.Item>
-  )}
-/>
+                  <List
+                    split={false}
+                    dataSource={plan.modules.length ? plan.modules : ["No modules available"]}
+                    renderItem={(item) => (
+                      <List.Item className="!border-none !px-0 !py-1.5">
+                        <div className="flex items-start gap-2">
+                          <CheckOutlined className="text-brand text-[12px] mt-1 flex-shrink-0" />
+                          <span className="text-[13px] text-ink/80 leading-snug">{item}</span>
+                        </div>
+                      </List.Item>
+                    )}
+                  />
                 </div>
 
                 {/* Footer Button */}
@@ -214,6 +207,93 @@ export default function SubscriptionPage() {
           );
         })}
       </Row>
+
+      {/* Compare Features table, shown below all plan cards */}
+        <h2 className="text-2xl font-black text-ink leading-none mt-0 pt-0">
+  Compare feature
+</h2>
+<p className="text-muted text-sm mt-0 pt-0 leading-tight">
+  Find the best option by comparing key features.
+</p>{plans.length > 0 ? (
+        <div className="mt-4 overflow-x-auto rounded-[22px] border border-[#eedad4] bg-white shadow-sm">
+          <table className="w-full min-w-[720px] border-collapse text-left">
+            <thead>
+              <tr>
+                
+                <th className="sticky left-0 z-20 w-[240px] bg-white p-5 align-bottom shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)]">
+                   <div className="text-xl font-black text-ink">Modules</div>
+                
+                 </th>
+                {plans.map((plan) => {
+                  const isSelected = activePlanIdSet.has(String(plan.id));
+                  return (
+                    <th
+                      key={plan.id}
+                      className={`p-5 text-center align-bottom ${
+                        isSelected ? "bg-brand/5" : "bg-gray-50/50"
+                      }`}
+                    >
+                      <div className="text-sm font-black uppercase tracking-widest text-ink">
+                        {plan.name}
+                      </div>
+                      <div className="mt-1 flex items-baseline justify-center gap-1">
+                        <span className="text-2xl font-black text-brand">₹{plan.price}</span>
+                        <span className="text-muted text-[10px] font-medium">/{plan.validity}</span>
+                      </div>
+                      <Button
+                        block
+                        type={isSelected ? "default" : "primary"}
+                        disabled={isSelected}
+                        size="middle"
+                        className={`!mt-3 !h-9 !rounded-xl !text-xs !font-bold transition-transform active:scale-95 ${
+                          isSelected
+                            ? "!bg-green-50 !text-green-400 !border-transparent !cursor-not-allowed"
+                            : "shadow-md"
+                        }`}
+                        onClick={() => handleSelectPlan(plan.id)}
+                      >
+                        {isSelected ? "Current Plan" : "Choose Plan"}
+                      </Button>
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+             
+              {allFeatures.map((feature, i) => (
+                <tr key={feature} className={i % 2 === 0 ? "bg-gray-50/40" : "bg-white"}>
+                  <td
+                    className={`sticky left-0 z-10 p-4 text-[13px] font-medium text-ink/80 shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)] ${
+                      i % 2 === 0 ? "bg-gray-50/40" : "bg-white"
+                    }`}
+                  >
+                    {feature}
+                  </td>
+                  {plans.map((plan) => {
+                    const included = (plan.modules || []).includes(feature);
+                    const isSelected = activePlanIdSet.has(String(plan.id));
+                    return (
+                      <td
+                        key={plan.id}
+                        className={`p-4 text-center ${isSelected ? "bg-brand/5" : ""}`}
+                      >
+                        {included ? (
+                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
+                            <CheckOutlined className="text-[11px]" />
+                          </span>
+                        ) : (
+                          <CloseOutlined className="text-[12px] text-ink/20" />
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </ModuleScreen>
   );
 }
