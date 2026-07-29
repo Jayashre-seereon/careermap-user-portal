@@ -75,10 +75,37 @@ export default function SubscriptionPage() {
     rzp.open();
   };
 
-  // union of every feature/module across all plans, in first-seen order, for the comparison table below
-  const allFeatures = Array.from(
-    new Set(plans.flatMap((plan) => plan.modules || []))
-  );
+  // Static comparison data — edit this directly to change what shows in the table below.
+  // Each row's `values` array must line up 1:1 with `comparisonPlans` order.
+  const comparisonPlans = [
+    { name: "Basic", price: "₹1,500" },
+    { name: "Standard", price: "₹3,000" },
+    { name: "Most Popular", price: "₹5,000" },
+    { name: "Premium", price: "₹7,500", priceNote: "(₹5,000 + ₹2,500)" },
+  ];
+
+  const comparisonRows = [
+    { feature: "Initial Career Guidance", values: [true, true, true, true] },
+    { feature: "Detailed Psychometric Assessment", values: [false, true, true, true] },
+    { feature: "Personalized Career Recommendations", values: [false, true, true, true] },
+    {
+      feature: "Comprehensive Career Counselling",
+      values: [false, true, true, true],
+      notes: [null, null, "(Unlimited for 1 Year)", "(Unlimited for 1 Year)"],
+    },
+    { feature: "Personalized Career Roadmap", values: [false, false, true, true] },
+    { feature: "End-to-End Career Planning", values: [false, false, true, true] },
+    { feature: "Annual Career Mentorship & Follow-up Support", values: [false, false, true, true] },
+    { feature: "Study Abroad Guidance & Counselling", values: [false, false, false, true] },
+    { feature: "Abroad Consultancy Support", values: [false, false, false, true] },
+  ];
+
+  const comparisonBestFor = [
+    "Students looking for initial career guidance",
+    "Students seeking a detailed assessment and personalized counselling",
+    "Students requiring complete career planning with year-long mentorship",
+    "Students planning both their career and higher education abroad",
+  ];
 
   return (
     <ModuleScreen className="space-y-6">
@@ -209,91 +236,74 @@ export default function SubscriptionPage() {
       </Row>
 
       {/* Compare Features table, shown below all plan cards */}
-        <h2 className="text-2xl font-black text-ink leading-none mt-0 pt-0">
-  Compare feature
-</h2>
-<p className="text-muted text-sm mt-0 pt-0 leading-tight">
-  Find the best option by comparing key features.
-</p>{plans.length > 0 ? (
-        <div className="mt-4 overflow-x-auto rounded-[22px] border border-[#eedad4] bg-white shadow-sm">
-          <table className="w-full min-w-[720px] border-collapse text-left">
-            <thead>
-              <tr>
-                
-                <th className="sticky left-0 z-20 w-[240px] bg-white p-5 align-bottom shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)]">
-                   <div className="text-xl font-black text-ink">Modules</div>
-                
-                 </th>
-                {plans.map((plan) => {
-                  const isSelected = activePlanIdSet.has(String(plan.id));
-                  return (
-                    <th
-                      key={plan.id}
-                      className={`p-5 text-center align-bottom ${
-                        isSelected ? "bg-brand/5" : "bg-gray-50/50"
-                      }`}
-                    >
-                      <div className="text-sm font-black uppercase tracking-widest text-ink">
-                        {plan.name}
-                      </div>
-                      <div className="mt-1 flex items-baseline justify-center gap-1">
-                        <span className="text-2xl font-black text-brand">₹{plan.price}</span>
-                        <span className="text-muted text-[10px] font-medium">/{plan.validity}</span>
-                      </div>
-                      <Button
-                        block
-                        type={isSelected ? "default" : "primary"}
-                        disabled={isSelected}
-                        size="middle"
-                        className={`!mt-3 !h-9 !rounded-xl !text-xs !font-bold transition-transform active:scale-95 ${
-                          isSelected
-                            ? "!bg-green-50 !text-green-400 !border-transparent !cursor-not-allowed"
-                            : "shadow-md"
-                        }`}
-                        onClick={() => handleSelectPlan(plan.id)}
-                      >
-                        {isSelected ? "Current Plan" : "Choose Plan"}
-                      </Button>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-             
-              {allFeatures.map((feature, i) => (
-                <tr key={feature} className={i % 2 === 0 ? "bg-gray-50/40" : "bg-white"}>
-                  <td
-                    className={`sticky left-0 z-10 p-4 text-[13px] font-medium text-ink/80 shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)] ${
-                      i % 2 === 0 ? "bg-gray-50/40" : "bg-white"
-                    }`}
-                  >
-                    {feature}
-                  </td>
-                  {plans.map((plan) => {
-                    const included = (plan.modules || []).includes(feature);
-                    const isSelected = activePlanIdSet.has(String(plan.id));
-                    return (
-                      <td
-                        key={plan.id}
-                        className={`p-4 text-center ${isSelected ? "bg-brand/5" : ""}`}
-                      >
-                        {included ? (
-                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
-                            <CheckOutlined className="text-[11px]" />
-                          </span>
-                        ) : (
-                          <CloseOutlined className="text-[12px] text-ink/20" />
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
+      <h2 className="text-2xl font-black text-ink leading-none mt-0 pt-0">Compare features</h2>
+      <p className="text-muted text-sm mt-0 pt-0 leading-tight">
+        Find the best option by comparing key features.
+      </p>
+      <div className="mt-4 overflow-x-auto rounded-[22px] border border-[#eedad4] bg-white shadow-sm">
+        <table className="w-full min-w-[820px] border-collapse text-left">
+          <colgroup>
+            <col className="w-[320px]" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-20 w-[320px] bg-white p-5 align-bottom shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)]">
+                <div className="text-xl font-black text-ink">Features</div>
+              </th>
+              {comparisonPlans.map((plan) => (
+                <th key={plan.name} className="bg-gray-50/50 p-5 text-center align-bottom">
+                  <div className="text-sm font-black uppercase tracking-widest text-ink">{plan.name}</div>
+                  <div className="mt-1 flex items-baseline justify-center gap-1">
+                    <span className="text-2xl font-black text-brand">{plan.price}</span>
+                  </div>
+                  {plan.priceNote ? (
+                    <div className="text-muted text-[11px] font-medium italic">{plan.priceNote}</div>
+                  ) : null}
+                </th>
               ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
+            </tr>
+          </thead>
+          <tbody>
+            {comparisonRows.map((row, i) => (
+              <tr key={row.feature} className={i % 2 === 0 ? "bg-gray-50/40" : "bg-white"}>
+                <td
+                  className={`sticky left-0 z-10 p-4 text-[13px] font-medium text-ink/80 shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)] ${
+                    i % 2 === 0 ? "bg-gray-50/40" : "bg-white"
+                  }`}
+                >
+                  {row.feature}
+                </td>
+                {row.values.map((included, j) => (
+                  <td key={j} className="p-4 text-center">
+                    <div className="flex flex-col items-center gap-1">
+                      {included ? (
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
+                          <CheckOutlined className="text-[11px]" />
+                        </span>
+                      ) : (
+                        <CloseOutlined className="text-[12px] text-ink/20" />
+                      )}
+                      {row.notes?.[j] ? (
+                        <span className="text-muted text-[10px] italic">{row.notes[j]}</span>
+                      ) : null}
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+            <tr className="bg-gray-50/50">
+              <td className="sticky left-0 z-10 bg-gray-50/50 p-4 text-[13px] font-black text-ink shadow-[6px_0_8px_-6px_rgba(0,0,0,0.08)]">
+                Best For
+              </td>
+              {comparisonBestFor.map((text, j) => (
+                <td key={j} className="p-4 text-center text-[12px] leading-snug text-ink/70">
+                  {text}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </ModuleScreen>
   );
 }
