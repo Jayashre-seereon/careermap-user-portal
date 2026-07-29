@@ -89,7 +89,33 @@ function getItemTitle(item) {
     `Item ${item?.id ?? ""}`.trim()
   );
 }
+function MergedSection({ icon, title, subtitle, children, id }) {
+  return (
+    <div id={id} className="scroll-mt-4 border-b border-[#f7eeec] px-5 py-5 last:border-b-0">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h2 className="m-0 text-[18px] font-black text-[#1a0a09]">{title}</h2>
+          {subtitle ? (
+            <p className="m-0 mt-1 text-[12px] leading-5 text-[#8f7d79]">{subtitle}</p>
+          ) : null}
+        </div>
+      </div>
+      <div className="text-[#000000]">{children}</div>
+    </div>
+  );
+}
 
+function Wrapper({ isCompetitive, children }) {
+  if (!isCompetitive) return <>{children}</>;
+  return (
+    <div className="rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm overflow-hidden">
+      {children}
+    </div>
+  );
+}
 function getDetailTitle(detail) {
   return (
     detail?.subcategory?.title ||
@@ -1436,8 +1462,14 @@ useEffect(() => {
   }
 
   // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
+ // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
+    //competitive
+    const isCompetitive =
+      String(detail?.raw?.stream?.name || "").toLowerCase() === "competitive";
+    const Section = isCompetitive ? MergedSection : SectionCard;
+    //competitive
     const instituteGroups = groupInstitutesByTopStatus(detail?.institutes, "Odisha");
     const careerpaths = detail?.raw?.careerpaths || [];
     const entranceexams = detail?.raw?.entranceexams || [];
@@ -1467,8 +1499,7 @@ useEffect(() => {
           <MediaBanner media={detail.media} title={title} onBack={handleBack} />
         ) : null}
 
-        <div
-          className="flex gap-6 items-start">
+        <div className="flex gap-6 items-start">
           <div className="hidden lg:block sticky top-4 w-72 shrink-0">
             <div className="overflow-hidden rounded-[28px] border border-[#f0e4e2] bg-white shadow-sm">
               <div className="border-b border-[#f7eeec] px-5 py-4">
@@ -1499,259 +1530,258 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 space-y-5">
+          <div className={isCompetitive ? "flex-1 min-w-0" : "flex-1 min-w-0 space-y-5"}>
+            <Wrapper isCompetitive={isCompetitive}>
 
+              {description ? (
+                <Section
+                  id={`desc-${index}`}
+                  icon={<FileTextOutlined />}
+                  title="Description"
+                  subtitle="What this career is about and why it matters."
+                >
+                  <p className="m-0 text-[15px] leading-8 text-[#000000]">{description}</p>
+                </Section>
+              ) : null}
 
-
-            {description ? (
-              <SectionCard
-                id={`desc-${index}`}
-                icon={<FileTextOutlined />}
-                title="Description"
-                subtitle="What this career is about and why it matters."
+              <Section
+                id={`path-${index}`}
+                icon={<BranchesOutlined />}
+                title={`Career Path for ${title}`}
+                subtitle="A simple path from education to career entry."
               >
-                <p className="m-0 text-[15px] leading-8 text-[#000000]">{description}</p>
-              </SectionCard>
-            ) : null}
-
-            <SectionCard
-              id={`path-${index}`}
-              icon={<BranchesOutlined />}
-              title={`Career Path for ${title}`}
-              subtitle="A simple path from education to career entry."
-            >
-              {careerpaths.length > 0 ? (
-               <div className="overflow-x-auto rounded-[20px] border border-[#f0e4e2]">
-  <table className="min-w-[800px] w-full border-collapse text-sm">
-         <thead>
-                      <tr className="bg-[#fdf7f6]">
-                        {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map((col) => (
-                          <th
-                            key={col}
-                            className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#000000]"
-                          >
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {careerpaths.map((cp, cpIdx) => (
-                        <tr key={cp?.id ?? cpIdx} className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
-                          <td className="whitespace-nowrap border-b border-[#f7eeec] px-4 py-3 font-semibold text-[#9a2119]">
-                            {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
-                          </td>
-                          <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">
-                            {detail?.raw?.stream?.name || "—"}
-                          </td>
-                          <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.graduation || "—"}</td>
-                          <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.aftergraduation || "—"}</td>
-                          <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.afterpostgraduation || "—"}</td>
-                          <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.anyother || "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : detail?.path?.length > 0 ? (
-                <div className="grid gap-3">
-                  {detail.path.map((step, si) => (
-                    <div
-                      key={si}
-                      className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-3"
-                    >
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-[12px] font-black text-white">
-                        {si + 1}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="m-0 text-[14px] font-semibold text-[#000000]">Step {si + 1}</p>
-                        <p className="m-0 mt-1 text-[13px] leading-6 text-[#000000]">{step}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
-              )}
-            </SectionCard>
-
-            <SectionCard
-              id={`exams-${index}`}
-              icon={<SolutionOutlined />}
-              title="Entrance Exams"
-              subtitle="Relevant exams for this career path."
-            >
-              {entranceexams.length > 0 ? (
-                <div className="grid gap-3">
-                  {entranceexams.map((exam, ei) => (
-                    <div
-                      key={exam?.id ?? ei}
-                      className="rounded-[20px] border border-[#f0e4e2] bg-[#fffdfa] p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
-                              <SolutionOutlined />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">Exam Name</p>
-                              <p className="m-0 text-[16px] font-black text-[#000000]">{exam?.examname || "—"}</p>
-                            </div>
-                          </div>
-                          {exam?.about && exam.about !== "Nothing" ? (
-                            <p className="m-0 mt-3 text-[13px] leading-6 text-[#000000] line-clamp-2">{exam.about}</p>
-                          ) : null}
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          
-                          {exam?.url ? (
-                            <a
-                              href={exam.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] transition hover:bg-[#fdf0ee]"
+                {careerpaths.length > 0 ? (
+                  <div className="overflow-x-auto rounded-[20px] border border-[#f0e4e2]">
+                    <table className="min-w-[800px] w-full border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-[#fdf7f6]">
+                          {["Path", "Stream", "Graduation", "After Graduation", "After Post Graduation", "Any Other"].map((col) => (
+                            <th
+                              key={col}
+                              className="whitespace-nowrap border-b border-[#f0e4e2] px-4 py-3 text-left font-bold text-[#000000]"
                             >
-                              <ArrowRightOutlined />
-                            </a>
-                          ) : null}
+                              {col}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {careerpaths.map((cp, cpIdx) => (
+                          <tr key={cp?.id ?? cpIdx} className={cpIdx % 2 === 0 ? "bg-white" : "bg-[#fdf9f9]"}>
+                            <td className="whitespace-nowrap border-b border-[#f7eeec] px-4 py-3 font-semibold text-[#9a2119]">
+                              {cp?.path?.pathtype || cp?.pathName || `Path ${cpIdx + 1}`}
+                            </td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">
+                              {detail?.raw?.stream?.name || "—"}
+                            </td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.graduation || "—"}</td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.aftergraduation || "—"}</td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.afterpostgraduation || "—"}</td>
+                            <td className="border-b border-[#f7eeec] px-4 py-3 text-[#62585c]">{cp?.anyother || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : detail?.path?.length > 0 ? (
+                  <div className="grid gap-3">
+                    {detail.path.map((step, si) => (
+                      <div
+                        key={si}
+                        className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-3"
+                      >
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#9a2119] text-[12px] font-black text-white">
+                          {si + 1}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="m-0 text-[14px] font-semibold text-[#000000]">Step {si + 1}</p>
+                          <p className="m-0 mt-1 text-[13px] leading-6 text-[#000000]">{step}</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : toList(detail?.exams).length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {toList(detail.exams).map((exam, ei) => (
-                    <DetailPill key={ei} icon={<SolutionOutlined />} label={exam} />
-                  ))}
-                </div>
-              ) : (
-                <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
-              )}
-            </SectionCard>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
+                )}
+              </Section>
 
-        
-            {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
-              <div className="grid gap-5 sm:grid-cols-2">
-                <SectionCard
-                  id={`spec-${index}`}
-                  icon={<StarOutlined />}
-                  title="Specialization"
-                  subtitle="Key specializations in this field."
-                >
-                  {detail.specializationList.length > 0 ? (
-                    <ul className="m-0 list-none space-y-2 p-0">
-                      {detail.specializationList.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <StarOutlined className="mt-1 text-[#9a2119]" />
-                          <span className="text-[14px] text-[#000000]">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="m-0 text-sm text-gray-400">Not available.</p>
-                  )}
-                </SectionCard>
-
-                <SectionCard
-                  id={`imp-${index}`}
-                  icon={<CheckCircleOutlined />}
-                  title="Important Factors"
-                  subtitle="Things to know before choosing this path."
-                >
-                  {detail.importantFactorList.length > 0 ? (
-                    <ul className="m-0 list-none space-y-2 p-0">
-                      {detail.importantFactorList.map((item, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
-                          <span className="text-[14px] text-[#000000]">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="m-0 text-sm text-gray-400">Not available.</p>
-                  )}
-                </SectionCard>
-              </div>
-            )}
-
-              <SectionCard
-              id={`jobs-${index}`}
-              icon={<RocketOutlined />}
-              title="Job Scopes"
-              subtitle="Common roles and career directions after this path."
-            >
-              {jobs.length > 0 ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {jobs.map((scope, ji) => (
-                    <div
-                      key={ji}
-                      className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
-                    >
-                      <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
-                        <TrophyOutlined />
-                      </span>
-                      <p className="m-0 text-[14px] leading-6 text-[#000000]">{scope}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
-              )}
-            </SectionCard>
-            <SectionCard
-              id={`salary-${index}`}
-              icon={<DollarOutlined />}
-              title="Salary Range"
-              subtitle="Expected salary bands in the field."
-            >
-              {salaryRanges.length > 0 ? (
-                <ul className="m-0 list-none space-y-3 p-0">
-                  {salaryRanges.map((salary, si) => (
-                    <li key={salary?.id ?? si} className="flex items-center gap-3">
-                      <DollarOutlined className="text-[#9a2119]" />
-                      <span className="text-[14px] font-semibold text-[#1a0a09]">{formatSalaryRange(salary)}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : detail?.salary ? (
-                <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
-                  <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
-                  <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{detail.salary}</p>
-                </div>
-              ) : (
-                <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
-              )}
-            </SectionCard>
+              <Section
+                id={`exams-${index}`}
+                icon={<SolutionOutlined />}
+                title="Entrance Exams"
+                subtitle="Relevant exams for this career path."
+              >
+                {entranceexams.length > 0 ? (
+                  <div className="grid gap-3">
+                    {entranceexams.map((exam, ei) => (
+                      <div
+                        key={exam?.id ?? ei}
+                        className="rounded-[20px] border border-[#f0e4e2] bg-[#fffdfa] p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
+                                <SolutionOutlined />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="m-0 text-[10px] font-bold uppercase tracking-[0.18em] text-[#b8837e]">Exam Name</p>
+                                <p className="m-0 text-[16px] font-black text-[#000000]">{exam?.examname || "—"}</p>
+                              </div>
+                            </div>
+                            {exam?.about && exam.about !== "Nothing" ? (
+                              <p className="m-0 mt-3 text-[13px] leading-6 text-[#000000] line-clamp-2">{exam.about}</p>
+                            ) : null}
+                          </div>
+<div className="flex flex-wrap items-center gap-2">
+  <a
+  href={exam.url}
+target="_blank"
+rel="noopener noreferrer"
+className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#f0e4e2] text-[#9a2119] transition hover:bg-[#fdf0ee]">
+    <ArrowRightOutlined />
+                            </a>
+                              
+</div>
   
-          <SectionCard
-  id={`top-in-${index}`}
-  icon={<BankOutlined />}
-  title="Top Institutes in Odisha"
-  subtitle="Institutes in Odisha highlighted from this career map data."
->
-  <InstituteFilterGroup
-    institutes={instituteGroups.topInstitutes}
-    badge="Odisha"
-    emptyText="No Odisha institutes found."
-    showLocationFilter={false}
-  />
-</SectionCard>
 
-<SectionCard
-  id={`top-out-${index}`}
-  icon={<EnvironmentOutlined />}
-  title="Top  Institutes Outside Odisha"
-  subtitle="All institutes from other states are shown here."
->
-  <InstituteFilterGroup
-    institutes={instituteGroups.outsideInstitutes}
-    badge="Outside Odisha"
-    emptyText="No institutes found outside Odisha."
-  />
-</SectionCard>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : toList(detail?.exams).length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {toList(detail.exams).map((exam, ei) => (
+                      <DetailPill key={ei} icon={<SolutionOutlined />} label={exam} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
+                )}
+              </Section>
+
+              {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Section
+                    id={`spec-${index}`}
+                    icon={<StarOutlined />}
+                    title="Specialization"
+                    subtitle="Key specializations in this field."
+                  >
+                    {detail.specializationList.length > 0 ? (
+                      <ul className="m-0 list-none space-y-2 p-0">
+                        {detail.specializationList.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <StarOutlined className="mt-1 text-[#9a2119]" />
+                            <span className="text-[14px] text-[#000000]">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="m-0 text-sm text-gray-400">Not available.</p>
+                    )}
+                  </Section>
+
+                  <Section
+                    id={`imp-${index}`}
+                    icon={<CheckCircleOutlined />}
+                    title="Important Factors"
+                    subtitle="Things to know before choosing this path."
+                  >
+                    {detail.importantFactorList.length > 0 ? (
+                      <ul className="m-0 list-none space-y-2 p-0">
+                        {detail.importantFactorList.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
+                            <span className="text-[14px] text-[#000000]">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="m-0 text-sm text-gray-400">Not available.</p>
+                    )}
+                  </Section>
+                </div>
+              )}
+
+              <Section
+                id={`jobs-${index}`}
+                icon={<RocketOutlined />}
+                title="Job Scopes"
+                subtitle="Common roles and career directions after this path."
+              >
+                {jobs.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {jobs.map((scope, ji) => (
+                      <div
+                        key={ji}
+                        className="flex items-start gap-3 rounded-[18px] border border-[#f0e4e2] bg-white px-4 py-3"
+                      >
+                        <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff0e8] text-[#9a2119]">
+                          <TrophyOutlined />
+                        </span>
+                        <p className="m-0 text-[14px] leading-6 text-[#000000]">{scope}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
+                )}
+              </Section>
+
+              <Section
+                id={`salary-${index}`}
+                icon={<DollarOutlined />}
+                title="Salary Range"
+                subtitle="Expected salary bands in the field."
+              >
+                {salaryRanges.length > 0 ? (
+                  <ul className="m-0 list-none space-y-3 p-0">
+                    {salaryRanges.map((salary, si) => (
+                      <li key={salary?.id ?? si} className="flex items-center gap-3">
+                        <DollarOutlined className="text-[#9a2119]" />
+                        <span className="text-[14px] font-semibold text-[#1a0a09]">{formatSalaryRange(salary)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : detail?.salary ? (
+                  <div className="rounded-[18px] border border-[#f0e4e2] bg-[#fffdfa] px-4 py-4">
+                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Expected Range</p>
+                    <p className="m-0 mt-2 text-[16px] font-black text-[#9a2119]">{detail.salary}</p>
+                  </div>
+                ) : (
+                  <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
+                )}
+              </Section>
+
+              <Section
+                id={`top-in-${index}`}
+                icon={<BankOutlined />}
+                title="Top Institutes in Odisha"
+                subtitle="Institutes in Odisha highlighted from this career map data."
+              >
+                <InstituteFilterGroup
+                  institutes={instituteGroups.topInstitutes}
+                  badge="Odisha"
+                  emptyText="No Odisha institutes found."
+                  showLocationFilter={false}
+                />
+              </Section>
+
+              <Section
+                id={`top-out-${index}`}
+                icon={<EnvironmentOutlined />}
+                title="Top  Institutes Outside Odisha"
+                subtitle="All institutes from other states are shown here."
+              >
+                <InstituteFilterGroup
+                  institutes={instituteGroups.outsideInstitutes}
+                  badge="Outside Odisha"
+                  emptyText="No institutes found outside Odisha."
+                />
+              </Section>
+
+            </Wrapper>
           </div>
         </div>
       </div>
