@@ -82,7 +82,7 @@ const getAccessBadge = (status) => {
   "Entrance Exam",
   "Institutes",
   "Scholarship",
-  "Assessment",
+  "Career Psychometric Assessment",
   "Book Your Mentor",
   "Career & Personality Videos",
   "Study Abroad",
@@ -107,10 +107,10 @@ const sortedCards = [...curatedCards].sort(
       {curatedCards.length ? (
         <Row gutter={[14, 14]}>
           {sortedCards.map((card) => {
-            const art = moduleStyleMap[card.title] || moduleStyleMap.Assessment;
+            const art = moduleStyleMap[card.title] || moduleStyleMap["Career Psychometric Assessment"] || moduleStyleMap.Assessment;
 
             const description =
-              card.title === "Assessment"
+              card.title === "Career Psychometric Assessment" || card.title === "Assessment"
                 ? "Deep personality and aptitude analysis for smarter career decisions."
                 : card.subtitle;
             const badge = getAccessBadge(card.accessStatus);

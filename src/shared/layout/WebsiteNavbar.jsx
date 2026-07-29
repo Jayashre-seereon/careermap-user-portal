@@ -29,7 +29,7 @@ import BrandMark from "../branding/BrandMark";
 
 const moduleItems = [
   { key: "/app/library", icon: <BookOutlined />, label: "Career Archive" },
-  { key: "/app/assessment", icon: <FundProjectionScreenOutlined />, label: "Career Assessment" },
+  { key: "/app/assessment", icon: <FundProjectionScreenOutlined />, label: "Career Psychometric Assessment" },
   { key: "/app/learn", icon: <ReadOutlined />, label: "Career & Personality Videos" },
   { key: "/app/entrance-exam", icon: <BulbOutlined />, label: "Entrance Exam" },
   { key: "/app/book-mentor", icon: <TeamOutlined />, label: "Book Your Mentor" },

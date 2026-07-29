@@ -33,7 +33,7 @@ export const heroStats = [
 
 export const moduleCards = [
   { title: "Career Archive", subtitle: "Explore Careers, Entry Routes & Job Scopes.", route: "/app/library", tone: palette.blue },
-  { title: "Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
+  { title: "Career Psychometric Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
   { title: "Career & Personality Videos", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Explore State,National,and Private University Entrance Exams.", route: "/app/entrance-exam", tone: palette.teal },
   { title: "Institutes", subtitle: "Browse top colleges and universities.", route: "/app/institutes", tone: palette.pink },
@@ -136,6 +136,29 @@ export const moduleArtPresets = {
           <rect x="176" y="144" width="108" height="10" rx="5" fill="#cfb8ab"/>
           <rect x="176" y="166" width="85" height="10" rx="5" fill="#e2d3ca"/>
           <rect x="176" y="188" width="96" height="10" rx="5" fill="#efe5df"/>
+        </svg>`),
+  },
+  "Career Psychometric Assessment": {
+    background: "linear-gradient(135deg, #f8f0eb 0%, #e8d8d1 100%)",
+    accent: "#9a2119",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#faf3ef"/>
+              <stop offset="100%" stop-color="#e8d8d1"/>
+            </linearGradient>
+          </defs>
+          <rect width="600" height="320" rx="36" fill="url(#bg)"/>
+          <circle cx="165" cy="95" r="54" fill="#ffffff" fill-opacity="0.3"/>
+          <rect x="110" y="66" width="210" height="188" rx="28" fill="#ffffff"/>
+          <rect x="144" y="104" width="142" height="14" rx="7" fill="#d7c0b4"/>
+          <rect x="144" y="138" width="112" height="14" rx="7" fill="#e5d4cb"/>
+          <rect x="144" y="172" width="132" height="14" rx="7" fill="#f0e6e1"/>
+          <path d="M378 216c32-72 74-108 126-108 17 0 35 5 52 15-10 63-46 111-108 142-24 12-52 22-86 28 0-32 5-58 16-77z" fill="#9a2119"/>
+          <circle cx="468" cy="120" r="18" fill="#ffffff"/>
         </svg>`),
   },
   Assessment: {
