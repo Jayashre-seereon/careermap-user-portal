@@ -86,6 +86,28 @@ export default function SubscriptionPage() {
         <PageHero backOnly onBack={() => navigate(-1)} className="shrink-0" />
       </div>
 
+      <div className="rounded-[22px] border border-[#eedad4] bg-[#fff8f3] p-4 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-[15px] font-black text-ink">Unsure About Your Next Step?</div>
+            <div className="text-[12px] font-medium text-muted">Speak to our Counsellor for guidance.</div>
+          </div>
+          <button
+            type="button"
+            className="rounded-full bg-brand px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-95"
+            onClick={() =>
+              navigate("/app/settings", {
+                state: {
+                  openHelpCenter: true,
+                },
+              })
+            }
+          >
+            Speak to our Counsellor
+          </button>
+        </div>
+      </div>
+
       {/* Row setup for 4 cards: xs (1 card), sm (2 cards), lg (4 cards) */}
       <Row gutter={[16, 16]} justify="center">
       {plans.map((plan) => {
