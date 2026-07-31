@@ -1467,6 +1467,11 @@ useEffect(() => {
     const salaryRanges = detail?.salaryRanges || [];
     const descriptionSections = getDetailDescriptionSections(detail);
     const stateLabel = "Odisha";
+    const hasCareerPath = careerpaths.length > 0 || detail?.path?.length > 0;
+    const hasEntranceExams = entranceexams.length > 0 || toList(detail?.exams).length > 0;
+    const hasJobs = jobs.length > 0;
+    const hasSalary = salaryRanges.length > 0 || Boolean(detail?.salary);
+    const hasTopInstitutes = instituteGroups.topInstitutes.length > 0 || instituteGroups.outsideInstitutes.length > 0;
 
     const sidebarSections = [
       ...descriptionSections.map((item, itemIndex) => ({
@@ -1474,12 +1479,12 @@ useEffect(() => {
         label: item.title || `Description ${itemIndex + 1}`,
         icon: <FileTextOutlined />,
       })),
-      { id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> },
-      { id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> },
-      { id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> },
-      { id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> },
-      { id: `top-in-${index}`, label: `Top Institutes in ${stateLabel}`, icon: <BankOutlined /> },
-      { id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> },
+      ...(hasCareerPath ? [{ id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> }] : []),
+      ...(hasEntranceExams ? [{ id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> }] : []),
+      ...(hasJobs ? [{ id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> }] : []),
+      ...(hasSalary ? [{ id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> }] : []),
+      ...(hasTopInstitutes ? [{ id: `top-in-${index}`, label: `Top Institutes in ${stateLabel}`, icon: <BankOutlined /> }] : []),
+      ...(instituteGroups.outsideInstitutes.length > 0 ? [{ id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> }] : []),
     ];
 
     function scrollTo(id) {
@@ -1546,6 +1551,7 @@ useEffect(() => {
                 </Section>
               ) : null}
 
+              {hasCareerPath ? (
               <Section
                 id={`path-${index}`}
                 icon={<BranchesOutlined />}
@@ -1606,7 +1612,9 @@ useEffect(() => {
                   <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
                 )}
               </Section>
+              ) : null}
 
+              {hasEntranceExams ? (
               <Section
                 id={`exams-${index}`}
                 icon={<SolutionOutlined />}
@@ -1661,6 +1669,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
                 )}
               </Section>
+              ) : null}
 
               {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -1706,6 +1715,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                 </div>
               )}
 
+              {hasJobs ? (
               <Section
                 id={`jobs-${index}`}
                 icon={<RocketOutlined />}
@@ -1730,7 +1740,9 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
                 )}
               </Section>
+              ) : null}
 
+              {hasSalary ? (
               <Section
                 id={`salary-${index}`}
                 icon={<DollarOutlined />}
@@ -1755,7 +1767,9 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
                 )}
               </Section>
+              ) : null}
 
+              {instituteGroups.topInstitutes.length > 0 ? (
               <Section
                 id={`top-in-${index}`}
                 icon={<BankOutlined />}
@@ -1769,7 +1783,9 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   showLocationFilter={false}
                 />
               </Section>
+              ) : null}
 
+              {instituteGroups.outsideInstitutes.length > 0 ? (
               <Section
                 id={`top-out-${index}`}
                 icon={<EnvironmentOutlined />}
@@ -1782,6 +1798,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   emptyText="No institutes found outside Odisha."
                 />
               </Section>
+              ) : null}
 
           </div>
         </div>
