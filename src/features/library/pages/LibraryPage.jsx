@@ -89,33 +89,6 @@ function getItemTitle(item) {
     `Item ${item?.id ?? ""}`.trim()
   );
 }
-function MergedSection({ icon, title, subtitle, children, id }) {
-  return (
-    <div id={id} className="scroll-mt-4 border-b border-[#f7eeec] px-5 py-5 last:border-b-0">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <h2 className="m-0 text-[18px] font-black text-[#1a0a09]">{title}</h2>
-          {subtitle ? (
-            <p className="m-0 mt-1 text-[12px] leading-5 text-[#8f7d79]">{subtitle}</p>
-          ) : null}
-        </div>
-      </div>
-      <div className="text-[#000000]">{children}</div>
-    </div>
-  );
-}
-
-function Wrapper({ isCompetitive, children }) {
-  if (!isCompetitive) return <>{children}</>;
-  return (
-    <div className="rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm overflow-hidden">
-      {children}
-    </div>
-  );
-}
 function getDetailTitle(detail) {
   return (
     detail?.subcategory?.title ||
@@ -1465,11 +1438,7 @@ useEffect(() => {
  // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
-    //competitive
-    const isCompetitive =
-      String(detail?.raw?.stream?.name || "").toLowerCase() === "competitive";
-    const Section = isCompetitive ? MergedSection : SectionCard;
-    //competitive
+    const Section = SectionCard;
     const instituteGroups = groupInstitutesByTopStatus(detail?.institutes, "Odisha");
     const careerpaths = detail?.raw?.careerpaths || [];
     const entranceexams = detail?.raw?.entranceexams || [];
@@ -1530,8 +1499,7 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className={isCompetitive ? "flex-1 min-w-0" : "flex-1 min-w-0 space-y-5"}>
-            <Wrapper isCompetitive={isCompetitive}>
+          <div className="flex-1 min-w-0 space-y-5">
 
               {description ? (
                 <Section
@@ -1781,7 +1749,6 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                 />
               </Section>
 
-            </Wrapper>
           </div>
         </div>
       </div>
