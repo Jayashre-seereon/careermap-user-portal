@@ -89,33 +89,6 @@ function getItemTitle(item) {
     `Item ${item?.id ?? ""}`.trim()
   );
 }
-function MergedSection({ icon, title, subtitle, children, id }) {
-  return (
-    <div id={id} className="scroll-mt-4 border-b border-[#f7eeec] px-5 py-5 last:border-b-0">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fdf0ee] text-[#9a2119]">
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <h2 className="m-0 text-[18px] font-black text-[#1a0a09]">{title}</h2>
-          {subtitle ? (
-            <p className="m-0 mt-1 text-[12px] leading-5 text-[#8f7d79]">{subtitle}</p>
-          ) : null}
-        </div>
-      </div>
-      <div className="text-[#000000]">{children}</div>
-    </div>
-  );
-}
-
-function Wrapper({ isCompetitive, children }) {
-  if (!isCompetitive) return <>{children}</>;
-  return (
-    <div className="rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm overflow-hidden">
-      {children}
-    </div>
-  );
-}
 function getDetailTitle(detail) {
   return (
     detail?.subcategory?.title ||
@@ -499,6 +472,17 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
     ),
     specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
     importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
+    descriptions: Array.isArray(item?.descriptions)
+      ? item.descriptions
+          .map((entry, entryIndex) => ({
+            id: entry?.id ?? `${title}-description-${entryIndex}`,
+            title: stripHtml(entry?.title || `Description ${entryIndex + 1}`),
+            description: stripHtml(entry?.description || ""),
+            sortOrder: Number.isFinite(Number(entry?.sortOrder)) ? Number(entry.sortOrder) : entryIndex,
+          }))
+          .filter((entry) => entry.title || entry.description)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+      : [],
     media: item?.media || sourceItem?.media || "",
     institutes: normalizeInstituteItems(
       item?.institutions ||
@@ -623,6 +607,16 @@ function LibraryBreadcrumb({
       ))}
     </div>
   );
+}
+
+function getDetailDescriptionSections(detail) {
+  if (Array.isArray(detail?.descriptions) && detail.descriptions.length > 0) {
+    return detail.descriptions;
+  }
+  const fallbackDescription = getDetailDescription(detail);
+  return fallbackDescription
+    ? [{ id: "description-0", title: "Description", description: fallbackDescription }]
+    : [];
 }
 
 function SectionHeader({ icon, title }) {
@@ -1465,27 +1459,32 @@ useEffect(() => {
  // ── REDESIGNED renderDetailItem ─────────────────────────────────────────────
   function renderDetailItem(detail, index) {
     const title = detail?.title || getItemTitle(detail);
-    //competitive
-    const isCompetitive =
-      String(detail?.raw?.stream?.name || "").toLowerCase() === "competitive";
-    const Section = isCompetitive ? MergedSection : SectionCard;
-    //competitive
+    const Section = SectionCard;
     const instituteGroups = groupInstitutesByTopStatus(detail?.institutes, "Odisha");
     const careerpaths = detail?.raw?.careerpaths || [];
     const entranceexams = detail?.raw?.entranceexams || [];
     const jobs = toList(detail?.jobs || detail?.jobScope);
     const salaryRanges = detail?.salaryRanges || [];
-    const description = getDetailDescription(detail);
+    const descriptionSections = getDetailDescriptionSections(detail);
     const stateLabel = "Odisha";
+    const hasCareerPath = careerpaths.length > 0 || detail?.path?.length > 0;
+    const hasEntranceExams = entranceexams.length > 0 || toList(detail?.exams).length > 0;
+    const hasJobs = jobs.length > 0;
+    const hasSalary = salaryRanges.length > 0 || Boolean(detail?.salary);
+    const hasTopInstitutes = instituteGroups.topInstitutes.length > 0 || instituteGroups.outsideInstitutes.length > 0;
 
     const sidebarSections = [
-      { id: `desc-${index}`, label: "Description", icon: <FileTextOutlined /> },
-      { id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> },
-      { id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> },
-      { id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> },
-      { id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> },
-      { id: `top-in-${index}`, label: `Top Institutes in ${stateLabel}`, icon: <BankOutlined /> },
-      { id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> },
+      ...descriptionSections.map((item, itemIndex) => ({
+        id: `desc-${index}-${item.id ?? itemIndex}`,
+        label: item.title || `Description ${itemIndex + 1}`,
+        icon: <FileTextOutlined />,
+      })),
+      ...(hasCareerPath ? [{ id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> }] : []),
+      ...(hasEntranceExams ? [{ id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> }] : []),
+      ...(hasJobs ? [{ id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> }] : []),
+      ...(hasSalary ? [{ id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> }] : []),
+      ...(hasTopInstitutes ? [{ id: `top-in-${index}`, label: `Top Institutes in ${stateLabel}`, icon: <BankOutlined /> }] : []),
+      ...(instituteGroups.outsideInstitutes.length > 0 ? [{ id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> }] : []),
     ];
 
     function scrollTo(id) {
@@ -1530,20 +1529,29 @@ useEffect(() => {
             </div>
           </div>
 
-          <div className={isCompetitive ? "flex-1 min-w-0" : "flex-1 min-w-0 space-y-5"}>
-            <Wrapper isCompetitive={isCompetitive}>
+          <div className="flex-1 min-w-0 space-y-5">
 
-              {description ? (
+              {descriptionSections.length > 0 ? (
                 <Section
                   id={`desc-${index}`}
                   icon={<FileTextOutlined />}
                   title="Description"
                   subtitle="What this career is about and why it matters."
                 >
-                  <p className="m-0 text-[15px] leading-8 text-[#000000]">{description}</p>
+                  <div className="space-y-4">
+                    {descriptionSections.map((item, itemIndex) => (
+                      <div key={item.id ?? itemIndex} id={`desc-${index}-${item.id ?? itemIndex}`} className="scroll-mt-4">
+                        <h3 className="m-0 text-[15px] font-black text-[#1a0a09]">{item.title}</h3>
+                        {item.description ? (
+                          <p className="m-0 mt-2 text-[15px] leading-8 text-[#000000]">{item.description}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
                 </Section>
               ) : null}
 
+              {hasCareerPath ? (
               <Section
                 id={`path-${index}`}
                 icon={<BranchesOutlined />}
@@ -1604,7 +1612,9 @@ useEffect(() => {
                   <p className="m-0 text-sm text-gray-400">Career path details not available.</p>
                 )}
               </Section>
+              ) : null}
 
+              {hasEntranceExams ? (
               <Section
                 id={`exams-${index}`}
                 icon={<SolutionOutlined />}
@@ -1659,6 +1669,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   <p className="m-0 text-sm text-gray-400">Entrance exam details not available.</p>
                 )}
               </Section>
+              ) : null}
 
               {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -1704,6 +1715,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                 </div>
               )}
 
+              {hasJobs ? (
               <Section
                 id={`jobs-${index}`}
                 icon={<RocketOutlined />}
@@ -1728,7 +1740,9 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   <p className="m-0 text-sm text-gray-400">Job scope not available.</p>
                 )}
               </Section>
+              ) : null}
 
+              {hasSalary ? (
               <Section
                 id={`salary-${index}`}
                 icon={<DollarOutlined />}
@@ -1753,7 +1767,9 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   <p className="m-0 text-sm text-gray-400">Salary details not available.</p>
                 )}
               </Section>
+              ) : null}
 
+              {instituteGroups.topInstitutes.length > 0 ? (
               <Section
                 id={`top-in-${index}`}
                 icon={<BankOutlined />}
@@ -1767,7 +1783,9 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   showLocationFilter={false}
                 />
               </Section>
+              ) : null}
 
+              {instituteGroups.outsideInstitutes.length > 0 ? (
               <Section
                 id={`top-out-${index}`}
                 icon={<EnvironmentOutlined />}
@@ -1780,8 +1798,8 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                   emptyText="No institutes found outside Odisha."
                 />
               </Section>
+              ) : null}
 
-            </Wrapper>
           </div>
         </div>
       </div>
