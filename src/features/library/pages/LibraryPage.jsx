@@ -472,6 +472,17 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
     ),
     specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
     importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
+    descriptions: Array.isArray(item?.descriptions)
+      ? item.descriptions
+          .map((entry, entryIndex) => ({
+            id: entry?.id ?? `${title}-description-${entryIndex}`,
+            title: stripHtml(entry?.title || `Description ${entryIndex + 1}`),
+            description: stripHtml(entry?.description || ""),
+            sortOrder: Number.isFinite(Number(entry?.sortOrder)) ? Number(entry.sortOrder) : entryIndex,
+          }))
+          .filter((entry) => entry.title || entry.description)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+      : [],
     media: item?.media || sourceItem?.media || "",
     institutes: normalizeInstituteItems(
       item?.institutions ||
@@ -596,6 +607,16 @@ function LibraryBreadcrumb({
       ))}
     </div>
   );
+}
+
+function getDetailDescriptionSections(detail) {
+  if (Array.isArray(detail?.descriptions) && detail.descriptions.length > 0) {
+    return detail.descriptions;
+  }
+  const fallbackDescription = getDetailDescription(detail);
+  return fallbackDescription
+    ? [{ id: "description-0", title: "Description", description: fallbackDescription }]
+    : [];
 }
 
 function SectionHeader({ icon, title }) {
@@ -1444,11 +1465,15 @@ useEffect(() => {
     const entranceexams = detail?.raw?.entranceexams || [];
     const jobs = toList(detail?.jobs || detail?.jobScope);
     const salaryRanges = detail?.salaryRanges || [];
-    const description = getDetailDescription(detail);
+    const descriptionSections = getDetailDescriptionSections(detail);
     const stateLabel = "Odisha";
 
     const sidebarSections = [
-      { id: `desc-${index}`, label: "Description", icon: <FileTextOutlined /> },
+      ...descriptionSections.map((item, itemIndex) => ({
+        id: `desc-${index}-${item.id ?? itemIndex}`,
+        label: item.title || `Description ${itemIndex + 1}`,
+        icon: <FileTextOutlined />,
+      })),
       { id: `path-${index}`, label: "Career Path", icon: <BranchesOutlined /> },
       { id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> },
       { id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> },
@@ -1501,14 +1526,23 @@ useEffect(() => {
 
           <div className="flex-1 min-w-0 space-y-5">
 
-              {description ? (
+              {descriptionSections.length > 0 ? (
                 <Section
                   id={`desc-${index}`}
                   icon={<FileTextOutlined />}
                   title="Description"
                   subtitle="What this career is about and why it matters."
                 >
-                  <p className="m-0 text-[15px] leading-8 text-[#000000]">{description}</p>
+                  <div className="space-y-4">
+                    {descriptionSections.map((item, itemIndex) => (
+                      <div key={item.id ?? itemIndex} id={`desc-${index}-${item.id ?? itemIndex}`} className="scroll-mt-4">
+                        <h3 className="m-0 text-[15px] font-black text-[#1a0a09]">{item.title}</h3>
+                        {item.description ? (
+                          <p className="m-0 mt-2 text-[15px] leading-8 text-[#000000]">{item.description}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
                 </Section>
               ) : null}
 
