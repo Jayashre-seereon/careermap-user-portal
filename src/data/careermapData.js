@@ -33,6 +33,7 @@ export const heroStats = [
 
 export const moduleCards = [
   { title: "Career Archive", subtitle: "Explore Careers, Entry Routes & Job Scopes.", route: "/app/library", tone: palette.blue },
+  { title: "Career News Letter", subtitle: "Read career updates and newsletter resources.", route: "/app/newsletter", tone: palette.green },
   { title: "Career Psychometric Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
   { title: "Career & Personality Videos", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Explore State,National,and Private University Entrance Exams.", route: "/app/entrance-exam", tone: palette.teal },
@@ -136,6 +137,25 @@ export const moduleArtPresets = {
           <rect x="176" y="144" width="108" height="10" rx="5" fill="#cfb8ab"/>
           <rect x="176" y="166" width="85" height="10" rx="5" fill="#e2d3ca"/>
           <rect x="176" y="188" width="96" height="10" rx="5" fill="#efe5df"/>
+        </svg>`),
+  },
+  "Career News Letter": {
+    background: "linear-gradient(135deg, #eef8f1 0%, #dfeee5 100%)",
+    accent: "#2f9367",
+    image:
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320">
+          <rect width="600" height="320" rx="36" fill="#eef8f1"/>
+          <rect x="112" y="58" width="376" height="204" rx="24" fill="#ffffff"/>
+          <rect x="144" y="90" width="130" height="16" rx="8" fill="#cfe4d8"/>
+          <rect x="144" y="124" width="250" height="12" rx="6" fill="#e2efe7"/>
+          <rect x="144" y="152" width="220" height="12" rx="6" fill="#e2efe7"/>
+          <rect x="144" y="180" width="196" height="12" rx="6" fill="#e2efe7"/>
+          <rect x="144" y="210" width="108" height="34" rx="17" fill="#2f9367"/>
+          <rect x="392" y="96" width="60" height="116" rx="14" fill="#d8eadf"/>
+          <path d="M418 124h8v44h-8z" fill="#2f9367"/>
+          <path d="M406 136h32v8h-32z" fill="#2f9367"/>
         </svg>`),
   },
   "Career Psychometric Assessment": {
