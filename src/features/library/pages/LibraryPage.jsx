@@ -1041,23 +1041,20 @@ useEffect(() => {
       // ── CATEGORY ────────────────────────────────────────────────────────────
       if (type === "category") {
         setSelectedCategory(item);
-        //         currentPreviewSessionId =
-        //   await createPreviewSession(
-        //     "category",
-        //     id,
-        //     item
-        //   );
+        let currentPreviewSessionId = null;
+        if (moduleStatus === "preview") {
+          currentPreviewSessionId = await createPreviewSession("category", id, item);
+          if (!currentPreviewSessionId) {
+            return;
+          }
+        }
 
-        // if (moduleStatus === "preview" && !currentPreviewSessionId) {
-        //   return;
-        // }
-        //         const response = await getCareerLibraryNext(
-        //   type,
-        //   id,
-        //   CAREER_LIBRARY_MODULE_ID,
-        //   currentPreviewSessionId
-        // );
-        const response = await getCareerLibraryNext(type, id);
+        const response = await getCareerLibraryNext(
+          type,
+          id,
+          CAREER_LIBRARY_MODULE_ID,
+          currentPreviewSessionId
+        );
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -1070,6 +1067,14 @@ useEffect(() => {
         }
 
         if (nextType === "details") {
+          let previewId = currentPreviewSessionId;
+          if (moduleStatus === "preview" && !previewId) {
+            previewId = await createPreviewSession("details", id, item);
+            if (!previewId) {
+              return;
+            }
+          }
+
           let detailItems = items;
           if (detailItems.length === 0) {
             try {
@@ -1077,7 +1082,7 @@ useEffect(() => {
                 await getCareerLibraryDetails(
                   id,
                   CAREER_LIBRARY_MODULE_ID,
-                  currentPreviewSessionId
+                  previewId
                 );
               const detailData = detailResponse ?? {};
               detailItems = Array.isArray(detailData?.data) ? detailData.data : [];
@@ -1098,25 +1103,20 @@ useEffect(() => {
       // ── SECOND CATEGORY ─────────────────────────────────────────────────────
       if (type === "second") {
         setSelectedSecondCategory(item);
+        let currentPreviewSessionId = null;
+        if (moduleStatus === "preview") {
+          currentPreviewSessionId = await createPreviewSession("second", id, item);
+          if (!currentPreviewSessionId) {
+            return;
+          }
+        }
 
-        //     currentPreviewSessionId =
-        //   await createPreviewSession(
-        //     "second",
-        //     id,
-        //     item
-        //   );
-
-        // if (moduleStatus === "preview" && !currentPreviewSessionId) {
-        //   return;
-        // }
-
-        // const response = await getCareerLibraryNext(
-        //   type,
-        //   id,
-        //   CAREER_LIBRARY_MODULE_ID,
-        //   currentPreviewSessionId
-        // );
-        const response = await getCareerLibraryNext(type, id);
+        const response = await getCareerLibraryNext(
+          type,
+          id,
+          CAREER_LIBRARY_MODULE_ID,
+          currentPreviewSessionId
+        );
         const data = response ?? {};
         const nextType = data?.type;
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -1129,10 +1129,22 @@ useEffect(() => {
         }
 
         if (nextType === "details") {
+          let previewId = currentPreviewSessionId;
+          if (moduleStatus === "preview" && !previewId) {
+            previewId = await createPreviewSession("details", id, item);
+            if (!previewId) {
+              return;
+            }
+          }
+
           let detailItems = items;
           if (detailItems.length === 0) {
             try {
-              const detailResponse = await getCareerLibraryDetails(id);
+              const detailResponse = await getCareerLibraryDetails(
+                id,
+                CAREER_LIBRARY_MODULE_ID,
+                previewId
+              );
               const detailData = detailResponse ?? {};
               detailItems = Array.isArray(detailData?.data) ? detailData.data : [];
             } catch (_err) { detailItems = []; }
@@ -1150,41 +1162,28 @@ useEffect(() => {
       // ── SUB CATEGORY ────────────────────────────────────────────────────────
       if (type === "sub") {
         setSelectedSubCategory(item);
+        let currentPreviewSessionId = null;
+        if (moduleStatus === "preview") {
+          currentPreviewSessionId = await createPreviewSession("sub", id, item);
+          if (!currentPreviewSessionId) {
+            return;
+          }
+        }
 
-        //        currentPreviewSessionId =
-        //   await createPreviewSession(
-        //     "sub",
-        //     id,
-        //     item
-        //   );
-
-        // if (moduleStatus === "preview" && !currentPreviewSessionId) {
-        //   return;
-        // }
-
-        // const response = await getCareerLibraryNext(
-        //   type,
-        //   id,
-        //   CAREER_LIBRARY_MODULE_ID,
-        //   currentPreviewSessionId
-        // );
-        const response = await getCareerLibraryNext(type, id);
+        const response = await getCareerLibraryNext(
+          type,
+          id,
+          CAREER_LIBRARY_MODULE_ID,
+          currentPreviewSessionId
+        );
         const data = response ?? {};
         const nextType = data?.type;
         let items = Array.isArray(data?.data) ? data.data : [];
 
         if (nextType === "details") {
-
-          let previewId = null;
-
-          if (moduleStatus === "preview") {
-
-            previewId = await createPreviewSession(
-              "sub",
-              id,
-              item
-            );
-
+          let previewId = currentPreviewSessionId;
+          if (moduleStatus === "preview" && !previewId) {
+            previewId = await createPreviewSession("details", id, item);
             if (!previewId) {
               return;
             }
