@@ -16,6 +16,7 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UserOutlined,
+   NotificationOutlined,
 } from "@ant-design/icons";
 import { Avatar, Badge, Button, Divider, Dropdown, Empty, Input, Popover, Space, Tag, Typography } from "antd";
 import { useMemo, useState } from "react";
@@ -35,6 +36,7 @@ const moduleItems = [
   { key: "/app/book-mentor", icon: <TeamOutlined />, label: "Book Your Mentor" },
   { key: "/app/scholarships", icon: <TrophyOutlined />, label: "Scholarships" },
   { key: "/app/institutes", icon: <AppstoreOutlined />, label: "Institutes" },
+  { key: "/app/newsletter", icon: <NotificationOutlined />, label: "Career Newsletter" },
   { key: "/app/abroad", icon: <GlobalOutlined />, label: "Study Abroad" },
   { key: "/app/subscription", icon: <CreditCardOutlined />, label: "Subscriptions" },
   { key: "/app/quiz", icon: <QuestionCircleOutlined />, label: "Quiz" },
