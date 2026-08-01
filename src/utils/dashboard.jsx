@@ -41,6 +41,7 @@ export const moduleRouteMap = {
   "career archive": "/app/library",
   assessment: "/app/assessment",
   "career & personality videos": "/app/learn",
+  "career news letter": "/app/newsletter",
   "entrance exam": "/app/entrance-exam",
   institutes: "/app/institutes",
   institute: "/app/institutes",
@@ -58,6 +59,7 @@ export const moduleIconMap = {
   "Career Psychometric Assessment": <BulbOutlined style={{ color: "#5d8f26" }} />,
   Assessment: <BulbOutlined style={{ color: "#5d8f26" }} />,
   "Career & Personality Videos": <TrophyOutlined style={{ color: "#4c45aa" }} />,
+  "Career News Letter": <ReadOutlined style={{ color: "#2f9367" }} />,
   "Entrance Exam": <FileDoneOutlined style={{ color: "#0f8a7c" }} />,
   Institutes: <BankOutlined style={{ color: "#c64f7a" }} />,
   "Book Your Mentor": <TeamOutlined style={{ color: "#157f69" }} />,
@@ -72,6 +74,7 @@ export const moduleStyleMap = {
   "Career Psychometric Assessment": { background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)", actionBg: "#5d8f26", tone: palette.purple },
   Assessment: { background: "linear-gradient(180deg, #e7f2d2 0%, #f3f9e9 100%)", actionBg: "#5d8f26", tone: palette.purple },
   "Career & Personality Videos": { background: "linear-gradient(180deg, #e6e4fb 0%, #f3f2ff 100%)", actionBg: "#4c45aa", tone: palette.orange },
+  "Career News Letter": { background: "linear-gradient(180deg, #e7f5ec 0%, #f5fbf7 100%)", actionBg: "#2f9367", tone: palette.green },
   "Entrance Exam": { background: "linear-gradient(180deg, #def6f2 0%, #f0fbf9 100%)", actionBg: "#0f8a7c", tone: palette.teal },
   Institutes: { background: "linear-gradient(180deg, #fdebf2 0%, #fff6f9 100%)", actionBg: "#c64f7a", tone: palette.pink },
   "Book Your Mentor": { background: "linear-gradient(180deg, #def2ee 0%, #f0fbf8 100%)", actionBg: "#157f69", tone: palette.secondary },
@@ -90,6 +93,7 @@ export function resolveModuleLookupKey(value = "") {
   if (normalized === "scholarship") return "scholarships";
   if (normalized === "institute") return "institutes";
   if (normalized === "subscription") return "subscriptions";
+  if (normalized === "career news letter") return "career news letter";
   if (normalized === "career psychometric assessment") return "career psychometric assessment";
   return normalized;
 }

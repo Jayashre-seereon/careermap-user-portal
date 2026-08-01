@@ -19,6 +19,7 @@ import AssessmentPage from "../features/assessment/pages/AssessmentPage";
 import PsychometricTestPage from "../features/assessment/pages/PsychometricTestPage";
 import LibraryPage from "../features/library/pages/LibraryPage";
 import LearnPage from "../features/learn/pages/LearnPage";
+import NewsletterPage from "../features/newsletter/pages/NewsletterPage";
 import BookMentorPage from "../features/mentor/pages/BookMentorPage";
 import ScholarshipPage from "../features/scholarships/pages/ScholarshipPage";
 import InstitutePage from "../features/institutes/pages/InstitutePage";
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
               { path: "psychometric-test", element: <PsychometricTestPage /> },
               { path: "library", element: <LibraryPage /> },
               { path: "learn", element: <LearnPage /> },
+              { path: "newsletter", element: <NewsletterPage /> },
               { path: "book-mentor", element: <BookMentorPage /> },
               { path: "scholarships", element: <ScholarshipPage /> },
               { path: "institutes", element: <InstitutePage /> },

@@ -22,11 +22,13 @@ export function ExploreModulesSection({ modules = [] }) {
       ? modules
       : buildDashboardModules(modules);
   const [lockedModule, setLockedModule] = useState(null);
+  const PREVIEW_UNLOCK_LIMIT = 4;
+  const moduleMode = String(curatedCards[0]?.accessStatus || "").toLowerCase();
   const isCareerPsychometricAssessment = (title = "") => {
     const normalized = String(title).trim().toLowerCase();
     return normalized === "career psychometric assessment" || normalized === "assessment";
   };
-const getAccessBadge = (status) => {
+  const getAccessBadge = (status) => {
   switch (status) {
     case "unlocked":
       return {
@@ -53,9 +55,54 @@ const getAccessBadge = (status) => {
       };
   }
   };  
-  const handleModuleClick = async (card) => {
+  const getEffectiveAccessStatus = (_card, index) => {
+    const rawStatus = String(_card?.accessStatus || "").toLowerCase();
+
+    if (rawStatus === "unlocked" || rawStatus === "full" || rawStatus === "preview") {
+      return "unlocked";
+    }
+
+    if (rawStatus === "locked") {
+      return "locked";
+    }
+
+    return moduleMode === "full" ? "unlocked" : "locked";
+  };
+
+  const getDisplayAccessStatus = (card, index) => {
+    const rawStatus = String(card?.accessStatus || "").toLowerCase();
+
+    if (rawStatus === "unlocked" || rawStatus === "full") {
+      return "unlocked";
+    }
+
+    if (rawStatus === "preview") {
+      return "preview";
+    }
+
+    if (rawStatus === "locked") {
+      return "locked";
+    }
+
+    return moduleMode === "full" ? "unlocked" : "locked";
+  };
+
+  const handleModuleClick = async (card, index) => {
+    const effectiveStatus = getEffectiveAccessStatus(card, index);
+    const rawStatus = String(card?.accessStatus || "").toLowerCase();
+
+    if (rawStatus === "unlocked" || rawStatus === "full") {
+      navFunc(card.route, {
+        state: {
+          accessStatus: "full",
+          moduleId: card.id,
+        },
+      });
+      return;
+    }
+
     if (isCareerPsychometricAssessment(card.title)) {
-      if (card.accessStatus === "locked") {
+      if (effectiveStatus === "locked") {
         setLockedModule({
           title: card.title,
           message: "This module is locked. Please purchase a subscription to continue accessing this module.",
@@ -65,7 +112,7 @@ const getAccessBadge = (status) => {
 
       navFunc(card.route, {
         state: {
-          accessStatus: card.accessStatus || "unlocked",
+          accessStatus: effectiveStatus,
           moduleId: card.id,
         },
       });
@@ -73,6 +120,14 @@ const getAccessBadge = (status) => {
     }
 
     try {
+      if (rawStatus === "locked" || effectiveStatus === "locked") {
+        setLockedModule({
+          title: card.title,
+          message: "This module is locked. Please purchase a subscription to continue accessing this module.",
+        });
+        return;
+      }
+
       const response = await checkModuleAccess(card.id);
 
       if (!response?.allowed) {
@@ -89,11 +144,11 @@ const getAccessBadge = (status) => {
       //   },
       // });
       navFunc(card.route, {
-  state: {
-    accessStatus: response.mode, // "preview" | "full"
-     moduleId: card.id,
-  },
-});
+        state: {
+          accessStatus: rawStatus === "preview" ? "preview" : (effectiveStatus === "unlocked" ? (response.mode || "full") : "locked"),
+          moduleId: card.id,
+        },
+      });
     } catch (err) {
       console.error(err);
     }
@@ -111,8 +166,13 @@ const getAccessBadge = (status) => {
   "Quiz",
 ];
 const sortedCards = [...curatedCards].sort(
-  (a, b) =>
-    moduleOrder.indexOf(a.title) - moduleOrder.indexOf(b.title)
+  (a, b) => {
+    const aIndex = moduleOrder.indexOf(a.title);
+    const bIndex = moduleOrder.indexOf(b.title);
+    const aRank = aIndex === -1 ? moduleOrder.length : aIndex;
+    const bRank = bIndex === -1 ? moduleOrder.length : bIndex;
+    return aRank - bRank;
+  }
 );
   return (
     <section>
@@ -128,20 +188,22 @@ const sortedCards = [...curatedCards].sort(
       </div>
       {curatedCards.length ? (
         <Row gutter={[14, 14]}>
-          {sortedCards.map((card) => {
+          {sortedCards.map((card, index) => {
+            const effectiveAccessStatus = getEffectiveAccessStatus(card, index);
+            const displayAccessStatus = getDisplayAccessStatus(card, index);
             const art = moduleStyleMap[card.title] || moduleStyleMap["Career Psychometric Assessment"] || moduleStyleMap.Assessment;
 
             const description =
               card.title === "Career Psychometric Assessment" || card.title === "Assessment"
                 ? "Deep personality and aptitude analysis for smarter career decisions."
                 : card.subtitle;
-            const badge = getAccessBadge(card.accessStatus);
+            const badge = getAccessBadge(displayAccessStatus);
             return (
               <Col xs={24} sm={12} lg={8} xl={6} key={card.id || card.title}>
                 <button
                   type="button"
                   className="dashboard-module-card group h-full w-full overflow-hidden rounded-[24px] border border-[#e8dbd6] bg-white text-left"
-                  onClick={() => handleModuleClick(card)}
+                  onClick={() => handleModuleClick(card, index)}
                 >
                   <div
                     className="dashboard-module-media relative h-[180px] w-full overflow-hidden"
