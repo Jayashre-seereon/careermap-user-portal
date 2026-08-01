@@ -40,7 +40,7 @@ function NewsletterCard({ item, canView }) {
             <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Newsletter</p>
             <h3 className="m-0 mt-1 text-[18px] font-black text-[#1a0a09]">{item.title}</h3>
           </div>
-          <span className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#9a2119]">
+          <span className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a2119]">
             {kind}
           </span>
         </div>
@@ -172,9 +172,7 @@ export default function NewsletterPage() {
     return () => clearInterval(timer);
   }, [previewRemaining, previewExpired]);
 
-  // full mode -> every item viewable
-  // preview mode -> only the first `previewLimit` items viewable, rest locked
-  // locked mode -> nothing viewable
+
   function isItemUnlocked(index) {
     if (hasFullAccess) return true;
     if (isPreview) return index < previewLimit;
@@ -214,20 +212,13 @@ export default function NewsletterPage() {
 
   return (
     <ModuleScreen className="space-y-5">
-      {isPreview && !previewExpired && previewRemaining > 0 ? (
-        <div className="sticky top-0 z-10 flex justify-end">
-          <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 shadow-sm">
-            <ClockCircleOutlined />
-            Preview ends in {previewRemaining}s
-          </div>
-        </div>
-      ) : null}
+      
 
       <PageHero backOnly onBack={goToDashboard} />
       {error ? <Alert type="warning" message={error} showIcon style={{ borderRadius: 16 }} /> : null}
 
-      <div className="grid gap-4">
-        {items.length > 0 ? (
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  {items.length > 0 ? (
           items.map((item, index) => (
             <button
               key={item.id}
