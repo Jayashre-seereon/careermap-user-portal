@@ -6,11 +6,11 @@ import {
 import { Link } from "react-router-dom";
 
 const socialLinks = [
-  { Icon: YoutubeFilled,   label: "YouTube"   },
-  { Icon: LinkedinFilled,  label: "LinkedIn"  },
-  { Icon: InstagramFilled, label: "Instagram" },
-  { Icon: GlobalOutlined,  label: "Website"   },
-  { Icon: FacebookFilled,  label: "Facebook"  },
+  { Icon: YoutubeFilled,   label: "YouTube" , href: "https://www.youtube.com/@careermap2016" },
+  { Icon: LinkedinFilled,  label: "LinkedIn" , href: "https://in.linkedin.com/company/career-map" },
+  { Icon: InstagramFilled, label: "Instagram" , href: "https://www.instagram.com/thecareermaps/?igsh=MWFpbWJ1bmhxMG5ncA%3D%3D#" },
+  { Icon: GlobalOutlined,  label: "Website"   , href: "https://x.com/identitygroup22?s=11" },
+  { Icon: FacebookFilled,  label: "Facebook"  , href: "https://www.facebook.com/careermapbhubaneswar?rdid=uJ0Avr7n95yKhI94&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F19nX7dB9TX%2F#" },
 ];
 
 const contactItems = [
@@ -62,7 +62,7 @@ export default function WebsiteFooter() {
   {socialLinks.map(({ Icon, label }) => (
     <a
       key={label}
-      href="#"
+      href={socialLinks.find(link => link.label === label)?.href || ""}
       aria-label={label}
       style={{
         width: 42,
@@ -122,7 +122,7 @@ export default function WebsiteFooter() {
       {/* Bottom bar */}
       <div className="relative z-10 flex items-center justify-between flex-wrap gap-3 px-14 py-4"
         style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>© 2025 Career Map. All rights reserved.</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>© 2026 Career Map. All rights reserved. Developed by Seereon Consulting & IT Services</div>
         <div style={{ display: "flex", gap: 20 }}>
           {["Privacy Policy", "Terms of Service", "Support"].map(label => (
             <Link key={label} to="#"
