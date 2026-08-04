@@ -25,9 +25,9 @@ function mapPlanItem(item, index) {
       .split(".") // split if sentences
       .map((f) => f.trim())
       .filter(Boolean),
-
-    description: stripHtml(item?.description),
+description: stripHtml(item?.description),
     descriptionList: extractListItems(item?.description),
+    descriptionHtml: item?.description || "",
     validity: item?.validity || "",
     price: item?.price || "0",
 
