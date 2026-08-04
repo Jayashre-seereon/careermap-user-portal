@@ -339,8 +339,17 @@ useEffect(() => {
                       <div className="m-0 mb-2 text-[15px]" style={{ fontWeight: "bold", color: "#9a2119" }}>
                         {section.title}
                       </div>
-                      <div
-                        className="ckeditor-output text-sm leading-7 text-gray-600"
+                     <div
+                        className="prose prose-sm max-w-none
+                                   prose-headings:text-black
+                                   prose-p:text-ink
+                                   prose-li:text-ink
+                                   prose-a:text-brand
+                                   prose-strong:text-ink
+                                   prose-table:border prose-table:border-line
+                                   prose-td:border prose-td:border-line prose-td:p-2
+                                   prose-th:border prose-th:border-line prose-th:p-2
+                                   prose-blockquote:border-l-brand prose-blockquote:text-ink"
                         dangerouslySetInnerHTML={{ __html: section.description || "" }}
                       />
                     </div>

@@ -470,14 +470,16 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
       sourceItem?.salaryRanges ||
       []
     ),
-    specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
+  specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
+    specializationHtml: item?.specialization || sourceItem?.specialization || "",
     importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
-    descriptions: Array.isArray(item?.descriptions)
+    importantFactorHtml: item?.important_factor || sourceItem?.important_factor || "",  descriptions: Array.isArray(item?.descriptions)
       ? item.descriptions
           .map((entry, entryIndex) => ({
             id: entry?.id ?? `${title}-description-${entryIndex}`,
             title: stripHtml(entry?.title || `Description ${entryIndex + 1}`),
             description: stripHtml(entry?.description || ""),
+            descriptionHtml: entry?.description || "",
             sortOrder: Number.isFinite(Number(entry?.sortOrder)) ? Number(entry.sortOrder) : entryIndex,
           }))
           .filter((entry) => entry.title || entry.description)
@@ -613,12 +615,24 @@ function getDetailDescriptionSections(detail) {
   if (Array.isArray(detail?.descriptions) && detail.descriptions.length > 0) {
     return detail.descriptions;
   }
-  const fallbackDescription = getDetailDescription(detail);
-  return fallbackDescription
-    ? [{ id: "description-0", title: "Description", description: fallbackDescription }]
+  const fallbackDescriptionHtml = getDetailDescriptionHtml(detail);
+  return fallbackDescriptionHtml
+    ? [{ id: "description-0", title: "Description", descriptionHtml: fallbackDescriptionHtml }]
     : [];
 }
-
+function getDetailDescriptionHtml(detail) {
+  return (
+    detail?.description ||
+    detail?.overview ||
+    detail?.subcategory?.description ||
+    detail?.secondcategory?.description ||
+    detail?.category?.description ||
+    detail?.subcategory?.specialization ||
+    detail?.secondcategory?.specialization ||
+    detail?.category?.specialization ||
+    ""
+  );
+}
 function SectionHeader({ icon, title }) {
   return (
     <div className="flex items-center gap-2 border-b border-[#f0e4e2] px-5 py-3">
@@ -1537,12 +1551,24 @@ useEffect(() => {
                   title="Description"
                   subtitle="What this career is about and why it matters."
                 >
-                  <div className="space-y-4">
+                 <div className="space-y-4">
                     {descriptionSections.map((item, itemIndex) => (
                       <div key={item.id ?? itemIndex} id={`desc-${index}-${item.id ?? itemIndex}`} className="scroll-mt-4">
                         <h3 className="m-0 text-[15px] font-black text-[#1a0a09]">{item.title}</h3>
-                        {item.description ? (
-                          <p className="m-0 mt-2 text-[15px] leading-8 text-[#000000]">{item.description}</p>
+                        {item.descriptionHtml || item.description ? (
+                          <div
+                            className="prose prose-sm max-w-none mt-2
+                                       prose-headings:text-ink
+                                       prose-p:text-[#000000]
+                                       prose-li:text-[#000000]
+                                       prose-a:text-brand
+                                       prose-strong:text-ink
+                                       prose-table:border prose-table:border-line
+                                       prose-td:border prose-td:border-line prose-td:p-2
+                                       prose-th:border prose-th:border-line prose-th:p-2
+                                       prose-blockquote:border-l-brand"
+                            dangerouslySetInnerHTML={{ __html: item.descriptionHtml || item.description || "" }}
+                          />
                         ) : null}
                       </div>
                     ))}
@@ -1670,7 +1696,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
               </Section>
               ) : null}
 
-              {(detail?.specializationList?.length > 0 || detail?.importantFactorList?.length > 0) && (
+             {(detail?.specializationHtml || detail?.importantFactorHtml) && (
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Section
                     id={`spec-${index}`}
@@ -1678,15 +1704,20 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                     title="Specialization"
                     subtitle="Key specializations in this field."
                   >
-                    {detail.specializationList.length > 0 ? (
-                      <ul className="m-0 list-none space-y-2 p-0">
-                        {detail.specializationList.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <StarOutlined className="mt-1 text-[#9a2119]" />
-                            <span className="text-[14px] text-[#000000]">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    {detail.specializationHtml ? (
+                      <div
+                        className="prose prose-sm max-w-none
+                                   prose-headings:text-ink
+                                   prose-p:text-[#000000]
+                                   prose-li:text-[#000000]
+                                   prose-a:text-brand
+                                   prose-strong:text-ink
+                                   prose-table:border prose-table:border-line
+                                   prose-td:border prose-td:border-line prose-td:p-2
+                                   prose-th:border prose-th:border-line prose-th:p-2
+                                   prose-blockquote:border-l-brand"
+                        dangerouslySetInnerHTML={{ __html: detail.specializationHtml }}
+                      />
                     ) : (
                       <p className="m-0 text-sm text-gray-400">Not available.</p>
                     )}
@@ -1698,15 +1729,20 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                     title="Important Factors"
                     subtitle="Things to know before choosing this path."
                   >
-                    {detail.importantFactorList.length > 0 ? (
-                      <ul className="m-0 list-none space-y-2 p-0">
-                        {detail.importantFactorList.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircleOutlined className="mt-1 text-[#9a2119]" />
-                            <span className="text-[14px] text-[#000000]">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    {detail.importantFactorHtml ? (
+                      <div
+                        className="prose prose-sm max-w-none
+                                   prose-headings:text-ink
+                                   prose-p:text-[#000000]
+                                   prose-li:text-[#000000]
+                                   prose-a:text-brand
+                                   prose-strong:text-ink
+                                   prose-table:border prose-table:border-line
+                                   prose-td:border prose-td:border-line prose-td:p-2
+                                   prose-th:border prose-th:border-line prose-th:p-2
+                                   prose-blockquote:border-l-brand"
+                        dangerouslySetInnerHTML={{ __html: detail.importantFactorHtml }}
+                      />
                     ) : (
                       <p className="m-0 text-sm text-gray-400">Not available.</p>
                     )}
