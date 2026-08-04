@@ -186,20 +186,26 @@ export default function SubscriptionPage() {
                     <span className="text-muted text-[10px] font-medium">/{plan.validity}</span>
                   </div>
 
-                  {plan.descriptionList?.length ? (
-                    <ul className="m-0 mt-3 list-none space-y-1.5 p-0">
-                      {plan.descriptionList.map((line, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <CheckOutlined className="text-brand text-[11px] mt-1 flex-shrink-0" />
-                          <span className="text-[12px] leading-snug text-ink/70">{line}</span>
-                        </li>
-                      ))}
-                    </ul>
+                {plan.descriptionHtml ? (
+                    <div
+                      className="prose prose-sm max-w-none mt-3
+                                 prose-headings:text-ink
+                                 prose-p:text-ink/70
+                                 prose-li:text-ink/70
+                                 prose-a:text-brand
+                                 prose-strong:text-ink
+                                 prose-table:border prose-table:border-line
+                                 prose-td:border prose-td:border-line prose-td:p-2
+                                 prose-th:border prose-th:border-line prose-th:p-2
+                                 prose-blockquote:border-l-brand
+                                 [&_*]:!text-[12px]"
+                      dangerouslySetInnerHTML={{ __html: plan.descriptionHtml }}
+                    />
                   ) : null}
                 </div>
 
                 {/* Features Area */}
-                <div className="p-5 flex-grow">
+                <div className="p-5 pt-0 mt-0 flex-grow">
                   <List
                     split={false}
                     dataSource={plan.modules.length ? plan.modules : ["No modules available"]}
