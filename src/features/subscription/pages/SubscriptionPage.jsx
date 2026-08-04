@@ -283,11 +283,11 @@ export default function SubscriptionPage() {
                   <td key={j} className="p-4 text-center">
                     <div className="flex flex-col items-center gap-1">
                       {included ? (
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-brand text-white">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-white">
                           <CheckOutlined className="text-[11px]" />
                         </span>
                       ) : (
-                        <CloseOutlined className="text-[12px] text-ink/20" />
+                        <CloseOutlined className="text-[12px] text-brand" />
                       )}
                       {row.notes?.[j] ? (
                         <span className="text-muted text-[10px] italic">{row.notes[j]}</span>
