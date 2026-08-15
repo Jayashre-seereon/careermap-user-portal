@@ -196,7 +196,7 @@ const stateOptions = useMemo(() => {
 
   // 🌍 Other countries → your API logic
   const states = items
-    .filter((i) => i.country === country)
+  .filter((i) => i.country?.toLowerCase() === country)
     .map((i) => i.state)
     .filter(Boolean);
 
