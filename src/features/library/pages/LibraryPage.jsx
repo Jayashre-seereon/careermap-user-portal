@@ -668,7 +668,7 @@ function InstituteFilterGroup({ institutes, badge, emptyText, showLocationFilter
     if (showLocationFilter) {
       const isIndia = normalizeCountryName(i.country) === "india";
       const matchesCountry = country === "India" ? isIndia : !isIndia;
-      const matchesState = !state || i.state === state;
+    const matchesState = !state || normalizeStateName(i.state) === normalizeStateName(state);
       if (!matchesCountry || !matchesState) return false;
     }
 
