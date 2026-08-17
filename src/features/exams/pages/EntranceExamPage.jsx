@@ -15,6 +15,66 @@ import { usePortalNavigation } from "../../portal/components/portalPageShared";
 import { checkModuleAccess } from "../../../api/moduleAccessApi";
 import { Select } from "antd";
 const { Option } = Select;
+
+function renderExamAboutHtml(html = "") {
+  if (typeof window === "undefined" || !html) {
+    return null;
+  }
+
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const nodes = Array.from(doc.body.children);
+
+  return nodes.map((node, index) => {
+    const tag = node.tagName.toLowerCase();
+    const text = node.textContent?.replace(/\s+/g, " ").trim() || "";
+
+    if (!text) {
+      return null;
+    }
+
+    if (tag === "p") {
+      return (
+        <p key={`p-${index}`} className="m-0 mb-4 leading-7 text-[#4f4347]">
+          <span dangerouslySetInnerHTML={{ __html: node.innerHTML }} />
+        </p>
+      );
+    }
+
+    if (tag === "ul" || tag === "ol") {
+      const listTag = tag;
+      const isOrdered = listTag === "ol";
+      const ListTag = isOrdered ? "ol" : "ul";
+
+      return (
+        <ListTag
+          key={`${tag}-${index}`}
+          className={`mb-4 ${isOrdered ? "list-decimal" : "list-disc"} pl-6 text-[#4f4347]`}
+        >
+          {Array.from(node.children).map((child, childIndex) => (
+            <li key={`${tag}-${index}-${childIndex}`} className="mb-1 leading-7">
+              <span dangerouslySetInnerHTML={{ __html: child.innerHTML }} />
+            </li>
+          ))}
+        </ListTag>
+      );
+    }
+
+    if (tag === "strong" || tag === "b") {
+      return (
+        <p key={`${tag}-${index}`} className="m-0 mb-4 font-bold leading-7 text-[#1a0a09]">
+          <span dangerouslySetInnerHTML={{ __html: node.innerHTML }} />
+        </p>
+      );
+    }
+
+    return (
+      <div key={`${tag}-${index}`} className="mb-4 leading-7 text-[#4f4347]">
+        <span dangerouslySetInnerHTML={{ __html: node.innerHTML }} />
+      </div>
+    );
+  });
+}
+
 export default function EntranceExamPage() {
   const { goToDashboard } = usePortalNavigation();
   const location = useLocation();
@@ -131,6 +191,17 @@ export default function EntranceExamPage() {
       }),
     [items, category, secondCategory, subCategory, selectedExamId]
   );
+
+  const infoHtml = useMemo(() => {
+    const rawHtml =
+      infoItem?.aboutHtml ||
+      infoItem?.about ||
+      infoItem?.details?.[0]?.description ||
+      infoItem?.description ||
+      "";
+
+    return rawHtml.replace(/&nbsp;/g, " ");
+  }, [infoItem]);
 
   return (
     <>
@@ -339,9 +410,9 @@ export default function EntranceExamPage() {
               </button>
             </div>
 
-            <p className="mt-3 max-h-[50vh] overflow-y-auto pr-1 text-[14px] leading-6 text-[#4f4347]">
-              {infoItem.about}
-            </p>
+            <div className="mt-3 max-h-[50vh] overflow-y-auto pr-1 text-[14px] leading-7 text-[#4f4347]">
+              {renderExamAboutHtml(infoHtml)}
+            </div>
           </div>
         </div>
       ) : null}

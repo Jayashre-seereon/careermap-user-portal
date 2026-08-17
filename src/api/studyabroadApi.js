@@ -9,24 +9,6 @@ function stripHtml(value) {
   return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function formatList(value, fallback) {
-  if (Array.isArray(value)) {
-    const items = value.map((item) => String(item).trim()).filter(Boolean);
-    return items.length ? items : [fallback];
-  }
-
-  if (!value) {
-    return [fallback];
-  }
-
-  const items = String(value)
-    .split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  return items.length ? items : [fallback];
-}
-
 function formatCost(value, fallback) {
   if (value === null || value === undefined || value === "") {
     return fallback;
@@ -50,21 +32,13 @@ function mapStudyAbroadItem(item, index) {
     name: countryName,
     countryName,
     flag: resolveFlag(item?.flag, countryName),
+    // Kept as raw HTML so headings / bullet lists in the admin-entered description render correctly
+    descriptionHtml: item?.description || "<p>Description not available.</p>",
+    // Plain-text fallback, in case it's needed anywhere else
     description: stripHtml(item?.description) || "Description not available.",
-    detail: stripHtml(item?.overview) || "Overview not available.",
-    overview: stripHtml(item?.overview) || "Overview not available.",
-    visa: stripHtml(item?.visa_work) || "Visa guidance not available.",
-    visaWork: stripHtml(item?.visa_work) || "Visa guidance not available.",
     living: formatCost(item?.living_cost, "Living cost not available."),
-    livingCost: formatCost(item?.living_cost, "Living cost not available."),
     tuition: formatCost(item?.tution_cost, "Tuition cost not available."),
-    tuitionCost: formatCost(item?.tution_cost, "Tuition cost not available."),
-    intake: item?.intake || "Intake information not available.",
     workRights: item?.work_rights || "Work rights not available.",
-    topUniversities: formatList(item?.top_university, "University details not available."),
-    scholarships: formatList(item?.scholarship, "Scholarship details not available."),
-    requirements: formatList(item?.requirment, "Requirement details not available."),
-    popularCourses: formatList(item?.popular_course, "Course details not available."),
   };
 }
 
