@@ -70,6 +70,8 @@ function formatTopColleges(colleges) {
 }
 
 function mapEntranceExam(item, index) {
+  const aboutHtml = item?.about || item?.details?.[0]?.description || item?.description || "";
+
   return {
     id: String(item?.id ?? `entrance-exam-${index}`),
     name: item?.examname || "Unnamed Exam",
@@ -85,7 +87,9 @@ function mapEntranceExam(item, index) {
     subjects: formatSubjects(item?.subject),
     totalMarks: item?.total_mark || "Marks not available",
     frequency: item?.frequncy || "Frequency not available",
-    about: stripHtml(item?.about) || "About information is not available right now.",
+    about: stripHtml(aboutHtml) || "About information is not available right now.",
+    aboutHtml,
+    details: Array.isArray(item?.details) ? item.details : [],
     examPattern: formatPattern(item?.exam_pattern),
     topColleges: formatTopColleges(item?.top_institution),
     website: item?.url || "#",
