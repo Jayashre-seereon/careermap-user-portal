@@ -47,9 +47,10 @@ function SectionCard({ icon, title, children }) {
 }
 
 export default function AbroadPage() {
-  const { canAccessFreeDetail, isUnlocked, registerFreeDetailAccess } = useAppState();
+  const { isUnlocked } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
-  const unlocked = isUnlocked("abroad-consultancy");
+  const accessStatus = location.state?.accessStatus || "preview";
+  const unlocked = accessStatus === "full" || isUnlocked("abroad-consultancy");
 
   const [countryList, setCountryList] = useState(fallbackStudyAbroadCountries);
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -67,6 +68,7 @@ export default function AbroadPage() {
   });
 
   const activeCountry = useMemo(() => selectedCountry, [selectedCountry]);
+  const detailUnlocked = Boolean(activeCountry) && unlocked;
 
   function buildAbroadReturnTo(countryRef = activeCountry) {
     const countryName = typeof countryRef === "string" ? countryRef : countryRef?.name;
@@ -232,10 +234,16 @@ export default function AbroadPage() {
           <div className="mx-auto w-full max-w-7xl">
             <button
               type="button"
-              onClick={() => setFormOpen(true)}
+              onClick={() => {
+                if (!detailUnlocked) {
+                  setUnlockModalItem(selectedCountry.name);
+                  return;
+                }
+                setFormOpen(true);
+              }}
               className="w-full rounded-xl bg-[#9a2119] py-3 font-semibold text-white shadow-md"
             >
-              Get Free Consultation
+              {detailUnlocked ? "Get Free Consultation" : "Unlock to Continue"}
             </button>
           </div>
         </div>
@@ -325,20 +333,20 @@ export default function AbroadPage() {
       </div>
 
       <div className="content-stagger grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {countryList.map((country) => {
-          const countryFree = unlocked || canAccessFreeDetail("abroad-consultancy", country.name);
+        {countryList.map((country, index) => {
+          const isPreviewMode = accessStatus === "preview";
+          const isFree = !isPreviewMode || index < 4;
 
           return (
             <button
               key={country.name}
               type="button"
               onClick={() => {
-                if (!unlocked && !countryFree) {
+                if (!isFree) {
                   setUnlockModalItem(country.name);
                   return;
                 }
 
-                registerFreeDetailAccess("abroad-consultancy", country.name);
                 setSelectedCountry(country);
               }}
               className="group relative overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white p-5 text-left transition-all duration-200 hover:-translate-y-1 hover:border-[#d9b5ad] hover:shadow-lg hover:shadow-[#9a2119]/10"
@@ -357,10 +365,10 @@ export default function AbroadPage() {
                     {!unlocked ? (
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                          countryFree ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                          isFree ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                         }`}
                       >
-                        {countryFree ? "FREE" : "LOCK"}
+                        {isFree ? "FREE" : "LOCK"}
                       </span>
                     ) : null}
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff6f2] text-[#9a2119] transition-colors group-hover:bg-[#9a2119] group-hover:text-white">
@@ -391,7 +399,7 @@ export default function AbroadPage() {
                 <div className="flex items-center justify-between border-t border-[#f0e4e2] pt-3">
                   <span className="text-xs font-semibold text-[#8c6c67]">Tap to explore details</span>
                   <span className="flex items-center gap-1 text-sm font-bold text-[#9a2119]">
-                    Explore <ArrowRightOutlined />
+                    {isFree ? "Explore" : "Unlock"} <ArrowRightOutlined />
                   </span>
                 </div>
               </div>
