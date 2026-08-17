@@ -308,16 +308,16 @@ if (selectedCountry) {
          
 
           {/* Consultation Card */}
-          <div className="overflow-hidden rounded-[26px] bg-[#9a2119] p-6 text-white shadow-lg shadow-[#9a2119]/15">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl">
+          <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white p-6 shadow-sm">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fdf0ee] text-xl text-[#9a2119]">
               <BookOutlined />
             </div>
 
-            <h3 className="m-0 text-xl font-bold text-white">
+            <h3 className="m-0 text-xl font-bold text-[#241312]">
               Need Help Choosing?
             </h3>
 
-            <p className="mt-2 text-sm leading-6 text-white">
+            <p className="mt-2 text-sm leading-6 text-gray-600">
               Get personalized guidance about courses, universities,
               applications, and studying in {selectedCountry.name}.
             </p>
@@ -332,7 +332,7 @@ if (selectedCountry) {
 
                 setFormOpen(true);
               }}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-bold text-[#9a2119] shadow-sm transition-all duration-300 hover:bg-[#fff5f2] hover:shadow-md"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#9a2119] py-3 text-sm font-bold text-white shadow-sm transition-all duration-300 hover:bg-[#7f1913] hover:shadow-md"
             >
               {unlocked
                 ? "Get Free Consultation"
@@ -375,12 +375,12 @@ if (selectedCountry) {
       {formOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md overflow-hidden rounded-[26px] bg-white shadow-2xl">
-            <div className="bg-[#9a2119] px-6 py-5 text-white">
-              <h2 className="m-0 text-xl font-bold">
+            <div className="border-b border-[#f0e4e2] px-6 py-5">
+              <h2 className="m-0 text-xl font-bold text-[#241312]">
                 Get Free Consultation
               </h2>
 
-              <p className="mt-1 text-sm text-white/80">
+              <p className="mt-1 text-sm text-gray-600">
                 Tell us about your study plans.
               </p>
             </div>
