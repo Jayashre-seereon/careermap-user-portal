@@ -563,67 +563,36 @@ if (selectedCountry) {
                       setSelectedCountry(country);
                     }
                   }}
-                  className="group relative flex cursor-pointer flex-col overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#d9b5ad] hover:shadow-lg hover:shadow-[#9a2119]/10"
+                  className="group flex cursor-pointer flex-col overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#d9b5ad] hover:shadow-lg hover:shadow-[#9a2119]/10"
                 >
-                <div
-  key={country.id || country.name}
-  role="button"
-  tabIndex={0}
-  onClick={() => {
-    if (!isFree) {
-      setUnlockModalItem(country.name);
-      return;
-    }
-    setSelectedCountry(country);
-  }}
-  onKeyDown={(event) => {
-    if (event.key === "Enter") {
-      if (!isFree) {
-        setUnlockModalItem(country.name);
-        return;
-      }
-      setSelectedCountry(country);
-    }
-  }}
-  
->
- {/* Top Icon */}
-<div className="flex justify-center pt-7">
-  <div className="flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-[#f5d8d1] bg-[#fff7f5] text-2xl text-[#9a2119] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-[#9a2119] group-hover:text-white">
-    <GlobalOutlined />
-  </div>
-</div>
+                  <div className="flex flex-1 flex-col items-center px-5 pb-5 pt-7 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border-[3px] border-[#f5d8d1] bg-[#fff7f5] text-2xl text-[#9a2119] shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-[#9a2119] group-hover:text-white">
+                      <GlobalOutlined />
+                    </div>
 
-{/* Country Name */}
-<div className="flex flex-1 flex-col items-center px-5 pt-2">
-  <h3 className="m-0 mb-3 text-center text-xl font-bold text-[#241312] transition-colors group-hover:text-[#9a2119]">
-    {country.name}
-  </h3>
+                    <h3 className="m-0 mt-4 text-xl font-bold leading-tight text-[#241312] transition-colors group-hover:text-[#9a2119]">
+                      {country.name}
+                    </h3>
 
-  {/* Free / Locked */}
-  {!unlocked ? (
-    <span
-      className={`rounded-full px-3 py-1 text-[10px] font-bold tracking-wide ${
-        isFree
-          ? "bg-green-50 text-green-600"
-          : "bg-[#fdf0ee] text-[#9a2119]"
-      }`}
-    >
-      {isFree ? "FREE ACCESS" : "LOCKED"}
-    </span>
-  ) : null}
+                    {!unlocked ? (
+                      <span
+                        className={`mt-3 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide ${
+                          isFree ? "bg-green-50 text-green-600" : "bg-[#fdf0ee] text-[#9a2119]"
+                        }`}
+                      >
+                        {isFree ? "FREE ACCESS" : "LOCKED"}
+                      </span>
+                    ) : null}
 
-  {/* Button */}
-  <button
-    type="button"
-    onClick={(event) => handleCardConsult(country, isFree, event)}
-    className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-[#9a2119] py-2 text-xs font-semibold text-white shadow-sm transition-all duration-300 hover:bg-[#7f1913] hover:shadow-md"
-  >
-    Get Consultation
-    <ArrowRightOutlined className="text-xs transition-transform duration-300 group-hover:translate-x-1" />
-  </button>
-</div>
-</div>
+                    <button
+                      type="button"
+                      onClick={(event) => handleCardConsult(country, isFree, event)}
+                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#9a2119] px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-[#7f1913] hover:shadow-md"
+                    >
+                      Get Consultation
+                      <ArrowRightOutlined className="text-xs transition-transform duration-300 group-hover:translate-x-1" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
