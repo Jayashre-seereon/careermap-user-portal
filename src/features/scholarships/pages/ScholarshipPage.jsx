@@ -583,16 +583,7 @@ useEffect(() => {
               className="group flex cursor-pointer overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white transition-all duration-200 hover:-translate-y-1 hover:border-[#9a2119] hover:shadow-lg hover:shadow-[#9a2119]/10"
             >
               {/* Amount rail: leads with the number, not an icon */}
-              <div
-                className={`flex w-[92px] shrink-0 flex-col items-center justify-center gap-1 px-2 py-4 text-center ${isActive ? "bg-[#fdf8f3]" : "bg-gray-50"
-                  }`}
-              >
-                <span className="text-[9px] font-bold uppercase tracking-widest text-[#b8837e]">Award</span>
-                <span className={`text-[15px] font-black leading-tight ${isActive ? "text-[#92702c]" : "text-gray-400"}`}>
-                  {item.rawPrice ? `Rs ${item.rawPrice}` : "N/A"}
-                </span>
-              </div>
-
+             
               <div className="flex min-w-0 flex-1 flex-col gap-3 border-l border-[#f0e4e2] px-4 py-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
