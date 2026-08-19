@@ -8,21 +8,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#16243A;
-    --ink-soft:#243652;
-    --parchment:#F4ECDC;
-    --gold:#C9A227;
-    --coral:#E0563A;
-    --teal:#3E8E8E;
-    --teal-dim:#3E8E8E55;
-    --fog:#7C8AA0;
-    --line:#3A4D6B;
+    --ink:#1F2A3C;
+    --ink-soft:#FFFFFF;
+    --parchment:#F7F1E4;
+    --gold:#AD7F0E;
+    --coral:#D14A2E;
+    --teal:#2E7A7A;
+    --teal-dim:#3E8E8E33;
+    --fog:#5F6B80;
+    --line:#E1D9C6;
+    --text-secondary:#4B5768;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--ink);
-    color:var(--parchment);
+    background:var(--parchment);
+    color:var(--ink);
     font-family:'Inter',sans-serif;
     min-height:100vh;
     display:flex;
@@ -48,7 +49,8 @@
     display:block;
   }
   .logo-chip{
-    background:var(--parchment);
+    background:#FFFFFF;
+    border:1px solid var(--line);
     border-radius:8px;
     padding:8px 14px;
     display:inline-flex;
@@ -61,6 +63,7 @@
     border:1px solid var(--line);
     border-radius:14px;
     padding:32px 28px;
+    box-shadow:0 4px 18px rgba(31,42,60,0.06);
   }
   .intro-card h1{
     font-family:'Fraunces',serif;
@@ -70,7 +73,7 @@
     font-weight:600;
   }
   .intro-card p{
-    color:#D7DCE6;
+    color:var(--text-secondary);
     line-height:1.6;
     margin:0 0 12px;
     font-size:0.97rem;
@@ -88,11 +91,11 @@
     align-items:center;
     gap:6px;
   }
-  .meta-item b{color:var(--parchment);font-weight:600;}
+  .meta-item b{color:var(--ink);font-weight:600;}
 
   button.primary{
     background:var(--coral);
-    color:var(--parchment);
+    color:#FFFFFF;
     border:none;
     border-radius:8px;
     padding:13px 26px;
@@ -102,12 +105,13 @@
     cursor:pointer;
     transition:transform 0.12s ease, background 0.2s ease;
   }
-  button.primary:hover{background:#c84a30;}
+  button.primary:hover{background:#b83c24;}
   button.primary:active{transform:scale(0.98);}
   button.primary:disabled{
-    background:#5a4640;
+    background:#D9CFC3;
+    color:#8A8172;
     cursor:not-allowed;
-    opacity:0.6;
+    opacity:0.8;
   }
   button.ghost{
     background:transparent;
@@ -119,7 +123,7 @@
     cursor:pointer;
     font-family:'Inter',sans-serif;
   }
-  button.ghost:hover{color:var(--parchment);border-color:var(--fog);}
+  button.ghost:hover{color:var(--ink);border-color:var(--fog);}
 
   /* ---------- TRAIL / PROGRESS ---------- */
   .trail{
@@ -166,7 +170,7 @@
     border:1px solid var(--line);
     border-radius:9px;
     cursor:pointer;
-    background:rgba(255,255,255,0.02);
+    background:rgba(31,42,60,0.015);
     transition:border-color 0.15s ease, background 0.15s ease;
     font-size:0.92rem;
   }
@@ -209,7 +213,7 @@
     color:var(--gold);
   }
   .result-sub{
-    color:#D7DCE6;
+    color:var(--text-secondary);
     font-size:0.95rem;
     line-height:1.6;
     margin:0 0 26px;
@@ -223,8 +227,8 @@
   }
   .pin-label{
     font-family:'JetBrains Mono',monospace;
-    font-size:9px;
-    fill:var(--parchment);
+    font-size:11px;
+    fill:var(--ink);
   }
   .pin-label.locked{fill:var(--fog);}
 
@@ -236,15 +240,16 @@
   .blurb-block.surprise{border-left-color:var(--teal);}
   .blurb-label{
     font-family:'JetBrains Mono',monospace;
-    font-size:0.7rem;
+    font-size:0.85rem;
+    font-weight:600;
     color:var(--gold);
     text-transform:uppercase;
     letter-spacing:0.05em;
-    margin-bottom:4px;
+    margin-bottom:6px;
   }
   .blurb-block.surprise .blurb-label{color:var(--teal);}
   .blurb-text{
-    color:#E6E9F0;
+    color:var(--text-secondary);
     font-size:0.93rem;
     line-height:1.6;
     margin:0;
@@ -260,9 +265,9 @@
     margin:6px 0 8px;
   }
   .work-tag{
-    background:rgba(224,86,58,0.14);
-    border:1px solid rgba(224,86,58,0.45);
-    color:#F4D8CF;
+    background:rgba(209,74,46,0.1);
+    border:1px solid rgba(209,74,46,0.35);
+    color:#8C3A22;
     font-size:0.8rem;
     padding:6px 12px;
     border-radius:999px;
@@ -275,8 +280,8 @@
   }
 
   .tension-card{
-    background:rgba(224,86,58,0.1);
-    border:1px solid rgba(224,86,58,0.4);
+    background:rgba(209,74,46,0.07);
+    border:1px solid rgba(209,74,46,0.3);
     border-radius:10px;
     padding:16px 18px;
     margin:22px 0;
@@ -285,15 +290,16 @@
     margin:0;
     font-size:0.9rem;
     line-height:1.55;
-    color:#F4D8CF;
+    color:#6B3320;
   }
   .tension-label{
     font-family:'JetBrains Mono',monospace;
-    font-size:0.7rem;
+    font-size:0.85rem;
+    font-weight:600;
     color:var(--coral);
     text-transform:uppercase;
     letter-spacing:0.05em;
-    margin-bottom:6px;
+    margin-bottom:8px;
     display:block;
   }
 
@@ -317,7 +323,7 @@
   }
   .locked-item .lk-hint{
     font-size:0.65rem;
-    color:#5C6A80;
+    color:var(--fog);
     margin-top:4px;
     line-height:1.3;
   }
@@ -399,7 +405,7 @@
     <p class="result-sub" id="r-sub">—</p>
 
     <div class="compass-wrap">
-      <svg width="280" height="280" viewBox="0 0 280 280" id="compass-svg"></svg>
+      <svg width="470" height="310" viewBox="0 0 470 310" id="compass-svg" style="width:100%;max-width:470px;height:auto;"></svg>
     </div>
 
     <div class="blurb-block">
@@ -765,14 +771,14 @@ function showResult(){
 function drawCompass(report){
   const svg = document.getElementById('compass-svg');
   svg.innerHTML = '';
-  const cx=140, cy=140, r=95;
+  const cx=210, cy=155, r=80;
   const traitOrder = ['O','C','E','A','N'];
   const angleStep = (2*Math.PI)/traitOrder.length;
 
   // outer ring
-  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${r}" stroke="#3A4D6B" stroke-width="1" fill="none"/>`;
-  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${r*0.6}" stroke="#3A4D6B" stroke-width="1" fill="none" stroke-dasharray="3 4"/>`;
-  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="2.5" fill="#C9A227"/>`;
+  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${r}" stroke="#C9C0AA" stroke-width="1" fill="none"/>`;
+  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="${r*0.6}" stroke="#C9C0AA" stroke-width="1" fill="none" stroke-dasharray="3 4"/>`;
+  svg.innerHTML += `<circle cx="${cx}" cy="${cy}" r="2.5" fill="#AD7F0E"/>`;
 
   traitOrder.forEach((t,i)=>{
     const angle = -Math.PI/2 + i*angleStep;
@@ -782,18 +788,24 @@ function drawCompass(report){
     const dist = isRevealed ? (0.35 + (score-1)/4*0.65) * r : r*0.6;
     const x = cx + dist*Math.cos(angle);
     const y = cy + dist*Math.sin(angle);
-    const lx = cx + (r+22)*Math.cos(angle);
-    const ly = cy + (r+22)*Math.sin(angle);
+    const cosA = Math.cos(angle);
+    const lx = cx + (r+18)*cosA;
+    const ly = cy + (r+18)*Math.sin(angle);
+    // Flip anchor based on which side of the circle the label sits on,
+    // so long labels grow away from the circle instead of getting clipped.
+    let anchor = 'middle';
+    if(cosA > 0.3){ anchor = 'start'; }
+    else if(cosA < -0.3){ anchor = 'end'; }
 
     if(isRevealed){
-      svg.innerHTML += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#C9A227" stroke-width="1" opacity="0.4"/>`;
-      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="6" fill="#E0563A" stroke="#16243A" stroke-width="2"/>`;
+      svg.innerHTML += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#AD7F0E" stroke-width="1" opacity="0.5"/>`;
+      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="6" fill="#D14A2E" stroke="#FFFFFF" stroke-width="2"/>`;
     } else {
-      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="5" fill="none" stroke="#5C6A80" stroke-width="1.5" stroke-dasharray="2 2"/>`;
+      svg.innerHTML += `<circle cx="${x}" cy="${y}" r="5" fill="none" stroke="#8A93A3" stroke-width="1.5" stroke-dasharray="2 2"/>`;
     }
 
     const label = isRevealed ? REPOSITORY.traitNames[t] : '???';
-    svg.innerHTML += `<text x="${lx}" y="${ly}" text-anchor="middle" class="pin-label${isRevealed?'':' locked'}">${label}</text>`;
+    svg.innerHTML += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" class="pin-label${isRevealed?'':' locked'}">${label}</text>`;
   });
 }
 </script>
