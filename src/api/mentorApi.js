@@ -113,6 +113,7 @@ export function mapMentorItem(item, index = 0) {
 
   return {
     id: String(item?.id ?? `mentor-${index}`),
+     createdAt: item?.createdAt || item?.created_at || null,
     name,
     specialty: item?.designation || item?.specialty || "Career Guidance",
     rank: item?.rank ?? "N/A",                              // ← add this, own key

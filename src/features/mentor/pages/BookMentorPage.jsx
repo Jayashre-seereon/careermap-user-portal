@@ -326,9 +326,10 @@ export default function BookMentorPage() {
   }
 
   // ── Filtered list ────────────────────────────────────────────────────────
-  const filteredMentorList = useMemo(
-    () =>
-      mentorList.filter((m) => {
+ const filteredMentorList = useMemo(
+  () =>
+    mentorList
+      .filter((m) => {
         const matchesCategory =
           !category || String(m.categoryObj?.id) === String(category);
         const matchesSecondCategory =
@@ -336,9 +337,17 @@ export default function BookMentorPage() {
         const matchesSubCategory =
           !subCategory || String(m.subcategoryObj?.id) === String(subCategory);
         return matchesCategory && matchesSecondCategory && matchesSubCategory;
+      })
+      .sort((a, b) => {
+        // prefer createdAt if backend provides it
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        // fallback: higher id = more recently added
+        return Number(b.id) - Number(a.id);
       }),
-    [mentorList, category, secondCategory, subCategory]
-  );
+  [mentorList, category, secondCategory, subCategory]
+);
 
   // ── Active mentor ────────────────────────────────────────────────────────
   const activeMentor = useMemo(() => {

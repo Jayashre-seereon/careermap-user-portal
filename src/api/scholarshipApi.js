@@ -91,6 +91,7 @@ function mapScholarshipItem(item, index) {
 
   return {
     id: String(item?.id ?? `scholarship-${index}`),
+    createdAt: item?.createdAt || item?.created_at || null,
     name: item?.name || "Unnamed Scholarship",
     eligibility: stripHtml(item?.eligibility) || "Eligibility not available",
     amount: formatAmount(item?.price),

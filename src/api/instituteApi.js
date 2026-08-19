@@ -37,6 +37,7 @@ const instituteType = item?.institute_type?.trim() || "Institute";
 
 return {
   id: String(item?.id ?? `institute-${index}`),
+   createdAt: item?.createdAt || item?.created_at || null,
   name: item?.name || "Unnamed Institute",
  location: item?.address,
   courses,

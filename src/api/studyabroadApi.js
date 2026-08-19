@@ -28,6 +28,7 @@ function mapStudyAbroadItem(item, index) {
 
   return {
     id: String(item?.id ?? `study-abroad-${index}`),
+    createdAt: item?.createdAt || item?.created_at || null,
     title,
     name: countryName,
     countryName,

@@ -35,6 +35,7 @@ function mapMasterclassItem(item, index) {
 
   return {
     id: String(item?.id ?? `${item?.title ?? "masterclass"}-${index}`),
+    createdAt: item?.createdAt || item?.created_at || null,
     title: item?.title || "Untitled Master Class",
     mentor: item?.name || "Unknown Mentor",
     duration: formatMasterclassTime(item?.time),

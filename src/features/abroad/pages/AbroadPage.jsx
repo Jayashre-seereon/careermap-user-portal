@@ -113,8 +113,7 @@ export default function AbroadPage() {
         setLoadError("");
         const items = await getStudyAbroadCountries();
         if (active) {
-          setCountryList(items.length ? items : fallbackStudyAbroadCountries);
-        }
+       setCountryList(items.length ? [...items].sort((a, b) => b.id - a.id) : fallbackStudyAbroadCountries); }
       } catch (error) {
         if (active) {
           setLoadError(error?.response?.data?.message || error?.message || "Failed to load study abroad destinations.");
