@@ -108,16 +108,18 @@ export default function NewsletterPage() {
   useEffect(() => {
     let active = true;
 
-    async function loadItems() {
-      try {
-        const response = await getNewsletters();
-        if (active) setItems(response);
-      } catch (err) {
-        if (active) {
-          setError(err?.response?.data?.message || err?.message || "Failed to load newsletters.");
-        }
-      }
+   async function loadItems() {
+  try {
+    const response = await getNewsletters();
+    if (active) {
+      setItems([...response].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     }
+  } catch (err) {
+    if (active) {
+      setError(err?.response?.data?.message || err?.message || "Failed to load newsletters.");
+    }
+  }
+}
 
     loadItems();
     return () => {

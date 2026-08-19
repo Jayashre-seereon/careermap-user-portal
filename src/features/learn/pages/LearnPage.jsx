@@ -116,7 +116,7 @@ const unlocked =
   const [items, setItems] = useState(fallbackMasterClasses);
   const [error, setError] = useState("");
   const [videoType, setVideoType] = useState("All");
-  const [sortBy, setSortBy] = useState("popular");
+  const [sortBy, setSortBy] = useState("newest");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
 
   useEffect(() => {
@@ -153,17 +153,23 @@ const unlocked =
     if (nextSortBy) setSortBy(nextSortBy);
   }, [params]);
 
-  const filtered = useMemo(
-    () =>
-      [...items]
-        .filter((item) => videoType === "All" || item.videoType === videoType)
-        .sort((a, b) => {
-          if (sortBy === "az") return a.title.localeCompare(b.title);
-          if (sortBy === "za") return b.title.localeCompare(a.title);
-          return b.views - a.views;
-        }),
-    [items, sortBy, videoType]
-  );
+ const filtered = useMemo(
+  () =>
+    [...items]
+      .filter((item) => videoType === "All" || item.videoType === videoType)
+      .sort((a, b) => {
+        if (sortBy === "az") return a.title.localeCompare(b.title);
+        if (sortBy === "za") return b.title.localeCompare(a.title);
+        if (sortBy === "newest") {
+          if (a.createdAt && b.createdAt) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }
+          return Number(b.id) - Number(a.id); // fallback if no createdAt
+        }
+        return b.views - a.views; // popular
+      }),
+  [items, sortBy, videoType]
+);
 
   const videoTypeOptions = useMemo(
     () => ["All", ...Array.from(new Set(items.map((item) => item.videoType)))],

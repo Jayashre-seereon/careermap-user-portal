@@ -172,19 +172,28 @@ useEffect(() => {
     setSubCategory("");
   }
 
-  const filtered = useMemo(
-    () =>
-      items.filter((item) => {
+ const filtered = useMemo(
+  () =>
+    items
+      .filter((item) => {
         const matchesStatus = activeStatus === "All" || item.status === activeStatus;
         const matchesCategory = !category || String(item.categoryObj?.id) === String(category);
         const matchesSecondCategory = !secondCategory || String(item.secondcategoryObj?.id) === String(secondCategory);
         const matchesSubCategory = !subCategory || String(item.subcategoryObj?.id) === String(subCategory);
-         const matchesType = !type || item.tag === type; // add this
+        const matchesType = !type || item.tag === type;
 
         return matchesStatus && matchesCategory && matchesSecondCategory && matchesSubCategory && matchesType;
+      })
+      .sort((a, b) => {
+        // prefer createdAt if backend provides it
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        // fallback: higher id = more recently added
+        return Number(b.id) - Number(a.id);
       }),
-    [activeStatus, items, category, secondCategory, subCategory, type]
-  );
+  [activeStatus, items, category, secondCategory, subCategory, type]
+);
 
   function buildScholarshipReturnTo(itemName = selectedItem?.name) {
     const nextParams = new URLSearchParams();

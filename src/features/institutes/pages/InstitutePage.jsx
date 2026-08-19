@@ -149,35 +149,39 @@ useEffect(() => {
 
 const filtered = useMemo(
   () =>
-    items.filter((item) => {
-      const matchesSearch =
-        !search ||
-        item.name?.toLowerCase().includes(search.toLowerCase()) ||
-        item.location?.toLowerCase().includes(search.toLowerCase()) ||
-        item.type?.toLowerCase().includes(search.toLowerCase());
+    items
+      .filter((item) => {
+        const matchesSearch =
+          !search ||
+          item.name?.toLowerCase().includes(search.toLowerCase()) ||
+          item.location?.toLowerCase().includes(search.toLowerCase()) ||
+          item.type?.toLowerCase().includes(search.toLowerCase());
 
-      const matchesCategory = !category || String(item.category?.id) === String(category);
-      const matchesSecondCategory = !secondCategory || String(item.secondcategory?.id) === String(secondCategory);
-      const matchesSubCategory = !subCategory || String(item.subcategory?.id) === String(subCategory);
-    const matchesCountry =
-  !country ||
-  item.country?.toLowerCase() === country.toLowerCase();
+        const matchesCategory = !category || String(item.category?.id) === String(category);
+        const matchesSecondCategory = !secondCategory || String(item.secondcategory?.id) === String(secondCategory);
+        const matchesSubCategory = !subCategory || String(item.subcategory?.id) === String(subCategory);
+        const matchesCountry = !country || item.country?.toLowerCase() === country.toLowerCase();
+        const matchesState = !stateFilter || item.state?.toLowerCase() === stateFilter.toLowerCase();
+        const matchesType = !type || item.type?.trim() === type;
 
-const matchesState =
-  !stateFilter ||
-  item.state?.toLowerCase() === stateFilter.toLowerCase(); 
-  const matchesType =
-  !type || item.type?.trim() === type;
-    return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesSecondCategory &&
-        matchesSubCategory &&
-        matchesCountry &&
-        matchesState &&
-        matchesType
-      );
-    }),
+        return (
+          matchesSearch &&
+          matchesCategory &&
+          matchesSecondCategory &&
+          matchesSubCategory &&
+          matchesCountry &&
+          matchesState &&
+          matchesType
+        );
+      })
+      .sort((a, b) => {
+        // prefer createdAt if backend provides it
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        // fallback: higher id = more recently added
+        return Number(b.id) - Number(a.id);
+      }),
   [items, search, category, secondCategory, subCategory, country, stateFilter, type]
 );
 const countryOptions = useMemo(() => {
