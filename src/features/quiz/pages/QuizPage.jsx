@@ -52,6 +52,7 @@ function normalizeQuizTitle(title) {
   return String(title || "")
     .trim()
     .toLowerCase()
+    .replace(/&/g, "and")
     .replace(/\s+/g, " ");
 }
 
