@@ -28,7 +28,14 @@ const QUIZ_ICONS = [
   <LinkOutlined key="link" />,
   <BulbOutlined key="bulb" />,
 ];
-
+const QUIZ_ORDER = [
+  "science",
+  "commerce",
+  "arts and humanities",
+  "neutral",
+  "competitive",
+  "vocational",
+];
 const SCORE_MESSAGES = [
   "Keep practicing and you will get there.",
   "You are building momentum.",
@@ -36,7 +43,33 @@ const SCORE_MESSAGES = [
   "Great work, you are on track.",
   "Perfect score, outstanding.",
 ];
+function normalizeQuizTitle(title) {
+  return String(title || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
 
+function sortQuizzes(quizzes) {
+  return [...quizzes].sort((a, b) => {
+    const titleA = normalizeQuizTitle(a.title);
+    const titleB = normalizeQuizTitle(b.title);
+
+    const indexA = QUIZ_ORDER.indexOf(titleA);
+    const indexB = QUIZ_ORDER.indexOf(titleB);
+
+    // Known quizzes come first in the required order
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+
+    // Any other quiz goes after the required quizzes
+    return titleA.localeCompare(titleB);
+  });
+}
 function mapFallbackQuestions(quizIndex = 0) {
   return sampleQuizQuestions.map((question, index) => ({
     id: `fallback-${quizIndex}-${index}`,
@@ -116,8 +149,9 @@ function getQuizMeta(quiz) {
 
 export default function QuizPage() {
   const { navigate } = usePortalNavigation();
-  const [quizzes, setQuizzes] = useState(buildFallbackQuizzes());
-  const [loadError, setLoadError] = useState("");
+ const [quizzes, setQuizzes] = useState(
+  sortQuizzes(buildFallbackQuizzes())
+); const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [current, setCurrent] = useState(0);
@@ -135,13 +169,15 @@ export default function QuizPage() {
         setLoadError("");
         const items = await getQuizzes();
 
-        if (active) {
-          setQuizzes(items.length ? items : buildFallbackQuizzes());
-        }
+       if (active) {
+  setQuizzes(
+    sortQuizzes(items.length ? items : buildFallbackQuizzes())
+  );
+}
       } catch (error) {
         if (active) {
           setLoadError(error?.response?.data?.message || error?.message || "Failed to load quizzes.");
-          setQuizzes(buildFallbackQuizzes());
+        setQuizzes(sortQuizzes(buildFallbackQuizzes()));
         }
       } finally {
         if (active) {
