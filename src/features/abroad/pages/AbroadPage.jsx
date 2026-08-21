@@ -6,6 +6,8 @@ import {
   CheckCircleOutlined,
   GlobalOutlined,
   ReadOutlined,
+   LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { createStudyAbroadConsultation, getStudyAbroadCountries } from "../../../api/studyabroadApi";
@@ -570,18 +572,14 @@ if (selectedCountry) {
                       <GlobalOutlined />
                     </div>
 
-                    <h3 className="m-0 mt-4 text-xl font-bold leading-tight text-[#241312] transition-colors group-hover:text-[#9a2119]">
+                    <h3 className="m-0 mt-2 text-xl font-bold leading-tight text-[#241312] transition-colors group-hover:text-[#9a2119]">
                       {country.name}
                     </h3>
 
                     {!unlocked ? (
-                      <span
-                        className={`mt-3 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide ${
-                          isFree ? "bg-green-50 text-green-600" : "bg-[#fdf0ee] text-[#9a2119]"
-                        }`}
-                      >
-                        {isFree ? "FREE ACCESS" : "LOCKED"}
-                      </span>
+                       <div className={`absolute  right-3 flex h-8 w-8 items-center justify-center rounded-full ${isFree ? "bg-green-50" : "bg-red-50"}`}>
+                {isFree ? <UnlockOutlined className="text-green-600" /> : <LockOutlined className="text-red-500" />}
+              </div>
                     ) : null}
 
                     <button
