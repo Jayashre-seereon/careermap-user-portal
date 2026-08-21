@@ -55,9 +55,24 @@ type: instituteType,
 };
 }
 
-export async function getInstitutes() {
-  const response = await api.get("/institutes");
-  const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+export async function getInstitutes(page = 1) {
+  const response = await api.get(
+    `/institutes/paginated?page=${page}&limit=32`
+  );
 
-  return items.map((item, index) => mapInstituteItem(item, index));
+  const items = Array.isArray(response?.data?.data)
+    ? response.data.data
+    : [];
+
+  return {
+    items: items.map((item, index) => mapInstituteItem(item, index)),
+    pagination: response?.data?.pagination || {
+      page,
+      limit: 32,
+      total: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    },
+  };
 }

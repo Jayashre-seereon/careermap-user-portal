@@ -54,27 +54,37 @@ export default function InstitutePage() {
   const [subCategory, setSubCategory] = useState("");
   const [unlockModalItem, setUnlockModalItem] = useState(null);
   const [moduleMode, setModuleMode] = useState(location.state?.accessStatus || "preview");
-
+  const [page, setPage] = useState(1);
+const [pagination, setPagination] = useState(null);
+const [loading, setLoading] = useState(false);
   useEffect(() => {
   let active = true;
 
-  async function loadInstitutes() {
-    try {
-      setError("");
-      const response = await getInstitutes();
-      if (active && response.length) {
-        setItems(response);
-      }
-    } catch (loadError) {
-      if (active) {
-        setError(
-          loadError?.response?.data?.message ||
-          loadError?.message ||
-          "Failed to load institutes."
-        );
-      }
+ async function loadInstitutes(currentPage) {
+  try {
+    setLoading(true);
+    setError("");
+
+    const response = await getInstitutes(currentPage);
+
+    if (active) {
+      setItems(response.items);
+      setPagination(response.pagination);
+    }
+  } catch (loadError) {
+    if (active) {
+      setError(
+        loadError?.response?.data?.message ||
+        loadError?.message ||
+        "Failed to load institutes."
+      );
+    }
+  } finally {
+    if (active) {
+      setLoading(false);
     }
   }
+}
 
   loadInstitutes();
 
@@ -88,31 +98,41 @@ useEffect(() => {
   setStateFilter("");
 }, [country]);
 
-  useEffect(() => {
-    let active = true;
+ useEffect(() => {
+  let active = true;
 
-    async function loadAccessMode() {
-      const moduleId = location.state?.moduleId;
-      if (!moduleId) return;
+  async function loadInstitutes(currentPage) {
+    try {
+      setLoading(true);
+      setError("");
 
-      try {
-        const response = await checkModuleAccess(moduleId);
-        if (active && response?.mode) {
-          setModuleMode(response.mode);
-        }
-      } catch {
-        if (active) {
-          setModuleMode(location.state?.accessStatus || "preview");
-        }
+      const response = await getInstitutes(currentPage);
+
+      if (active) {
+        setItems(response.items);
+        setPagination(response.pagination);
+      }
+    } catch (loadError) {
+      if (active) {
+        setError(
+          loadError?.response?.data?.message ||
+          loadError?.message ||
+          "Failed to load institutes."
+        );
+      }
+    } finally {
+      if (active) {
+        setLoading(false);
       }
     }
+  }
 
-    loadAccessMode();
-    return () => {
-      active = false;
-    };
-  }, [location.state?.moduleId, location.state?.accessStatus]);
+  loadInstitutes(page);
 
+  return () => {
+    active = false;
+  };
+}, [page]);
   const categoryOptions = useMemo(
     () => [...new Map(items.filter((i) => i.category).map((i) => [i.category.id, i.category])).values()],
     [items]
@@ -404,8 +424,27 @@ const typeOptions = useMemo(
         })}
       </div>
 
-      {filtered.length === 0 ? <div className="py-10 text-center text-gray-500">No results found</div> : null}
+     {pagination && pagination.totalPages > 1 && (
+  <div className="flex items-center justify-center gap-3 py-6">
+    <Button
+      disabled={!pagination.hasPreviousPage || loading}
+      onClick={() => setPage((prev) => prev - 1)}
+    >
+      Previous
+    </Button>
 
+    <span className="text-sm font-semibold">
+      Page {pagination.page} of {pagination.totalPages}
+    </span>
+
+    <Button
+      disabled={!pagination.hasNextPage || loading}
+      onClick={() => setPage((prev) => prev + 1)}
+    >
+      Next
+    </Button>
+  </div>
+)}
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
         title="Unlock Institute"
