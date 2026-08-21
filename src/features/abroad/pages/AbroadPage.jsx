@@ -146,15 +146,17 @@ export default function AbroadPage() {
     }
   }, [countryList, location.search]);
 
-  function handleCardConsult(country, isFree, event) {
-    event.stopPropagation();
-    if (!isFree || !unlocked) {
-      setUnlockModalItem(country.name);
-      return;
-    }
-    setSelectedCountry(country);
-    setFormOpen(true);
+ function handleCardConsult(country, isFree, event) {
+  event.stopPropagation();
+
+  if (!isFree) {
+    setUnlockModalItem(country.name);
+    return;
   }
+
+  setSelectedCountry(country);
+  setFormOpen(true);
+}
 
   if (submitted && activeCountry) {
     return (
