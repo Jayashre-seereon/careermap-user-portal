@@ -372,8 +372,7 @@ if (selectedCountry) {
 
       {/* Consultation Modal */}
       {formOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md overflow-hidden rounded-[26px] bg-white shadow-2xl">
+       <div className="fixed inset-0 z-0 flex items-start justify-center bg-black/50 p-4 pt-24 backdrop-blur-sm">    <div className="w-full max-w-md overflow-hidden rounded-[26px] bg-white shadow-2xl">
             <div className="border-b border-[#f0e4e2] px-6 py-5">
               <h2 className="m-0 text-xl font-bold text-[#241312]">
                 Get Free Consultation
