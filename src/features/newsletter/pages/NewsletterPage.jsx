@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert, Empty } from "antd";
-import { ArrowRightOutlined, ClockCircleOutlined, FileTextOutlined, LockOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined, UnlockOutlined, FileTextOutlined, LockOutlined } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
@@ -32,58 +32,80 @@ function NewsletterCard({ item, canView }) {
   const fileUrl = item.media || item.url;
   const kind = getFileKindLabel(fileUrl);
 
-  return (
-    <div className="overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm">
-      <div className="space-y-3 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">Newsletter</p>
-            <h3 className="m-0 mt-1 text-[18px] font-black text-[#1a0a09]">{item.title}</h3>
-          </div>
-          <span className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[#9a2119]">
+ return (
+  <div className="overflow-hidden rounded-[24px] border border-[#f0e4e2] bg-white shadow-sm">
+    <div className="space-y-3 p-5">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">
+            Newsletter
+          </p>
+
+          <h3 className="m-0 mt-1 text-[18px] font-black text-[#1a0a09]">
+            {item.title}
+          </h3>
+        </div>
+
+        {/* Right Side */}
+        <div className="flex flex-col items-end gap-2">
+
+          {/* Lock / Unlock Icon */}
+          <span
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${
+              canView
+                ? "bg-[#ecfdf3] text-[#16a34a]"
+                : "bg-[#f8e8d8] text-[#9a2119]"
+            }`}
+          >
+            {canView ? <UnlockOutlined /> : <LockOutlined />}
+          </span>
+
+          {/* PDF / IMAGE */}
+          <span className="rounded-full bg-[#fdf0ee] px-3 py-1 text-[8px] font-bold uppercase tracking-[0.16em] text-[#9a2119]">
             {kind}
           </span>
         </div>
+      </div>
 
-        <p className="m-0 text-[14px] leading-7 text-[#4f4347]">{item.description}</p>
+      {/* Description */}
+      <p className="m-0 text-[14px] leading-7 text-[#4f4347]">
+        {item.description}
+      </p>
 
-        {canView ? (
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+      {/* Buttons only when unlocked */}
+      {canView ? (
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-2 rounded-full border border-[#f0e4e2] bg-[#fffdfa] px-2 py-2 text-[10px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+          >
+            <FileTextOutlined />
+            View
+          </a>
+
+          {item.url ? (
             <a
-              href={fileUrl}
+              href={item.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-2 rounded-full border border-[#f0e4e2] bg-[#fffdfa] px-4 py-2 text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+              className="inline-flex items-center gap-2 rounded-full border border-transparent bg-[#9a2119] px-2 py-2 text-[10px] font-semibold text-white transition hover:bg-[#7a1a13]"
             >
-              <FileTextOutlined />
-              View
+              Open Link
+              <ArrowRightOutlined />
             </a>
+          ) : null}
+        </div>
+      ) : null}
 
-            {item.url ? (
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-2 rounded-full border border-transparent bg-[#9a2119] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#7a1a13]"
-              >
-                Open Link
-                <ArrowRightOutlined />
-              </a>
-            ) : null}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 pt-1">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#f8e8d8] px-4 py-2 text-[12px] font-bold text-[#9a2119]">
-              <LockOutlined />
-              Locked item
-            </span>
-          </div>
-        )}
-      </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default function NewsletterPage() {

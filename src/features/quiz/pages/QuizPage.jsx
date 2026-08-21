@@ -11,13 +11,18 @@ import {
   ArrowRightOutlined,
   CheckCircleOutlined,
   LoadingOutlined,
+   LockOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { Alert } from "antd";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { quizCatalog as fallbackQuizCatalog, sampleQuizQuestions } from "../../../data/careermapData";
 import { getQuizzes, submitQuiz } from "../../../api/quizApi";
-import { usePortalNavigation } from "../../portal/components/portalPageShared";
-
+import {
+  UnlockRedirectModal,
+  usePortalNavigation,
+} from "../../portal/components/portalPageShared";
+import { useAppState } from "../../../state/AppStateContext";
 const QUIZ_ICONS = [
   <FileTextOutlined key="file" />,
   <MedicineBoxOutlined key="medicine" />,
@@ -148,7 +153,13 @@ function getQuizMeta(quiz) {
 }
 
 export default function QuizPage() {
-  const { navigate } = usePortalNavigation();
+ const { navigate, location } = usePortalNavigation();
+const { isUnlocked } = useAppState();
+
+const accessStatus = location.state?.accessStatus || "preview";
+const unlocked =
+  accessStatus === "full" || isUnlocked("quiz");
+  const [unlockModalItem, setUnlockModalItem] = useState(null);
  const [quizzes, setQuizzes] = useState(
   sortQuizzes(buildFallbackQuizzes())
 ); const [loadError, setLoadError] = useState("");
@@ -410,10 +421,13 @@ export default function QuizPage() {
           </div>
         ) : null}
 
-        {quizzes.map((quiz, index) => {
-          const meta = getQuizMeta(quiz);
+  {quizzes.map((quiz, index) => {
+  const meta = getQuizMeta(quiz);
 
-          return (
+  const isPreviewMode = accessStatus === "preview";
+  const isFree = !isPreviewMode || index < 4;
+
+  return (
             <div
               key={quiz.id || quiz.title}
               className="group relative overflow-hidden rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
@@ -454,7 +468,19 @@ export default function QuizPage() {
               <p className="relative mb-5 text-[13px] leading-relaxed" style={{ color: "#6b6560" }}>
                 {quiz.type || "Quiz"}
               </p>
-
+{!unlocked ? (
+  <div
+    className={`absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full ${
+      isFree ? "bg-green-50" : "bg-red-50"
+    }`}
+  >
+    {isFree ? (
+      <UnlockOutlined className="text-green-600" />
+    ) : (
+      <LockOutlined className="text-red-500" />
+    )}
+  </div>
+) : null}
               <div className="relative flex items-center justify-between border-t border-[#f0e4e2] pt-3">
                 <span
                   className="rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide"
@@ -468,16 +494,37 @@ export default function QuizPage() {
                 </span>
 
                 <button
-                  onClick={() => startQuiz(quiz)}
-                  className="flex items-center gap-1 text-sm font-bold text-[#9a2119] transition-colors hover:text-[#7a1a13]"
-                >
-                  Explore <ArrowRightOutlined />
-                </button>
+  onClick={() => {
+    if (!isFree) {
+      setUnlockModalItem(meta.title);
+      return;
+    }
+
+    startQuiz(quiz);
+  }}
+  className="flex items-center gap-1 text-sm font-bold text-[#9a2119] transition-colors hover:text-[#7a1a13]"
+>
+  {isFree ? "Explore" : "Locked"}
+  <ArrowRightOutlined />
+</button>
               </div>
             </div>
           );
         })}
       </div>
+      <UnlockRedirectModal
+  open={Boolean(unlockModalItem)}
+  title="Unlock Quiz"
+  itemLabel={unlockModalItem}
+  description="Your free quiz access has already been used. Subscribe to unlock"
+  onCancel={() => setUnlockModalItem(null)}
+  onConfirm={() => {
+    setUnlockModalItem(null);
+    navigate(
+      `/app/subscription?returnTo=${encodeURIComponent(location.pathname)}`
+    );
+  }}
+/>
     </ModuleScreen>
   );
 }
