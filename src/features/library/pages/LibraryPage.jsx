@@ -231,6 +231,39 @@ function normalizeTextItems(value) {
     .filter(Boolean);
 }
 
+function normalizeCareerPathItems(value) {
+  return toList(value).map((item, index) => {
+    if (typeof item === "string") {
+      return {
+        id: `careerpath-${index}`,
+        pathName: item,
+        path: { pathtype: item },
+        graduation: "",
+        aftergraduation: "",
+        afterpostgraduation: "",
+        anyother: "",
+        raw: item,
+      };
+    }
+
+    return {
+      id: item?.id ?? `careerpath-${index}`,
+      pathName:
+        item?.pathName ||
+        item?.path?.pathtype ||
+        item?.pathtype ||
+        item?.name ||
+        `Path ${index + 1}`,
+      path: item?.path || (item?.pathtype ? { pathtype: item.pathtype } : null),
+      graduation: stripHtml(item?.graduation || ""),
+      aftergraduation: stripHtml(item?.aftergraduation || ""),
+      afterpostgraduation: stripHtml(item?.afterpostgraduation || ""),
+      anyother: stripHtml(item?.anyother || ""),
+      raw: item,
+    };
+  });
+}
+
 function normalizeInstituteItems(value) {
   return toList(value).map((item, index) => {
     if (typeof item === "string") {
@@ -470,7 +503,16 @@ function normalizeDetailItem(item, index = 0, sourceItem = null) {
       sourceItem?.salaryRanges ||
       []
     ),
-  specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
+    careerpaths: normalizeCareerPathItems(
+      item?.careerpaths ||
+      item?.careerPaths ||
+      item?.careerPath ||
+      sourceItem?.careerpaths ||
+      sourceItem?.careerPaths ||
+      sourceItem?.careerPath ||
+      []
+    ),
+    specializationList: extractListItems(item?.specialization || sourceItem?.specialization),
     specializationHtml: item?.specialization || sourceItem?.specialization || "",
     importantFactorList: extractListItems(item?.important_factor || sourceItem?.important_factor),
     importantFactorHtml: item?.important_factor || sourceItem?.important_factor || "",  descriptions: Array.isArray(item?.descriptions)
