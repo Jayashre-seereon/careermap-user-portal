@@ -310,14 +310,34 @@ function normalizeStateName(value = "") {
 
 function groupInstitutesByTopStatus(value, targetState = "Odisha") {
   const institutes = value || [];
+
   const normalizedTargetState = normalizeStateName(targetState);
-  const topInstitutes = institutes.filter(
-    (item) => normalizeStateName(item.state) === normalizedTargetState
+
+  const sortTopFirst = (items) => {
+    return [...items].sort((a, b) => {
+      return Number(b.isTop) - Number(a.isTop);
+    });
+  };
+
+  const odishaInstitutes = institutes.filter(
+    (item) =>
+      normalizeStateName(item.state) === normalizedTargetState
   );
+
   const outsideInstitutes = institutes.filter(
-    (item) => normalizeStateName(item.state) !== normalizedTargetState
+    (item) =>
+      normalizeStateName(item.state) !== normalizedTargetState
   );
-  return { institutes, topInstitutes, outsideInstitutes, targetState };
+
+  return {
+    institutes,
+
+    topInstitutes: sortTopFirst(odishaInstitutes),
+
+    outsideInstitutes: sortTopFirst(outsideInstitutes),
+
+    targetState,
+  };
 }
 
 function formatSalaryAmount(value) {
