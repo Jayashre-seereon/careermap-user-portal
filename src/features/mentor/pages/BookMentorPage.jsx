@@ -193,10 +193,7 @@ function MentorCard({ mentor, isFree, onClick }) {
       </div>
 
       <div className="mb-4 flex items-center gap-2">
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#1a0a09]">
-          <TrophyOutlined style={{ color: "#d4a017" }} />
-          {mentor.rating} Air/State
-        </span>
+       
         <span className="rounded-full bg-[#fff6ef] px-2.5 py-1 text-[11px] font-semibold text-[#9a2119]">
           {mentor.price}
         </span>
@@ -741,10 +738,7 @@ export default function BookMentorPage() {
       </div>
 
       <div className="flex flex-wrap items-stretch justify-center gap-2.5 pt-2 text-sm sm:justify-start sm:gap-3">
-        <span className="inline-flex items-center gap-2 rounded-2xl border border-[#f0e4e2] bg-white px-4 py-2.5 font-bold text-[#241008]">
-          <TrophyOutlined style={{ color: "#9a2119" }} />
-          {activeMentor.rating} Air/State
-        </span>
+      
 
         <span className="inline-flex items-center gap-2 rounded-2xl border border-[#f0e4e2] bg-white px-4 py-2.5 font-bold text-[#241008]">
           <StarFilled style={{ color: "#d4a017" }} />
@@ -758,7 +752,7 @@ export default function BookMentorPage() {
     icon={<FileTextOutlined />}
     className="!inline-flex !items-center !gap-2 !rounded-2xl !border !border-[#f0e4e2] !bg-white !px-4 !py-2 !h-auto !font-bold !text-[#9a2119] hover:!bg-[#fdf0ee] hover:!border-[#9a2119]"
   >
-    Resume
+    Expert Profile
   </Button>
 ) : null}
 

@@ -310,14 +310,34 @@ function normalizeStateName(value = "") {
 
 function groupInstitutesByTopStatus(value, targetState = "Odisha") {
   const institutes = value || [];
+
   const normalizedTargetState = normalizeStateName(targetState);
-  const topInstitutes = institutes.filter(
-    (item) => normalizeStateName(item.state) === normalizedTargetState
+
+  const sortTopFirst = (items) => {
+    return [...items].sort((a, b) => {
+      return Number(b.isTop) - Number(a.isTop);
+    });
+  };
+
+  const odishaInstitutes = institutes.filter(
+    (item) =>
+      normalizeStateName(item.state) === normalizedTargetState
   );
+
   const outsideInstitutes = institutes.filter(
-    (item) => normalizeStateName(item.state) !== normalizedTargetState
+    (item) =>
+      normalizeStateName(item.state) !== normalizedTargetState
   );
-  return { institutes, topInstitutes, outsideInstitutes, targetState };
+
+  return {
+    institutes,
+
+    topInstitutes: sortTopFirst(odishaInstitutes),
+
+    outsideInstitutes: sortTopFirst(outsideInstitutes),
+
+    targetState,
+  };
 }
 
 function formatSalaryAmount(value) {
@@ -1538,9 +1558,9 @@ useEffect(() => {
       ...(hasEntranceExams ? [{ id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> }] : []),
       ...(hasJobs ? [{ id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> }] : []),
       ...(hasSalary ? [{ id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> }] : []),
-      ...(hasTopInstitutes ? [{ id: `top-in-${index}`, label: `Top Institutes in ${stateLabel}`, icon: <BankOutlined /> }] : []),
-      ...(instituteGroups.outsideInstitutes.length > 0 ? [{ id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> }] : []),
-    ];
+        ...(instituteGroups.outsideInstitutes.length > 0 ? [{ id: `top-out-${index}`, label: `Outside ${stateLabel}`, icon: <EnvironmentOutlined /> }] : []),
+      ...(hasTopInstitutes ? [{ id: `top-in-${index}`, label: `Institutes in ${stateLabel}`, icon: <BankOutlined /> }] : []),
+      ];
 
     function scrollTo(id) {
       const el = document.getElementById(id);
@@ -1706,9 +1726,9 @@ useEffect(() => {
                                 <p className="m-0 text-[16px] font-black text-[#000000]">{exam?.examname || "—"}</p>
                               </div>
                             </div>
-                            {exam?.about && exam.about !== "Nothing" ? (
+                            {/* {exam?.about && exam.about !== "Nothing" ? (
                               <p className="m-0 mt-3 text-[13px] leading-6 text-[#000000] line-clamp-2">{exam.about}</p>
-                            ) : null}
+                            ) : null} */}
                           </div>
 <div className="flex flex-wrap items-center gap-2">
   <a
@@ -1845,12 +1865,26 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
                 )}
               </Section>
               ) : null}
+  {instituteGroups.outsideInstitutes.length > 0 ? (
+              <Section
+                id={`top-out-${index}`}
+                icon={<EnvironmentOutlined />}
+                title="Institutes Outside Odisha"
+                subtitle="All institutes from other states are shown here."
+              >
+                <InstituteFilterGroup
+                  institutes={instituteGroups.outsideInstitutes}
+                  badge="Outside Odisha"
+                  emptyText="No institutes found outside Odisha."
+                />
+              </Section>
+              ) : null}
 
               {instituteGroups.topInstitutes.length > 0 ? (
               <Section
                 id={`top-in-${index}`}
                 icon={<BankOutlined />}
-                title="Top Institutes in Odisha"
+                title="Institutes in Odisha"
                 subtitle="Institutes in Odisha highlighted from this career map data."
               >
                 <InstituteFilterGroup
@@ -1862,20 +1896,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
               </Section>
               ) : null}
 
-              {instituteGroups.outsideInstitutes.length > 0 ? (
-              <Section
-                id={`top-out-${index}`}
-                icon={<EnvironmentOutlined />}
-                title="Top  Institutes Outside Odisha"
-                subtitle="All institutes from other states are shown here."
-              >
-                <InstituteFilterGroup
-                  institutes={instituteGroups.outsideInstitutes}
-                  badge="Outside Odisha"
-                  emptyText="No institutes found outside Odisha."
-                />
-              </Section>
-              ) : null}
+            
 
           </div>
         </div>
