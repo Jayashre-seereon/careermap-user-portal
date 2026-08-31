@@ -307,6 +307,9 @@ const typeOptions = useMemo(
   showSearch
   allowClear
   placeholder="All States"
+  filterOption={(input, option) =>
+    (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+  }
   value={stateFilter || undefined}
   onChange={(value) => setStateFilter(value || "")}
   options={stateOptions}
