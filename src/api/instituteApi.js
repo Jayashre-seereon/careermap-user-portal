@@ -1,7 +1,10 @@
 import api from "./axios";
 
 function buildLocation(city, state) {
-  return [city, state].filter(Boolean).join(", ") || "Location not available";
+  return (
+    [city, state].filter(Boolean).join(", ") ||
+    "Location not available"
+  );
 }
 
 function stripHtml(value) {
@@ -9,7 +12,10 @@ function stripHtml(value) {
     return "";
   }
 
-  return String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return String(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function formatDateDDMMYYYY(value) {
@@ -27,52 +33,149 @@ function formatDateDDMMYYYY(value) {
 }
 
 function mapInstituteItem(item, index) {
- const state = item?.state?.trim().toLowerCase() || "";
-const country = (item?.country || item?.countruy || "")
-  .trim()
-  .toLowerCase();
-const city = item?.city?.trim() || "";
-const instituteType = item?.institute_type?.trim() || "Institute";
- const courses = Array.isArray(item?.course_offered) ? item.course_offered.filter(Boolean) : [];
+  const state =
+    item?.state?.trim() || "";
 
-return {
-  id: String(item?.id ?? `institute-${index}`),
-   createdAt: item?.createdAt || item?.created_at || null,
-  name: item?.name || "Unnamed Institute",
- location: item?.address,
-  courses,
- country,
-state,
-type: instituteType,
-  about: stripHtml(item?.about) || "About information is not available right now.",
-  website: item?.url || "#",
-  rank: item?.rank || "Top",
-  logo: item?.logo || null,
-  tentativeDate: formatDateDDMMYYYY(item?.tentative_date || item?.tentativeDate || ""),
-  category: item?.category || null,
-  secondcategory: item?.secondcategory || null,
-  subcategory: item?.subcategory || null,
-};
+  const country =
+    (item?.country || item?.countruy || "")
+      .trim()
+      .toLowerCase();
+
+  const city =
+    item?.city?.trim() || "";
+
+  const instituteType =
+    item?.institute_type?.trim() ||
+    "Institute";
+
+  const courses = Array.isArray(
+    item?.course_offered
+  )
+    ? item.course_offered.filter(Boolean)
+    : [];
+
+  return {
+    id: String(
+      item?.id ?? `institute-${index}`
+    ),
+
+    createdAt:
+      item?.createdAt ||
+      item?.created_at ||
+      null,
+
+    name:
+      item?.name ||
+      "Unnamed Institute",
+
+    location:
+      item?.address ||
+      buildLocation(city, state),
+
+    city,
+    country,
+    state,
+
+    type: instituteType,
+
+    courses,
+
+    about:
+      stripHtml(item?.about) ||
+      "About information is not available right now.",
+
+    website:
+      item?.url || "#",
+
+    rank:
+      item?.rank || "Top",
+
+    logo:
+      item?.logo || null,
+
+    tentativeDate:
+      formatDateDDMMYYYY(
+        item?.tentative_date ||
+        item?.tentativeDate ||
+        ""
+      ),
+
+    category:
+      item?.category || null,
+
+    secondcategory:
+      item?.secondcategory || null,
+
+    subcategory:
+      item?.subcategory || null,
+  };
 }
 
-export async function getInstitutes(page = 1) {
+
+/*
+|--------------------------------------------------------------------------
+| Get Institutes - Paginated + Filters
+|--------------------------------------------------------------------------
+|
+| Example:
+|
+| getInstitutes({
+|   page: 1,
+|   limit: 32,
+|   country: "india",
+|   state: "Bihar",
+|   type: "Government"
+| })
+|
+*/
+export async function getInstitutes({
+  page = 1,
+  limit = 32,
+  country = "",
+  state = "",
+  type = "",
+} = {}) {
+  const params = new URLSearchParams();
+
+  params.append("page", page);
+  params.append("limit", limit);
+
+  if (country) {
+    params.append("country", country);
+  }
+
+  if (state) {
+    params.append("state", state);
+  }
+
+  if (type) {
+    params.append("type", type);
+  }
+
   const response = await api.get(
-    `/institutes/paginated?page=${page}&limit=32`
+    `/institutes/paginated?${params.toString()}`
   );
 
-  const items = Array.isArray(response?.data?.data)
+  const items = Array.isArray(
+    response?.data?.data
+  )
     ? response.data.data
     : [];
 
   return {
-    items: items.map((item, index) => mapInstituteItem(item, index)),
-    pagination: response?.data?.pagination || {
-      page,
-      limit: 32,
-      total: 0,
-      totalPages: 0,
-      hasNextPage: false,
-      hasPreviousPage: false,
-    },
+    items: items.map(
+      (item, index) =>
+        mapInstituteItem(item, index)
+    ),
+
+    pagination:
+      response?.data?.pagination || {
+        page,
+        limit,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
   };
 }
