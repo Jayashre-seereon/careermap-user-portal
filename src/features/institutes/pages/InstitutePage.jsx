@@ -42,7 +42,10 @@ function getAccentByType(type = "") {
 export default function InstitutePage() {
   const { goToDashboard, navigate, location } = usePortalNavigation();
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("search") || params.get("q") || "";
+  });
 
   const [items, setItems] = useState(fallbackInstitutes);
   const [error, setError] = useState("");
@@ -66,6 +69,14 @@ export default function InstitutePage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("search") || params.get("q");
+    if (q !== null && q !== undefined) {
+      setSearch(q);
+    }
+  }, [location.search]);
 
   /*
    * ============================================================
