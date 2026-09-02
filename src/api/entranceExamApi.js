@@ -106,3 +106,8 @@ export async function getEntranceExams() {
 
   return items.map((item, index) => mapEntranceExam(item, index));
 }
+
+export const getCategories = async () => {
+  const res = await api.get("/categories/");
+  return res.data;
+};

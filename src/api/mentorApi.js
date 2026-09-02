@@ -216,3 +216,8 @@ export async function createMentorReview(payload) {
   const response = await api.post("/mentorreview/", payload);
   return response.data;
 }
+
+export const getCategories = async () => {
+  const res = await api.get("/categories/");
+  return res.data;
+};

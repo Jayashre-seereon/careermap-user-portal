@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UnlockRedirectModal } from "../../portal/components/portalPageShared";
-import { getEntranceExams } from "../../../api/entranceExamApi";
+import { getEntranceExams ,getCategories} from "../../../api/entranceExamApi";
 import { entranceExams as fallbackEntranceExams } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
@@ -89,31 +89,83 @@ export default function EntranceExamPage() {
   const [moduleMode, setModuleMode] = useState(accessStatus);
   const [infoItem, setInfoItem] = useState(null);
   const [category, setCategory] = useState("");
-  const [secondCategory, setSecondCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("");
+  const [categories, setCategories] = useState([]);
   const [selectedExamId, setSelectedExamId] = useState(""); 
-  useEffect(() => {
-    let active = true;
+  const [mode, setMode] = useState("");
+// LOAD ENTRANCE EXAMS
+useEffect(() => {
+  let active = true;
 
-    async function loadExams() {
-      try {
-        setError("");
-        const response = await getEntranceExams();
-        if (active && response.length) {
-          setItems(response);
-        }
-      } catch (loadError) {
-        if (active) {
-          setError(loadError?.response?.data?.message || loadError?.message || "Failed to load entrance exams.");
-        }
+  async function loadExams() {
+    try {
+      setError("");
+
+      const response = await getEntranceExams();
+
+      console.log("Entrance Exams API Response:", response);
+
+      if (active) {
+        setItems(
+          Array.isArray(response) && response.length > 0
+            ? response
+            : fallbackEntranceExams
+        );
+      }
+    } catch (loadError) {
+      console.error("Failed to load entrance exams:", loadError);
+
+      if (active) {
+        setError(
+          loadError?.response?.data?.message ||
+          loadError?.message ||
+          "Failed to load entrance exams."
+        );
+
+        // Keep fallback data if API fails
+        setItems(fallbackEntranceExams);
       }
     }
+  }
 
-    loadExams();
-    return () => {
-      active = false;
-    };
-  }, []);
+  loadExams();
+
+  return () => {
+    active = false;
+  };
+}, []);
+
+// LOAD CATEGORIES
+useEffect(() => {
+  let active = true;
+
+  async function loadCategories() {
+    try {
+      const response = await getCategories();
+
+      console.log("Categories API Response:", response);
+
+      if (active) {
+        setCategories(
+          Array.isArray(response?.data)
+            ? response.data
+            : []
+        );
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+
+      if (active) {
+        setCategories([]);
+      }
+    }
+  }
+
+  loadCategories();
+
+  return () => {
+    active = false;
+  };
+}, []);
 
   useEffect(() => {
     let active = true;
@@ -140,57 +192,65 @@ export default function EntranceExamPage() {
     };
   }, [accessStatus, location.state?.moduleId]);
 
-  const categoryOptions = useMemo(
-    () => [...new Map(items.filter((i) => i.categoryObj).map((i) => [i.categoryObj.id, i.categoryObj])).values()],
-    [items]
-  );
-
-  const secondCategoryOptions = useMemo(() => {
-    const source = category
-      ? items.filter((i) => String(i.categoryObj?.id) === String(category))
-      : items;
-    return [...new Map(source.filter((i) => i.secondcategoryObj).map((i) => [i.secondcategoryObj.id, i.secondcategoryObj])).values()];
-  }, [items, category]);
-
-  const subCategoryOptions = useMemo(() => {
-    let source = items;
-    if (category) {
-      source = source.filter((i) => String(i.categoryObj?.id) === String(category));
-    }
-    if (secondCategory) {
-      source = source.filter((i) => String(i.secondcategoryObj?.id) === String(secondCategory));
-    }
-    return [...new Map(source.filter((i) => i.subcategoryObj).map((i) => [i.subcategoryObj.id, i.subcategoryObj])).values()];
-  }, [items, category, secondCategory]);
 
   const examOptions = useMemo(
   () => items.map((item) => ({ value: String(item.id), label: item.name })),
   [items]
 );
 
-  function handleCategoryChange(value) {
-    setCategory(value);
-    setSecondCategory("");
-    setSubCategory("");
-  }
+const categoryOptions = useMemo(() => {
+  return categories.map((item) => ({
+    value: String(item.id),
+    label: item.title,
+  }));
+}, [categories]);
 
-  function handleSecondCategoryChange(value) {
-    setSecondCategory(value);
-    setSubCategory("");
-  }
+const modeOptions = useMemo(() => {
+  const uniqueModes = [
+    ...new Set(
+      items
+        .map((item) => item.mode)
+        .filter(
+          (item) =>
+            item &&
+            item !== "Mode not available"
+        )
+    ),
+  ];
 
-  const filtered = useMemo(
-    () =>
-      items.filter((item) => {
-        const matchesCategory = !category || String(item.categoryObj?.id) === String(category);
-        const matchesSecondCategory = !secondCategory || String(item.secondcategoryObj?.id) === String(secondCategory);
-        const matchesSubCategory = !subCategory || String(item.subcategoryObj?.id) === String(subCategory);
-         const matchesExam = !selectedExamId || String(item.id) === String(selectedExamId);
+  return uniqueModes.map((item) => ({
+    value: item,
+    label: item,
+  }));
+}, [items]);
+const filtered = useMemo(
+  () =>
+    items.filter((item) => {
+      const matchesCategory =
+        !category ||
+        String(item.categoryObj?.id) === String(category);
 
-        return matchesCategory && matchesSecondCategory && matchesSubCategory && matchesExam;
-      }),
-    [items, category, secondCategory, subCategory, selectedExamId]
-  );
+      const matchesExam =
+        !selectedExamId ||
+        String(item.id) === String(selectedExamId);
+
+      const matchesMode =
+        !mode ||
+        String(item.mode) === String(mode);
+
+      return (
+        matchesCategory &&
+        matchesExam &&
+        matchesMode
+      );
+    }),
+  [
+    items,
+    category,
+    selectedExamId,
+    mode,
+  ]
+);
 
   const infoHtml = useMemo(() => {
     const rawHtml =
@@ -221,78 +281,66 @@ export default function EntranceExamPage() {
           <PageHero backOnly onBack={goToDashboard} className="shrink-0" />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-         <div className="relative">
-  <Select
-    showSearch
-    allowClear
-    placeholder="Search Exam"
-    optionFilterProp="label"
-    value={selectedExamId || undefined}
-    onChange={(value) => setSelectedExamId(value || "")}
-    options={examOptions}
-    style={{ minWidth: 220 }}
-    className="pill-select"
-  />
-</div>
+      <div className="flex flex-wrap items-center gap-2">
+  {/* Search Exam */}
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="Search Exam"
+      optionFilterProp="label"
+      value={selectedExamId || undefined}
+      onChange={(value) => setSelectedExamId(value || "")}
+      options={examOptions}
+      style={{ minWidth: 220 }}
+      className="pill-select"
+    />
+  </div>
 
+  {/* Category */}
+  <div className="relative">
+   <Select
+  showSearch
+  allowClear
+  placeholder="All Domains"
+  optionFilterProp="label"
+  value={category || undefined}
+  onChange={(value) => setCategory(value || "")}
+  options={categoryOptions}
+  style={{ minWidth: 220 }}
+  className="pill-select"
+/>
+  </div>
+
+  {/* Mode */}
 <div className="relative">
   <Select
     showSearch
     allowClear
-    placeholder="All Categories"
+    placeholder="All Types"
     optionFilterProp="label"
-    value={category || undefined}
-    onChange={(value) => handleCategoryChange(value || "")}
-    options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+    value={mode || undefined}
+    onChange={(value) => setMode(value || "")}
+    options={modeOptions}
     style={{ minWidth: 180 }}
     className="pill-select"
   />
 </div>
 
-<div className="relative">
-  <Select
-    showSearch
-    allowClear
-    placeholder="All Second Categories"
-    optionFilterProp="label"
-    value={secondCategory || undefined}
-    onChange={(value) => handleSecondCategoryChange(value || "")}
-    options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
-    style={{ minWidth: 200 }}
-    className="pill-select"
-  />
+  {(category || selectedExamId || mode) ? (
+    <button
+      type="button"
+      onClick={() => {
+        setCategory("");
+        setSelectedExamId("");
+        setMode("");
+      }}
+      className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
+    >
+      Clear
+    </button>
+  ) : null}
 </div>
-
-<div className="relative">
-  <Select
-    showSearch
-    allowClear
-    placeholder="All Sub Categories"
-    optionFilterProp="label"
-    value={subCategory || undefined}
-    onChange={(value) => setSubCategory(value || "")}
-    options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
-    style={{ minWidth: 200 }}
-    className="pill-select"
-  />
-</div>
-
-          {(category || secondCategory || subCategory || selectedExamId) ? (
-            <button
-              type="button"
-              onClick={() => {
-                setCategory("");
-                setSecondCategory("");
-                setSubCategory("");
-                setSelectedExamId("");
-              }}
-              className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
-            >
-              Clear
-            </button>
-          ) : null}
-        </div>
 
         <div className="content-stagger grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {filtered.map((item, index) => {
