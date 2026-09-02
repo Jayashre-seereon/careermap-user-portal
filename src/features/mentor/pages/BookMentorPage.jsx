@@ -267,9 +267,7 @@ export default function BookMentorPage() {
 
   // ── Filter state ─────────────────────────────────────────────────────────
   const [category, setCategory] = useState("");
-  const [secondCategory, setSecondCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("");
-
+ 
   // ── Category dropdown options ────────────────────────────────────────────
   // category.title | secondcategory.name | subcategory.title
   const categoryOptions = useMemo(
@@ -283,67 +281,31 @@ export default function BookMentorPage() {
     [mentorList]
   );
 
-  const secondCategoryOptions = useMemo(() => {
-    const source = category
-      ? mentorList.filter((m) => String(m.categoryObj?.id) === String(category))
-      : mentorList;
-    return [
-      ...new Map(
-        source
-          .filter((m) => m.secondcategoryObj)
-          .map((m) => [m.secondcategoryObj.id, m.secondcategoryObj])
-      ).values(),
-    ];
-  }, [mentorList, category]);
 
-  const subCategoryOptions = useMemo(() => {
-    let source = mentorList;
-    if (category)
-      source = source.filter((m) => String(m.categoryObj?.id) === String(category));
-    if (secondCategory)
-      source = source.filter((m) => String(m.secondcategoryObj?.id) === String(secondCategory));
-    return [
-      ...new Map(
-        source
-          .filter((m) => m.subcategoryObj)
-          .map((m) => [m.subcategoryObj.id, m.subcategoryObj])
-      ).values(),
-    ];
-  }, [mentorList, category, secondCategory]);
+ function handleCategoryChange(value) {
+  setCategory(value || "");
+}
 
-  function handleCategoryChange(value) {
-    setCategory(value);
-    setSecondCategory("");
-    setSubCategory("");
-  }
-
-  function handleSecondCategoryChange(value) {
-    setSecondCategory(value);
-    setSubCategory("");
-  }
 
   // ── Filtered list ────────────────────────────────────────────────────────
  const filteredMentorList = useMemo(
   () =>
     mentorList
-      .filter((m) => {
-        const matchesCategory =
-          !category || String(m.categoryObj?.id) === String(category);
-        const matchesSecondCategory =
-          !secondCategory || String(m.secondcategoryObj?.id) === String(secondCategory);
-        const matchesSubCategory =
-          !subCategory || String(m.subcategoryObj?.id) === String(subCategory);
-        return matchesCategory && matchesSecondCategory && matchesSubCategory;
+      .filter((mentor) => {
+        return (
+          !category ||
+          String(mentor.categoryObj?.id) === String(category)
+        );
       })
       .sort((a, b) => {
-        // prefer createdAt if backend provides it
         if (a.createdAt && b.createdAt) {
           return new Date(b.createdAt) - new Date(a.createdAt);
         }
-        // fallback: higher id = more recently added
+
         return Number(b.id) - Number(a.id);
       }),
-  [mentorList, category, secondCategory, subCategory]
+
+  [mentorList, category]
 );
 
   // ── Active mentor ────────────────────────────────────────────────────────
@@ -595,7 +557,7 @@ export default function BookMentorPage() {
       <ModuleScreen className="space-y-6">
         <div className="motion-item flex items-start justify-between gap-4">
           <div>
-            <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
+            <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book Your Mentor</h1>
             <p className="mt-1 mb-0 text-xs text-[#b8837e]">Confirming your mentor booking.</p>
           </div>
           <PageHero backOnly onBack={() => setProcessing(false)} className="shrink-0" />
@@ -666,7 +628,7 @@ export default function BookMentorPage() {
       <ModuleScreen className="space-y-6 pb-24">
         <div className="motion-item flex items-start justify-between gap-4">
           <div>
-            <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
+            <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book Your Mentor</h1>
             <p className="mt-1 mb-0 text-xs text-[#b8837e]">
               Profile, schedule selection, and booking flow.
             </p>
@@ -921,8 +883,16 @@ export default function BookMentorPage() {
             </div>
             <div className="rounded-[18px] bg-[#fffaf8] p-4">
               <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">Experience</div>
-              <div className="mt-1 text-[14px] font-semibold text-[#1a0a09]">{activeMentor.experience || "N/A"}</div>
-            </div>
+             <div className="mt-1 text-[14px] font-semibold text-[#1a0a09]">
+  {(() => {
+    const experience = String(activeMentor.experience || "")
+      .replace(/[^0-9.]/g, "");
+
+    if (!experience) return "N/A";
+
+    return `${experience} ${Number(experience) === 1 ? "Year" : "Years"}`;
+  })()}
+</div> </div>
             <div className="rounded-[18px] bg-[#fffaf8] p-4">
               <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#b8837e]">Area of Expertise</div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -966,10 +936,8 @@ export default function BookMentorPage() {
     <ModuleScreen className="space-y-6 pb-8">
       <div className="motion-item flex items-start justify-between gap-4">
         <div>
-          <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book a Mentor</h1>
-          <p className="mt-1 mb-0 text-xs text-[#b8837e]">
-            Mentor list and booking flow adapted from the mobile app.
-          </p>
+          <h1 className="m-0 text-2xl font-black leading-tight text-[#1a0a09]">Book Your Mentor</h1>
+         
           {loadError ? (
             <p className="mt-2 text-xs font-semibold text-[#9a2119]">{loadError}</p>
           ) : null}
@@ -981,65 +949,33 @@ export default function BookMentorPage() {
 
       {/* ── Filter dropdowns ── */}
       <div className="flex flex-wrap items-center gap-2">
-       {/* Category — field: title */}
-<div className="relative">
-  <Select
-    showSearch
-    allowClear
-    placeholder="All Categories"
-    optionFilterProp="label"
-    value={category || undefined}
-    onChange={(value) => handleCategoryChange(value || "")}
-    options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
-    style={{ minWidth: 180 }}
-    className="pill-select"
-  />
-</div>
+  <div className="relative">
+    <Select
+      showSearch
+      allowClear
+      placeholder="All Domains"
+      optionFilterProp="label"
+      value={category || undefined}
+      onChange={(value) => handleCategoryChange(value)}
+      options={categoryOptions.map((opt) => ({
+        value: String(opt.id),
+        label: opt.title,
+      }))}
+      style={{ minWidth: 220 }}
+      className="pill-select"
+    />
+  </div>
 
-{/* Second Category — field: name */}
-<div className="relative">
-  <Select
-    showSearch
-    allowClear
-    placeholder="All Second Categories"
-    optionFilterProp="label"
-    value={secondCategory || undefined}
-    onChange={(value) => handleSecondCategoryChange(value || "")}
-    options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
-    style={{ minWidth: 200 }}
-    className="pill-select"
-  />
+  {category ? (
+    <button
+      type="button"
+      onClick={() => setCategory("")}
+      className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
+    >
+      Clear
+    </button>
+  ) : null}
 </div>
-
-{/* Sub Category — field: title */}
-<div className="relative">
-  <Select
-    showSearch
-    allowClear
-    placeholder="All Sub Categories"
-    optionFilterProp="label"
-    value={subCategory || undefined}
-    onChange={(value) => setSubCategory(value || "")}
-    options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
-    style={{ minWidth: 200 }}
-    className="pill-select"
-  />
-</div>
-
-        {(category || secondCategory || subCategory) ? (
-          <button
-            type="button"
-            onClick={() => {
-              setCategory("");
-              setSecondCategory("");
-              setSubCategory("");
-            }}
-            className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
-          >
-            Clear
-          </button>
-        ) : null}
-      </div>
 
       {/* ── Mentor grid ── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

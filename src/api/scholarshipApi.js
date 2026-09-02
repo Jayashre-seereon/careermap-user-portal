@@ -136,3 +136,8 @@ export async function getScholarshipById(
 
   return mapScholarshipItem(response.data.data);
 }
+
+export const getCategories = async () => {
+  const res = await api.get("/categories/");
+  return res.data;
+};

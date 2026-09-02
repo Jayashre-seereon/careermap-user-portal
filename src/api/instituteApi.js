@@ -121,34 +121,40 @@ function mapInstituteItem(item, index) {
 |
 | getInstitutes({
 |   page: 1,
-|   limit: 32,
-|   country: "india",
-|   state: "Bihar",
-|   type: "Government"
+|   limit: 30,
+|   category: "Engineering",
+|   country: "India",
+|   state: "Delhi",
+|   type: "Private"
 | })
 |
 */
 export async function getInstitutes({
   page = 1,
-  limit = 32,
+  limit = 30,
+  category = "",
   country = "",
   state = "",
   type = "",
 } = {}) {
   const params = new URLSearchParams();
 
-  params.append("page", page);
-  params.append("limit", limit);
+  if (page) params.append("page", page);
+  if (limit) params.append("limit", limit);
 
-  if (country) {
+  if (category && category !== "all") {
+    params.append("category", category);
+  }
+
+  if (country && country !== "all") {
     params.append("country", country);
   }
 
-  if (state) {
+  if (state && state !== "all") {
     params.append("state", state);
   }
 
-  if (type) {
+  if (type && type !== "all") {
     params.append("type", type);
   }
 
@@ -156,26 +162,34 @@ export async function getInstitutes({
     `/institutes/paginated?${params.toString()}`
   );
 
-  const items = Array.isArray(
-    response?.data?.data
-  )
+  const items = Array.isArray(response?.data?.data)
     ? response.data.data
+    : Array.isArray(response?.data?.items)
+    ? response.data.items
+    : Array.isArray(response?.data)
+    ? response.data
     : [];
 
   return {
-    items: items.map(
-      (item, index) =>
-        mapInstituteItem(item, index)
+    items: items.map((item, index) =>
+      mapInstituteItem(item, index)
     ),
 
     pagination:
       response?.data?.pagination || {
         page,
         limit,
-        total: 0,
-        totalPages: 0,
+        total: items.length,
+        totalPages: 1,
         hasNextPage: false,
         hasPreviousPage: false,
       },
   };
 }
+
+export const fetchInstitutions = getInstitutes;
+
+export const getCategories = async () => {
+  const res = await api.get("/categories/");
+  return res.data;
+};

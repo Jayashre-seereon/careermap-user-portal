@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import { State } from "country-state-city";
 
-import { getInstitutes } from "../../../api/instituteApi";
+import { getInstitutes, getCategories } from "../../../api/instituteApi";
 import { institutes as fallbackInstitutes } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import {
@@ -51,14 +51,11 @@ export default function InstitutePage() {
   const [error, setError] = useState("");
 
   // Backend filters
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
   const [country, setCountry] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [type, setType] = useState("");
-
-  // Frontend category filters
-  const [category, setCategory] = useState("");
-  const [secondCategory, setSecondCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("");
 
   const [unlockModalItem, setUnlockModalItem] = useState(null);
 
@@ -80,8 +77,43 @@ export default function InstitutePage() {
 
   /*
    * ============================================================
+   * LOAD CATEGORIES (ALL DOMAINS)
+   * ============================================================
+   */
+  useEffect(() => {
+    let active = true;
+
+    async function loadCategories() {
+      try {
+        const response = await getCategories();
+        if (!active) return;
+
+        const categoryList = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+        setCategories(categoryList);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        if (active) {
+          setCategories([]);
+        }
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  /*
+   * ============================================================
    * LOAD INSTITUTES
-   * Country + State + Type are now sent to backend.
+   * Category + Country + State + Type are now sent to backend.
    * Backend will filter first and then paginate.
    * ============================================================
    */
@@ -96,6 +128,7 @@ export default function InstitutePage() {
         const response = await getInstitutes({
           page,
           limit: 30,
+          category,
           country,
           state: stateFilter,
           type,
@@ -125,7 +158,7 @@ export default function InstitutePage() {
     return () => {
       active = false;
     };
-  }, [page, country, stateFilter, type]);
+  }, [page, category, country, stateFilter, type]);
 
   /*
    * ============================================================
@@ -139,72 +172,15 @@ export default function InstitutePage() {
 
   /*
    * ============================================================
-   * CATEGORY OPTIONS
+   * CATEGORY OPTIONS (ALL DOMAINS)
    * ============================================================
    */
-  const categoryOptions = useMemo(
-    () =>
-      [
-        ...new Map(
-          items
-            .filter((i) => i.category)
-            .map((i) => [i.category.id, i.category])
-        ).values(),
-      ],
-    [items]
-  );
-
-  /*
-   * ============================================================
-   * SECOND CATEGORY OPTIONS
-   * ============================================================
-   */
-  const secondCategoryOptions = useMemo(() => {
-    const source = category
-      ? items.filter(
-          (i) => String(i.category?.id) === String(category)
-        )
-      : items;
-
-    return [
-      ...new Map(
-        source
-          .filter((i) => i.secondcategory)
-          .map((i) => [i.secondcategory.id, i.secondcategory])
-      ).values(),
-    ];
-  }, [items, category]);
-
-  /*
-   * ============================================================
-   * SUB CATEGORY OPTIONS
-   * ============================================================
-   */
-  const subCategoryOptions = useMemo(() => {
-    let source = items;
-
-    if (category) {
-      source = source.filter(
-        (i) => String(i.category?.id) === String(category)
-      );
-    }
-
-    if (secondCategory) {
-      source = source.filter(
-        (i) =>
-          String(i.secondcategory?.id) ===
-          String(secondCategory)
-      );
-    }
-
-    return [
-      ...new Map(
-        source
-          .filter((i) => i.subcategory)
-          .map((i) => [i.subcategory.id, i.subcategory])
-      ).values(),
-    ];
-  }, [items, category, secondCategory]);
+  const categoryOptions = useMemo(() => {
+    return categories.map((cat) => ({
+      value: cat.title || cat.name || String(cat.id),
+      label: cat.title || cat.name || String(cat.id),
+    }));
+  }, [categories]);
 
   /*
    * ============================================================
@@ -213,18 +189,7 @@ export default function InstitutePage() {
    */
   function handleCategoryChange(value) {
     setCategory(value);
-    setSecondCategory("");
-    setSubCategory("");
-  }
-
-  /*
-   * ============================================================
-   * SECOND CATEGORY CHANGE
-   * ============================================================
-   */
-  function handleSecondCategoryChange(value) {
-    setSecondCategory(value);
-    setSubCategory("");
+    setPage(1);
   }
 
   /*
@@ -232,10 +197,8 @@ export default function InstitutePage() {
    * FRONTEND FILTER
    *
    * IMPORTANT:
-   * Country / State / Type are NOT filtered here.
-   * They are already filtered by backend.
-   *
-   * Search + Category filters remain frontend filters.
+   * Category / Country / State / Type are already filtered by backend.
+   * Search filter remains frontend filter.
    * ============================================================
    */
   const filtered = useMemo(
@@ -257,26 +220,7 @@ export default function InstitutePage() {
               .toLowerCase()
               .includes(search.toLowerCase());
 
-          const matchesCategory =
-            !category ||
-            String(item.category?.id) === String(category);
-
-          const matchesSecondCategory =
-            !secondCategory ||
-            String(item.secondcategory?.id) ===
-              String(secondCategory);
-
-          const matchesSubCategory =
-            !subCategory ||
-            String(item.subcategory?.id) ===
-              String(subCategory);
-
-          return (
-            matchesSearch &&
-            matchesCategory &&
-            matchesSecondCategory &&
-            matchesSubCategory
-          );
+          return matchesSearch;
         })
         .sort((a, b) => {
           if (a.createdAt && b.createdAt) {
@@ -288,13 +232,7 @@ export default function InstitutePage() {
 
           return Number(b.id) - Number(a.id);
         }),
-    [
-      items,
-      search,
-      category,
-      secondCategory,
-      subCategory,
-    ]
+    [items, search]
   );
 
   /*
@@ -426,15 +364,10 @@ export default function InstitutePage() {
    */
   function handleClearFilters() {
     setCategory("");
-    setSecondCategory("");
-    setSubCategory("");
-
     setCountry("");
     setStateFilter("");
     setType("");
-
     setSearch("");
-
     setPage(1);
   }
 
@@ -476,62 +409,19 @@ export default function InstitutePage() {
           FILTERS
       ======================================================== */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* CATEGORY */}
+        {/* DOMAIN / CATEGORY */}
         <div className="relative">
           <Select
             showSearch
             allowClear
-            placeholder="All Categories"
+            placeholder="All Domain"
             optionFilterProp="label"
             value={category || undefined}
             onChange={(value) =>
               handleCategoryChange(value || "")
             }
-            options={categoryOptions.map((opt) => ({
-              value: String(opt.id),
-              label: opt.title,
-            }))}
+            options={categoryOptions}
             style={{ minWidth: 180 }}
-            className="pill-select"
-          />
-        </div>
-
-        {/* SECOND CATEGORY */}
-        <div className="relative">
-          <Select
-            showSearch
-            allowClear
-            placeholder="All Second Categories"
-            optionFilterProp="label"
-            value={secondCategory || undefined}
-            onChange={(value) =>
-              handleSecondCategoryChange(value || "")
-            }
-            options={secondCategoryOptions.map((opt) => ({
-              value: String(opt.id),
-              label: opt.name,
-            }))}
-            style={{ minWidth: 200 }}
-            className="pill-select"
-          />
-        </div>
-
-        {/* SUB CATEGORY */}
-        <div className="relative">
-          <Select
-            showSearch
-            allowClear
-            placeholder="All Sub Categories"
-            optionFilterProp="label"
-            value={subCategory || undefined}
-            onChange={(value) =>
-              setSubCategory(value || "")
-            }
-            options={subCategoryOptions.map((opt) => ({
-              value: String(opt.id),
-              label: opt.title,
-            }))}
-            style={{ minWidth: 200 }}
             className="pill-select"
           />
         </div>
@@ -592,8 +482,6 @@ export default function InstitutePage() {
         {/* CLEAR */}
         {(
           category ||
-          secondCategory ||
-          subCategory ||
           country ||
           stateFilter ||
           type ||

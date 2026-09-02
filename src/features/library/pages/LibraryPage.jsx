@@ -1558,7 +1558,7 @@ useEffect(() => {
       ...(hasEntranceExams ? [{ id: `exams-${index}`, label: "Entrance Exams", icon: <SolutionOutlined /> }] : []),
       ...(hasJobs ? [{ id: `jobs-${index}`, label: "Job Scopes", icon: <RocketOutlined /> }] : []),
       ...(hasSalary ? [{ id: `salary-${index}`, label: "Salary Range", icon: <DollarOutlined /> }] : []),
-        ...(instituteGroups.outsideInstitutes.length > 0 ? [{ id: `top-out-${index}`, label: `Institutes Outside ${stateLabel}`, icon: <EnvironmentOutlined /> }] : []),
+        ...(instituteGroups.outsideInstitutes.length > 0 ? [{ id: `top-out-${index}`, label: `Institutes in INDIA`, icon: <EnvironmentOutlined /> }] : []),
       ...(hasTopInstitutes ? [{ id: `top-in-${index}`, label: `Institutes in ${stateLabel}`, icon: <BankOutlined /> }] : []),
       ];
 
@@ -1869,7 +1869,8 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
               <Section
                 id={`top-out-${index}`}
                 icon={<EnvironmentOutlined />}
-                title="Institutes Outside Odisha"
+                title="Institutes in INDIA
+"
                 subtitle="All institutes from other states are shown here."
               >
                 <InstituteFilterGroup

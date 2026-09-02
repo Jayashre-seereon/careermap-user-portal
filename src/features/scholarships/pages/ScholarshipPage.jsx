@@ -13,7 +13,7 @@ import {
   StarOutlined,
 } from "@ant-design/icons";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { getScholarships,  getScholarshipById, } from "../../../api/scholarshipApi";
+import { getScholarships,  getScholarshipById, getCategories} from "../../../api/scholarshipApi";
 import { scholarships as fallbackScholarships } from "../../../data/careermapData";
 import { ModuleScreen, PageHero } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
@@ -44,10 +44,40 @@ export default function ScholarshipPage() {
 const [previewSessionId, setPreviewSessionId] = useState(null);
 const [previewRemaining, setPreviewRemaining] = useState(0);
 const [previewExpired, setPreviewExpired] = useState(false);
-  const [category, setCategory] = useState("");
-  const [secondCategory, setSecondCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("");
+const [category, setCategory] = useState("");
+const [categories, setCategories] = useState([]);
 const [type, setType] = useState("");
+const [eligibility, setEligibility] = useState("");
+
+const eligibilityOptions = [
+  "Class 1 to 5",
+  "Class 6 to 8",
+  "Class 9 to 10",
+  "Class 11 to 12",
+  "UG",
+  "PG",
+];
+
+useEffect(() => {
+  async function loadCategories() {
+    try {
+      const response = await getCategories();
+
+      const categoryList = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+        ? response.data
+        : [];
+
+      setCategories(categoryList);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+      setCategories([]);
+    }
+  }
+
+  loadCategories();
+}, []);
   useEffect(() => {
     let active = true;
 
@@ -138,23 +168,6 @@ useEffect(() => {
     [items]
   );
 
-  const secondCategoryOptions = useMemo(() => {
-    const source = category
-      ? items.filter((i) => String(i.categoryObj?.id) === String(category))
-      : items;
-    return [...new Map(source.filter((i) => i.secondcategoryObj).map((i) => [i.secondcategoryObj.id, i.secondcategoryObj])).values()];
-  }, [items, category]);
-
-  const subCategoryOptions = useMemo(() => {
-    let source = items;
-    if (category) {
-      source = source.filter((i) => String(i.categoryObj?.id) === String(category));
-    }
-    if (secondCategory) {
-      source = source.filter((i) => String(i.secondcategoryObj?.id) === String(secondCategory));
-    }
-    return [...new Map(source.filter((i) => i.subcategoryObj).map((i) => [i.subcategoryObj.id, i.subcategoryObj])).values()];
-  }, [items, category, secondCategory]);
 
   const typeOptions = useMemo(
   () => [...new Set(items.map((i) => i.tag).filter(Boolean))],
@@ -162,37 +175,52 @@ useEffect(() => {
 );
 
   function handleCategoryChange(value) {
-    setCategory(value);
-    setSecondCategory("");
-    setSubCategory("");
-  }
+  setCategory(value || "");
+}
 
-  function handleSecondCategoryChange(value) {
-    setSecondCategory(value);
-    setSubCategory("");
-  }
-
- const filtered = useMemo(
+const filtered = useMemo(
   () =>
     items
       .filter((item) => {
-        const matchesStatus = activeStatus === "All" || item.status === activeStatus;
-        const matchesCategory = !category || String(item.categoryObj?.id) === String(category);
-        const matchesSecondCategory = !secondCategory || String(item.secondcategoryObj?.id) === String(secondCategory);
-        const matchesSubCategory = !subCategory || String(item.subcategoryObj?.id) === String(subCategory);
-        const matchesType = !type || item.tag === type;
+        const matchesStatus =
+          activeStatus === "All" ||
+          item.status === activeStatus;
 
-        return matchesStatus && matchesCategory && matchesSecondCategory && matchesSubCategory && matchesType;
+        const matchesCategory =
+          !category ||
+          String(item.categoryObj?.id) === String(category);
+
+        const matchesType =
+          !type ||
+          item.tag === type;
+
+        const matchesEligibility =
+          !eligibility ||
+          String(item.eligibility || "")
+            .toLowerCase()
+            .includes(eligibility.toLowerCase());
+
+        return (
+          matchesStatus &&
+          matchesCategory &&
+          matchesType &&
+          matchesEligibility
+        );
       })
       .sort((a, b) => {
-        // prefer createdAt if backend provides it
         if (a.createdAt && b.createdAt) {
           return new Date(b.createdAt) - new Date(a.createdAt);
         }
-        // fallback: higher id = more recently added
+
         return Number(b.id) - Number(a.id);
       }),
-  [activeStatus, items, category, secondCategory, subCategory, type]
+  [
+    activeStatus,
+    items,
+    category,
+    type,
+    eligibility,
+  ]
 );
 
   function buildScholarshipReturnTo(itemName = selectedItem?.name) {
@@ -498,49 +526,45 @@ useEffect(() => {
         </div>
       </div>
 
-     <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+
+  {/* Category */}
   <div className="relative">
     <Select
       showSearch
       allowClear
-      placeholder="All Categories"
+      placeholder="All Domains"
       optionFilterProp="label"
       value={category || undefined}
-      onChange={(value) => handleCategoryChange(value || "")}
-      options={categoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
+      onChange={handleCategoryChange}
+      options={categories.map((item) => ({
+        value: String(item.id),
+        label: item.title || item.name,
+      }))}
       style={{ minWidth: 180 }}
       className="pill-select"
     />
   </div>
 
+  {/* Eligibility Range */}
   <div className="relative">
     <Select
       showSearch
       allowClear
-      placeholder="All Second Categories"
+      placeholder="Range"
       optionFilterProp="label"
-      value={secondCategory || undefined}
-      onChange={(value) => handleSecondCategoryChange(value || "")}
-      options={secondCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.name }))}
-      style={{ minWidth: 200 }}
+      value={eligibility || undefined}
+      onChange={(value) => setEligibility(value || "")}
+      options={eligibilityOptions.map((option) => ({
+        value: option,
+        label: option,
+      }))}
+      style={{ minWidth: 180 }}
       className="pill-select"
     />
   </div>
 
-  <div className="relative">
-    <Select
-      showSearch
-      allowClear
-      placeholder="All Sub Categories"
-      optionFilterProp="label"
-      value={subCategory || undefined}
-      onChange={(value) => setSubCategory(value || "")}
-      options={subCategoryOptions.map((opt) => ({ value: String(opt.id), label: opt.title }))}
-      style={{ minWidth: 200 }}
-      className="pill-select"
-    />
-  </div>
-
+  {/* Type */}
   <div className="relative">
     <Select
       showSearch
@@ -549,21 +573,23 @@ useEffect(() => {
       optionFilterProp="label"
       value={type || undefined}
       onChange={(value) => setType(value || "")}
-      options={typeOptions.map((opt) => ({ value: opt, label: opt }))}
+      options={typeOptions.map((option) => ({
+        value: option,
+        label: option,
+      }))}
       style={{ minWidth: 160 }}
       className="pill-select"
     />
   </div>
 
 </div>
-{(category || secondCategory || subCategory || type) ? (
+{(category || type || eligibility) ? (
   <button
     type="button"
     onClick={() => {
       setCategory("");
-      setSecondCategory("");
-      setSubCategory("");
       setType("");
+      setEligibility("");
     }}
     className="rounded-full px-2.5 py-1.5 text-[12px] font-semibold text-[#9a2119] underline-offset-2 hover:underline"
   >

@@ -252,29 +252,29 @@ transition:
 
 .module-screen :where(h1, h2, h3, h4, h5, h6) {
   margin: 0;
-  color: var(--ink) !important;
-  font-family: inherit !important;
+  color: var(--ink);
+  font-family: inherit;
   letter-spacing: -0.02em;
 }
 
 .module-screen h1 {
-  font-size: var(--heading-1) !important;
-  font-weight: 800 !important;
+  font-size: var(--heading-1);
+  font-weight: 800;
   line-height: 1.12;
 }
 
 .module-screen h2 {
-  font-size: var(--heading-2) !important;
-  font-weight: 800 !important;
+  font-size: var(--heading-2);
+  font-weight: 800;
   line-height: 1.18;
 }
 
 .module-screen h3,
 .module-screen .ant-card .ant-card-head-title {
-  font-size: var(--heading-3) !important;
-  font-weight: 700 !important;
+  font-size: var(--heading-3);
+  font-weight: 700;
   line-height: 1.24;
-  color: var(--ink) !important;
+  color: var(--ink);
 }
 
 .module-screen :where(p, li, label) {
@@ -436,3 +436,30 @@ transition:
 .ckeditor-output {
   all: revert;
 }
+
+.filter-pill-selected,
+.filter-pill-selected:hover,
+.filter-pill-selected:focus,
+.filter-pill-selected:active {
+  background-color: #9a2119 !important;
+  color: #ffffff !important;
+  border-color: #9a2119 !important;
+}
+
+.filter-pill-selected *,
+.filter-pill-selected:hover *,
+.filter-pill-selected:focus *,
+.filter-pill-selected:active * {
+  color: #ffffff !important;
+}
+
+.filter-pill-unselected {
+  background-color: #ffffff !important;
+  color: #4f4347 !important;
+  border-color: #f0e4e2 !important;
+}
+
+.filter-pill-unselected:hover {
+  border-color: #9a2119 !important;
+  color: #9a2119 !important;
+}
