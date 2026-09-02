@@ -306,14 +306,17 @@ if (selectedExam) {
               className="scroll-mt-24 overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm"
             >
               <div className="border-b border-[#f0e4e2] px-5 py-3">
-                <h3 className="m-0 text-[15px] font-bold text-[#9a2119]">
+                <h3
+                  className="m-0 text-[15px] font-bold !text-[#9a2119]"
+                  style={{ color: "#9a2119" }}
+                >
                   {section.title}
                 </h3>
               </div>
 
               <div
                 className="prose prose-sm max-w-none px-5 py-4
-                  prose-headings:text-[#1a0a09]
+                  prose-headings:text-[#9a2119]
                   prose-p:text-[#4f4347]
                   prose-p:leading-7
                   prose-li:text-[#4f4347]
