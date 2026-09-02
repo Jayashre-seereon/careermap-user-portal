@@ -16,64 +16,6 @@ import { checkModuleAccess } from "../../../api/moduleAccessApi";
 import { Select } from "antd";
 const { Option } = Select;
 
-function renderExamAboutHtml(html = "") {
-  if (typeof window === "undefined" || !html) {
-    return null;
-  }
-
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  const nodes = Array.from(doc.body.children);
-
-  return nodes.map((node, index) => {
-    const tag = node.tagName.toLowerCase();
-    const text = node.textContent?.replace(/\s+/g, " ").trim() || "";
-
-    if (!text) {
-      return null;
-    }
-
-    if (tag === "p") {
-      return (
-        <p key={`p-${index}`} className="m-0 mb-4 leading-7 text-[#4f4347]">
-          <span dangerouslySetInnerHTML={{ __html: node.innerHTML }} />
-        </p>
-      );
-    }
-
-    if (tag === "ul" || tag === "ol") {
-      const listTag = tag;
-      const isOrdered = listTag === "ol";
-      const ListTag = isOrdered ? "ol" : "ul";
-
-      return (
-        <ListTag
-          key={`${tag}-${index}`}
-          className={`mb-4 ${isOrdered ? "list-decimal" : "list-disc"} pl-6 text-[#4f4347]`}
-        >
-          {Array.from(node.children).map((child, childIndex) => (
-            <li key={`${tag}-${index}-${childIndex}`} className="mb-1 leading-7">
-              <span dangerouslySetInnerHTML={{ __html: child.innerHTML }} />
-            </li>
-          ))}
-        </ListTag>
-      );
-    }
-
-    if (tag === "strong" || tag === "b") {
-      return (
-        <p key={`${tag}-${index}`} className="m-0 mb-4 font-bold leading-7 text-[#1a0a09]">
-          <span dangerouslySetInnerHTML={{ __html: node.innerHTML }} />
-        </p>
-      );
-    }
-
-    return (
-      <div key={`${tag}-${index}`} className="mb-4 leading-7 text-[#4f4347]">
-        <span dangerouslySetInnerHTML={{ __html: node.innerHTML }} />
-      </div>
-    );
-  });
-}
 
 export default function EntranceExamPage() {
   const { goToDashboard } = usePortalNavigation();
@@ -87,12 +29,13 @@ export default function EntranceExamPage() {
   const [items, setItems] = useState(fallbackEntranceExams);
   const [error, setError] = useState("");
   const [moduleMode, setModuleMode] = useState(accessStatus);
-  const [infoItem, setInfoItem] = useState(null);
+ const [selectedExam, setSelectedExam] = useState(null);
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState([]);
   const [selectedExamId, setSelectedExamId] = useState(""); 
   const [mode, setMode] = useState("");
 // LOAD ENTRANCE EXAMS
+
 useEffect(() => {
   let active = true;
 
@@ -197,7 +140,16 @@ useEffect(() => {
   () => items.map((item) => ({ value: String(item.id), label: item.name })),
   [items]
 );
+function scrollToSection(id) {
+  const element = document.getElementById(id);
 
+  if (element) {
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+}
 const categoryOptions = useMemo(() => {
   return categories.map((item) => ({
     value: String(item.id),
@@ -252,17 +204,199 @@ const filtered = useMemo(
   ]
 );
 
-  const infoHtml = useMemo(() => {
-    const rawHtml =
-      infoItem?.aboutHtml ||
-      infoItem?.about ||
-      infoItem?.details?.[0]?.description ||
-      infoItem?.description ||
-      "";
 
-    return rawHtml.replace(/&nbsp;/g, " ");
-  }, [infoItem]);
+const examSections = useMemo(() => {
+  if (!selectedExam) return [];
 
+  const rawHtml =
+    selectedExam?.aboutHtml ||
+    selectedExam?.about ||
+    selectedExam?.details?.[0]?.description ||
+    selectedExam?.description ||
+    "";
+
+  if (!rawHtml || typeof window === "undefined") {
+    return [];
+  }
+
+  const doc = new DOMParser().parseFromString(
+    rawHtml.replace(/&nbsp;/g, " "),
+    "text/html"
+  );
+
+  const sections = [];
+  let currentSection = null;
+
+  Array.from(doc.body.children).forEach((node, index) => {
+    const tag = node.tagName.toLowerCase();
+
+    if (/^h[1-6]$/.test(tag)) {
+      currentSection = {
+        id: `exam-section-${index}`,
+        title: node.textContent?.trim() || `Section ${index + 1}`,
+        content: "",
+      };
+
+      sections.push(currentSection);
+    } else {
+      if (!currentSection) {
+        currentSection = {
+          id: `exam-section-${index}`,
+          title: "Overview",
+          content: "",
+        };
+
+        sections.push(currentSection);
+      }
+
+      currentSection.content += node.outerHTML;
+    }
+  });
+
+  return sections;
+}, [selectedExam]);
+
+if (selectedExam) {
+  return (
+    <ModuleScreen className="space-y-4">
+      <PageHero
+        backOnly
+        onBack={() => setSelectedExam(null)}
+      />
+
+      <div className="content-stagger grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
+
+        {/* LEFT SIDE */}
+        <div className="space-y-5">
+
+          {/* EXAM HEADER */}
+          <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+            <div className="h-2 bg-gradient-to-r from-[#9a2119] to-[#c84f15]" />
+
+            <div className="space-y-4 p-6">
+              <div>
+                <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">
+                  Entrance Examination
+                </p>
+
+                <h1 className="m-0 mt-1 text-2xl font-black leading-snug text-[#1a0a09]">
+                  {selectedExam.name}
+                </h1>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800">
+                  <CalendarOutlined />
+                  Issue: {selectedExam.issueDate}
+                </span>
+
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#fdf0ee] px-3 py-1.5 text-xs font-semibold text-[#9a2119]">
+                  <CalendarOutlined />
+                  Last Date: {selectedExam.lastDate}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* DESCRIPTION SECTIONS */}
+          {examSections.map((section) => (
+            <div
+              key={section.id}
+              id={section.id}
+              className="scroll-mt-24 overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm"
+            >
+              <div className="border-b border-[#f0e4e2] px-5 py-3">
+                <h3 className="m-0 text-[15px] font-bold text-[#9a2119]">
+                  {section.title}
+                </h3>
+              </div>
+
+              <div
+                className="prose prose-sm max-w-none px-5 py-4
+                  prose-headings:text-[#1a0a09]
+                  prose-p:text-[#4f4347]
+                  prose-p:leading-7
+                  prose-li:text-[#4f4347]
+                  prose-li:leading-7
+                  prose-strong:text-[#1a0a09]
+                  prose-table:border
+                  prose-table:border-[#f0e4e2]
+                  prose-td:border
+                  prose-td:border-[#f0e4e2]
+                  prose-td:p-2
+                  prose-th:border
+                  prose-th:border-[#f0e4e2]
+                  prose-th:p-2"
+                dangerouslySetInnerHTML={{
+                  __html: section.content,
+                }}
+              />
+            </div>
+          ))}
+
+          {!examSections.length ? (
+            <div className="rounded-[26px] border border-[#f0e4e2] bg-white p-6 text-sm text-gray-500">
+              No description available.
+            </div>
+          ) : null}
+
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="space-y-4 lg:sticky lg:top-4">
+
+          <div className="overflow-hidden rounded-[26px] border border-[#f0e4e2] bg-white shadow-sm">
+
+            <div className="space-y-4 p-5">
+
+              {/* WEBSITE */}
+              {selectedExam.website &&
+              selectedExam.website !== "#" ? (
+                <a
+                  href={selectedExam.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#9a2119] text-sm font-semibold text-white transition hover:bg-[#7a1a13]"
+                >
+                  Explore Official Website
+                  <ArrowRightOutlined />
+                </a>
+              ) : null}
+
+              <div className="h-px bg-[#f0e4e2]" />
+
+              {/* ON THIS PAGE */}
+              <div>
+                <p className="m-0 mb-2 text-[10px] font-bold uppercase tracking-widest text-[#b8837e]">
+                  On This Page
+                </p>
+
+                <div className="flex flex-col gap-1">
+                  {examSections.map((section) => (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() =>
+                        scrollToSection(section.id)
+                      }
+                      className="flex items-center gap-2 rounded-lg px-2 py-2 text-left text-[13px] font-semibold text-[#9a2119] transition hover:bg-[#fdf0ee]"
+                    >
+                      <ArrowRightOutlined className="text-xs" />
+
+                      <span>{section.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </ModuleScreen>
+  );
+}
   return (
     <>
       <ModuleScreen className="space-y-4">
@@ -378,10 +512,18 @@ const filtered = useMemo(
 <div className="mt-auto flex items-center justify-between border-t border-[#f0e4e2] pt-3">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoItem(item);
-                  }}
+                 onClick={(e) => {
+  e.stopPropagation();
+
+  if (!isFree) {
+    setUnlockModalItem({
+      title: item.name,
+    });
+    return;
+  }
+
+  setSelectedExam(item);
+}}
                   className=" py-1 text-sm font-bold text-[#9a2119] "
                 >
                   View
@@ -436,34 +578,7 @@ const filtered = useMemo(
         }}
       />
 
-  {infoItem ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          onClick={() => setInfoItem(null)}
-        >
-          <div
-            className="w-full max-w-[1000px] rounded-[24px] bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="m-0 text-[19px] font-black text-[#1a0a09]">
-                {infoItem.name}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setInfoItem(null)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f5f1ee] text-[#1a0a09]"
-              >
-                ×
-              </button>
-            </div>
 
-            <div className="mt-3 max-h-[50vh] overflow-y-auto pr-1 text-[14px] leading-7 text-[#4f4347]">
-              {renderExamAboutHtml(infoHtml)}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }
