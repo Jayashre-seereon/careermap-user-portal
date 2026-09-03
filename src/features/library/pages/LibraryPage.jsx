@@ -1875,7 +1875,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
               >
                 <InstituteFilterGroup
                   institutes={instituteGroups.outsideInstitutes}
-                  badge="Outside Odisha"
+               
                   emptyText="No institutes found outside Odisha."
                 />
               </Section>
@@ -1890,7 +1890,7 @@ className="inline-flex h-10 w-10 items-center justify-center rounded-full border
               >
                 <InstituteFilterGroup
                   institutes={instituteGroups.topInstitutes}
-                  badge="Odisha"
+                 
                   emptyText="No Odisha institutes found."
                   showLocationFilter={false}
                 />
