@@ -453,6 +453,14 @@ transition:
   color: #ffffff !important;
 }
 
+button.filter-pill-selected,
+button.filter-pill-selected:hover,
+button.filter-pill-selected:focus,
+button.filter-pill-selected:active {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .filter-pill-unselected {
   background-color: #ffffff !important;
   color: #4f4347 !important;
@@ -462,4 +470,4 @@ transition:
 .filter-pill-unselected:hover {
   border-color: #9a2119 !important;
   color: #9a2119 !important;
-}
+}

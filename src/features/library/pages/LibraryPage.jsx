@@ -786,7 +786,9 @@ function InstituteFilterGroup({ institutes, badge, emptyText, showLocationFilter
             key={f}
             onClick={() => setFilter(f)}
             className={`rounded-full px-3 py-1 text-xs font-bold ${
-              filter === f ? "bg-[#9a2119] text-white" : "border border-[#f0e4e2]"
+              filter === f
+                ? "filter-pill-selected !bg-[#9a2119] !text-white"
+                : "filter-pill-unselected"
             }`}
           >
             {f === "govt" ? "Government" : f === "private" ? "Private" : "All"}
