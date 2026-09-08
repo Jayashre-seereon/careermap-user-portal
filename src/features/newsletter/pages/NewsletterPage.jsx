@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useMemo } from "react";
 import { Alert, Empty } from "antd";
 import { ArrowRightOutlined, UnlockOutlined, FileTextOutlined, LockOutlined } from "@ant-design/icons";
 import { useLocation } from "react-router-dom";
@@ -123,7 +123,7 @@ export default function NewsletterPage() {
   const [previewRemaining, setPreviewRemaining] = useState(0);
   const [previewExpired, setPreviewExpired] = useState(false);
   const [unlockModalItem, setUnlockModalItem] = useState(null);
-
+  const [selectedType, setSelectedType] = useState("ALL");
   const hasFullAccess = moduleMode === "full" || isUnlocked("newsletter");
   const isPreview = moduleMode === "preview";
 
@@ -148,7 +148,15 @@ export default function NewsletterPage() {
       active = false;
     };
   }, []);
+const filteredItems = useMemo(() => {
+  if (selectedType === "ALL") {
+    return items;
+  }
 
+  return items.filter(
+    (item) => item.type?.toUpperCase() === selectedType
+  );
+}, [items, selectedType]);
   // Always resolve access live from the API — the passed-in accessStatus is only
   // a starting guess for the very first render, never a substitute for the real check.
   useEffect(() => {
@@ -240,10 +248,29 @@ export default function NewsletterPage() {
 
       <PageHero backOnly onBack={goToDashboard} />
       {error ? <Alert type="warning" message={error} showIcon style={{ borderRadius: 16 }} /> : null}
-
+<div className="mb-5 flex flex-wrap gap-2">
+  {[
+    { label: "All", value: "ALL" },
+    { label: "Weekly", value: "WEEKLY" },
+    { label: "Quarterly", value: "QUARTERLY" },
+  ].map((tab) => (
+    <button
+      key={tab.value}
+      type="button"
+      onClick={() => setSelectedType(tab.value)}
+      className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+        selectedType === tab.value
+          ? "bg-[#9a2119] text-white"
+          : "border border-[#f0e4e2] bg-white text-[#9a2119] hover:bg-[#fdf0ee]"
+      }`}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-  {items.length > 0 ? (
-          items.map((item, index) => (
+ {filteredItems.length > 0 ? (
+  filteredItems.map((item, index) => (
             <button
               key={item.id}
               type="button"

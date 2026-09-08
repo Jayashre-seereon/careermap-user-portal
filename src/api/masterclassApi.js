@@ -38,6 +38,7 @@ function mapMasterclassItem(item, index) {
     createdAt: item?.createdAt || item?.created_at || null,
     title: item?.title || "Untitled Master Class",
     mentor: item?.name || "Unknown Mentor",
+     image: item?.image || null,
     duration: formatMasterclassTime(item?.time),
     views,
     career: categoryLabel,

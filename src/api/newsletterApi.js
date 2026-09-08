@@ -8,7 +8,8 @@ function stripHtml(value) {
 function mapNewsletterItem(item) {
   return {
     id: String(item?.id ?? ""),
-    title: item?.title || "Untitled Newsletter",
+    title: item?.title || "",
+    type: item?.type || "",
     description: stripHtml(item?.description) || "Newsletter details are not available right now.",
     media: item?.image || null,
     url: item?.url || "#",
