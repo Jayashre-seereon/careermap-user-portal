@@ -36,15 +36,40 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
       <div className="absolute left-0 right-0 top-0 h-[3px] bg-[#f0e4e2] transition-colors group-hover:bg-[#9a2119]" />
 
       <div className="flex h-full flex-col gap-4 pt-2">
-        <div className="flex items-start gap-3">
+
+  {/* Master Class Image */}
+  <div className="relative h-44 w-full overflow-hidden rounded-[18px] bg-[#faf4f2]">
+    {item.image ? (
+      <img
+        src={item.image}
+        alt={item.title}
+        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+    ) : (
+      <div className="flex h-full items-center justify-center text-sm text-muted">
+        No image available
+      </div>
+    )}
+
+    {/* Lock overlay */}
+    {locked && (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow">
+          <LockOutlined className="text-[#9a2119]" />
+        </div>
+      </div>
+    )}
+  </div>
+
+  {/* Existing content */}
+  <div className="flex items-start gap-3">
           
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[15px] font-extrabold leading-[21px] text-ink">{item.title}</div>
-                <div className="mt-1 truncate text-[12px] text-muted">{item.mentor}</div>
-              </div>
+                </div>
 
              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${locked ? "bg-[#fff6f2] text-brand" : "bg-green-50 text-green-600"}`}>
                 {locked ? <LockOutlined /> : <UnlockOutlined />}
@@ -55,28 +80,21 @@ function MasterClassCard({ item, unlocked, detailUnlocked, onWatch }) {
               <SoftTag color="red" className="shrink-0 whitespace-nowrap">
                 {item.career}
               </SoftTag>
-              <SoftTag color="gold" className="shrink-0 whitespace-nowrap">
+              {/* <SoftTag color="gold" className="shrink-0 whitespace-nowrap">
                 {formatViews(item.views)}
-              </SoftTag>
+              </SoftTag> */}
             
             </div>
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div className="w-full rounded-[18px] border border-[#f4e3df] bg-[#fff9f7] px-5 py-3 sm:col-span-2">
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#b8837e]">
-              Date
-            </div>
-            <div className="mt-1 text-[13px] font-semibold text-ink">{item.duration}</div>
-          </div>
-        </div>
+       
 
         {!unlocked && item.locked ? (
-          <div className="rounded-[18px] border border-[#f4e3df] bg-[#fff9f7] px-4 py-3 text-[12px] leading-5 text-muted">
+          <div className="">
             {detailUnlocked
               ? "Your first locked class is available for free."
-              : "You have already used the free career & personality videos preview."}
+              : ""}
           </div>
         ) : null}
 
@@ -189,47 +207,44 @@ const unlocked =
     <ModuleScreen className="space-y-5 pb-8">
       {error ? <Alert type="warning" message={error} showIcon style={{ borderRadius: 16 }} /> : null}
 
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="m-0 shrink-0 text-[10px] font-bold uppercase tracking-widest text-[#1a0a09]">Filter By</p>
-          <div className="flex flex-wrap gap-2">
-            {videoTypeOptions.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setVideoType(item)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  videoType === item ? "bg-[#9a2119] text-white" : "bg-[#faf4f2] text-[#7b605c]"
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </div>
+<div className="flex flex-wrap items-center gap-2">
+  {/* Video Type */}
+  {videoTypeOptions.map((item) => (
+    <button
+      key={item}
+      type="button"
+      onClick={() => setVideoType(item)}
+      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+        videoType === item
+          ? "bg-[#9a2119] text-white"
+          : "bg-[#faf4f2] text-[#7b605c]"
+      }`}
+    >
+      {item}
+    </button>
+  ))}
 
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="m-0 shrink-0 text-[10px] font-bold uppercase tracking-widest text-[#1a0a09]">Sort</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: "Most Popular", value: "popular" },
-              { label: "A-Z", value: "az" },
-              { label: "Z-A", value: "za" },
-            ].map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => setSortBy(item.value)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  sortBy === item.value ? "bg-[#9a2119] text-white" : "bg-[#faf4f2] text-[#7b605c]"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+  {/* Sort */}
+  {[
+    { label: "A-Z", value: "az" },
+    { label: "Z-A", value: "za" },
+  ].map((item) => (
+    <button
+      key={item.value}
+      type="button"
+      onClick={() => setSortBy(item.value)}
+      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+        sortBy === item.value
+          ? "bg-[#9a2119] text-white"
+          : "bg-[#faf4f2] text-[#7b605c]"
+      }`}
+    >
+      {item.label}
+    </button>
+  ))}
+</div>
+
+
 
       <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {filtered.length === 0 ? (
