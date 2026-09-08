@@ -27,7 +27,7 @@ const CATEGORY_TABS = [
   { key: "studyAbroad", label: "Abroad", groupKey: "studyAbroad", types: ["studyabroad"] },
   { key: "masterclasses", label: "Videos", groupKey: "masterclasses", types: ["masterclass"] },
   { key: "quizzes", label: "Quizzes", groupKey: "quizzes", types: ["quiz"] },
-  { key: "newsletters", label: "Newsletters", groupKey: "newsletters", types: ["newsletter"] },
+  { key: "newsletters", label: "Career Insights", groupKey: "newsletters", types: ["newsletter"] },
 ];
 
 const POPULAR_SHORTCUTS = [
@@ -108,7 +108,7 @@ function getTypeConfig(item = {}) {
   }
   if (type === "newsletter" || group === "newsletters") {
     return {
-      label: item.badge || "Newsletter",
+      label: item.badge || "Career Insights",
       badgeClass: "bg-red-50 text-[#9a2119] border-red-200",
       avatarBg: "#9a2119",
       icon: <NotificationOutlined />,

@@ -33,7 +33,7 @@ export const heroStats = [
 
 export const moduleCards = [
   { title: "Career Archive", subtitle: "Explore Careers, Entry Routes & Job Scopes.", route: "/app/library", tone: palette.blue },
-  { title: "Career News Letter", subtitle: "Read career updates and newsletter resources.", route: "/app/newsletter", tone: palette.green },
+  { title: "Career Insights", subtitle: "Read career updates and insight resources.", route: "/app/newsletter", tone: palette.green },
   { title: "Career Psychometric Assessment", subtitle: "Discover aptitude and personality insights.", route: "/app/assessment", tone: palette.purple },
   { title: "Career & Personality Videos", subtitle: "Short expert-led learning videos.", route: "/app/learn", tone: palette.orange },
   { title: "Entrance Exam", subtitle: "Explore State,National,and Private University Entrance Exams.", route: "/app/entrance-exam", tone: palette.teal },
@@ -139,7 +139,7 @@ export const moduleArtPresets = {
           <rect x="176" y="188" width="96" height="10" rx="5" fill="#efe5df"/>
         </svg>`),
   },
-  "Career News Letter": {
+  "Career Insights": {
     background: "linear-gradient(135deg, #eef8f1 0%, #dfeee5 100%)",
     accent: "#2f9367",
     image:
