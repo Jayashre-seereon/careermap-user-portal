@@ -40,7 +40,7 @@ function NewsletterCard({ item, canView }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-[#b8837e]">
-            Newsletter
+          Career Insights
           </p>
 
           <h3 className="m-0 mt-1 text-[18px] font-black text-[#1a0a09]">
@@ -138,7 +138,7 @@ export default function NewsletterPage() {
     }
   } catch (err) {
     if (active) {
-      setError(err?.response?.data?.message || err?.message || "Failed to load newsletters.");
+      setError(err?.response?.data?.message || err?.message || "Failed to load career insights.");
     }
   }
 }
@@ -281,15 +281,15 @@ const filteredItems = useMemo(() => {
             </button>
           ))
         ) : !error ? (
-          <Empty description="No newsletters available right now." />
+          <Empty description="No career insights available right now." />
         ) : null}
       </div>
 
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
-        title="Unlock Career News Letter"
+        title="Unlock Career Insights"
         itemLabel={unlockModalItem?.title}
-        description="Your free newsletter preview has already been used. Subscribe to continue."
+        description="Your free career insights preview has already been used. Subscribe to continue."
         onCancel={() => setUnlockModalItem(null)}
         onConfirm={handleGoToPlans}
       />
