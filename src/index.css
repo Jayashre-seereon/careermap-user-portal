@@ -471,3 +471,12 @@ button.filter-pill-selected:active {
   border-color: #9a2119 !important;
   color: #9a2119 !important;
 }
+
+
+@layer components {
+  .form-input {
+    @apply w-full rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition;
+    @apply focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10;
+  }
+}
+
