@@ -617,7 +617,7 @@ if (selectedCountry) {
 {formOpen ? (
   <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
 
-    <div className="flex max-h-[95vh] w-full max-w-7xl flex-col overflow-hidden rounded-[26px] bg-white shadow-2xl">
+    <div className="flex max-h-[85vh] w-full max-w-6xl flex-col overflow-hidden rounded-[26px] bg-white shadow-2xl">
 
       {/* ===================================================== */}
       {/* HEADER */}
