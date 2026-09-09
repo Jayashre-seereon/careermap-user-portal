@@ -60,6 +60,22 @@ export async function createStudyAbroadConsultation(payload) {
   const requestBody = {
     ...payload,
     studyAbroadId: normalizedStudyAbroadId,
+    // Prisma stores this field as a scalar list. Keep the request compatible
+    // even if a caller supplies a single funding source.
+    primaryFundingSource: Array.isArray(payload?.primaryFundingSource)
+      ? payload.primaryFundingSource
+      : payload?.primaryFundingSource
+        ? [payload.primaryFundingSource]
+        : [],
+    // The consultation schema accepts one intake, rather than a scalar list.
+    preferredIntake: Array.isArray(payload?.preferredIntake)
+      ? payload.preferredIntake[0] || null
+      : payload?.preferredIntake || null,
+    // The API contract has one English-test value; the remaining exam fields
+    // are list fields and are passed through unchanged.
+    englishTest: Array.isArray(payload?.englishTest)
+      ? payload.englishTest[0] || null
+      : payload?.englishTest || null,
   };
 
   const response = await api.post("/studyabroad/consult/create", requestBody, {

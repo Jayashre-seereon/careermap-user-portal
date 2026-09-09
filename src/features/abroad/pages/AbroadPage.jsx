@@ -72,6 +72,161 @@ function ProgramList({ icon, title, programs }) {
   );
 }
 
+function RadioGroup({
+  label,
+  value,
+  options,
+  onChange,
+  required = false,
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#241312]">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </label>
+
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const selected = value === option.value;
+
+          return (
+            <label
+              key={option.value}
+              className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                selected
+                  ? "border-[#9a2119] bg-[#fdf0ee] text-[#9a2119]"
+                  : "border-[#ead9d5] bg-white text-gray-700 hover:border-[#d9b5ad]"
+              }`}
+            >
+              <input
+                type="radio"
+                name={label}
+                value={option.value}
+                checked={selected}
+                onChange={() => onChange(option.value)}
+                className="h-4 w-4 accent-[#9a2119]"
+              />
+
+              <span>{option.label}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CheckboxGroup({
+  label,
+  values = [],
+  options,
+  onChange,
+  required = false,
+}) {
+  const safeValues = Array.isArray(values) ? values : [];
+
+  const handleToggle = (value) => {
+    if (safeValues.includes(value)) {
+      onChange(
+        safeValues.filter((item) => item !== value)
+      );
+    } else {
+      onChange([...safeValues, value]);
+    }
+  };
+
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#241312]">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </label>
+
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const checked = safeValues.includes(option.value);
+
+          return (
+            <label
+              key={option.value}
+              className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
+                checked
+                  ? "border-[#9a2119] bg-[#fdf0ee] text-[#9a2119]"
+                  : "border-[#ead9d5] bg-white text-gray-700 hover:border-[#d9b5ad]"
+              }`}
+            >
+              <input
+                type="checkbox"
+                value={option.value}
+                checked={checked}
+                onChange={() => handleToggle(option.value)}
+                className="h-4 w-4 accent-[#9a2119]"
+              />
+
+              <span>{option.label}</span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FormInput({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  placeholder = "",
+  required = false,
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#241312]">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </label>
+
+      <input
+        type={type}
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
+      />
+    </div>
+  );
+}
+
+function FormTextarea({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder = "",
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-semibold text-[#241312]">
+        {label}
+      </label>
+
+      <textarea
+        name={name}
+        value={value ?? ""}
+        onChange={onChange}
+        placeholder={placeholder}
+        rows={4}
+        className="w-full resize-none rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
+      />
+    </div>
+  );
+}
+
+
 export default function AbroadPage() {
   const { isUnlocked } = useAppState();
   const { navigate, location, goToDashboard } = usePortalNavigation();
@@ -86,12 +241,92 @@ export default function AbroadPage() {
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [consultForm, setConsultForm] = useState({
-    courseInterest: "",
-    budgetRange: "",
-    preferredIntake: "",
-    message: "",
-  });
+
+const initialConsultForm = {
+  // Student Information
+  fullName: "",
+  dateOfBirth: "",
+  gender: "",
+  email: "",
+  mobileNumber: "",
+  whatsappNumber: "",
+  currentCityState: "",
+  countryOfCitizenship: "",
+
+  // Parent / Guardian
+  parentGuardianName: "",
+  parentRelationship: "",
+  parentMobileNumber: "",
+  parentEmail: "",
+  parentOccupation: "",
+  primaryFundingSource: [],
+
+  // Academic
+  highestQualification: "",
+  schoolCollegeUniversity: "",
+  boardUniversity: "",
+  passingYear: "",
+  class10PercentageCGPA: "",
+  class12PercentageCGPA: "",
+
+  // Study Abroad
+  intendedStudyLevel: "",
+  preferredIntake: "",
+  preferredCountries: [],
+  preferredCourseProgramme: "",
+  preferredSpecialization: "",
+  preferredUniversities: "",
+  openToAlternativeUniversities: "",
+
+  // English / Entrance
+  englishTest: "",
+  englishTestScoreDate: "",
+  otherEntranceExams: [],
+  entranceExamScoreDate: "",
+
+  // Career / Budget
+  preferredCareerDomain: "",
+  reasonToStudyAbroad: "",
+  topPriorities: [],
+  annualTuitionBudget: "",
+  totalEducationBudget: "",
+  scholarshipRequired: "",
+  educationLoanRequired: "",
+
+  // Passport
+  passportStatus: "",
+  passportExpiryDate: "",
+  documentsAvailable: [],
+
+  // Services
+  servicesRequired: [],
+
+  // Additional
+  message: "",
+};
+
+
+const handleConsultChange = (event) => {
+  const { name, value } = event.target;
+
+  setConsultForm((current) => ({
+    ...current,
+    [name]: value,
+  }));
+};
+
+const updateConsultField = (name, value) => {
+  setConsultForm((current) => ({
+    ...current,
+    [name]: value,
+  }));
+};
+
+
+
+const [consultForm, setConsultForm] = useState(initialConsultForm);
+
+
 
   const activeCountry = selectedCountry;
 
@@ -374,134 +609,1744 @@ if (selectedCountry) {
         </div>
       </div>
 
-      {/* Consultation Modal */}
-      {formOpen ? (
-       <div className="fixed inset-0 z-0 flex items-start justify-center bg-black/50 p-4 pt-24 backdrop-blur-sm">    <div className="w-full max-w-md overflow-hidden rounded-[26px] bg-white shadow-2xl">
-            <div className="border-b border-[#f0e4e2] px-6 py-5">
-              <h2 className="m-0 text-xl font-bold text-[#241312]">
-                Get Free Consultation
-              </h2>
+  
+{/* ===================================================== */}
+{/* CONSULTATION MODAL */}
+{/* ===================================================== */}
 
-              <p className="mt-1 text-sm text-gray-600">
-                Tell us about your study plans.
-              </p>
+{formOpen ? (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+
+    <div className="flex max-h-[85vh] w-full max-w-6xl flex-col overflow-hidden rounded-[26px] bg-white shadow-2xl">
+
+      {/* ===================================================== */}
+      {/* HEADER */}
+      {/* ===================================================== */}
+
+      <div className="shrink-0 border-b border-[#f0e4e2] bg-white px-6 py-5">
+
+        <div className="flex items-start justify-between gap-4">
+
+          <div>
+            <h2 className="m-0 text-xl font-bold text-[#241312]">
+              Foreign University Admission
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-600">
+              Student Registration & Free Counselling Form
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormOpen(false);
+              setSubmitError("");
+            }}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg text-gray-500 transition hover:bg-[#fdf0ee] hover:text-[#9a2119]"
+          >
+            ×
+          </button>
+
+        </div>
+      </div>
+
+
+      {/* ===================================================== */}
+      {/* FORM BODY */}
+      {/* ===================================================== */}
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+
+        <div className="space-y-8">
+
+
+          {/* ===================================================== */}
+          {/* 1. STUDENT BASIC DETAILS */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                1. Student Basic Details
+              </h3>
             </div>
 
-            <div className="space-y-4 p-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+              {/* Full Name */}
               <input
-                className="w-full rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
-                placeholder="Course Interest"
+                type="text"
+                placeholder="Full Name *"
+                value={consultForm.fullName}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    fullName: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              {/* Date of Birth */}
+              <input
+                type="date"
+                value={consultForm.dateOfBirth}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    dateOfBirth: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              {/* Gender */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 lg:col-span-2">
+
+                <p className="mb-2 text-sm font-semibold text-gray-700">
+                  Gender
+                </p>
+
+                <div className="flex flex-wrap gap-4">
+
+                  {[
+                    "Male",
+                    "Female",
+                    "Other",
+                    "Prefer not to say",
+                  ].map((option) => (
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 text-sm text-gray-700"
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={option}
+                        checked={consultForm.gender === option}
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            gender: e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+                    </label>
+                  ))}
+
+                </div>
+              </div>
+
+
+              {/* Email */}
+              <input
+                type="email"
+                placeholder="Email Address *"
+                value={consultForm.email}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    email: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              {/* Mobile */}
+              <input
+                type="tel"
+                maxLength={10}
+                placeholder="Mobile Number *"
+                value={consultForm.mobileNumber}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    mobileNumber: e.target.value.replace(/\D/g, ""),
+                  }))
+                }
+                className="form-input"
+              />
+
+              {/* WhatsApp */}
+              <input
+                type="tel"
+                maxLength={10}
+                placeholder="WhatsApp Number"
+                value={consultForm.whatsappNumber}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    whatsappNumber: e.target.value.replace(/\D/g, ""),
+                  }))
+                }
+                className="form-input"
+              />
+
+              {/* Current City */}
+              <input
+                type="text"
+                placeholder="Current City / State *"
+                value={consultForm.currentCityState}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    currentCityState: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              {/* Citizenship */}
+              <input
+                type="text"
+                placeholder="Country of Citizenship"
+                value={consultForm.countryOfCitizenship}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    countryOfCitizenship: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+            </div>
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 2. PARENT / GUARDIAN */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                2. Parent / Guardian Details
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+              <input
+                type="text"
+                placeholder="Parent / Guardian Name"
+                value={consultForm.parentGuardianName}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    parentGuardianName: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              <input
+                type="text"
+                placeholder="Relationship"
+                value={consultForm.parentRelationship}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    parentRelationship: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              <input
+                type="tel"
+                maxLength={10}
+                placeholder="Mobile Number"
+                value={consultForm.parentMobileNumber}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    parentMobileNumber: e.target.value.replace(/\D/g, ""),
+                  }))
+                }
+                className="form-input"
+              />
+
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={consultForm.parentEmail}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    parentEmail: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              <input
+                type="text"
+                placeholder="Occupation"
+                value={consultForm.parentOccupation}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    parentOccupation: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+
+            {/* Primary Funding Source - Multi Select */}
+<div>
+  <label className="mb-2 block text-sm font-semibold text-gray-700">
+    Primary Funding Source
+  </label>
+
+  <div className="flex flex-wrap gap-3">
+    {[
+      "Parents/Guardian",
+      "Student",
+      "Education Loan",
+      "Scholarship",
+      "Other",
+    ].map((option) => (
+      <label
+        key={option}
+        className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+      >
+        <input
+          type="checkbox"
+          value={option}
+          checked={
+            consultForm.primaryFundingSource.includes(option)
+          }
+          onChange={(e) =>
+            setConsultForm((current) => {
+              const selectedSources = current.primaryFundingSource;
+
+              return {
+                ...current,
+                primaryFundingSource: e.target.checked
+                  ? [...selectedSources, option]
+                  : selectedSources.filter((source) => source !== option),
+              };
+            })
+          }
+          className="accent-[#9a2119]"
+        />
+
+        {option}
+      </label>
+    ))}
+  </div>
+</div>
+
+            </div>
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 3. ACADEMIC DETAILS */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                3. Academic Details
+              </h3>
+            </div>
+
+{/* Current / Highest Qualification - Single Select */}
+<div>
+  <label className="mb-2 block text-sm font-semibold text-gray-700">
+    Current / Highest Qualification
+  </label>
+
+  <div className="flex flex-wrap gap-3">
+    {[
+      "Class 10",
+      "Class 12",
+      "Diploma",
+      "Bachelor's",
+      "Master's",
+      "Other",
+    ].map((option) => (
+      <label
+        key={option}
+        className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+      >
+        <input
+          type="radio"
+          name="highestQualification"
+          value={option}
+          checked={
+            consultForm.highestQualification === option
+          }
+          onChange={(e) =>
+            setConsultForm((current) => ({
+              ...current,
+              highestQualification: e.target.value,
+            }))
+          }
+          className="accent-[#9a2119]"
+        />
+
+        {option}
+      </label>
+    ))}
+  </div>
+</div>
+
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+              <input
+                type="text"
+                placeholder="School / College / University"
+                value={consultForm.schoolCollegeUniversity}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    schoolCollegeUniversity: e.target.value,
+                  }))
+                }
+                className="form-input lg:col-span-2"
+              />
+
+              <input
+                type="text"
+                placeholder="Board / University"
+                value={consultForm.boardUniversity}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    boardUniversity: e.target.value,
+                  }))
+                }
+                className="form-input lg:col-span-2"
+              />
+
+              <input
+                type="text"
+                placeholder="Year of Passing / Expected Graduation"
+                value={consultForm.passingYear}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    passingYear: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              <input
+                type="text"
+                placeholder="Class 10 Percentage / CGPA"
+                value={consultForm.class10PercentageCGPA}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    class10PercentageCGPA: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+              <input
+                type="text"
+                placeholder="Class 12 Percentage / CGPA"
+                value={consultForm.class12PercentageCGPA}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    class12PercentageCGPA: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+            </div>
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 4. FOREIGN EDUCATION PREFERENCES */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                4. Foreign Education Preferences
+              </h3>
+            </div>
+
+
+            {/* Intended Study Level */}
+            <div className="mb-4 rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Intended Study Level
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+
+                {[
+                  "Undergraduate",
+                  "Postgraduate",
+                  "PhD",
+                  "Diploma/Certificate",
+                ].map((option) => (
+
+                  <label
+                    key={option}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  >
+
+                    <input
+                      type="radio"
+                      name="intendedStudyLevel"
+                      value={option}
+                      checked={
+                        consultForm.intendedStudyLevel === option
+                      }
+                      onChange={(e) =>
+                        setConsultForm((current) => ({
+                          ...current,
+                          intendedStudyLevel: e.target.value,
+                        }))
+                      }
+                      className="accent-[#9a2119]"
+                    />
+
+                    {option}
+
+                  </label>
+
+                ))}
+
+              </div>
+            </div>
+
+
+            {/* Preferred Intake */}
+            <div className="mb-4 rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Preferred Intake
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+
+                {[
+                  "Jan",
+                  "Feb",
+                  "May",
+                  "Sep",
+                  "Other",
+                ].map((option) => {
+                  return (
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+
+                      <input
+                        type="radio"
+                        name="preferredIntake"
+                        value={option}
+                        checked={consultForm.preferredIntake === option}
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            preferredIntake: e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+                  );
+                })}
+
+              </div>
+            </div>
+
+
+            {/* Preferred Countries */}
+            <div className="mb-4 rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Preferred Countries
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+
+                {[
+                  "USA",
+                  "UK",
+                  "Canada",
+                  "Australia",
+                  "NZ",
+                  "Germany",
+                  "Ireland",
+                ].map((option) => {
+
+                  const selected =
+                    Array.isArray(consultForm.preferredCountries) &&
+                    consultForm.preferredCountries.includes(option);
+
+                  return (
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(e) => {
+
+                          setConsultForm((current) => {
+
+                            const oldValues =
+                              Array.isArray(current.preferredCountries)
+                                ? current.preferredCountries
+                                : [];
+
+                            return {
+                              ...current,
+                              preferredCountries:
+                                e.target.checked
+                                  ? [...oldValues, option]
+                                  : oldValues.filter(
+                                      (item) => item !== option
+                                    ),
+                            };
+                          });
+
+                        }}
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+                  );
+                })}
+
+              </div>
+            </div>
+
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+              <input
+                type="text"
+                placeholder="Preferred Course / Programme *"
                 value={consultForm.courseInterest}
-                onChange={(event) =>
+                onChange={(e) =>
                   setConsultForm((current) => ({
                     ...current,
-                    courseInterest: event.target.value,
+                    courseInterest: e.target.value,
                   }))
                 }
+                className="form-input"
               />
 
               <input
-                className="w-full rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
-                placeholder="Budget Range"
-                value={consultForm.budgetRange}
-                onChange={(event) =>
+                type="text"
+                placeholder="Preferred Specialization"
+                value={consultForm.preferredSpecialization}
+                onChange={(e) =>
                   setConsultForm((current) => ({
                     ...current,
-                    budgetRange: event.target.value,
+                    preferredSpecialization: e.target.value,
                   }))
                 }
+                className="form-input"
               />
 
               <input
-                className="w-full rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
-                placeholder="Preferred Country"
-                value={consultForm.preferredIntake}
-                onChange={(event) =>
+                type="text"
+                placeholder="Preferred Universities"
+                value={consultForm.preferredUniversities}
+                onChange={(e) =>
                   setConsultForm((current) => ({
                     ...current,
-                    preferredIntake: event.target.value,
+                    preferredUniversities: e.target.value,
                   }))
                 }
+                className="form-input"
               />
+
+
+              {/* Alternative Universities */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3">
+
+                <p className="mb-2 text-sm font-semibold text-gray-700">
+                  Open to Alternative Universities?
+                </p>
+
+                <div className="flex gap-5">
+
+                  {["Yes", "No"].map((option) => (
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="radio"
+                        name="alternativeUniversities"
+                        value={option}
+                        checked={
+                          consultForm.openToAlternativeUniversities ===
+                          option
+                        }
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            openToAlternativeUniversities:
+                              e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+                    </label>
+                  ))}
+
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 5. ENGLISH & ENTRANCE EXAMS */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                5. English & Entrance Exams
+              </h3>
+            </div>
+
+          {/* English Test - Single Select */}
+<div>
+  <label className="mb-2 block text-sm font-semibold text-gray-700">
+    English Test
+  </label>
+
+  <div className="flex flex-wrap gap-3">
+    {[
+      "IELTS",
+      "TOEFL",
+      "PTE",
+      "Duolingo",
+      "Cambridge",
+      "Not Yet",
+      "Other",
+    ].map((option) => {
+      return (
+        <label
+          key={option}
+          className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+        >
+          <input
+            type="radio"
+            name="englishTest"
+            value={option}
+            checked={consultForm.englishTest === option}
+            onChange={(e) =>
+              setConsultForm((current) => ({
+                ...current,
+                englishTest: e.target.value,
+              }))
+            }
+            className="accent-[#9a2119]"
+          />
+
+          {option}
+        </label>
+      );
+    })}
+  </div>
+</div>
+
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+              <input
+                type="date"
+                aria-label="English test score date"
+                value={consultForm.englishTestScoreDate}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    englishTestScoreDate: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
+            </div>
+
+
+            {/* Other Entrance Exams */}
+            <div className="mt-4 rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Other Entrance Exam
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+
+                {[
+                  "SAT",
+                  "ACT",
+                  "GRE",
+                  "GMAT",
+                  "LSAT",
+                  "MCAT",
+                  "Other",
+                  "None",
+                ].map((option) => {
+
+                  const selected =
+                    Array.isArray(consultForm.otherEntranceExams) &&
+                    consultForm.otherEntranceExams.includes(option);
+
+                  return (
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(e) => {
+
+                          setConsultForm((current) => {
+
+                            const oldValues =
+                              Array.isArray(
+                                current.otherEntranceExams
+                              )
+                                ? current.otherEntranceExams
+                                : [];
+
+                            return {
+                              ...current,
+                              otherEntranceExams:
+                                e.target.checked
+                                  ? [...oldValues, option]
+                                  : oldValues.filter(
+                                      (item) => item !== option
+                                    ),
+                            };
+                          });
+
+                        }}
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+                  );
+                })}
+
+              </div>
+            </div>
+
+
+            <input
+              type="date"
+              aria-label="Entrance exam score date"
+              value={consultForm.entranceExamScoreDate}
+              onChange={(e) =>
+                setConsultForm((current) => ({
+                  ...current,
+                  entranceExamScoreDate: e.target.value,
+                }))
+              }
+              className="form-input mt-4 w-full"
+            />
+
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 6. CAREER & BUDGET */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                6. Career & Budget Preferences
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+
+              <input
+                type="text"
+                placeholder="Preferred Career / Domain"
+                value={consultForm.preferredCareerDomain}
+                onChange={(e) =>
+                  setConsultForm((current) => ({
+                    ...current,
+                    preferredCareerDomain: e.target.value,
+                  }))
+                }
+                className="form-input"
+              />
+
 
               <textarea
-                className="w-full resize-none rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
-                rows={4}
-                placeholder="Message"
-                value={consultForm.message}
-                onChange={(event) =>
+                rows={3}
+                placeholder="Why do you want to study abroad?"
+                value={consultForm.reasonToStudyAbroad}
+                onChange={(e) =>
                   setConsultForm((current) => ({
                     ...current,
-                    message: event.target.value,
+                    reasonToStudyAbroad: e.target.value,
                   }))
                 }
+                className="form-input resize-none"
               />
 
-              {submitError ? (
-                <p className="text-sm font-medium text-[#9a2119]">
-                  {submitError}
+
+              {/* Top Priorities */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+                <p className="mb-3 text-sm font-semibold text-gray-700">
+                  Top Priorities
                 </p>
-              ) : null}
 
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={async () => {
-                  if (!unlocked) {
-                    setFormOpen(false);
-                    navigate(
-                      `/app/subscription?returnTo=${encodeURIComponent(
-                        buildAbroadReturnTo()
-                      )}`
+                <div className="flex flex-wrap gap-3">
+
+                  {[
+                    "Ranking",
+                    "Course Quality",
+                    "Jobs",
+                    "Fees",
+                    "Scholarship",
+                    "Location",
+                    "Research",
+                    "Other",
+                  ].map((option) => {
+
+                    const selected =
+                      Array.isArray(consultForm.topPriorities) &&
+                      consultForm.topPriorities.includes(option);
+
+                    return (
+                      <label
+                        key={option}
+                        className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                      >
+
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={(e) => {
+
+                            setConsultForm((current) => {
+
+                              const oldValues =
+                                Array.isArray(current.topPriorities)
+                                  ? current.topPriorities
+                                  : [];
+
+                              return {
+                                ...current,
+                                topPriorities:
+                                  e.target.checked
+                                    ? [...oldValues, option]
+                                    : oldValues.filter(
+                                        (item) => item !== option
+                                      ),
+                              };
+                            });
+
+                          }}
+                          className="accent-[#9a2119]"
+                        />
+
+                        {option}
+
+                      </label>
                     );
-                    return;
-                  }
+                  })}
 
-                  try {
-                    setSubmitting(true);
-                    setSubmitError("");
+                </div>
+              </div>
 
-                    await createStudyAbroadConsultation({
-                      studyAbroadId: Number(selectedCountry.id),
-                      preferredCountry: selectedCountry.name,
-                      courseInterest: consultForm.courseInterest,
-                      budgetRange: consultForm.budgetRange,
-                      preferredIntake: consultForm.preferredIntake,
-                      message: consultForm.message,
-                    });
 
-                    setSubmitted(true);
-                    setFormOpen(false);
-                  } catch (error) {
-                    setSubmitError(
-                      error?.response?.data?.message ||
-                        error?.message ||
-                        "Failed to submit consultation."
-                    );
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }}
-                className="flex w-full items-center justify-center rounded-xl bg-[#9a2119] py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#7f1913]"
-              >
-                {submitting
-                  ? "Submitting..."
-                  : unlocked
-                  ? "Submit Request"
-                  : "Subscribe to Submit"}
-              </button>
+              {/* Annual Tuition */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
 
-              <button
-                type="button"
-                onClick={() => setFormOpen(false)}
-                className="w-full text-sm font-medium text-gray-500 hover:text-[#9a2119]"
-              >
-                Cancel
-              </button>
+                <p className="mb-3 text-sm font-semibold text-gray-700">
+                  Annual Tuition Budget
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+
+                  {[
+                    "< ₹10L",
+                    "₹10–20L",
+                    "₹20–30L",
+                    "₹30–50L",
+                    "₹50L+",
+                    "Not Decided",
+                  ].map((option) => (
+
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+
+                      <input
+                        type="radio"
+                        name="annualTuitionBudget"
+                        value={option}
+                        checked={
+                          consultForm.annualTuitionBudget === option
+                        }
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            annualTuitionBudget: e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+
+                  ))}
+
+                </div>
+              </div>
+
+
+              {/* Total Education Budget */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+                <p className="mb-3 text-sm font-semibold text-gray-700">
+                  Total Education Budget
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+
+                  {[
+                    "< ₹20L",
+                    "₹20–40L",
+                    "₹40–60L",
+                    "₹60L–1Cr",
+                    "> ₹1Cr",
+                  ].map((option) => (
+
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+
+                      <input
+                        type="radio"
+                        name="totalEducationBudget"
+                        value={option}
+                        checked={
+                          consultForm.totalEducationBudget === option
+                        }
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            totalEducationBudget: e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+
+                  ))}
+
+                </div>
+              </div>
+
+
+              {/* Scholarship */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+                <p className="mb-3 text-sm font-semibold text-gray-700">
+                  Scholarship Required?
+                </p>
+
+                <div className="flex gap-5">
+
+                  {["Yes", "No"].map((option) => (
+
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+
+                      <input
+                        type="radio"
+                        name="scholarshipRequired"
+                        value={option}
+                        checked={
+                          consultForm.scholarshipRequired === option
+                        }
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            scholarshipRequired: e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+
+                  ))}
+
+                </div>
+              </div>
+
+
+              {/* Education Loan */}
+              <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+                <p className="mb-3 text-sm font-semibold text-gray-700">
+                  Education Loan Required?
+                </p>
+
+                <div className="flex gap-5">
+
+                  {["Yes", "No", "Maybe"].map((option) => (
+
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+
+                      <input
+                        type="radio"
+                        name="educationLoanRequired"
+                        value={option}
+                        checked={
+                          consultForm.educationLoanRequired === option
+                        }
+                        onChange={(e) =>
+                          setConsultForm((current) => ({
+                            ...current,
+                            educationLoanRequired: e.target.value,
+                          }))
+                        }
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+
+                  ))}
+
+                </div>
+              </div>
+
             </div>
-          </div>
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 7. PASSPORT & DOCUMENTS */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                7. Passport & Documents
+              </h3>
+            </div>
+
+
+            {/* Valid Passport */}
+            <div className="mb-4 rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Valid Passport
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+
+                {[
+                  "Yes",
+                  "No",
+                  "Applied",
+                  "Renewal in Process",
+                ].map((option) => (
+
+                  <label
+                    key={option}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  >
+
+                    <input
+                      type="radio"
+                      name="passportStatus"
+                      value={option}
+                      checked={
+                        consultForm.passportStatus === option
+                      }
+                      onChange={(e) =>
+                        setConsultForm((current) => ({
+                          ...current,
+                          passportStatus: e.target.value,
+                        }))
+                      }
+                      className="accent-[#9a2119]"
+                    />
+
+                    {option}
+
+                  </label>
+
+                ))}
+
+              </div>
+            </div>
+
+
+            {/* Passport Expiry */}
+            <input
+              type="date"
+              value={consultForm.passportExpiryDate}
+              onChange={(e) =>
+                setConsultForm((current) => ({
+                  ...current,
+                  passportExpiryDate: e.target.value,
+                }))
+              }
+              className="form-input mb-4 w-full"
+            />
+
+
+            {/* Documents */}
+            <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Documents Available
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+
+                {[
+                  "Passport",
+                  "10th",
+                  "12th",
+                  "Degree",
+                  "Marksheets",
+                  "English Score",
+                  "CV",
+                  "SOP",
+                  "LOR",
+                  "Financial Docs",
+                ].map((option) => {
+
+                  const selected =
+                    Array.isArray(consultForm.documentsAvailable) &&
+                    consultForm.documentsAvailable.includes(option);
+
+                  return (
+                    <label
+                      key={option}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    >
+
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(e) => {
+
+                          setConsultForm((current) => {
+
+                            const oldValues =
+                              Array.isArray(
+                                current.documentsAvailable
+                              )
+                                ? current.documentsAvailable
+                                : [];
+
+                            return {
+                              ...current,
+                              documentsAvailable:
+                                e.target.checked
+                                  ? [...oldValues, option]
+                                  : oldValues.filter(
+                                      (item) => item !== option
+                                    ),
+                            };
+                          });
+
+                        }}
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+                  );
+                })}
+
+              </div>
+            </div>
+
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* 9. SERVICES REQUIRED */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                9. Services Required
+              </h3>
+            </div>
+
+            <div className="rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-4">
+
+              <p className="mb-3 text-sm font-semibold text-gray-700">
+                Select Required Services
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+                {[
+                  "Counselling / University Selection",
+                  "Eligibility Assessment",
+                  "Application Processing",
+                  "SOP",
+                  "LOR",
+                  "CV/Resume",
+                  "Test Guidance",
+                  "Scholarship",
+                  "Loan Guidance",
+                  "Visa Guidance",
+                  "Pre-departure",
+                  "Accommodation",
+                  "Complete Admission Support",
+                ].map((option) => {
+
+                  const selected =
+                    Array.isArray(consultForm.servicesRequired) &&
+                    consultForm.servicesRequired.includes(option);
+
+                  return (
+                    <label
+                      key={option}
+                      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                        selected
+                          ? "border-[#9a2119] bg-[#fff1ee] text-[#9a2119]"
+                          : "border-gray-200 bg-white text-gray-700"
+                      }`}
+                    >
+
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={(e) => {
+
+                          setConsultForm((current) => {
+
+                            const oldValues =
+                              Array.isArray(
+                                current.servicesRequired
+                              )
+                                ? current.servicesRequired
+                                : [];
+
+                            return {
+                              ...current,
+                              servicesRequired:
+                                e.target.checked
+                                  ? [...oldValues, option]
+                                  : oldValues.filter(
+                                      (item) => item !== option
+                                    ),
+                            };
+                          });
+
+                        }}
+                        className="accent-[#9a2119]"
+                      />
+
+                      {option}
+
+                    </label>
+                  );
+                })}
+
+              </div>
+            </div>
+
+          </section>
+
+
+          {/* ===================================================== */}
+          {/* ADDITIONAL MESSAGE */}
+          {/* ===================================================== */}
+
+          <section>
+
+            <div className="mb-5 border-b border-[#f0e4e2] pb-3">
+              <h3 className="text-lg font-bold text-[#9a2119]">
+                Additional Information
+              </h3>
+            </div>
+
+            <textarea
+              rows={5}
+              placeholder="Tell us anything else about your study plans..."
+              value={consultForm.message}
+              onChange={(e) =>
+                setConsultForm((current) => ({
+                  ...current,
+                  message: e.target.value,
+                }))
+              }
+              className="w-full resize-none rounded-xl border border-[#ead9d5] bg-[#fffdfc] p-3 text-sm outline-none transition focus:border-[#9a2119] focus:ring-2 focus:ring-[#9a2119]/10"
+            />
+
+          </section>
+
+
+          {/* ERROR */}
+          {submitError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+              {submitError}
+            </div>
+          ) : null}
+
         </div>
-      ) : null}
+      </div>
+
+
+      {/* ===================================================== */}
+      {/* FOOTER */}
+      {/* ===================================================== */}
+
+      <div className="shrink-0 border-t border-[#f0e4e2] bg-white px-6 py-4">
+
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormOpen(false);
+              setSubmitError("");
+            }}
+            className="rounded-xl border border-[#ead9d5] px-6 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+
+
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={async () => {
+
+              if (!unlocked) {
+                setFormOpen(false);
+
+                navigate(
+                  `/app/subscription?returnTo=${encodeURIComponent(
+                    buildAbroadReturnTo()
+                  )}`
+                );
+
+                return;
+              }
+
+
+              /* ================= VALIDATION ================= */
+
+              if (!consultForm.fullName.trim()) {
+                setSubmitError("Please enter your full name.");
+                return;
+              }
+
+              if (!consultForm.dateOfBirth) {
+                setSubmitError("Please select your date of birth.");
+                return;
+              }
+
+              if (!consultForm.gender) {
+                setSubmitError("Please select your gender.");
+                return;
+              }
+
+              if (!consultForm.email.trim()) {
+                setSubmitError("Please enter your email address.");
+                return;
+              }
+
+              if (
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                  consultForm.email.trim()
+                )
+              ) {
+                setSubmitError("Please enter a valid email address.");
+                return;
+              }
+
+              if (consultForm.mobileNumber.length !== 10) {
+                setSubmitError(
+                  "Please enter a valid 10-digit mobile number."
+                );
+                return;
+              }
+
+              if (!consultForm.currentCityState.trim()) {
+                setSubmitError(
+                  "Please enter your current city / state."
+                );
+                return;
+              }
+
+              if (!consultForm.courseInterest?.trim()) {
+                setSubmitError(
+                  "Please enter your course / programme."
+                );
+                return;
+              }
+
+
+              try {
+
+                setSubmitting(true);
+                setSubmitError("");
+
+
+                /* ================= API PAYLOAD ================= */
+
+                const payload = {
+
+                  studyAbroadId: Number(selectedCountry?.id),
+
+                  // Student
+                  fullName: consultForm.fullName.trim(),
+                  dateOfBirth: consultForm.dateOfBirth,
+                  gender: consultForm.gender,
+                  email: consultForm.email.trim(),
+                  mobileNumber: consultForm.mobileNumber,
+                  whatsappNumber:
+                    consultForm.whatsappNumber.trim(),
+                  currentCityState:
+                    consultForm.currentCityState.trim(),
+                  countryOfCitizenship:
+                    consultForm.countryOfCitizenship.trim(),
+
+                  // Parent
+                  parentGuardianName:
+                    consultForm.parentGuardianName.trim(),
+                  parentRelationship:
+                    consultForm.parentRelationship.trim(),
+                  parentMobileNumber:
+                    consultForm.parentMobileNumber,
+                  parentEmail:
+                    consultForm.parentEmail.trim(),
+                  parentOccupation:
+                    consultForm.parentOccupation.trim(),
+                  primaryFundingSource:
+                    consultForm.primaryFundingSource,
+
+                  // Academic
+                  highestQualification:
+                    consultForm.highestQualification,
+                  schoolCollegeUniversity:
+                    consultForm.schoolCollegeUniversity.trim(),
+                  boardUniversity:
+                    consultForm.boardUniversity.trim(),
+                  passingYear:
+                    consultForm.passingYear.trim(),
+                  class10PercentageCGPA:
+                    consultForm.class10PercentageCGPA.trim(),
+                  class12PercentageCGPA:
+                    consultForm.class12PercentageCGPA.trim(),
+
+                  // Foreign Education
+                  intendedStudyLevel:
+                    consultForm.intendedStudyLevel,
+
+                  preferredIntake:
+                    consultForm.preferredIntake,
+
+                  preferredCountries:
+                    consultForm.preferredCountries,
+
+                  preferredCountry:
+                    selectedCountry?.name || "",
+
+                  preferredCourseProgramme:
+                    consultForm.courseInterest?.trim() || "",
+
+                  preferredSpecialization:
+                    consultForm.preferredSpecialization.trim(),
+
+                  preferredUniversities:
+                    consultForm.preferredUniversities.trim(),
+
+                  openToAlternativeUniversities:
+                    consultForm.openToAlternativeUniversities,
+
+                  // Exams
+                  englishTest:
+                    consultForm.englishTest,
+
+                  englishTestScoreDate:
+                    consultForm.englishTestScoreDate.trim(),
+
+                  otherEntranceExams:
+                    consultForm.otherEntranceExams,
+
+                  entranceExamScoreDate:
+                    consultForm.entranceExamScoreDate.trim(),
+
+                  // Career
+                  preferredCareerDomain:
+                    consultForm.preferredCareerDomain.trim(),
+
+                  reasonToStudyAbroad:
+                    consultForm.reasonToStudyAbroad.trim(),
+
+                  topPriorities:
+                    consultForm.topPriorities,
+
+                  // Budget
+                  annualTuitionBudget:
+                    consultForm.annualTuitionBudget,
+
+                  totalEducationBudget:
+                    consultForm.totalEducationBudget,
+
+                  scholarshipRequired:
+                    consultForm.scholarshipRequired,
+
+                  educationLoanRequired:
+                    consultForm.educationLoanRequired,
+
+                  // Passport
+                  passportStatus:
+                    consultForm.passportStatus,
+
+                  passportExpiryDate:
+                    consultForm.passportExpiryDate || null,
+
+                  documentsAvailable:
+                    consultForm.documentsAvailable,
+
+                  // Services
+                  servicesRequired:
+                    consultForm.servicesRequired,
+
+                  // Consultation
+                  courseInterest:
+                    consultForm.courseInterest?.trim() || "",
+
+                  budgetRange:
+                    consultForm.budgetRange?.trim() || "",
+
+                  message:
+                    consultForm.message.trim(),
+                };
+
+
+                console.log(
+                  "Study Abroad Consultation Payload:",
+                  payload
+                );
+
+
+                await createStudyAbroadConsultation(payload);
+
+
+                /* ================= SUCCESS ================= */
+
+                setSubmitted(true);
+                setFormOpen(false);
+                setSubmitError("");
+
+                setConsultForm({
+                  ...initialConsultForm,
+                });
+
+
+              } catch (error) {
+
+                console.error(
+                  "Study Abroad Consultation Error:",
+                  error
+                );
+
+                setSubmitError(
+                  error?.response?.data?.message ||
+                    error?.response?.data?.error ||
+                    error?.message ||
+                    "Failed to submit consultation. Please try again."
+                );
+
+              } finally {
+
+                setSubmitting(false);
+
+              }
+
+            }}
+            className="rounded-xl bg-[#9a2119] px-8 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#7f1913] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {submitting
+              ? "Submitting..."
+              : unlocked
+              ? "Submit Consultation"
+              : "Subscribe to Submit"}
+          </button>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+) : null}
+
 
       <UnlockRedirectModal
         open={Boolean(unlockModalItem)}
