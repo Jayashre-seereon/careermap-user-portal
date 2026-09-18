@@ -127,7 +127,7 @@ export default function AssessmentLandingPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-[#faf6f3] pb-16 pt-4 text-slate-800 antialiased">
+    <div className="min-h-screen  pb-16 pt-4 text-slate-800 antialiased">
       {/* Container */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top Hero Section */}
@@ -386,7 +386,7 @@ export default function AssessmentLandingPage() {
               </Button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="max-h-[600px]  overflow-y-auto overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-700">
