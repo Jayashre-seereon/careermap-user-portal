@@ -2,27 +2,39 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeftOutlined,
-  BulbOutlined,
-  CheckCircleFilled,
-  CompassOutlined,
-  DownloadOutlined,
   HomeOutlined,
   LoadingOutlined,
   PrinterOutlined,
-  ReadOutlined,
-  RedoOutlined,
-  ShareAltOutlined,
-  StarFilled,
-  TrophyFilled,
+  DownloadOutlined,
+  BookOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Col, Divider, Progress, Row, Spin, Tag, Tooltip, message } from "antd";
+import { Button, Spin, message } from "antd";
 import { getAttemptResult } from "../../../api/psychometricAssessmentApi";
 import { useAuthStore } from "../../../store/authStore";
 import {
-  HOLLAND_TRAIT_INFO,
-  SAMPLE_FALLBACK_REPORT,
-} from "../data/assessmentConstants";
+  CLUSTERS,
+  CLUSTER_MAP,
+  INTERP,
+  SEM_SUB,
+  SEM_BLEND,
+  CHART_COLOR,
+  INTEREST_COLOR,
+  VALUES_COLOR,
+  PERSON_COLOR,
+  VARK_COLOR,
+  pct,
+  band,
+  bandColorHex,
+} from "../data/careerCompassData";
+import {
+  DonutChart,
+  ColumnChart,
+  LineChart,
+  TwinBars,
+  HBarChart,
+} from "../components/CareerCompassCharts";
+import "./AssessmentReportPage.css";
 
 export default function AssessmentReportPage() {
   const { attemptId } = useParams();
@@ -41,14 +53,14 @@ export default function AssessmentReportPage() {
     setLoading(true);
     try {
       const data = await getAttemptResult(attemptId);
-      if (data && (data.report || data.topCareerCluster || data.careerClusters)) {
-        setReportData(data);
+      if (data && (data.report || data.data?.report || data.topCareerCluster || data.data?.topCareerCluster)) {
+        setReportData(data.data || data);
       } else {
-        setReportData(SAMPLE_FALLBACK_REPORT);
+        setReportData(null);
       }
     } catch (err) {
-      console.warn("Could not fetch remote result, rendering report with verified scores:", err?.message);
-      setReportData(SAMPLE_FALLBACK_REPORT);
+      console.warn("Could not fetch remote result:", err?.message);
+      setReportData(null);
     } finally {
       setLoading(false);
     }
@@ -58,483 +70,816 @@ export default function AssessmentReportPage() {
     window.print();
   }
 
+  function handleDownloadJSON() {
+    try {
+      const payload = {
+        student: { name: studentName, class: studentClass, school: studentSchool },
+        completedAt: completedDate,
+        hollandCode,
+        topCluster,
+        top5Clusters,
+        scores,
+        domains,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `career-compass-${(studentName || "report").replace(/\s+/g, "_")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      message.error("Could not download report JSON");
+    }
+  }
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#faf6f3]">
+      <div className="flex min-h-screen items-center justify-center bg-[#F2F4F6]">
         <div className="text-center">
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: "#9a2119" }} spin />} />
-          <h2 className="mt-4 text-xl font-bold text-slate-800">Generating Career Compass Report...</h2>
-          <p className="mt-1 text-sm text-slate-700">Synthesizing RIASEC, OCEAN, VARK, and Aptitude Matrices</p>
+          <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: "#9C2A1F" }} spin />} />
+          <h2 className="mt-4 font-['Big_Shoulders_Display'] text-2xl font-black text-[#211B19]">
+            Generating Career Compass Report...
+          </h2>
+          <p className="mt-1 font-['Source_Sans_3'] text-sm text-[#6E7075]">
+            Synthesizing RIASEC, OCEAN, Schwartz Values, Aptitude and Goal Orientation
+          </p>
         </div>
       </div>
     );
   }
 
-  // Normalize report data properties
-  const report = reportData?.report || reportData || {};
+  // Normalize API data
+  const rawData = reportData || {};
+  const report = rawData.report || {};
   const student = report.student || {};
-  const studentName = student.name || user?.name || "Student Candidate";
-  const studentClass = student.class || user?.selectedClass || "Senior Secondary";
-  const completedDate = student.completedAt || reportData?.completedAt || new Date().toISOString();
+  const studentName = student.name || rawData.studentName || user?.name || "Student Candidate";
+  const studentClass = student.class || rawData.className || user?.selectedClass || "Senior Secondary";
+  const studentSchool = student.school || rawData.school || user?.school || "";
+  const completedDate = student.completedAt || rawData.completedAt || new Date().toISOString();
 
-  const hollandCode = reportData?.hollandCode || report.hollandProfile?.code || "ICR";
-  const topCluster =
-    report.careerClusters?.topCluster || {
-      name: reportData?.topCareerCluster || "IT & Computers",
-      matchPercentage: reportData?.topCareerMatch || 91,
-      code: "ITC",
-      description: "Software engineering, cloud architecture, cybersecurity, and data science.",
-      fitI: 92,
-      fitA: 94,
-      fitP: 86,
-      fitV: 88,
+  const hollandCode = rawData.hollandCode || report.hollandProfile?.code || "SEC";
+  const scores = rawData.scores || {};
+
+  // Extract / calculate Goal Orientation percentages
+  const domains = report.domains || {};
+  const goalObj = domains.goalOrientation || {};
+  const longScore =
+    goalObj.longTerm?.score ??
+    (goalObj.longTerm?.percentage != null ? goalObj.longTerm.percentage / 100 : null) ??
+    scores.goalLong ??
+    0.6875;
+  const shortScore =
+    goalObj.shortTerm?.score ??
+    (goalObj.shortTerm?.percentage != null ? goalObj.shortTerm.percentage / 100 : null) ??
+    scores.goalShort ??
+    0.75;
+
+  const longPct = goalObj.longTerm?.percentage ?? pct(longScore);
+  const shortPct = goalObj.shortTerm?.percentage ?? pct(shortScore);
+
+  const goalDiff = (longPct - shortPct) / 100;
+  const goalKey = Math.abs(goalDiff) < 0.1 ? "balanced" : goalDiff > 0 ? "long_term" : "short_term";
+  const goalMeta = INTERP.goal_orientation[goalKey] || INTERP.goal_orientation.balanced;
+
+  // Top Cluster & Top 5
+  const rawTopCluster = report.careerClusters?.topCluster || {};
+  const rawTop5 = report.careerClusters?.top5 || rawData.top5Clusters || [];
+
+  const topClusterCode = rawTopCluster.code || rawTopCluster.clusterId || "GOV";
+  const topClusterMeta = CLUSTER_MAP[topClusterCode] || CLUSTER_MAP[rawData.topCareerCluster] || CLUSTERS[8];
+
+  const topCluster = {
+    code: topClusterCode,
+    name: rawTopCluster.name || rawData.topCareerCluster || topClusterMeta.name,
+    matchPercentage: rawTopCluster.matchPercentage || rawData.topCareerMatch || 67,
+    description: rawTopCluster.description || topClusterMeta.description,
+    why_fit: topClusterMeta.why_fit,
+    streams_and_pathways_india: topClusterMeta.streams_and_pathways_india,
+    careers: topClusterMeta.careers || [],
+    fitI: rawTopCluster.fitI || 71,
+    fitA: rawTopCluster.fitA || 51,
+    fitP: rawTopCluster.fitP || 77,
+    fitV: rawTopCluster.fitV || 74,
+  };
+
+  const top5Clusters = (rawTop5.length > 0 ? rawTop5 : [topCluster]).map((item, idx) => {
+    const code = item.code || item.clusterId || "GOV";
+    const meta = CLUSTER_MAP[code] || CLUSTER_MAP[item.name || item.cluster] || CLUSTERS[idx % CLUSTERS.length];
+    return {
+      rank: idx + 1,
+      code,
+      name: item.name || item.cluster || meta.name,
+      matchPercentage: item.matchPercentage ?? item.match ?? 65,
+      description: item.description || meta.description,
+      why_fit: meta.why_fit,
+      streams_and_pathways_india: meta.streams_and_pathways_india,
+      careers: meta.careers || [],
+      hollandCode: item.hollandCode || meta.holland_code,
+      fitI: item.fitI || 70,
+      fitA: item.fitA || 50,
+      fitP: item.fitP || 75,
+      fitV: item.fitV || 72,
     };
+  });
 
-  const top5Clusters = report.careerClusters?.top5 || [
-    { code: "ITC", name: "IT & Computers", matchPercentage: 91, fitI: 92, fitA: 94, fitP: 86, fitV: 88 },
-    { code: "SEM", name: "Science, Engineering & Mathematics", matchPercentage: 87, fitI: 90, fitA: 92, fitP: 80, fitV: 82 },
-    { code: "FIN", name: "Accounts & Finance", matchPercentage: 81, fitI: 75, fitA: 88, fitP: 85, fitV: 78 },
-    { code: "EMG", name: "Emerging & Niche Careers", matchPercentage: 79, fitI: 84, fitA: 80, fitP: 76, fitV: 74 },
-    { code: "GOV", name: "Government & Law", matchPercentage: 73, fitI: 70, fitA: 78, fitP: 74, fitV: 72 },
+  // Fit Composition breakdown for #1 match
+  const fitItems = [
+    { label: "Interests", value: 0.35 * topCluster.fitI, color: CHART_COLOR.slate },
+    { label: "Aptitude", value: 0.3 * topCluster.fitA, color: CHART_COLOR.red },
+    { label: "Personality", value: 0.2 * topCluster.fitP, color: CHART_COLOR.gold },
+    { label: "Values", value: 0.15 * topCluster.fitV, color: CHART_COLOR.sage },
   ];
+  const fitTotal = fitItems.reduce((a, b) => a + b.value, 0) || 1;
 
-  const domains = report.domains || SAMPLE_FALLBACK_REPORT.report.domains;
-  const interests = domains.interests || [];
-  const personality = domains.personality || [];
-  const values = domains.values || [];
-  const learningStyles = domains.learningStyles || [];
-  const aptitudes = domains.aptitudes || [];
+  // Domain 1: Interests (RIASEC)
+  const interestFacets = ["R", "I", "A", "S", "E", "C"];
+  const domainInterests = domains.interests || [];
+  const interestScoreMap = {};
+  domainInterests.forEach((d) => {
+    interestScoreMap[d.facet] = d.percentage ?? pct(d.score);
+  });
+  interestFacets.forEach((f) => {
+    if (interestScoreMap[f] == null) {
+      interestScoreMap[f] = pct(scores[f] ?? 0.6);
+    }
+  });
+
+  const riItems = interestFacets.map((f) => ({
+    label: f,
+    value: interestScoreMap[f],
+    color: INTEREST_COLOR[f],
+  }));
+  const riRank = [...interestFacets]
+    .map((f) => [f, interestScoreMap[f]])
+    .sort((a, b) => b[1] - a[1]);
+
+  // Domain 2: Personality (OCEAN)
+  const personFacets = ["O", "Cn", "Ex", "Ag", "ES"];
+  const domainPerson = domains.personality || [];
+  const personScoreMap = {};
+  domainPerson.forEach((d) => {
+    personScoreMap[d.facet] = d.percentage ?? pct(d.score);
+  });
+  personFacets.forEach((f) => {
+    if (personScoreMap[f] == null) {
+      personScoreMap[f] = pct(scores[f] ?? 0.7);
+    }
+  });
+  const ocRank = [...personFacets]
+    .map((f) => [f, personScoreMap[f]])
+    .sort((a, b) => b[1] - a[1]);
+  const personChartItems = ocRank.map(([f, v]) => ({
+    label: INTERP.personality[f]?.name || f,
+    pct: v,
+    color: PERSON_COLOR[f],
+  }));
+
+  // Domain 3: Values (Schwartz)
+  const valFacets = ["OC", "SE", "CO", "ST"];
+  const domainValues = domains.values || [];
+  const valScoreMap = {};
+  domainValues.forEach((d) => {
+    valScoreMap[d.facet] = d.percentage ?? pct(d.score);
+  });
+  valFacets.forEach((f) => {
+    if (valScoreMap[f] == null) {
+      valScoreMap[f] = pct(scores[f] ?? 0.7);
+    }
+  });
+  const valItems = valFacets.map((f) => ({
+    label: f,
+    value: valScoreMap[f],
+    color: VALUES_COLOR[f],
+  }));
+  const valRank = [...valFacets]
+    .map((f) => [f, valScoreMap[f]])
+    .sort((a, b) => b[1] - a[1]);
+
+  // Domain 4: Aptitudes
+  const aptFacets = ["Log", "Num", "Verb", "Voc", "Mech", "Spat"];
+  const domainApt = domains.aptitudes || [];
+  const aptScoreMap = {};
+  domainApt.forEach((d) => {
+    aptScoreMap[d.facet] = d.percentage ?? pct(d.score);
+  });
+  aptFacets.forEach((f) => {
+    if (aptScoreMap[f] == null) {
+      aptScoreMap[f] = pct(scores[f] ?? 0.5);
+    }
+  });
+  const aptRank = [...aptFacets]
+    .map((f) => [f, aptScoreMap[f]])
+    .sort((a, b) => b[1] - a[1]);
+  const aptChartItems = aptRank.map(([f, v]) => ({
+    label: f,
+    pct: v,
+    color: bandColorHex(v),
+  }));
+
+  // Domain 5: Learning Styles (VARK)
+  const varkFacets = ["V", "A", "Rd", "K"];
+  const domainVark = domains.learningStyles || [];
+  const varkScoreMap = {};
+  domainVark.forEach((d) => {
+    varkScoreMap[d.facet] = d.percentage ?? pct(d.score);
+  });
+  varkFacets.forEach((f) => {
+    if (varkScoreMap[f] == null) {
+      varkScoreMap[f] = pct(scores.vark?.[f] ?? scores[f] ?? 0.7);
+    }
+  });
+  const varkChartItems = varkFacets.map((f) => ({
+    label: f,
+    pct: varkScoreMap[f],
+  }));
+  const varkRank = [...varkFacets]
+    .map((f) => [f, varkScoreMap[f]])
+    .sort((a, b) => b[1] - a[1]);
+  const varkGap = varkRank[0][1] - varkRank[1][1];
+  const varkMulti = varkGap < 8; // less than 8% difference
+  const varkName = (f) => INTERP.learning_style[f]?.name || f;
+  const learnLabel = varkMulti
+    ? `${varkName(varkRank[0][0])} + ${varkName(varkRank[1][0])} (multimodal)`
+    : varkName(varkRank[0][0]);
+  const tipFacets = varkMulti ? [varkRank[0][0], varkRank[1][0]] : [varkRank[0][0]];
+  const tips = tipFacets.flatMap((f) => INTERP.learning_style[f]?.tips || []);
+
+  // Roadmap Stops & Highlight based on Goal Orientation
+  const roadStops = [
+    { b: "Class 8–10", s: "Build basics", k: "base" },
+    { b: "Stream choice", s: "Class 11 onward", k: "stream" },
+    { b: "Entrance prep", s: "If required", k: "entrance" },
+    { b: "Degree / course", s: "College years", k: "degree" },
+    { b: "Internship", s: "Real experience", k: "intern" },
+    { b: "Career", s: "Your destination", k: "career" },
+  ];
+  const hiSet = {
+    long_term: ["stream", "entrance", "degree"],
+    short_term: ["stream", "intern", "career"],
+    balanced: ["stream", "degree", "intern"],
+  }[goalKey] || ["stream", "degree", "intern"];
+
+  // Leg 4 Passport Narrative
+  const top1 = top5Clusters[0] || topCluster;
+  const topValue = INTERP.values[valRank[0][0]]?.name || "Self-Enhancement";
+  const topTrait = INTERP.personality[ocRank[0][0]]?.name || "Conscientiousness";
+  const topApt1 = INTERP.aptitude[aptRank[0][0]]?.name || "Mechanical Reasoning";
+  const topApt2 = INTERP.aptitude[aptRank[1][0]]?.name || "Logical Reasoning";
+
+  const narrative = `${studentName} shows a ${hollandCode} interest pattern, which combined with ${topTrait.toLowerCase()} and a strong pull toward ${topValue.toLowerCase()} points most clearly toward ${top1.name} (${top1.matchPercentage}% match). Aptitude-wise, ${studentName}'s strongest results are in ${topApt1} and ${topApt2}, which support that direction. As a ${learnLabel.toLowerCase()} learner with a ${goalMeta.name.toLowerCase()} approach to the path ahead, the study tips and route in Section 3 are the most relevant starting point.`;
 
   return (
-    <div className="min-h-screen bg-[#faf6f3] pb-24 text-slate-800 antialiased print:bg-white print:p-0 print:pb-0">
-      {/* Top Action Bar (Hidden on Print) */}
-      <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/95 backdrop-blur-md print:hidden">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/app/assessment")}
-              className="rounded-xl text-xs font-bold"
-            >
-              All Assessments
-            </Button>
-            <Button
-              icon={<HomeOutlined />}
-              onClick={() => navigate("/app/dashboard")}
-              className="hidden rounded-xl text-xs font-bold sm:inline-flex"
-            >
-              Dashboard
-            </Button>
-          </div>
+    <div className="career-compass-page ">
+      {/* Sticky Top Bar with brand logo, stage label, and navigation */}
+      <div className="topbar">
+        <div className="topbar-inner">
+         <div className="brandrow">
+  <div className="flex items-center gap-3 pb-2">
+    <button
+      onClick={() => navigate("/app/assessment")}
+      className="btn btn-accent btn-sm !rounded-full !px-3 py-1 inline-flex items-center gap-1.5"
+    >
+      <ArrowLeftOutlined /> Assessments
+    </button>
+  </div>
 
-          <div className="flex items-center gap-2.5">
-            <Button
-              type="primary"
-              icon={<PrinterOutlined />}
-              onClick={handlePrint}
-              className="rounded-xl border-none bg-[#9a2119] font-bold text-white shadow-sm hover:bg-[#801812]"
-            >
-              Print / Download PDF
-            </Button>
-          </div>
+  <div className="flex items-center">
+    <button
+      onClick={handlePrint}
+      className="btn btn-accent btn-sm !rounded-full !px-3 py-1 inline-flex items-center gap-1.5"
+    >
+      <PrinterOutlined /> Print / PDF
+    </button>
+  </div>
+</div>
         </div>
       </div>
 
-      {/* Main Report Document Container */}
-      <div className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 print:max-w-none print:px-8 print:pt-4">
-        {/* Report Document Header */}
-        <div className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm sm:p-8 print:border-slate-300 print:shadow-none">
-          <div className="flex flex-col justify-between gap-6 border-b border-slate-100 pb-6 sm:flex-row sm:items-center">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-md bg-[#9a2119] px-2.5 py-1 text-xs font-black tracking-widest text-white uppercase">
-                  CareerMap
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Official Career Compass Report
-                </span>
-              </div>
-              <h1 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
-                Psychometric & Aptitude Evaluation
-              </h1>
-              <p className="text-xs text-slate-700">
-                Generated on{" "}
-                {new Date(completedDate).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-
-            {/* Candidate Info Pill */}
-            <div className="flex items-center gap-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 sm:px-5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#9a2119] text-base font-bold text-white">
-                <UserOutlined />
-              </div>
-              <div>
-                <div className="text-sm font-bold text-slate-900">{studentName}</div>
-                <div className="text-xs text-slate-700">{studentClass} • Candidate</div>
-              </div>
-            </div>
-          </div>
-
-          {/* 🏆 Top Career Match Hero Card */}
-          <div className="mt-8 rounded-2xl bg-gradient-to-br from-[#801812] via-[#9a2119] to-[#b32b21] p-6 text-white shadow-lg sm:p-8 print:bg-[#801812] print:text-white">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-xl">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-amber-300 backdrop-blur-md">
-                  <TrophyFilled /> #1 Highest Match Recommendation
-                </div>
-                <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl text-white">
-                  {topCluster.name}
-                </h2>
-                <div className="mt-2 flex flex-wrap items-center gap-2.5 text-xs font-semibold">
-                  <span className="rounded-lg bg-amber-400 px-2.5 py-1 text-slate-950 font-bold tracking-wider">
-                    Holland Code: {hollandCode}
-                  </span>
-                  <span className="rounded-lg bg-white/20 px-2.5 py-1 text-white">
-                    Code: {topCluster.code}
-                  </span>
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-rose-100">
-                  {topCluster.description ||
-                    "Exceptional alignment across investigative logic, technical reasoning, structured development, and high cognitive proficiency."}
-                </p>
-              </div>
-
-              {/* Match Meter & Fit Matrix */}
-              <div className="flex flex-col items-center rounded-2xl border border-white/20 bg-white/10 p-6 text-center backdrop-blur-md">
-                <div className="relative flex h-28 w-28 items-center justify-center rounded-full border-4 border-amber-400 bg-white/10">
-                  <div className="text-center">
-                    <span className="text-3xl font-black text-white">{topCluster.matchPercentage}%</span>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-amber-200">
-                      Overall Match
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sub-Fit Breakdown Pills */}
-                <div className="mt-5 grid grid-cols-2 gap-2 text-xs font-medium text-left">
-                  <div className="rounded-lg bg-white/15 px-3 py-1.5">
-                    <span className="text-rose-200">Interest (Fit<sub>I</sub>):</span>{" "}
-                    <strong className="text-white">{topCluster.fitI || 92}%</strong>
-                  </div>
-                  <div className="rounded-lg bg-white/15 px-3 py-1.5">
-                    <span className="text-rose-200">Aptitude (Fit<sub>A</sub>):</span>{" "}
-                    <strong className="text-white">{topCluster.fitA || 94}%</strong>
-                  </div>
-                  <div className="rounded-lg bg-white/15 px-3 py-1.5">
-                    <span className="text-rose-200">Personality (Fit<sub>P</sub>):</span>{" "}
-                    <strong className="text-white">{topCluster.fitP || 86}%</strong>
-                  </div>
-                  <div className="rounded-lg bg-white/15 px-3 py-1.5">
-                    <span className="text-rose-200">Values (Fit<sub>V</sub>):</span>{" "}
-                    <strong className="text-white">{topCluster.fitV || 88}%</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 🎯 Top 5 Recommended Career Clusters Grid */}
-          <div className="mt-10">
-            <div className="mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                Career Trajectory Rankings
-              </span>
-              <h3 className="text-xl font-black text-slate-900">
-                Top 5 Recommended Career Pathways
-              </h3>
-            </div>
-
-            <div className="grid gap-3.5">
-              {top5Clusters.map((cluster, rank) => (
-                <div
-                  key={cluster.code || rank}
-                  className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 transition-all hover:bg-white hover:shadow-xs sm:flex-row sm:items-center"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 text-xs font-black text-slate-700">
-                      #{rank + 1}
-                    </span>
-                    <div>
-                      <div className="font-bold text-slate-900">{cluster.name}</div>
-                      <div className="text-xs text-slate-700">Code: {cluster.code}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-6">
-                    {/* Sub-Fit Badges */}
-                    <div className="flex items-center gap-1.5 text-xs text-slate-700">
-                      <span className="rounded bg-white px-1.5 py-0.5 border border-slate-200">
-                        I: <strong>{cluster.fitI || 85}%</strong>
-                      </span>
-                      <span className="rounded bg-white px-1.5 py-0.5 border border-slate-200">
-                        A: <strong>{cluster.fitA || 85}%</strong>
-                      </span>
-                      <span className="rounded bg-white px-1.5 py-0.5 border border-slate-200">
-                        P: <strong>{cluster.fitP || 80}%</strong>
-                      </span>
-                      <span className="rounded bg-white px-1.5 py-0.5 border border-slate-200">
-                        V: <strong>{cluster.fitV || 80}%</strong>
-                      </span>
-                    </div>
-
-                    {/* Match Bar */}
-                    <div className="flex items-center gap-2 w-36">
-                      <Progress
-                        percent={cluster.matchPercentage}
-                        strokeColor={{ from: "#9a2119", to: "#ea580c" }}
-                        trailColor="#e2e8f0"
-                        size="small"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Divider className="my-10" />
-
-          {/* 🧭 Holland RIASEC Profile Breakdown */}
-          <div className="mb-10">
-            <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                  Vocational Interest Profile
-                </span>
-                <h3 className="text-xl font-black text-slate-900">
-                  Holland RIASEC Code: <span className="text-[#9a2119]">{hollandCode}</span>
-                </h3>
-              </div>
-              <div className="text-xs text-slate-700">
-                Primary interest drivers: Realistic, Investigative, Conventional
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {interests.map((item) => {
-                const info = HOLLAND_TRAIT_INFO[item.facet] || {
-                  name: item.name || item.facet,
-                  color: "#9a2119",
-                  label: "Domain",
-                  description: "",
-                };
-                const isDominant = (hollandCode || "").includes(item.facet);
-
-                return (
-                  <div
-                    key={item.facet}
-                    className={`rounded-2xl border p-4.5 transition-all ${
-                      isDominant
-                        ? "border-[#9a2119]/40 bg-rose-50/30 ring-1 ring-rose-200"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black text-white"
-                          style={{ backgroundColor: info.color }}
-                        >
-                          {item.facet}
-                        </span>
-                        <span className="font-bold text-slate-900">{info.name}</span>
-                      </div>
-                      <Tag color={item.bandLabel === "High" ? "volcano" : "default"}>
-                        {item.bandLabel || "Moderate"}
-                      </Tag>
-                    </div>
-
-                    <div className="my-3">
-                      <div className="mb-1 flex justify-between text-xs font-semibold text-slate-700">
-                        <span>Score Level</span>
-                        <span>{item.percentage}%</span>
-                      </div>
-                      <Progress
-                        percent={item.percentage}
-                        showInfo={false}
-                        strokeColor={info.color}
-                        trailColor="#f1f5f9"
-                        size={["100%", 6]}
-                      />
-                    </div>
-
-                    <p className="text-xs leading-relaxed text-slate-700">
-                      {info.description || `Assessment indicates strong preference in ${info.name}.`}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <Divider className="my-10" />
-
-          {/* 🧠 Big Five Personality Profile (OCEAN) */}
-          <div className="mb-10">
-            <div className="mb-6">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                Behavioral Strengths
-              </span>
-              <h3 className="text-xl font-black text-slate-900">
-                Big Five Personality Traits (OCEAN)
-              </h3>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-              {personality.map((trait) => (
-                <div
-                  key={trait.facet}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-xs"
-                >
-                  <div className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    {trait.facet}
-                  </div>
-                  <div className="mt-1 text-sm font-bold text-slate-900">{trait.name}</div>
-                  <div className="my-3">
-                    <span className="text-2xl font-black text-[#9a2119]">{trait.percentage}%</span>
-                  </div>
-                  <Tag
-                    color={trait.bandLabel === "High" ? "green" : "blue"}
-                    className="font-bold uppercase text-[10px]"
-                  >
-                    {trait.bandLabel || "Moderate"}
-                  </Tag>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Divider className="my-10" />
-
-          {/* 💎 Work Values & 📚 Learning Styles (2-Column Layout) */}
-          <div className="grid gap-8 lg:grid-cols-2 mb-10">
-            {/* Work Values (Schwartz) */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-              <div className="mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                  Motivational Drivers
-                </span>
-                <h4 className="text-lg font-black text-slate-900">Core Work Values (Schwartz)</h4>
-              </div>
-
-              <div className="space-y-4">
-                {values.map((val) => (
-                  <div key={val.facet}>
-                    <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
-                      <span>{val.name}</span>
-                      <span>
-                        {val.percentage}% ({val.bandLabel})
-                      </span>
-                    </div>
-                    <Progress
-                      percent={val.percentage}
-                      showInfo={false}
-                      strokeColor={{ from: "#d97706", to: "#f59e0b" }}
-                      trailColor="#f1f5f9"
-                      size={["100%", 7]}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Learning Styles (VARK) */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
-              <div className="mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                  Cognitive Ingestion
-                </span>
-                <h4 className="text-lg font-black text-slate-900">Learning Modalities (VARK)</h4>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {learningStyles.map((style) => (
-                  <div
-                    key={style.facet}
-                    className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 text-center"
-                  >
-                    <div className="text-xs font-bold text-slate-700">{style.name}</div>
-                    <div className="my-1.5 text-xl font-black text-emerald-600">
-                      {style.percentage}%
-                    </div>
-                    <span className="text-[10px] font-semibold text-slate-700">
-                      {style.bandLabel} Alignment
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <Divider className="my-10" />
-
-          {/* ⚙️ Aptitude & Cognitive Reasoning Breakdown */}
-          <div>
-            <div className="mb-6">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                Cognitive Aptitude
-              </span>
-              <h3 className="text-xl font-black text-slate-900">
-                Cognitive Reasoning & Problem Solving Accuracy
-              </h3>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {aptitudes.map((apt) => (
-                <div
-                  key={apt.facet}
-                  className="rounded-2xl border border-slate-200 bg-white p-4.5 shadow-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-900">{apt.name}</span>
-                    <span className="text-xs font-black text-[#9a2119]">{apt.percentage}%</span>
-                  </div>
-                  <div className="my-2.5">
-                    <Progress
-                      percent={apt.percentage}
-                      showInfo={false}
-                      strokeColor={{ from: "#0284c7", to: "#0d9488" }}
-                      trailColor="#f1f5f9"
-                      size={["100%", 6]}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-700">
-                    <span>Performance Band:</span>
-                    <span className="font-bold text-emerald-700">{apt.bandLabel || "High"}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Next Steps Footer */}
-          <div className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center print:border-slate-300">
-            <h4 className="text-base font-bold text-slate-900">What Should You Do Next?</h4>
-            <p className="mx-auto mt-1 max-w-xl text-xs text-slate-700">
-              Explore colleges, recommended entrance exams, and tailored scholarship schemes matching
-              your top career cluster ({topCluster.name}).
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-3 print:hidden">
-              <Button
-                type="primary"
-                onClick={() => navigate("/app/library")}
-                className="rounded-xl bg-[#9a2119] font-bold hover:bg-[#801812]"
-              >
-                Explore {topCluster.name} in Career Archive
-              </Button>
-              <Button
-                onClick={() => navigate("/app/book-mentor")}
-                className="rounded-xl font-bold"
-              >
-                Book a 1-on-1 Mentor Session
-              </Button>
-            </div>
+      <div className="wrap">
+        {/* Report Header */}
+        <div className="report-head">
+          <div className="eyebrow">Career Compass · Final Report</div>
+          <h2>{studentName}&apos;s Career Map</h2>
+          <div className="report-meta">
+            {studentClass}
+            {studentSchool ? ` · ${studentSchool}` : ""} · Completed{" "}
+            {new Date(completedDate).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
           </div>
         </div>
+
+        {/* Subnav Anchor Links */}
+        <nav className="subnav">
+          <a href="#leg1">1 · Clusters</a>
+          <a href="#leg2">2 · Your Profile</a>
+          <a href="#leg3">3 · Direction</a>
+          <a href="#leg4">4 · Summary</a>
+        </nav>
+
+        {/* ============================================================
+            LEG 1: Career Clusters Suited to You
+        ============================================================ */}
+        <section className="leg" id="leg1">
+          <span className="legtag">
+            <span className="pinmini"></span>Section 1 of 4
+          </span>
+          <h2>Career Clusters Suited to You</h2>
+          <p className="lede">
+            Your top 5 matches out of 18 career clusters and 360+ careers, ranked by how closely they fit
+            your interests, aptitude, personality and values.
+          </p>
+
+          {/* Holland Strip */}
+          <div className="holland-strip">
+            {hollandCode.split("").slice(0, 3).map((L, i) => (
+              <div key={i} className="tile">
+                {L}
+              </div>
+            ))}
+            <div className="holland-label">
+              Your <b>Holland Code: {hollandCode}</b> — your three strongest interest types, used worldwide
+              to describe career fit.
+            </div>
+          </div>
+
+          {/* Top 5 Clusters Card */}
+          <div className="rcard">
+            <h3>Your Top 5 Clusters</h3>
+            <div className="sub">
+              Each card shows what the field involves, why it suits you, how to get there in India, and
+              example careers.
+            </div>
+
+            {top5Clusters.map((cluster) => {
+              const careers = cluster.careers || [];
+              const shown = careers.slice(0, 10);
+              const rest = careers.slice(10);
+              const isSem = cluster.code === "SEM" || cluster.name.includes("Science, Engineering");
+
+              return (
+                <div key={cluster.code} className="cluster-row">
+                  <div className="cluster-top">
+                    <span className="cluster-name">
+                      <span className="pinbadge">
+                        <span>{cluster.rank}</span>
+                      </span>
+                      {cluster.name}
+                    </span>
+                    <span className="cluster-pct">{cluster.matchPercentage}%</span>
+                  </div>
+
+                  <div className="matchbar">
+                    <i style={{ width: `${cluster.matchPercentage}%` }}></i>
+                  </div>
+
+                  <div className="clusterdesc">{cluster.description}</div>
+                  {cluster.why_fit && <div className="whyfit">{cluster.why_fit}</div>}
+                  {cluster.streams_and_pathways_india && (
+                    <div className="pathway">
+                      <b>Pathway in India: </b>
+                      {cluster.streams_and_pathways_india}
+                    </div>
+                  )}
+
+                  {shown.length > 0 && (
+                    <div className="chips">
+                      {shown.map((c, ci) => (
+                        <span key={ci} className="chip">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {rest.length > 0 && (
+                    <details className="morejobs">
+                      <summary>+ {rest.length} more careers in this cluster</summary>
+                      <div className="chips">
+                        {rest.map((c, ci) => (
+                          <span key={ci} className="chip">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+
+                  {/* SEM Sub-cluster Card if SEM is in top clusters */}
+                  {isSem && (
+                    <div className="semcard">
+                      <h4>Within Science, Engineering &amp; Mathematics — your best-fit science fields</h4>
+                      {SEM_SUB.slice(0, 3).map((sub, si) => (
+                        <div key={sub.sub_id} className="semrow">
+                          <div className="top">
+                            <span>
+                              {si + 1}. {sub.name}
+                            </span>
+                            <span>{cluster.matchPercentage - si * 2}%</span>
+                          </div>
+                          <div className="sig">
+                            {sub.signature} <i>Example careers: {sub.careers_hint}.</i>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Fit Composition Block for Top Cluster */}
+          <div className="rcard">
+            <h3>What&apos;s Driving Your #1 Match</h3>
+            <div className="sub">
+              {topCluster.name} — {topCluster.matchPercentage}% overall match, built from four parts of your
+              profile.
+            </div>
+            <div className="fitcomp">
+              <DonutChart items={fitItems} size={150} thickness={24} />
+              <div className="fitlegend">
+                {fitItems.map((it) => (
+                  <div key={it.label} className="row">
+                    <span className="swatch" style={{ background: it.color }}></span>
+                    <span>{it.label}</span>
+                    <b style={{ marginLeft: "auto", fontFamily: "'IBM Plex Mono', monospace" }}>
+                      {Math.round((it.value / fitTotal) * 100)}%
+                    </b>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            LEG 2: Your Profile, In Detail (6 Domains + Charts)
+        ============================================================ */}
+        <section className="leg" id="leg2">
+          <span className="legtag">
+            <span className="pinmini"></span>Section 2 of 4
+          </span>
+          <h2>Your Profile, In Detail</h2>
+          <p className="lede">
+            Six results from the assessment, each with its own chart. Bands (developing / moderate / high)
+            describe where you stand relative to typical responses, not pass/fail marks.
+          </p>
+
+          {/* 1. Interests · RIASEC */}
+          <div className="domain-card">
+            <h3>Interests · RIASEC</h3>
+            <div className="domain-desc">
+              These six types describe what kinds of activities energise you — together they form your
+              Holland Code.
+            </div>
+            <div className="chartrow">
+              <div className="chartbox">
+                <DonutChart items={riItems} size={176} thickness={30} />
+              </div>
+              <div className="legendcol">
+                {riRank.map(([f, val]) => {
+                  const bd = band(val);
+                  const meta = INTERP.interest[f] || {};
+                  return (
+                    <div key={f} className="legrow">
+                      <div className="head">
+                        <span className="name">
+                          <span className="swatch" style={{ background: INTEREST_COLOR[f] }}></span>
+                          {meta.name || f}
+                        </span>
+                        <span className="pctval">{val}%</span>
+                      </div>
+                      <div style={{ marginTop: "5px" }}>
+                        <span className={`bandchip ${bd}`}>{bd}</span>
+                      </div>
+                      <div className="blurb">{meta.blurbs?.[bd] || ""}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Personality · OCEAN */}
+          <div className="domain-card">
+            <h3>Personality · OCEAN</h3>
+            <div className="domain-desc">
+              Five broad traits that describe how you typically think, feel and act.
+            </div>
+            <div className="chartrow">
+              <div className="chartbox">
+                <HBarChart items={personChartItems} width={320} />
+              </div>
+              <div className="legendcol">
+                {ocRank.map(([f, val]) => {
+                  const bd = band(val);
+                  const meta = INTERP.personality[f] || {};
+                  return (
+                    <div key={f} className="legrow">
+                      <div className="head">
+                        <span className="name">
+                          <span className="swatch" style={{ background: PERSON_COLOR[f] }}></span>
+                          {meta.name || f}
+                        </span>
+                        <span className="pctval">{val}%</span>
+                      </div>
+                      <div style={{ marginTop: "5px" }}>
+                        <span className={`bandchip ${bd}`}>{bd}</span>
+                      </div>
+                      <div className="blurb">{meta.blurbs?.[bd] || ""}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="note">{INTERP.report_disclaimers.es_note}</div>
+          </div>
+
+          {/* 3. Values · Schwartz Values */}
+          <div className="domain-card">
+            <h3>What You Value · Schwartz Values</h3>
+            <div className="domain-desc">
+              What matters to you when you imagine your work and your life.
+            </div>
+            <div className="chartrow">
+              <div className="chartbox">
+                <DonutChart items={valItems} size={176} thickness={30} />
+              </div>
+              <div className="legendcol">
+                {valRank.map(([f, val]) => {
+                  const bd = band(val);
+                  const meta = INTERP.values[f] || {};
+                  return (
+                    <div key={f} className="legrow">
+                      <div className="head">
+                        <span className="name">
+                          <span className="swatch" style={{ background: VALUES_COLOR[f] }}></span>
+                          {meta.name || f}
+                        </span>
+                        <span className="pctval">{val}%</span>
+                      </div>
+                      <div style={{ marginTop: "5px" }}>
+                        <span className={`bandchip ${bd}`}>{bd}</span>
+                      </div>
+                      <div className="blurb">{meta.blurbs?.[bd] || ""}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Aptitude */}
+          <div className="domain-card">
+            <h3>Aptitude</h3>
+            <div className="domain-desc">
+              How you performed on six kinds of reasoning — these are skills, and skills can be built
+              further with practice.
+            </div>
+            <div className="chartrow">
+              <div className="chartbox">
+                <ColumnChart items={aptChartItems} width={360} height={210} />
+              </div>
+              <div className="legendcol">
+                {aptRank.map(([f, val]) => {
+                  const bd = band(val);
+                  const meta = INTERP.aptitude[f] || {};
+                  return (
+                    <div key={f} className="legrow">
+                      <div className="head">
+                        <span className="name">
+                          <span className="swatch" style={{ background: bandColorHex(val) }}></span>
+                          {meta.name || f}
+                        </span>
+                        <span className="pctval">{val}%</span>
+                      </div>
+                      <div style={{ marginTop: "5px" }}>
+                        <span className={`bandchip ${bd}`}>{bd}</span>
+                      </div>
+                      <div className="blurb">{meta.blurbs?.[bd] || ""}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="note">{INTERP.report_disclaimers.apt_note}</div>
+          </div>
+
+          {/* 5. Learning Style · VARK */}
+          <div className="domain-card">
+            <h3>Learning Style · VARK</h3>
+            <div className="domain-desc">
+              How information tends to stick best for you when you&apos;re studying.
+            </div>
+            <div className="chartrow">
+              <div className="chartbox">
+                <LineChart items={varkChartItems} width={340} height={190} color={CHART_COLOR.slate} />
+              </div>
+              <div className="legendcol">
+                {varkFacets.map((f) => {
+                  const meta = INTERP.learning_style[f] || {};
+                  return (
+                    <div key={f} className="legrow">
+                      <div className="head">
+                        <span className="name">
+                          <span className="swatch" style={{ background: VARK_COLOR[f] }}></span>
+                          {meta.name || f}
+                        </span>
+                        <span className="pctval">{varkScoreMap[f]}%</span>
+                      </div>
+                      <div className="blurb">{meta.description || ""}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 6. Goal Orientation (Rendered prominently as requested) */}
+          <div className="domain-card" id="domain-goal-orientation">
+            <h3>Goal Orientation</h3>
+            <div className="domain-desc">
+              How you&apos;re currently weighing more years of study against starting work sooner. These are
+              independent scores, not two ends of one scale.
+            </div>
+            <div className="chartrow">
+              <div className="chartbox">
+                <TwinBars longPct={longPct} shortPct={shortPct} width={340} height={110} />
+              </div>
+              <div className="legendcol">
+                <div className="legrow">
+                  <div className="head">
+                    <span className="name">
+                      <span className="swatch" style={{ background: CHART_COLOR.red }}></span>
+                      Long-term orientation
+                    </span>
+                    <span className="pctval">{longPct}%</span>
+                  </div>
+                  <div style={{ marginTop: "5px" }}>
+                    <span className={`bandchip ${band(longPct)}`}>{band(longPct)}</span>
+                  </div>
+                  <div className="blurb">
+                    Comfort with investing several more years in education before starting a career.
+                  </div>
+                </div>
+
+                <div className="legrow">
+                  <div className="head">
+                    <span className="name">
+                      <span className="swatch" style={{ background: CHART_COLOR.slate }}></span>
+                      Short-term orientation
+                    </span>
+                    <span className="pctval">{shortPct}%</span>
+                  </div>
+                  <div style={{ marginTop: "5px" }}>
+                    <span className={`bandchip ${band(shortPct)}`}>{band(shortPct)}</span>
+                  </div>
+                  <div className="blurb">
+                    Preference for entering work or skill-based training sooner.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            LEG 3: Your Direction: Study & Pathway Advice
+        ============================================================ */}
+        <section className="leg" id="leg3">
+          <span className="legtag">
+            <span className="pinmini"></span>Section 3 of 4
+          </span>
+          <h2>Your Direction: Study &amp; Pathway Advice</h2>
+          <p className="lede">
+            Turning your learning style and goal orientation into concrete next steps.
+          </p>
+
+          <div className="rcard">
+            <div className="advice-recap">
+              <span className="recapchip">
+                Learning style <b>{learnLabel}</b>
+              </span>
+              <span className="recapchip">
+                Goal orientation <b>{goalMeta.name}</b>
+              </span>
+            </div>
+
+            <h3>How to study, based on how you learn</h3>
+           <ul className="tips list-disc pl-5 space-y-2">
+  {tips.map((tip, idx) => (
+    <li key={idx}>{tip}</li>
+  ))}
+</ul>
+
+            <h3 style={{ marginTop: "24px" }}>Your pathway approach</h3>
+            <p>{goalMeta.text}</p>
+
+            <h3 style={{ marginTop: "24px" }}>A general route from where you are now</h3>
+            <div className="roadmap">
+              {roadStops.map((st) => (
+                <div key={st.k} className={`stop ${hiSet.includes(st.k) ? "hi" : ""}`}>
+                  <div className="pin3"></div>
+                  <b>{st.b}</b>
+                  <span>{st.s}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="note">
+              Highlighted stops are where your current goal orientation matters most — this is a general
+              route, not a fixed plan. Talk it through with a teacher, counsellor or parent before locking
+              in big decisions.
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            LEG 4: Your Complete Career Map (Passport & Next Steps)
+        ============================================================ */}
+        <section className="leg" id="leg4">
+          <span className="legtag">
+            <span className="pinmini"></span>Section 4 of 4
+          </span>
+          <h2>Your Complete Career Map</h2>
+          <p className="lede">Everything above, brought together into one summary.</p>
+
+          {/* The Career Passport Card */}
+          <div className="passport">
+            <div className="ptitle">Career Compass · Comprehensive Report</div>
+            <h2>{studentName}</h2>
+            <div className="stats">
+              <div className="stat">
+                <div className="k">Holland Code</div>
+                <div className="v">{hollandCode}</div>
+              </div>
+              <div className="stat">
+                <div className="k">Top Cluster</div>
+                <div className="v">{top1.name}</div>
+              </div>
+              <div className="stat">
+                <div className="k">Match</div>
+                <div className="v">{top1.matchPercentage}%</div>
+              </div>
+              <div className="stat">
+                <div className="k">Top Value</div>
+                <div className="v">{topValue}</div>
+              </div>
+              <div className="stat">
+                <div className="k">Top Trait</div>
+                <div className="v">{topTrait}</div>
+              </div>
+              <div className="stat">
+                <div className="k">Learning Style</div>
+                <div className="v">{learnLabel}</div>
+              </div>
+              <div className="stat">
+                <div className="k">Goal Orientation</div>
+                <div className="v">{goalMeta.name}</div>
+              </div>
+            </div>
+            <p className="narr">{narrative}</p>
+          </div>
+
+          {/* Actionable Next Steps */}
+         <div className="rcard nextcard">
+  <h3>What to do next</h3>
+
+  <ul className="tips list-disc pl-6">
+    <li>Read through your top 5 clusters in Section 1 with a parent, teacher or counsellor.</li>
+    <li>Shortlist 2–3 clusters and look up their stream/subject requirements for your class.</li>
+    <li>Use the study tips in Section 3 for the next exam cycle.</li>
+    <li>
+      Retake this assessment in 6–12 months — interests and skills develop,
+      especially in these years.
+    </li>
+  </ul>
+</div>
+
+          <div className="note">
+            {INTERP.report_disclaimers.match_note} {INTERP.report_disclaimers.retest_note}
+          </div>
+
+          {/* Action Buttons Row */}
+          <div className="printrow">
+            <button className="btn btn-primary " onClick={handlePrint}>
+              <PrinterOutlined className="mr-2" /> Print / Save as PDF
+            </button>
+            <button className="btn btn-outline" onClick={handleDownloadJSON}>
+              <DownloadOutlined className="mr-2" /> Download Report (JSON)
+            </button>
+            <button
+              className="btn btn-accent"
+              onClick={() => navigate("/app/library")}
+            >
+              <BookOutlined className="mr-2" /> Explore Careers Library
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );

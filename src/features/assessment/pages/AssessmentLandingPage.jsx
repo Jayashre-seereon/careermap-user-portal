@@ -139,21 +139,20 @@ export default function AssessmentLandingPage() {
           <div className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-8">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold tracking-wide uppercase text-amber-200 backdrop-blur-md">
-                <SafetyCertificateOutlined /> Scientific 6-Domain Evaluation
+                <SafetyCertificateOutlined /> 6-Domain Evaluation
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
-                Career Compass Psychometric & Aptitude Assessment
+                 Psychometric Career Assessment
               </h1>
               <p className="mt-4 max-w-2xl text-base font-normal leading-relaxed text-rose-100 sm:text-lg">
-                Discover your Holland RIASEC code, Big Five personality strengths, VARK learning modality,
-                core work values, and cognitive reasoning accuracy to unlock your top 5 best-match career pathways.
+               Discover your interests, strengths, learning style, and career preferences to unlock your top 5 best-match career pathways.
               </p>
 
               {/* Key Meta Badges */}
               <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-semibold sm:text-sm">
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                   <FileTextOutlined className="text-amber-300" />
-                  <span>{TOTAL_ASSESSMENT_QUESTIONS} Scientific Questions</span>
+                  <span>{TOTAL_ASSESSMENT_QUESTIONS} Questions</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                   <ClockCircleOutlined className="text-amber-300" />
@@ -161,7 +160,7 @@ export default function AssessmentLandingPage() {
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                   <TrophyOutlined className="text-amber-300" />
-                  <span>21 Facets & 18 Career Clusters</span>
+                  <span>6 Domains 21 Facets & 18 Career Clusters</span>
                 </div>
               </div>
             </div>
@@ -180,24 +179,13 @@ export default function AssessmentLandingPage() {
                       In-Progress Test Found
                     </span>
                     <h3 className="mt-2 text-xl font-bold text-white">Continue Your Assessment</h3>
-                    <div className="my-4">
-                      <div className="mb-1 flex justify-between text-xs text-rose-100 font-medium">
-                        <span>Overall Progress</span>
-                        <span>{inProgressProgress}% Completed</span>
-                      </div>
-                      <Progress
-                        percent={inProgressProgress}
-                        showInfo={false}
-                        strokeColor={{ from: "#facc15", to: "#fbbf24" }}
-                        trailColor="rgba(255,255,255,0.2)"
-                      />
-                    </div>
+
                     <Button
                       type="primary"
-                      size="large"
+                      size="small"
                       loading={starting}
                       onClick={() => handleStartTest(false)}
-                      className="h-12 w-full rounded-xl border-none bg-amber-400 font-bold text-slate-900 shadow-lg hover:bg-amber-300 focus:bg-amber-300"
+                      className="h-10 w-full rounded-md border-none bg-white font-bold text-slate-900 shadow-lg hover:bg-amber-300 focus:bg-amber-300 mt-2"
                     >
                       ▶️ Resume Assessment
                     </Button>
@@ -403,9 +391,7 @@ export default function AssessmentLandingPage() {
                 <thead>
                   <tr className="border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-700">
                     <th className="pb-3 pl-2">Attempt Date</th>
-                    <th className="pb-3">Holland Code</th>
-                    <th className="pb-3">Top Career Cluster</th>
-                    <th className="pb-3">Match %</th>
+                   
                     <th className="pb-3">Status</th>
                     <th className="pb-3 text-right pr-2">Action</th>
                   </tr>
@@ -426,25 +412,9 @@ export default function AssessmentLandingPage() {
                     return (
                       <tr key={attemptId} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-4 pl-2 font-medium text-slate-800">{formattedDate}</td>
-                        <td className="py-4">
-                          <Tag color="volcano" className="font-bold tracking-wider">
-                            {attempt.hollandCode || attempt.report?.hollandProfile?.code || (isDone ? "ICR" : "—")}
-                          </Tag>
-                        </td>
-                        <td className="py-4 font-semibold text-slate-800">
-                          {attempt.topCareerCluster ||
-                            attempt.report?.careerClusters?.topCluster?.name ||
-                            (isDone ? "IT & Computers" : "In Progress")}
-                        </td>
-                        <td className="py-4">
-                          {attempt.topCareerMatch || attempt.report?.careerClusters?.topCluster?.matchPercentage ? (
-                            <span className="font-bold text-emerald-600">
-                              {attempt.topCareerMatch || attempt.report?.careerClusters?.topCluster?.matchPercentage}%
-                            </span>
-                          ) : (
-                            <span className="text-slate-600">—</span>
-                          )}
-                        </td>
+                       
+                       
+                        
                         <td className="py-4">
                           {isDone ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
