@@ -345,8 +345,8 @@ export default function DashboardPage() {
       />
     );
   }
-function handleTestClick() {
-    window.location.href = "/assessment/phycometrichalftest.html";
+  function handleTestClick() {
+    navigate("/app/assessment");
   }
 
   async function handleProtectedSectionClick({ route, title, moduleTitle, itemLabel }) {
