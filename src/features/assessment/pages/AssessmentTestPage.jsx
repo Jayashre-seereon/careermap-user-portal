@@ -314,8 +314,8 @@ export default function AssessmentTestPage() {
   return (
     <div className="min-h-screen  pb-32 text-slate-800 antialiased">
       {/* Sticky Top Header with Progress & Auto-save status */}
-      <div className="sticky top-16 z-30 border-b backdrop-blur-md shadow-sm">  
-        <div className="w-full px-4 py-2 sm:px-6"> 
+      <div className="sticky top-16 z-30 -mx-9 border-b backdrop-blur-md shadow-sm">  
+        <div className="w-full px-8 py-2"> 
           <div className="flex flex-nowrap items-center justify-between gap-3">   {/* Left: Test Info & Breadcrumb */}
             <div className="flex items-center gap-3">
               <Button
@@ -571,8 +571,8 @@ export default function AssessmentTestPage() {
       </div>
 
       {/* Sticky Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md shadow-sm px-4 py-3.5 backdrop-blur-md shadow-lg sm:px-6">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+      <div className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3.5 backdrop-blur-md shadow-sm shadow-lg">
+        <div className="flex w-full items-center justify-between gap-4">
           <Button
             size="small"
             disabled={currentSectionIndex === 0}
