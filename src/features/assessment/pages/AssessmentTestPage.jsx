@@ -312,12 +312,11 @@ export default function AssessmentTestPage() {
   const currentSectionQuestions = activeSection?.questions || [];
 
   return (
-    <div className="min-h-screen bg-[#faf6f3] pb-32 text-slate-800 antialiased">
+    <div className="min-h-screen  pb-32 text-slate-800 antialiased">
       {/* Sticky Top Header with Progress & Auto-save status */}
-      <div className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-sm">
-        <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Left: Test Info & Breadcrumb */}
+      <div className="sticky top-16 z-30 border-b backdrop-blur-md shadow-sm">  
+        <div className="w-full px-4 py-2 sm:px-6"> 
+          <div className="flex flex-nowrap items-center justify-between gap-3">   {/* Left: Test Info & Breadcrumb */}
             <div className="flex items-center gap-3">
               <Button
                 size="small"
@@ -328,66 +327,16 @@ export default function AssessmentTestPage() {
                 Exit Test
               </Button>
               <div className="hidden h-5 w-px bg-slate-200 sm:block" />
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#9a2119]">
-                  Section {currentSectionIndex + 1} of {sections.length}: {activeDomainMeta.shortCode}
-                </span>
-                <h2 className="text-sm font-bold text-slate-900 sm:text-base">
-                  {activeSection.title || activeDomainMeta.title}
-                </h2>
-              </div>
+             
             </div>
-
-            {/* Right: Auto-Save Badge & Total Progress */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
-                {saveStatus === "saving" ? (
-                  <>
-                    <SyncOutlined spin className="text-amber-500" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircleFilled className="text-emerald-500" />
-                    <span className="text-emerald-700 font-semibold">Saved</span>
-                  </>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-700">
-                  {totalAnsweredCount} / {totalQuestionsCount} ({overallPercent}%)
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Sticky Progress Bar */}
-          <div className="mt-2.5">
-            <Progress
-              percent={overallPercent}
-              showInfo={false}
-              strokeColor={{ "0%": "#9a2119", "100%": "#2d8c83" }}
-              trailColor="#e2e8f0"
-              size={["100%", 6]}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Section Stepper / Navigation Tabs */}
-      <div className="border-b border-slate-200/60 bg-white/60">
-        <div className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {sections.map((sec, idx) => {
+  <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 scrollbar-none">    {sections.map((sec, idx) => {
               const stat = sectionStats[idx];
               const isCurrent = idx === currentSectionIndex;
               return (
                 <button
                   key={sec.id || idx}
                   onClick={() => handleSwitchSection(idx)}
-                  className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                    isCurrent
+                className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-[10px]font-bold transition-all ${     isCurrent
                       ? "bg-[#9a2119] text-white shadow-sm"
                       : stat.isComplete
                       ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100/70"
@@ -411,6 +360,41 @@ export default function AssessmentTestPage() {
               );
             })}
           </div>
+            {/* Right: Auto-Save Badge & Total Progress */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
+                {saveStatus === "saving" ? (
+                  <>
+                    <SyncOutlined spin className="text-amber-500" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircleFilled className="text-emerald-500" />
+                   
+                  </>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-700">
+                  {totalAnsweredCount} / {totalQuestionsCount} ({overallPercent}%)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Sticky Progress Bar */}
+       <div className="mt-1.5">
+             <Progress
+              percent={overallPercent}
+              showInfo={false}
+              strokeColor={{ "0%": "#9a2119", "100%": "#2d8c83" }}
+              trailColor="#e2e8f0"
+              size={["100%", 6]}
+            />
+          </div>
+                
         </div>
       </div>
 
@@ -519,37 +503,64 @@ export default function AssessmentTestPage() {
                   ) : (
                     /* MCQ 4-Option Component */
                     <div className="grid gap-2.5 sm:grid-cols-2">
-                      {(question.options || []).map((opt, optIndex) => {
-                        const optionLetter = String.fromCharCode(65 + optIndex);
-                        const isSelected = currentAnswer.selectedOptionId === opt.id;
-                        return (
-                          <button
-                            key={opt.id || optIndex}
-                            type="button"
-                            onClick={() =>
-                              handleSelectAnswer(question.id, { selectedOptionId: opt.id })
-                            }
-                            className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all ${
-                              isSelected
-                                ? "border-cyan-500 bg-cyan-50/80 text-cyan-900 ring-2 ring-cyan-300"
-                                : "border-slate-200 bg-slate-50/40 text-slate-700 hover:border-cyan-300 hover:bg-cyan-50/30"
-                            }`}
-                          >
-                            <span
-                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-                                isSelected
-                                  ? "bg-cyan-600 text-white"
-                                  : "bg-slate-200 text-slate-700"
-                              }`}
-                            >
-                              {optionLetter}
-                            </span>
-                            <span className="text-sm font-medium leading-relaxed">
-                              {opt.text || opt.optionText || opt.label}
-                            </span>
-                          </button>
-                        );
-                      })}
+                   
+{(question.options || []).map((opt, optIndex) => {
+  const optionLetter = String.fromCharCode(65 + optIndex);
+  const isSelected = currentAnswer.selectedOptionId === opt.id;
+
+  // Check if option has an image URL
+  const optionImage =
+    opt.image ||
+    (typeof opt.optionText === "string" &&
+    /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(opt.optionText)
+      ? opt.optionText
+      : null);
+
+  return (
+    <button
+      key={opt.id || optIndex}
+      type="button"
+      onClick={() =>
+        handleSelectAnswer(question.id, {
+          selectedOptionId: opt.id,
+        })
+      }
+      className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all ${
+        isSelected
+          ? "border-cyan-500 bg-cyan-50/80 text-cyan-900 ring-2 ring-cyan-300"
+          : "border-slate-200 bg-slate-50/40 text-slate-700 hover:border-cyan-300 hover:bg-cyan-50/30"
+      }`}
+    >
+      {/* A / B / C / D */}
+      <span
+        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+          isSelected
+            ? "bg-cyan-600 text-white"
+            : "bg-slate-200 text-slate-700"
+        }`}
+      >
+        {optionLetter}
+      </span>
+
+      {/* Option Image or Text */}
+      <div className="flex flex-1 items-center">
+        {optionImage ? (
+          <img
+            src={optionImage}
+            alt={`Option ${optionLetter}`}
+            className="max-h-40 max-w-full rounded-lg object-contain"
+          />
+        ) : (
+          <span className="text-sm font-medium leading-relaxed">
+            {opt.text || opt.optionText || opt.label}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+})}
+
+
                     </div>
                   )}
                 </div>
@@ -560,10 +571,10 @@ export default function AssessmentTestPage() {
       </div>
 
       {/* Sticky Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3.5 backdrop-blur-md shadow-lg sm:px-6">
+      <div className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md shadow-sm px-4 py-3.5 backdrop-blur-md shadow-lg sm:px-6">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
           <Button
-            size="large"
+            size="small"
             disabled={currentSectionIndex === 0}
             onClick={() => handleSwitchSection(currentSectionIndex - 1)}
             className="rounded-xl font-bold"
@@ -580,7 +591,7 @@ export default function AssessmentTestPage() {
           {isLastSection ? (
             <Button
               type="primary"
-              size="large"
+              size="small"
               onClick={() => setIsSubmitModalVisible(true)}
               className="rounded-xl border-none bg-gradient-to-r from-emerald-600 to-teal-600 font-bold text-white shadow-md hover:from-emerald-500 hover:to-teal-500"
             >
@@ -589,7 +600,7 @@ export default function AssessmentTestPage() {
           ) : (
             <Button
               type="primary"
-              size="large"
+              size="small"
               onClick={() => handleSwitchSection(currentSectionIndex + 1)}
               className="rounded-xl border-none bg-[#9a2119] font-bold text-white shadow-md hover:bg-[#801812]"
             >
