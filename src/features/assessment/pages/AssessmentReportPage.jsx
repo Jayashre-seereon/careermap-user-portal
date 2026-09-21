@@ -11,7 +11,6 @@ import { getAttemptResult } from "../../../api/psychometricAssessmentApi";
 import { useAuthStore } from "../../../store/authStore";
 import {
   CLUSTERS,
-  CLUSTER_MAP,
   INTERP,
   pct,
   band,
@@ -25,15 +24,11 @@ function PageHeader({ studentFirstName }) {
       <div className="pdf-header-top">
         <div className="pdf-header-name">{studentFirstName || "Aryaman"}</div>
         <div className="pdf-header-logo">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-            {/* CareerMap Figure Logo Mark */}
-            <circle cx="21" cy="7" r="3" fill="#9C2A1F" />
-            <path d="M19 12C16 13 14 16 13 20L10 28" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M16 14L22 17L26 15" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M14 19L19 23L23 29" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M16 12C12 12 7 15 5 21C4 24 5 27 7 28" stroke="#9C2A1F" strokeWidth="1.5" strokeDasharray="2 2" strokeLinecap="round" />
-          </svg>
-          <div className="pdf-header-logo-text">CAREER<br/>MAP</div>
+          <img
+            src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789970133/logo_white.png"
+            alt="CareerMap"
+            className="h-8 w-auto object-contain"
+          />
         </div>
       </div>
       <div className="pdf-header-line"></div>
@@ -344,10 +339,16 @@ export default function AssessmentReportPage() {
   const rawTopCluster = report.careerClusters?.topCluster || {};
   const rawTop5 = report.careerClusters?.top5 || rawData.top5Clusters || [];
 
+  const clusterMap = (CLUSTERS || []).reduce((acc, c) => {
+    acc[c.cluster_id] = c;
+    acc[c.name] = c;
+    return acc;
+  }, {});
+
   const top5Clusters = rawTop5.length >= 5
     ? rawTop5.map((item, idx) => {
         const code = item.code || item.cluster_id || item.clusterId || defaultTop5[idx].code;
-        const meta = CLUSTER_MAP[code] || CLUSTER_MAP[item.name || item.cluster] || CLUSTERS[idx % CLUSTERS.length];
+        const meta = clusterMap[code] || clusterMap[item.name || item.cluster] || CLUSTERS[idx % CLUSTERS.length] || {};
         return {
           rank: idx + 1,
           code,
@@ -438,16 +439,11 @@ export default function AssessmentReportPage() {
 
           {/* Top Right Logo */}
           <div className="flex justify-end pt-2 pr-2 z-10">
-            <div className="flex items-center gap-2">
-              <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                <circle cx="21" cy="7" r="3" fill="#9C2A1F" />
-                <path d="M19 12C16 13 14 16 13 20L10 28" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M16 14L22 17L26 15" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M14 19L19 23L23 29" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M16 12C12 12 7 15 5 21C4 24 5 27 7 28" stroke="#9C2A1F" strokeWidth="1.5" strokeDasharray="2 2" strokeLinecap="round" />
-              </svg>
-              <div className="font-extrabold text-xs tracking-wider text-[#9C2A1F] leading-tight">CAREER<br/>MAP</div>
-            </div>
+            <img
+              src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789970133/logo_white.png"
+              alt="CareerMap Logo"
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           {/* Main Title Section */}
@@ -465,36 +461,11 @@ export default function AssessmentReportPage() {
 
           {/* Center Graphic: 3D Illustration matching PDF */}
           <div className="my-auto py-6 text-center flex justify-center items-center z-10">
-            <div className="relative w-72 h-64 flex items-center justify-center">
-              {/* Central Clipboard / Document Sheet */}
-              <div className="w-48 h-56 bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-300 rounded-2xl shadow-xl flex flex-col items-center pt-3 px-4 transform -rotate-6">
-                <div className="w-10 h-3 bg-slate-400 rounded-full mb-4"></div>
-                <div className="w-full h-1.5 bg-slate-300 rounded mb-2"></div>
-                <div className="w-full h-1.5 bg-slate-300 rounded mb-2"></div>
-                <div className="w-3/4 h-1.5 bg-slate-300 rounded mb-2 self-start"></div>
-                <div className="w-full h-1.5 bg-slate-300 rounded mb-2"></div>
-              </div>
-
-              {/* Hand Holding 3D Brain */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
-                <div className="relative">
-                  <div className="w-24 h-24 bg-gradient-to-br from-[#E24A3B] to-[#9C2A1F] rounded-full shadow-2xl flex items-center justify-center border-2 border-white/60">
-                    <span className="text-4xl">🧠</span>
-                  </div>
-                  {/* Hand graphic underneath */}
-                  <div className="w-28 h-8 bg-[#ECCDB7] rounded-full shadow-md -mt-4 mx-auto border border-[#DEB59B]"></div>
-                  <div className="w-16 h-8 bg-[#374151] rounded-b-md mx-auto -mt-1"></div>
-                </div>
-              </div>
-
-              {/* Floating Red Isometric Cubes */}
-              <div className="absolute top-2 left-6 w-8 h-8 bg-[#A82B20] rounded-sm shadow-md transform rotate-12"></div>
-              <div className="absolute top-10 right-4 w-9 h-9 bg-[#8C1814] rounded-sm shadow-md transform -rotate-12"></div>
-              <div className="absolute top-24 left-1 w-7 h-7 bg-[#C53F33] rounded-sm shadow-md transform rotate-45"></div>
-              <div className="absolute bottom-6 left-12 w-6 h-6 bg-[#A82B20] rounded-sm shadow-sm transform -rotate-12"></div>
-              <div className="absolute bottom-4 right-14 w-8 h-8 bg-[#8C1814] rounded-sm shadow-md transform rotate-6"></div>
-              <div className="absolute top-4 right-20 w-5 h-5 bg-[#C53F33] rounded-sm shadow-sm transform rotate-45"></div>
-            </div>
+            <img
+              src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982830/9.png"
+              alt="Career Assessment 3D Brain"
+              className="max-h-[300px] w-auto mx-auto object-contain drop-shadow-md"
+            />
           </div>
 
           {/* Bottom Left Student Info Box */}
@@ -586,60 +557,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Central Lightbulb + 6 Surrounding Petal Badges matching PDF Page 3 */}
-            <div className="relative py-10 flex justify-center items-center">
-              <div className="relative w-[340px] h-[340px] flex items-center justify-center">
-                {/* Central Yellow Lightbulb with Stylized Glow */}
-                <div className="relative z-10 flex flex-col items-center justify-center">
-                  <div className="w-32 h-44 bg-gradient-to-b from-[#FDE047] via-[#FBBF24] to-[#F59E0B] rounded-t-full rounded-b-3xl shadow-xl flex flex-col items-center justify-center border-4 border-white">
-                    {/* Filament lines */}
-                    <div className="w-12 h-14 border-2 border-amber-800/40 rounded-t-full border-b-0 mb-2 flex items-center justify-center">
-                      <div className="w-6 h-8 border border-amber-800/50 rounded-t-full"></div>
-                    </div>
-                  </div>
-                  {/* Bulb Base Screw */}
-                  <div className="w-14 h-7 bg-slate-400 rounded-b-md -mt-1 flex flex-col justify-evenly py-1 items-center border border-slate-500">
-                    <div className="w-12 h-1 bg-slate-300 rounded"></div>
-                    <div className="w-10 h-1 bg-slate-300 rounded"></div>
-                  </div>
-                </div>
-
-                {/* 6 Fan Petal Badges positioned around bulb */}
-                {/* Top-Left: LEARNING STYLE */}
-                <div className="absolute top-2 left-10 bg-[#38BDF8] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
-                  <span className="text-base">💻</span>
-                  <span>LEARNING<br/>STYLE</span>
-                </div>
-
-                {/* Top-Right: WORK VALUES */}
-                <div className="absolute top-2 right-10 bg-[#0284C7] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
-                  <span className="text-base">💼</span>
-                  <span>WORK VALUES</span>
-                </div>
-
-                {/* Mid-Left: PERSONALITY */}
-                <div className="absolute top-32 -left-6 bg-[#0EA5E9] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
-                  <span className="text-base">🧑‍🏫</span>
-                  <span>PERSONALITY</span>
-                </div>
-
-                {/* Mid-Right: GOAL ORIENTATION */}
-                <div className="absolute top-32 -right-6 bg-[#2563EB] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
-                  <span className="text-base">🎯</span>
-                  <span>GOAL<br/>ORIENTATION</span>
-                </div>
-
-                {/* Bottom-Left: INTEREST */}
-                <div className="absolute bottom-2 left-10 bg-[#38BDF8] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
-                  <span className="text-base">🧭</span>
-                  <span>INTEREST</span>
-                </div>
-
-                {/* Bottom-Right: APTITUDE */}
-                <div className="absolute bottom-2 right-10 bg-[#1D4ED8] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
-                  <span className="text-base">⚙️</span>
-                  <span>APTITUDE</span>
-                </div>
-              </div>
+            <div className="my-6 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982678/1.png"
+                alt="Introduction Wheel"
+                className="max-h-[420px] w-auto mx-auto object-contain"
+              />
             </div>
           </div>
 
@@ -665,83 +588,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Concentric RIASEC Rings Diagram matching PDF */}
-            <div className="my-6 text-center">
-              <div className="text-xs font-bold uppercase tracking-widest text-[#4A607A] mb-4">
-                RIASEC Model
-              </div>
-
-              <div className="relative max-w-xl mx-auto py-4">
-                {/* 6 Category Items with Connecting Lines */}
-                <div className="grid grid-cols-2 gap-y-10 gap-x-16 text-left">
-                  {/* Realistic */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">🔧</span>
-                    <div>
-                      <div className="font-extrabold text-[#4D6D47] text-sm tracking-wide">REALISTIC</div>
-                      <div className="text-xs text-slate-600">Hands-on tasks and practical skills</div>
-                    </div>
-                  </div>
-
-                  {/* Investigative */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">🔬</span>
-                    <div>
-                      <div className="font-extrabold text-[#D97706] text-sm tracking-wide">INVESTIGATIVE</div>
-                      <div className="text-xs text-slate-600">Research and problem-solving</div>
-                    </div>
-                  </div>
-
-                  {/* Artistic */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">🎨</span>
-                    <div>
-                      <div className="font-extrabold text-[#EA580C] text-sm tracking-wide">ARTISTIC</div>
-                      <div className="text-xs text-slate-600">Creativity and expression</div>
-                    </div>
-                  </div>
-
-                  {/* Social */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">💡</span>
-                    <div>
-                      <div className="font-extrabold text-[#0284C7] text-sm tracking-wide">SOCIAL</div>
-                      <div className="text-xs text-slate-600">Helping and connecting with others</div>
-                    </div>
-                  </div>
-
-                  {/* Enterprising */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">💼</span>
-                    <div>
-                      <div className="font-extrabold text-[#BE185D] text-sm tracking-wide">ENTERPRISING</div>
-                      <div className="text-xs text-slate-600">Leading and persuading others</div>
-                    </div>
-                  </div>
-
-                  {/* Conventional */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">📊</span>
-                    <div>
-                      <div className="font-extrabold text-[#9C2A1F] text-sm tracking-wide">CONVENTIONAL</div>
-                      <div className="text-xs text-slate-600">organising and managing details</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Central Concentric Rings Graphic */}
-                <div className="mt-8 flex justify-center items-center">
-                  <svg width="280" height="120" viewBox="0 0 280 120">
-                    <ellipse cx="140" cy="80" rx="130" ry="36" fill="#84CC16" opacity="0.9" />
-                    <ellipse cx="140" cy="80" rx="110" ry="30" fill="#EC4899" opacity="0.9" />
-                    <ellipse cx="140" cy="80" rx="90" ry="24" fill="#EAB308" opacity="0.9" />
-                    <ellipse cx="140" cy="80" rx="70" ry="18" fill="#06B6D4" opacity="0.9" />
-                    <ellipse cx="140" cy="80" rx="50" ry="12" fill="#3B82F6" opacity="0.9" />
-                    <ellipse cx="140" cy="80" rx="30" ry="7" fill="#4B5563" opacity="0.9" />
-                    {/* Water drop */}
-                    <circle cx="140" cy="30" r="5" fill="#4B5563" />
-                  </svg>
-                </div>
-              </div>
+            <div className="my-6 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982703/2.png"
+                alt="RIASEC Model"
+                className="max-h-[420px] w-auto mx-auto object-contain"
+              />
             </div>
           </div>
 
@@ -945,27 +797,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* 5-Tier Inverted Trapezoid Pyramid Stack matching PDF Page 8 */}
-            <div className="my-8 max-w-md mx-auto space-y-2 text-center">
-              <div className="flex items-center justify-between rounded-xl bg-[#A7E8EE] px-6 py-3.5 text-[#134E4A] font-extrabold text-sm shadow-xs">
-                <span className="text-lg">05</span>
-                <span className="tracking-wide">EMOTIONAL STABILITY</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl bg-[#A8E0F7] px-8 py-3.5 text-[#0369A1] font-extrabold text-sm shadow-xs mx-3">
-                <span className="text-lg">04</span>
-                <span className="tracking-wide">AGREEABLENESS</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl bg-[#9FE8D0] px-10 py-3.5 text-[#065F46] font-extrabold text-sm shadow-xs mx-6">
-                <span className="text-lg">03</span>
-                <span className="tracking-wide">EXTRAVERSION</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl bg-[#FFE899] px-12 py-3.5 text-[#854D0E] font-extrabold text-sm shadow-xs mx-9">
-                <span className="text-lg">02</span>
-                <span className="tracking-wide">CONSCIENTIOUSNESS</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl bg-[#FFC685] px-14 py-3.5 text-[#9A3412] font-extrabold text-sm shadow-xs mx-12">
-                <span className="text-lg">01</span>
-                <span className="tracking-wide">OPENNESS</span>
-              </div>
+            <div className="my-6 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982721/3.png"
+                alt="Big Five Personality"
+                className="max-h-[360px] w-auto mx-auto object-contain"
+              />
             </div>
           </div>
 
@@ -1077,38 +914,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Target Archery Diagram + 4 Pills matching PDF Page 11 */}
-            <div className="my-8 flex items-center justify-center gap-12">
-              <div className="relative flex flex-col items-center">
-                {/* 3D Round Target */}
-                <div className="w-36 h-36 rounded-full border-8 border-[#DC2626] bg-white flex items-center justify-center shadow-lg">
-                  <div className="w-24 h-24 rounded-full border-8 border-[#EF4444] bg-white flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-[#DC2626] flex items-center justify-center text-white font-black text-lg">
-                      🎯
-                    </div>
-                  </div>
-                </div>
-                {/* Wooden Tripod Stand */}
-                <div className="flex gap-4 -mt-2">
-                  <div className="w-2.5 h-12 bg-[#D97706] transform -rotate-12 rounded-b"></div>
-                  <div className="w-2.5 h-12 bg-[#B45309] rounded-b"></div>
-                  <div className="w-2.5 h-12 bg-[#D97706] transform rotate-12 rounded-b"></div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="bg-[#B91C1C] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
-                  VISUAL LEARNER
-                </div>
-                <div className="bg-[#E11D48] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
-                  AUDITORY LEARNER
-                </div>
-                <div className="bg-[#EA580C] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
-                  READING/WRITING LEARNER
-                </div>
-                <div className="bg-[#EAB308] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
-                  KINAESTHETIC LEARNER
-                </div>
-              </div>
+            <div className="my-6 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982739/4.png"
+                alt="Learning Styles VARK"
+                className="max-h-[360px] w-auto mx-auto object-contain"
+              />
             </div>
           </div>
 
@@ -1294,52 +1105,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
-            <div className="my-6 p-6 bg-[#FAFCF9] border border-[#D5E5D3] rounded-2xl max-w-lg mx-auto">
-              <div className="grid grid-cols-2 gap-4 text-center items-center">
-                {/* Conservation */}
-                <div className="p-3 bg-white rounded-xl border border-purple-200 shadow-xs flex flex-col items-center">
-                  <div className="flex items-center gap-1.5 text-purple-700 font-bold text-xs">
-                    <span>🏢</span>
-                    <span>Conservation</span>
-                  </div>
-                  <div className="text-[11px] text-slate-600 mt-1">security</div>
-                </div>
-
-                {/* Openness to Change */}
-                <div className="p-3 bg-white rounded-xl border border-amber-200 shadow-xs flex flex-col items-center">
-                  <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs">
-                    <span>⚡</span>
-                    <span>Openness to Change</span>
-                  </div>
-                  <div className="text-[11px] text-slate-600 mt-1">autonomy</div>
-                </div>
-
-                {/* Central Diamond Label */}
-                <div className="col-span-2 flex justify-center items-center py-2">
-                  <div className="p-2.5 bg-white rounded-xl border-2 border-slate-700 shadow-sm flex items-center gap-2">
-                    <span>💎</span>
-                    <span className="font-extrabold text-xs text-slate-900 uppercase">Schwartz Values</span>
-                  </div>
-                </div>
-
-                {/* Self-Transcendence */}
-                <div className="p-3 bg-white rounded-xl border border-pink-200 shadow-xs flex flex-col items-center">
-                  <div className="flex items-center gap-1.5 text-pink-700 font-bold text-xs">
-                    <span>🤝</span>
-                    <span>Self-Transcendence</span>
-                  </div>
-                  <div className="text-[11px] text-slate-600 mt-1">relationships<br/>meaningful impact</div>
-                </div>
-
-                {/* Self-Enhancement */}
-                <div className="p-3 bg-white rounded-xl border border-rose-200 shadow-xs flex flex-col items-center">
-                  <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs">
-                    <span>🏆</span>
-                    <span>Self-Enhancement</span>
-                  </div>
-                  <div className="text-[11px] text-slate-600 mt-1">achievement<br/>recognition</div>
-                </div>
-              </div>
+            <div className="my-6 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982759/5.png"
+                alt="Schwartz Values"
+                className="max-h-[360px] w-auto mx-auto object-contain"
+              />
             </div>
 
             <p className="page-lead-text text-xs text-slate-600">
@@ -1566,22 +1337,12 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6 Hanging Clip Badges matching PDF Page 20 */}
-            <div className="grid grid-cols-6 gap-2 my-4 text-center">
-              {[
-                { name: "MECHANICAL", color: "bg-[#D1FAE5] border-emerald-300 text-emerald-900" },
-                { name: "LOGICAL", color: "bg-[#D1FAE5] border-emerald-300 text-emerald-900" },
-                { name: "VERBAL", color: "bg-[#FEF3C7] border-amber-300 text-amber-900" },
-                { name: "VOCABULARY", color: "bg-[#CCFBF1] border-teal-300 text-teal-900" },
-                { name: "NUMERICAL", color: "bg-[#D1FAE5] border-emerald-300 text-emerald-900" },
-                { name: "SPATIAL", color: "bg-[#FEF3C7] border-amber-300 text-amber-900" },
-              ].map((c) => (
-                <div key={c.name} className="flex flex-col items-center">
-                  <div className="w-2.5 h-4 bg-slate-400 rounded-t-full -mb-1 z-10"></div>
-                  <div className={`w-full py-2.5 px-1 rounded-lg border text-[10px] font-black uppercase leading-tight shadow-xs ${c.color}`}>
-                    {c.name}<br/>APTITUDE
-                  </div>
-                </div>
-              ))}
+            <div className="my-4 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982779/6.png"
+                alt="Aptitude Categories"
+                className="max-h-[140px] w-auto mx-auto object-contain"
+              />
             </div>
 
             {/* 4 Summary Cards matching PDF */}
@@ -1842,31 +1603,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Counsellor + 5 Node Map Graphic matching PDF Page 26 */}
-            <div className="my-4 p-4 bg-[#F8FAFC] border border-slate-200 rounded-2xl flex items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="text-4xl">👩‍💼</div>
-                <div className="bg-[#5C768D] text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider">
-                  YOUR<br/>TOP<br/>CLUSTERS
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-1.5 text-right">
-                <div className="inline-block bg-white border border-emerald-500 text-emerald-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                  BUSINESS & ENTREPRENEURSHIP
-                </div><br/>
-                <div className="inline-block bg-white border border-blue-500 text-blue-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                  HOSPITALITY
-                </div><br/>
-                <div className="inline-block bg-white border border-purple-500 text-purple-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                  SPORTS & ATHLETICS
-                </div><br/>
-                <div className="inline-block bg-white border border-amber-500 text-amber-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                  GOVERNMENT, LAW & PUBLIC POLICY
-                </div><br/>
-                <div className="inline-block bg-white border border-teal-500 text-teal-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                  PERSONAL SERVICES & FREELANCE
-                </div>
-              </div>
+            <div className="my-4 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982787/7.png"
+                alt="Top Clusters Map"
+                className="max-h-[160px] w-auto mx-auto object-contain"
+              />
             </div>
 
             {/* Top 1 Cluster Card */}
@@ -2051,42 +1793,12 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6-Lightbulb Study Roadmap matching PDF Page 29 */}
-            <div className="mt-8">
-              <strong className="block text-sm font-bold text-slate-900 mb-4">
-                A general route from where you are now
-              </strong>
-              <div className="roadmap-container">
-                <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon">💡</div>
-                  <div className="roadmap-title">Class 8–10</div>
-                  <div className="roadmap-sub">Build basics</div>
-                </div>
-                <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon bg-amber-100 border-amber-400">💡</div>
-                  <div className="roadmap-title">Stream Choice</div>
-                  <div className="roadmap-sub">Class 11 onward</div>
-                </div>
-                <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon">💡</div>
-                  <div className="roadmap-title">Entrance Prep</div>
-                  <div className="roadmap-sub">If required</div>
-                </div>
-                <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon bg-amber-100 border-amber-400">💡</div>
-                  <div className="roadmap-title">Degree / Course</div>
-                  <div className="roadmap-sub">College years</div>
-                </div>
-                <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon bg-amber-100 border-amber-400">💡</div>
-                  <div className="roadmap-title">Internship</div>
-                  <div className="roadmap-sub">Real experience</div>
-                </div>
-                <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon">💡</div>
-                  <div className="roadmap-title">Career</div>
-                  <div className="roadmap-sub">Your Destination</div>
-                </div>
-              </div>
+            <div className="mt-6 mb-4 flex justify-center items-center">
+              <img
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982823/8.png"
+                alt="Study & Pathway Roadmap"
+                className="max-h-[160px] w-full mx-auto object-contain"
+              />
             </div>
 
             <div className="mt-6 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 leading-relaxed">
@@ -2170,15 +1882,11 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-31">
           {/* Header with Logo */}
           <div className="flex justify-end pt-1 pr-1 mb-4">
-            <div className="flex items-center gap-2">
-              <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-                <circle cx="21" cy="7" r="3" fill="#9C2A1F" />
-                <path d="M19 12C16 13 14 16 13 20L10 28" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M16 14L22 17L26 15" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M14 19L19 23L23 29" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-              <div className="font-extrabold text-xs tracking-wider text-[#9C2A1F] leading-tight">CAREER<br/>MAP</div>
-            </div>
+            <img
+              src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789970133/logo_white.png"
+              alt="CareerMap Logo"
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           <div className="my-auto space-y-5">
