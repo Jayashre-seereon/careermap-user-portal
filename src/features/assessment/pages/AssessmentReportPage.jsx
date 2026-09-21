@@ -462,9 +462,9 @@ export default function AssessmentReportPage() {
           {/* Center Graphic: 3D Illustration matching PDF */}
           <div className="my-auto py-6 text-center flex justify-center items-center z-10">
             <img
-              src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982830/9.png"
+              src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789984982/9.png"
               alt="Career Assessment 3D Brain"
-              className="max-h-[300px] w-auto mx-auto object-contain drop-shadow-md"
+              className="max-h-[320px] w-auto mx-auto object-contain drop-shadow-md"
             />
           </div>
 
@@ -499,7 +499,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-2">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -544,7 +544,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-3">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -575,7 +575,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-4">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -606,7 +606,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-5">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-4">
+          <div className="pdf-page-body space-y-4">
             {/* 01 ENTERPRISING */}
             <div className="detail-card-row">
               <div className="detail-card-left-badge">
@@ -665,7 +665,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-6">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-4">
+          <div className="pdf-page-body space-y-4">
             {/* 04 REALISTIC */}
             <div className="detail-card-row">
               <div className="detail-card-left-badge">
@@ -724,7 +724,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-7">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="score-rep-banner">
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
@@ -781,7 +781,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-8">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header green">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -815,7 +815,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-9">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-3.5">
+          <div className="pdf-page-body space-y-3.5">
             {[
               { num: "01", name: "EMOTIONAL STABILITY", band: "HIGH", text: "You stay calm and steady under pressure — a major asset for high-stakes fields like defence, medicine, aviation and competitive exams." },
               { num: "02", name: "OPENNESS", band: "MODERATE", text: "You balance curiosity with practicality — open to new ideas, while valuing what already works." },
@@ -851,7 +851,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-10">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="score-rep-banner green">
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
@@ -898,7 +898,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-11">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header lavender">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -932,7 +932,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-12">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-5">
             <div className="detail-card-row">
               <div className="detail-card-left-badge lavender">
                 <span className="detail-card-num-circle">01</span>
@@ -973,7 +973,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-13">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-5">
             <div className="detail-card-row">
               <div className="detail-card-left-badge lavender">
                 <span className="detail-card-num-circle">03</span>
@@ -1014,7 +1014,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-14">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="score-rep-banner lavender">
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
@@ -1089,7 +1089,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-15">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header green">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1107,7 +1107,7 @@ export default function AssessmentReportPage() {
             {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
             <div className="my-6 flex justify-center items-center">
               <img
-                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982759/5.png"
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789984731/copy_of_5.png"
                 alt="Schwartz Values"
                 className="max-h-[360px] w-auto mx-auto object-contain"
               />
@@ -1127,7 +1127,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-16">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-4">
+          <div className="pdf-page-body space-y-4">
             <div className="title-pill-header green">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1169,7 +1169,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-17">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="score-rep-banner green">
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
@@ -1213,7 +1213,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-18">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header gold">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1253,7 +1253,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-19">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-5">
             <div className="detail-card-row">
               <div className="detail-card-left-badge gold">
                 <span className="detail-card-num-circle">02</span>
@@ -1321,7 +1321,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-20">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header red">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1339,9 +1339,9 @@ export default function AssessmentReportPage() {
             {/* 6 Hanging Clip Badges matching PDF Page 20 */}
             <div className="my-4 flex justify-center items-center">
               <img
-                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982779/6.png"
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789984786/copy_of_6.png"
                 alt="Aptitude Categories"
-                className="max-h-[140px] w-auto mx-auto object-contain"
+                className="max-h-[160px] w-auto mx-auto object-contain"
               />
             </div>
 
@@ -1383,7 +1383,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-21">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
                 <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">NUMERICAL APTITUDE</div>
@@ -1429,7 +1429,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-22">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-5">
             <div className="detail-card-row">
               <div className="detail-card-left-badge red">
                 <span className="detail-card-num-circle">02</span>
@@ -1470,7 +1470,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-23">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-5">
             <div className="detail-card-row">
               <div className="detail-card-left-badge red">
                 <span className="detail-card-num-circle">04</span>
@@ -1511,7 +1511,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-24">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="detail-card-row">
               <div className="detail-card-left-badge red">
                 <span className="detail-card-num-circle">06</span>
@@ -1537,7 +1537,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-25">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="score-rep-banner red">
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
@@ -1587,7 +1587,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-26">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="title-pill-header gold">
               <div className="title-pill-icon-circle">
                 <div className="w-2 h-2 rounded-full bg-white"></div>
@@ -1603,11 +1603,11 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Counsellor + 5 Node Map Graphic matching PDF Page 26 */}
-            <div className="my-4 flex justify-center items-center">
+            <div className="my-3 flex justify-center items-center">
               <img
                 src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982787/7.png"
                 alt="Top Clusters Map"
-                className="max-h-[160px] w-auto mx-auto object-contain"
+                className="max-h-[260px] md:max-h-[290px] w-full max-w-xl mx-auto object-contain drop-shadow-sm"
               />
             </div>
 
@@ -1645,7 +1645,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-27">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-4">
             {/* Cluster #2 */}
             <div className="cluster-match-card">
               <div className="cluster-match-card-header rose">
@@ -1700,7 +1700,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-28">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto space-y-6">
+          <div className="pdf-page-body space-y-4">
             {/* Cluster #4 */}
             <div className="cluster-match-card">
               <div className="cluster-match-card-header green">
@@ -1755,7 +1755,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-29">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="score-rep-banner gold" style={{ fontSize: "1.05rem" }}>
               YOUR DIRECTION: STUDY & PATHWAY ADVICE
             </div>
@@ -1793,11 +1793,11 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6-Lightbulb Study Roadmap matching PDF Page 29 */}
-            <div className="mt-6 mb-4 flex justify-center items-center">
+            <div className="mt-4 mb-3 flex justify-center items-center">
               <img
-                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789982823/8.png"
+                src="https://res.cloudinary.com/tj6xmmar/image/upload/v1789984592/copy_of_8.png"
                 alt="Study & Pathway Roadmap"
-                className="max-h-[160px] w-full mx-auto object-contain"
+                className="max-h-[220px] w-full max-w-xl mx-auto object-contain drop-shadow-sm"
               />
             </div>
 
@@ -1815,7 +1815,7 @@ export default function AssessmentReportPage() {
         <div className="pdf-page" id="page-30">
           <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="my-auto">
+          <div className="pdf-page-body">
             <div className="text-xl font-black text-slate-900 uppercase">
               YOUR COMPLETE CAREER MAP
             </div>
@@ -1889,7 +1889,7 @@ export default function AssessmentReportPage() {
             />
           </div>
 
-          <div className="my-auto space-y-5">
+          <div className="pdf-page-body space-y-5">
             <div className="relative">
               <h2 className="text-2xl font-black text-slate-900 uppercase leading-tight">
                 DISCOVER YOUR DIRECTION.<br/>
