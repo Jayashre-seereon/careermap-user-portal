@@ -15,8 +15,9 @@ import ForgotPasswordPage from "../features/auth/pages/ForgotPasswordPage";
 import ResetPasswordPage from "../features/auth/pages/ResetPasswordPage";
 
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
-import AssessmentPage from "../features/assessment/pages/AssessmentPage";
-import PsychometricTestPage from "../features/assessment/pages/PsychometricTestPage";
+import AssessmentLandingPage from "../features/assessment/pages/AssessmentLandingPage";
+import AssessmentTestPage from "../features/assessment/pages/AssessmentTestPage";
+import AssessmentReportPage from "../features/assessment/pages/AssessmentReportPage";
 import LibraryPage from "../features/library/pages/LibraryPage";
 import LearnPage from "../features/learn/pages/LearnPage";
 import NewsletterPage from "../features/newsletter/pages/NewsletterPage";
@@ -57,6 +58,9 @@ export const router = createBrowserRouter([
       { path: "/promo", element: <PromoPage /> },
       { path: "/checkout", element: <CheckoutPage /> },
       { path: "/payment-success", element: <PaymentSuccessPage /> },
+      { path: "/assessment", element: <Navigate to="/app/assessment" replace /> },
+      { path: "/assessment/attempt/:attemptId", element: <Navigate to="/app/assessment/attempt/:attemptId" replace /> },
+      { path: "/assessment/attempt/:attemptId/result", element: <Navigate to="/app/assessment/attempt/:attemptId/result" replace /> },
       {
         element: <RequireAuth />,
         children: [
@@ -66,8 +70,11 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <Navigate to="/app/dashboard" replace /> },
               { path: "dashboard", element: <DashboardPage /> },
-              { path: "assessment", element: <AssessmentPage /> },
-              { path: "psychometric-test", element: <PsychometricTestPage /> },
+              { path: "assessment", element: <AssessmentLandingPage /> },
+              { path: "assessment/attempt/:attemptId", element: <AssessmentTestPage /> },
+              { path: "assessment/attempt/:attemptId/result", element: <AssessmentReportPage /> },
+              { path: "assessment/result/:attemptId", element: <AssessmentReportPage /> },
+              { path: "psychometric-test", element: <Navigate to="/app/assessment" replace /> },
               { path: "library", element: <LibraryPage /> },
               { path: "learn", element: <LearnPage /> },
               { path: "newsletter", element: <NewsletterPage /> },
