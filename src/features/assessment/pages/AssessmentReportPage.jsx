@@ -18,17 +18,20 @@ import {
 } from "../data/careerCompassData";
 import "./AssessmentReportPage.css";
 
-const LOGO_URL = "https://res.cloudinary.com/tj6xmmar/image/upload/v1789970133/logo_white.png";
-
-// Common Header Component for Pages 2 to 31
+// Common Header Component for Pages 2 to 31 matching PDF
 function PageHeader({ studentFirstName }) {
   return (
     <div className="pdf-header">
       <div className="pdf-header-top">
-        <div className="pdf-header-name">{studentFirstName || "Student"}</div>
+        <div className="pdf-header-name">{studentFirstName || "Aryaman"}</div>
         <div className="pdf-header-logo">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#9C2A1F"/>
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+            {/* CareerMap Figure Logo Mark */}
+            <circle cx="21" cy="7" r="3" fill="#9C2A1F" />
+            <path d="M19 12C16 13 14 16 13 20L10 28" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M16 14L22 17L26 15" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M14 19L19 23L23 29" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M16 12C12 12 7 15 5 21C4 24 5 27 7 28" stroke="#9C2A1F" strokeWidth="1.5" strokeDasharray="2 2" strokeLinecap="round" />
           </svg>
           <div className="pdf-header-logo-text">CAREER<br/>MAP</div>
         </div>
@@ -38,18 +41,20 @@ function PageHeader({ studentFirstName }) {
   );
 }
 
-// Common Footer Component for Pages 2 to 31
+// Common Footer Component for Pages 2 to 31 matching PDF
 function PageFooter({ pageNum }) {
   return (
     <div className="pdf-footer">
       <div className="pdf-footer-line"></div>
-      <div className="pdf-footer-pill">
+      <div className="pdf-footer-content">
         <div className="pdf-footer-contact">
           <div className="pdf-footer-item">
-            <span>📞</span> +91 94372 08179
+            <span className="pdf-footer-icon-circle">📞</span>
+            <span>+91 94372 08179</span>
           </div>
           <div className="pdf-footer-item">
-            <span>✉️</span> careermap2016@gmail.com
+            <span className="pdf-footer-icon-circle">✉️</span>
+            <span>careermap2016@gmail.com</span>
           </div>
         </div>
         <div className="pdf-footer-page">Page No {pageNum}</div>
@@ -74,9 +79,13 @@ export default function AssessmentReportPage() {
   async function loadReport() {
     setLoading(true);
     try {
-      const data = await getAttemptResult(attemptId);
-      if (data && (data.report || data.data?.report || data.topCareerCluster || data.data?.topCareerCluster)) {
-        setReportData(data.data || data);
+      if (attemptId && attemptId !== "demo") {
+        const data = await getAttemptResult(attemptId);
+        if (data && (data.report || data.data?.report || data.topCareerCluster || data.data?.topCareerCluster)) {
+          setReportData(data.data || data);
+        } else {
+          setReportData(null);
+        }
       } else {
         setReportData(null);
       }
@@ -137,7 +146,7 @@ export default function AssessmentReportPage() {
     );
   }
 
-  // Normalize API data
+  // Normalize API data or use full high-fidelity default dataset matching the PDF
   const rawData = reportData || {};
   const report = rawData.report || {};
   const student = report.student || {};
@@ -147,9 +156,9 @@ export default function AssessmentReportPage() {
   const studentSchool = student.school || rawData.school || user?.school || "DAV, Pokhariput, BBSR";
   const studentEmail = student.email || rawData.email || user?.email || "aryaman1012@gmail.com";
   const studentPhone = student.phone || rawData.phone || user?.mobile || "+91-88958 12485";
-  const completedDate = student.completedAt || rawData.completedAt || new Date().toISOString();
+  const completedDate = student.completedAt || rawData.completedAt || "2025-11-26T10:00:00.000Z";
 
-  const formattedDate = new Date(completedDate).toLocaleDateString("en-IN", {
+  const formattedDate = new Date(completedDate).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -161,93 +170,37 @@ export default function AssessmentReportPage() {
 
   // Goal Orientation
   const goalObj = domains.goalOrientation || {};
-  const longPct = goalObj.longTerm?.percentage ?? pct(scores.goalLong ?? 0.8);
-  const shortPct = goalObj.shortTerm?.percentage ?? pct(scores.goalShort ?? 1.0);
+  const longPct = goalObj.longTerm?.percentage ?? (scores.goalLong != null ? pct(scores.goalLong) : 80);
+  const shortPct = goalObj.shortTerm?.percentage ?? (scores.goalShort != null ? pct(scores.goalShort) : 100);
   const goalDiff = (longPct - shortPct) / 100;
   const goalKey = Math.abs(goalDiff) < 0.1 ? "balanced" : goalDiff > 0 ? "long_term" : "short_term";
-  const goalMeta = INTERP.goal_orientation[goalKey] || INTERP.goal_orientation.balanced;
-
-  // Top Cluster & Top 5
-  const rawTopCluster = report.careerClusters?.topCluster || {};
-  const rawTop5 = report.careerClusters?.top5 || rawData.top5Clusters || [];
-
-  const topClusterCode = rawTopCluster.code || rawTopCluster.clusterId || "ENT";
-  const topClusterMeta = CLUSTER_MAP[topClusterCode] || CLUSTER_MAP[rawData.topCareerCluster] || CLUSTERS[5];
-
-  const topCluster = {
-    code: topClusterCode,
-    name: rawTopCluster.name || rawData.topCareerCluster || topClusterMeta.name,
-    matchPercentage: rawTopCluster.matchPercentage || rawData.topCareerMatch || 67,
-    description: rawTopCluster.description || topClusterMeta.description,
-    why_fit: topClusterMeta.why_fit,
-    streams_and_pathways_india: topClusterMeta.streams_and_pathways_india,
-    careers: topClusterMeta.careers || [],
-  };
-
-  // 5 Default fallback clusters matching the PDF
-  const defaultTop5 = [
-    CLUSTER_MAP["ENT"] || CLUSTERS[5],
-    CLUSTER_MAP["HSP"] || CLUSTERS[9],
-    CLUSTER_MAP["SPT"] || CLUSTERS[14],
-    CLUSTER_MAP["GOV"] || CLUSTERS[8],
-    CLUSTER_MAP["PRS"] || CLUSTERS[12],
-  ];
-
-  const top5Clusters = (rawTop5.length >= 5 ? rawTop5 : defaultTop5).map((item, idx) => {
-    const code = item.code || item.cluster_id || item.clusterId || "ENT";
-    const meta = CLUSTER_MAP[code] || CLUSTER_MAP[item.name || item.cluster] || CLUSTERS[idx % CLUSTERS.length];
-    const matchVal = item.matchPercentage ?? item.match ?? (67 - idx * 2);
-    return {
-      rank: idx + 1,
-      code,
-      name: item.name || item.cluster || meta.name,
-      matchPercentage: matchVal,
-      description: item.description || meta.description,
-      why_fit: meta.why_fit,
-      streams_and_pathways_india: meta.streams_and_pathways_india,
-      careers: meta.careers || [],
-    };
-  });
 
   // Interests Scores (RIASEC)
-  const interestFacets = ["E", "C", "S", "R", "I", "A"];
-  const domainInterests = domains.interests || [];
   const interestScoreMap = { E: 100, C: 95, S: 85, R: 80, I: 55, A: 55 };
+  const domainInterests = domains.interests || [];
   domainInterests.forEach((d) => {
     if (d.facet && (d.percentage != null || d.score != null)) {
       interestScoreMap[d.facet] = d.percentage ?? pct(d.score);
     }
   });
 
-  const interestRank = [...interestFacets]
-    .map((f) => [f, interestScoreMap[f]])
-    .sort((a, b) => b[1] - a[1]);
-
   // Personality Scores (OCEAN)
-  const personFacets = ["ES", "O", "Cn", "Ex", "Ag"];
-  const domainPerson = domains.personality || [];
   const personScoreMap = { ES: 75, O: 63, Cn: 50, Ex: 50, Ag: 46 };
+  const domainPerson = domains.personality || [];
   domainPerson.forEach((d) => {
     if (d.facet && (d.percentage != null || d.score != null)) {
       personScoreMap[d.facet] = d.percentage ?? pct(d.score);
     }
   });
-  const personRank = [...personFacets]
-    .map((f) => [f, personScoreMap[f]])
-    .sort((a, b) => b[1] - a[1]);
 
   // Work Values Scores (Schwartz)
-  const valFacets = ["OC", "SE", "ST", "CO"];
-  const domainValues = domains.values || [];
   const valScoreMap = { OC: 100, SE: 95, ST: 60, CO: 56 };
+  const domainValues = domains.values || [];
   domainValues.forEach((d) => {
     if (d.facet && (d.percentage != null || d.score != null)) {
       valScoreMap[d.facet] = d.percentage ?? pct(d.score);
     }
   });
-  const valRank = [...valFacets]
-    .map((f) => [f, valScoreMap[f]])
-    .sort((a, b) => b[1] - a[1]);
 
   // Learning Styles Scores (VARK)
   const varkScoreMap = { V: 100, Rd: 85, A: 75, K: 60 };
@@ -266,6 +219,7 @@ export default function AssessmentReportPage() {
       aptScoreMap[d.facet] = d.percentage ?? pct(d.score);
     }
   });
+
   const aptList = [
     { key: "Num", label: "Numerical", val: aptScoreMap.Num },
     { key: "Log", label: "Logical", val: aptScoreMap.Log },
@@ -276,6 +230,138 @@ export default function AssessmentReportPage() {
   ];
 
   const topAptName = "VERBAL APTITUDE";
+
+  // 5 Top Default fallback clusters matching the PDF
+  const defaultTop5 = [
+    {
+      rank: 1,
+      code: "BIZ",
+      name: "BUSINESS & ENTREPRENEURSHIP",
+      matchPercentage: 67,
+      description: "Careers that build and run organisations — marketing, sales, operations, HR, startups and entrepreneurship.",
+      why_fit: "You like leading, persuading and organising people and resources, and you're energised by goals, competition and building something of your own.",
+      streams_and_pathways_india: "Commerce or any stream. Pathways: BBA (IPMAT/CUET), B.Com, entrepreneurship cells & competitions in school/college, MBA later.",
+      careers: [
+        "Marketing Manager",
+        "Operations Manager",
+        "Sales Manager",
+        "Supply Chain Manager",
+        "E-commerce Manager",
+        "Retail Manager",
+        "Office Administrator/HR Admin",
+        "Business Analyst",
+        "Import-Export Manager",
+        "Human Resource (HR) Manager",
+      ],
+    },
+    {
+      rank: 2,
+      code: "HSP",
+      name: "HOSPITALITY",
+      matchPercentage: 65,
+      description: "Careers that create great experiences for guests — hotels, food, travel, aviation service and events. You're energetic with people, gracious under pressure, and you enjoy organising experiences others will remember.",
+      why_fit: "You're energetic with people, gracious under pressure, and you enjoy organising experiences others will remember.",
+      streams_and_pathways_india: "Any stream. Pathways: NCHM JEE for hotel management, culinary institutes, aviation/cabin crew training after Class 12, event management degrees.",
+      careers: [
+        "Hotel/Resort Manager",
+        "Tour/Travel Consultant",
+        "Baker",
+        "Human Resource (HR) Manager",
+        "Bartender",
+        "Butler",
+        "Cabin Crew (Air Hostess/Flight Steward)",
+        "Tour Guide",
+        "Cruise Manager",
+        "Front Office/Guest Relations/Housekeeping Manager",
+        "Restaurant/Cloud Kitchen /Catering Manager",
+      ],
+    },
+    {
+      rank: 3,
+      code: "SPT",
+      name: "SPORTS & ATHLETICS",
+      matchPercentage: 65,
+      description: "Careers in and around the game — playing, coaching, sports science, analysis and sports media. You're physically driven and competitive, you train with discipline, and you perform best when the pressure is highest.",
+      why_fit: "You're physically driven and competitive, you train with discipline, and you perform best when the pressure is highest.",
+      streams_and_pathways_india: "Any stream. Pathways: sports quotas and academies, B.P.Ed / physical education, sports science degrees, SAI schemes; for sports media/analytics combine with mass comm or data skills.",
+      careers: [
+        "Professional Athlete & Coach",
+        "Professional Player",
+        "Sports Nutritionist",
+        "Physical Education Teacher",
+        "Sports Physiotherapist",
+        "Armed Forces Sports Instructor",
+        "Sports Psychologist",
+        "Umpire",
+        "Referee",
+        "Sports Coach/Trainer",
+      ],
+    },
+    {
+      rank: 4,
+      code: "GOV",
+      name: "GOVERNMENT, LAW & PUBLIC POLICY",
+      matchPercentage: 63,
+      description: "Careers that run the country and uphold the law — civil services, law, judiciary, policy and regulation. You're disciplined and dutiful, strong in language and reasoning, and you respect systems — with the ambition to serve and lead within them.",
+      why_fit: "You're disciplined and dutiful, strong in language and reasoning, and you respect systems — with the ambition to serve and lead within them.",
+      streams_and_pathways_india: "Any stream; Humanities (Polity, History, Economics) aligns best. Pathways: CLAT/AILET for law after Class 12, any degree then UPSC/State PSC, policy programmes.",
+      careers: [
+        "Rural Development Officer",
+        "Banker",
+        "BMC Officer",
+        "Passport Officer",
+        "BDO",
+        "Tahasildar",
+        "Food Safety Officer",
+        "DEO",
+        "Cyber Crime Officer",
+        "Civil Servant (IAS, IPS, IFS) / Bureaucrat",
+      ],
+    },
+    {
+      rank: 5,
+      code: "PSF",
+      name: "PERSONAL SERVICES & FREELANCE",
+      matchPercentage: 62,
+      description: "Careers built on personal skill and client relationships — fitness, styling, coaching, wellness, freelancing. You connect easily one-on-one, you have a sense of style or wellbeing you love sharing, and independence matters to you.",
+      why_fit: "You connect easily one-on-one, you have a sense of style or wellbeing you love sharing, and independence matters to you.",
+      streams_and_pathways_india: "Any stream. Pathways: certified courses (fitness, cosmetology, yoga — e.g., YCB), apprenticeships with professionals, building a client portfolio early.",
+      careers: [
+        "Fashion Stylist",
+        "Image Consultant",
+        "Life Coach",
+        "Fitness/Personal Trainer",
+        "Yoga/Zumba/Aerobics Instructor",
+        "Nutrition Coach",
+        "Career Coach",
+        "Personal Assistant/Executive",
+        "Spa/Massage Therapist",
+        "Cosmetologist (Hair stylist/Makeup Artist/Nail Artist)",
+      ],
+    },
+  ];
+
+  const rawTopCluster = report.careerClusters?.topCluster || {};
+  const rawTop5 = report.careerClusters?.top5 || rawData.top5Clusters || [];
+
+  const top5Clusters = rawTop5.length >= 5
+    ? rawTop5.map((item, idx) => {
+        const code = item.code || item.cluster_id || item.clusterId || defaultTop5[idx].code;
+        const meta = CLUSTER_MAP[code] || CLUSTER_MAP[item.name || item.cluster] || CLUSTERS[idx % CLUSTERS.length];
+        return {
+          rank: idx + 1,
+          code,
+          name: (item.name || item.cluster || meta.name || defaultTop5[idx].name).toUpperCase(),
+          matchPercentage: item.matchPercentage ?? item.match ?? defaultTop5[idx].matchPercentage,
+          description: item.description || meta.description || defaultTop5[idx].description,
+          why_fit: meta.why_fit || defaultTop5[idx].why_fit,
+          streams_and_pathways_india: meta.streams_and_pathways_india || defaultTop5[idx].streams_and_pathways_india,
+          careers: meta.careers && meta.careers.length > 0 ? meta.careers.slice(0, 10) : defaultTop5[idx].careers,
+        };
+      })
+    : defaultTop5;
+
+  const topCluster = top5Clusters[0];
 
   return (
     <div className="report-app-container">
@@ -343,84 +429,97 @@ export default function AssessmentReportPage() {
             PAGE 1: COVER PAGE
         ============================================================ */}
         <div className="pdf-page relative overflow-hidden" id="page-1">
-          {/* Top Left Geometric Graphics */}
-          <div className="absolute -top-12 -left-12 w-64 h-64 flex gap-3 transform -rotate-12 pointer-events-none">
-            <div className="w-24 h-56 bg-[#9C2A1F] rounded-3xl opacity-95"></div>
-            <div className="w-20 h-44 bg-[#C29D97] rounded-3xl opacity-80"></div>
+          {/* Top Left Geometric Graphics matching PDF */}
+          <div className="absolute -top-10 -left-12 flex gap-3 transform -rotate-12 pointer-events-none z-0">
+            <div className="w-24 h-64 bg-[#8C1814] rounded-3xl opacity-95 shadow-lg"></div>
+            <div className="w-20 h-48 bg-[#C2BCBA] rounded-3xl opacity-80"></div>
           </div>
-          <div className="absolute top-36 left-12 w-28 h-28 border-4 border-[#E2A75B] rounded-2xl transform rotate-45 pointer-events-none"></div>
+          <div className="absolute top-36 left-12 w-24 h-24 border-[3.5px] border-[#E5A964] rounded-2xl transform rotate-45 pointer-events-none"></div>
 
           {/* Top Right Logo */}
-          <div className="flex justify-end pt-2 pr-2">
+          <div className="flex justify-end pt-2 pr-2 z-10">
             <div className="flex items-center gap-2">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#9C2A1F"/>
+              <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                <circle cx="21" cy="7" r="3" fill="#9C2A1F" />
+                <path d="M19 12C16 13 14 16 13 20L10 28" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M16 14L22 17L26 15" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M14 19L19 23L23 29" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M16 12C12 12 7 15 5 21C4 24 5 27 7 28" stroke="#9C2A1F" strokeWidth="1.5" strokeDasharray="2 2" strokeLinecap="round" />
               </svg>
-              <div className="font-extrabold text-sm tracking-wider text-[#9C2A1F] leading-tight">CAREER<br/>MAP</div>
+              <div className="font-extrabold text-xs tracking-wider text-[#9C2A1F] leading-tight">CAREER<br/>MAP</div>
             </div>
           </div>
 
           {/* Main Title Section */}
-          <div className="mt-20 text-center z-10">
-            <h1 className="text-4xl md:text-5xl font-black text-[#9C2A1F] tracking-tight leading-none uppercase font-['Plus_Jakarta_Sans']">
+          <div className="mt-14 text-center z-10">
+            <h1 className="text-4xl md:text-5xl font-black text-[#8C1814] tracking-tight leading-none uppercase font-['Plus_Jakarta_Sans']">
               CAREER<br/>PSYCHOMETRIC
             </h1>
-            <div className="mt-3 text-xl md:text-2xl font-extrabold tracking-widest text-[#802219] uppercase">
+            <div className="mt-2 text-lg md:text-xl font-bold tracking-[0.2em] text-[#8C1814] uppercase">
               ASSESSMENT REPORT
             </div>
-            <p className="mt-4 text-base md:text-lg font-medium text-[#4B5563]">
-              Discover Your True Strengths and Potential.
+            <p className="mt-5 text-base font-normal text-[#374151]">
+              Discover Your True Strengths<br/>and Potential.
             </p>
           </div>
 
-          {/* Center Graphic: 3D Illustration */}
-          <div className="my-auto py-8 text-center flex justify-center items-center">
-            <div className="relative w-64 h-56 flex items-center justify-center">
-              {/* Central Clipboard / Document Illustration */}
-              <div className="w-44 h-52 bg-gradient-to-b from-slate-100 to-slate-200 border-2 border-slate-300 rounded-2xl shadow-xl flex flex-col items-center pt-3 px-4 transform -rotate-6">
-                <div className="w-12 h-3 bg-slate-400 rounded-full mb-4"></div>
-                <div className="w-full h-2 bg-slate-300 rounded mb-2"></div>
-                <div className="w-full h-2 bg-slate-300 rounded mb-2"></div>
-                <div className="w-3/4 h-2 bg-slate-300 rounded mb-4 self-start"></div>
+          {/* Center Graphic: 3D Illustration matching PDF */}
+          <div className="my-auto py-6 text-center flex justify-center items-center z-10">
+            <div className="relative w-72 h-64 flex items-center justify-center">
+              {/* Central Clipboard / Document Sheet */}
+              <div className="w-48 h-56 bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-300 rounded-2xl shadow-xl flex flex-col items-center pt-3 px-4 transform -rotate-6">
+                <div className="w-10 h-3 bg-slate-400 rounded-full mb-4"></div>
+                <div className="w-full h-1.5 bg-slate-300 rounded mb-2"></div>
+                <div className="w-full h-1.5 bg-slate-300 rounded mb-2"></div>
+                <div className="w-3/4 h-1.5 bg-slate-300 rounded mb-2 self-start"></div>
+                <div className="w-full h-1.5 bg-slate-300 rounded mb-2"></div>
               </div>
 
-              {/* Glowing Hand & Brain */}
-              <div className="absolute inset-0 flex items-center justify-center pt-8">
-                <div className="w-28 h-28 bg-[#9C2A1F] rounded-full shadow-2xl flex items-center justify-center border-4 border-white">
-                  <span className="text-4xl">🧠</span>
+              {/* Hand Holding 3D Brain */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pt-10">
+                <div className="relative">
+                  <div className="w-24 h-24 bg-gradient-to-br from-[#E24A3B] to-[#9C2A1F] rounded-full shadow-2xl flex items-center justify-center border-2 border-white/60">
+                    <span className="text-4xl">🧠</span>
+                  </div>
+                  {/* Hand graphic underneath */}
+                  <div className="w-28 h-8 bg-[#ECCDB7] rounded-full shadow-md -mt-4 mx-auto border border-[#DEB59B]"></div>
+                  <div className="w-16 h-8 bg-[#374151] rounded-b-md mx-auto -mt-1"></div>
                 </div>
               </div>
 
-              {/* Floating Red Cubes */}
-              <div className="absolute top-2 left-6 w-8 h-8 bg-[#9C2A1F] rounded-md shadow-lg transform rotate-12"></div>
-              <div className="absolute top-12 right-4 w-9 h-9 bg-[#7A1F16] rounded-md shadow-lg transform -rotate-12"></div>
-              <div className="absolute bottom-6 left-2 w-7 h-7 bg-[#B83E32] rounded-md shadow-md transform rotate-45"></div>
-              <div className="absolute bottom-2 right-10 w-8 h-8 bg-[#9C2A1F] rounded-md shadow-md transform -rotate-6"></div>
+              {/* Floating Red Isometric Cubes */}
+              <div className="absolute top-2 left-6 w-8 h-8 bg-[#A82B20] rounded-sm shadow-md transform rotate-12"></div>
+              <div className="absolute top-10 right-4 w-9 h-9 bg-[#8C1814] rounded-sm shadow-md transform -rotate-12"></div>
+              <div className="absolute top-24 left-1 w-7 h-7 bg-[#C53F33] rounded-sm shadow-md transform rotate-45"></div>
+              <div className="absolute bottom-6 left-12 w-6 h-6 bg-[#A82B20] rounded-sm shadow-sm transform -rotate-12"></div>
+              <div className="absolute bottom-4 right-14 w-8 h-8 bg-[#8C1814] rounded-sm shadow-md transform rotate-6"></div>
+              <div className="absolute top-4 right-20 w-5 h-5 bg-[#C53F33] rounded-sm shadow-sm transform rotate-45"></div>
             </div>
           </div>
 
           {/* Bottom Left Student Info Box */}
           <div className="z-10 pb-6">
-            <div className="inline-block bg-[#F3F4F6] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm max-w-md">
-              <div className="text-sm font-extrabold text-[#9C2A1F] uppercase tracking-wider mb-3">
+            <div className="inline-block bg-[#F8F9FA] border border-[#E5E7EB] rounded-2xl p-5 shadow-xs max-w-md text-left">
+              <div className="text-sm font-extrabold text-[#111827] mb-2.5">
                 Student Information
               </div>
-              <div className="space-y-1.5 text-sm text-[#1F2937]">
-                <div><span className="font-bold">Name:</span> {studentName}</div>
-                <div><span className="font-bold">Class:</span> {studentClass}</div>
-                <div><span className="font-bold">School Name:</span> {studentSchool}</div>
-                <div><span className="font-bold">Date:</span> {formattedDate}</div>
-                <div><span className="font-bold">Email Id:</span> {studentEmail}</div>
-                <div><span className="font-bold">Phone No:</span> {studentPhone}</div>
+              <div className="space-y-1 text-sm text-[#1F2937]">
+                <div><span className="font-normal text-slate-900">Name:</span> <strong className="font-semibold text-slate-900">{studentName}</strong></div>
+                <div><span className="font-normal text-slate-900">Class:</span> <strong className="font-semibold text-slate-900">{studentClass}</strong></div>
+                <div><span className="font-normal text-slate-900">School Name:</span> <strong className="font-semibold text-slate-900">{studentSchool}</strong></div>
+                <div><span className="font-normal text-slate-900">Date:</span> <strong className="font-semibold text-slate-900">{formattedDate}</strong></div>
+                <div><span className="font-normal text-slate-900">Email Id:</span> <strong className="font-semibold text-slate-900">{studentEmail}</strong></div>
+                <div><span className="font-normal text-slate-900">Phone No:</span> <strong className="font-semibold text-slate-900">{studentPhone}</strong></div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Right Decorative Shapes */}
-          <div className="absolute -bottom-10 -right-10 w-56 h-56 flex gap-3 transform rotate-45 pointer-events-none">
+          {/* Bottom Right Decorative Shapes matching PDF */}
+          <div className="absolute -bottom-10 -right-10 flex gap-3 transform rotate-45 pointer-events-none z-0">
             <div className="w-24 h-48 bg-[#D1D5DB] rounded-3xl opacity-70"></div>
-            <div className="w-24 h-56 bg-[#9C2A1F] rounded-3xl opacity-95"></div>
+            <div className="w-28 h-60 bg-[#8C1814] rounded-3xl opacity-95 shadow-lg"></div>
           </div>
+          <div className="absolute bottom-16 right-20 w-24 h-24 border-[3px] border-[#E5A964] rounded-2xl transform rotate-45 pointer-events-none"></div>
         </div>
 
         {/* ============================================================
@@ -431,7 +530,9 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">DECLARATION</span>
             </div>
 
@@ -444,7 +545,7 @@ export default function AssessmentReportPage() {
                 Thank you for choosing CareerMap for your Career Psychometric Assessment.
               </p>
               <p>
-                We appreciate your trust in our assessment process and recognize the importance of making informed educational and career decisions. This report has been prepared based on your responses to scientifically designed psychometric assessments and is intended to provide meaningful insights into your aptitude, <strong className="font-bold text-[#1E232A]">personality, interests and career preferences</strong>.
+                We appreciate your trust in our assessment process and recognize the importance of making informed educational and career decisions. This report has been prepared based on your responses to scientifically designed psychometric assessments and is intended to provide meaningful insights into your <strong className="font-bold text-[#1E232A]">aptitude, personality, interests and career preferences</strong>.
               </p>
               <p>
                 The recommendations and observations presented in this report are designed to help you better understand your strengths, explore suitable career pathways, and make well-informed academic and professional choices. While every effort has been made to ensure the reliability and accuracy of the assessment, this report should be considered a decision-support tool and not the sole basis for any educational or career decision.
@@ -474,46 +575,68 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">INTRODUCTION</span>
             </div>
 
             <p className="page-lead-text">
-              The report presented by Career Map outlines key observations about <strong className="text-[#1E232A]">{studentName}</strong>’s personality profile, career interests, work preferences, cognitive strengths, and future career orientation. These outcomes are indicative, not definitive, and must be reviewed again in subsequent counselling meetings. Recommendations may shift based on deeper interaction and continuous assessment.
+              The report presented by Career Map outlines key observations about <strong className="text-[#1E232A] font-bold">{studentName}</strong>’s personality profile, career interests, work preferences, cognitive strengths, and future career orientation. These outcomes are indicative, not definitive, and must be reviewed again in subsequent counselling meetings. Recommendations may shift based on deeper interaction and continuous assessment.
             </p>
 
-            {/* Central Lightbulb + 6 Surrounding Petal Badges */}
-            <div className="relative py-12 flex justify-center items-center">
-              <div className="relative w-80 h-80 flex items-center justify-center">
-                {/* Central Yellow Lightbulb */}
-                <div className="w-36 h-48 bg-gradient-to-b from-[#FBBF24] to-[#F59E0B] rounded-full flex flex-col items-center justify-center shadow-xl border-4 border-white z-10">
-                  <span className="text-5xl">💡</span>
-                  <div className="w-12 h-6 bg-slate-400 rounded-b-md mt-4"></div>
+            {/* Central Lightbulb + 6 Surrounding Petal Badges matching PDF Page 3 */}
+            <div className="relative py-10 flex justify-center items-center">
+              <div className="relative w-[340px] h-[340px] flex items-center justify-center">
+                {/* Central Yellow Lightbulb with Stylized Glow */}
+                <div className="relative z-10 flex flex-col items-center justify-center">
+                  <div className="w-32 h-44 bg-gradient-to-b from-[#FDE047] via-[#FBBF24] to-[#F59E0B] rounded-t-full rounded-b-3xl shadow-xl flex flex-col items-center justify-center border-4 border-white">
+                    {/* Filament lines */}
+                    <div className="w-12 h-14 border-2 border-amber-800/40 rounded-t-full border-b-0 mb-2 flex items-center justify-center">
+                      <div className="w-6 h-8 border border-amber-800/50 rounded-t-full"></div>
+                    </div>
+                  </div>
+                  {/* Bulb Base Screw */}
+                  <div className="w-14 h-7 bg-slate-400 rounded-b-md -mt-1 flex flex-col justify-evenly py-1 items-center border border-slate-500">
+                    <div className="w-12 h-1 bg-slate-300 rounded"></div>
+                    <div className="w-10 h-1 bg-slate-300 rounded"></div>
+                  </div>
                 </div>
 
-                {/* 6 Circular/Fan Domain Badges */}
-                <div className="absolute -top-4 left-10 bg-[#38BDF8] text-white px-5 py-3 rounded-2xl shadow-md font-bold text-xs uppercase tracking-wider text-center flex flex-col items-center">
-                  <span>📚</span>
-                  <span>LEARNING STYLE</span>
+                {/* 6 Fan Petal Badges positioned around bulb */}
+                {/* Top-Left: LEARNING STYLE */}
+                <div className="absolute top-2 left-10 bg-[#38BDF8] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
+                  <span className="text-base">💻</span>
+                  <span>LEARNING<br/>STYLE</span>
                 </div>
-                <div className="absolute -top-4 right-10 bg-[#0284C7] text-white px-5 py-3 rounded-2xl shadow-md font-bold text-xs uppercase tracking-wider text-center flex flex-col items-center">
-                  <span>💎</span>
+
+                {/* Top-Right: WORK VALUES */}
+                <div className="absolute top-2 right-10 bg-[#0284C7] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
+                  <span className="text-base">💼</span>
                   <span>WORK VALUES</span>
                 </div>
-                <div className="absolute top-28 -left-8 bg-[#0EA5E9] text-white px-5 py-3 rounded-2xl shadow-md font-bold text-xs uppercase tracking-wider text-center flex flex-col items-center">
-                  <span>🧠</span>
+
+                {/* Mid-Left: PERSONALITY */}
+                <div className="absolute top-32 -left-6 bg-[#0EA5E9] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
+                  <span className="text-base">🧑‍🏫</span>
                   <span>PERSONALITY</span>
                 </div>
-                <div className="absolute top-28 -right-8 bg-[#2563EB] text-white px-5 py-3 rounded-2xl shadow-md font-bold text-xs uppercase tracking-wider text-center flex flex-col items-center">
-                  <span>🎯</span>
-                  <span>GOAL ORIENTATION</span>
+
+                {/* Mid-Right: GOAL ORIENTATION */}
+                <div className="absolute top-32 -right-6 bg-[#2563EB] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
+                  <span className="text-base">🎯</span>
+                  <span>GOAL<br/>ORIENTATION</span>
                 </div>
-                <div className="absolute -bottom-4 left-10 bg-[#38BDF8] text-white px-5 py-3 rounded-2xl shadow-md font-bold text-xs uppercase tracking-wider text-center flex flex-col items-center">
-                  <span>🧭</span>
+
+                {/* Bottom-Left: INTEREST */}
+                <div className="absolute bottom-2 left-10 bg-[#38BDF8] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
+                  <span className="text-base">🧭</span>
                   <span>INTEREST</span>
                 </div>
-                <div className="absolute -bottom-4 right-10 bg-[#1D4ED8] text-white px-5 py-3 rounded-2xl shadow-md font-bold text-xs uppercase tracking-wider text-center flex flex-col items-center">
-                  <span>⚙️</span>
+
+                {/* Bottom-Right: APTITUDE */}
+                <div className="absolute bottom-2 right-10 bg-[#1D4ED8] text-white px-4 py-2.5 rounded-2xl shadow-md font-bold text-[11px] uppercase tracking-wider text-center flex flex-col items-center">
+                  <span className="text-base">⚙️</span>
                   <span>APTITUDE</span>
                 </div>
               </div>
@@ -531,7 +654,9 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">INTEREST</span>
             </div>
 
@@ -539,59 +664,82 @@ export default function AssessmentReportPage() {
               Your interests are the areas and activities that naturally capture your attention, curiosity, and motivation. They go beyond hobbies and point to the type of work where you will feel engaged and satisfied. The RIASEC model outlines six interest areas—Realistic, Investigative, Artistic, Social, Enterprising, and Conventional—each reflecting different strengths and preferences. Most individuals show a combination of these. Understanding your interest profile helps you explore careers that align with what inspires you, making work more enjoyable, learning more natural, and success more fulfilling.
             </p>
 
-            {/* Concentric RIASEC Rings Diagram */}
-            <div className="my-8 text-center">
+            {/* Concentric RIASEC Rings Diagram matching PDF */}
+            <div className="my-6 text-center">
               <div className="text-xs font-bold uppercase tracking-widest text-[#4A607A] mb-4">
                 RIASEC Model
               </div>
 
-              <div className="grid grid-cols-2 gap-6 text-left max-w-xl mx-auto text-sm">
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-2xl">🔧</span>
-                  <div>
-                    <div className="font-bold text-[#4D6D47]">REALISTIC</div>
-                    <div className="text-xs text-slate-600">Hands-on tasks and practical skills</div>
+              <div className="relative max-w-xl mx-auto py-4">
+                {/* 6 Category Items with Connecting Lines */}
+                <div className="grid grid-cols-2 gap-y-10 gap-x-16 text-left">
+                  {/* Realistic */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🔧</span>
+                    <div>
+                      <div className="font-extrabold text-[#4D6D47] text-sm tracking-wide">REALISTIC</div>
+                      <div className="text-xs text-slate-600">Hands-on tasks and practical skills</div>
+                    </div>
+                  </div>
+
+                  {/* Investigative */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🔬</span>
+                    <div>
+                      <div className="font-extrabold text-[#D97706] text-sm tracking-wide">INVESTIGATIVE</div>
+                      <div className="text-xs text-slate-600">Research and problem-solving</div>
+                    </div>
+                  </div>
+
+                  {/* Artistic */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🎨</span>
+                    <div>
+                      <div className="font-extrabold text-[#EA580C] text-sm tracking-wide">ARTISTIC</div>
+                      <div className="text-xs text-slate-600">Creativity and expression</div>
+                    </div>
+                  </div>
+
+                  {/* Social */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">💡</span>
+                    <div>
+                      <div className="font-extrabold text-[#0284C7] text-sm tracking-wide">SOCIAL</div>
+                      <div className="text-xs text-slate-600">Helping and connecting with others</div>
+                    </div>
+                  </div>
+
+                  {/* Enterprising */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">💼</span>
+                    <div>
+                      <div className="font-extrabold text-[#BE185D] text-sm tracking-wide">ENTERPRISING</div>
+                      <div className="text-xs text-slate-600">Leading and persuading others</div>
+                    </div>
+                  </div>
+
+                  {/* Conventional */}
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">📊</span>
+                    <div>
+                      <div className="font-extrabold text-[#9C2A1F] text-sm tracking-wide">CONVENTIONAL</div>
+                      <div className="text-xs text-slate-600">organising and managing details</div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-2xl">🔬</span>
-                  <div>
-                    <div className="font-bold text-[#D97706]">INVESTIGATIVE</div>
-                    <div className="text-xs text-slate-600">Research and problem-solving</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-2xl">🎨</span>
-                  <div>
-                    <div className="font-bold text-[#EA580C]">ARTISTIC</div>
-                    <div className="text-xs text-slate-600">Creativity and expression</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-2xl">🤝</span>
-                  <div>
-                    <div className="font-bold text-[#0284C7]">SOCIAL</div>
-                    <div className="text-xs text-slate-600">Helping and connecting with others</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-2xl">💼</span>
-                  <div>
-                    <div className="font-bold text-[#BE185D]">ENTERPRISING</div>
-                    <div className="text-xs text-slate-600">Leading and persuading others</div>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-2xl">📊</span>
-                  <div>
-                    <div className="font-bold text-[#9C2A1F]">CONVENTIONAL</div>
-                    <div className="text-xs text-slate-600">Organising and managing details</div>
-                  </div>
+                {/* Central Concentric Rings Graphic */}
+                <div className="mt-8 flex justify-center items-center">
+                  <svg width="280" height="120" viewBox="0 0 280 120">
+                    <ellipse cx="140" cy="80" rx="130" ry="36" fill="#84CC16" opacity="0.9" />
+                    <ellipse cx="140" cy="80" rx="110" ry="30" fill="#EC4899" opacity="0.9" />
+                    <ellipse cx="140" cy="80" rx="90" ry="24" fill="#EAB308" opacity="0.9" />
+                    <ellipse cx="140" cy="80" rx="70" ry="18" fill="#06B6D4" opacity="0.9" />
+                    <ellipse cx="140" cy="80" rx="50" ry="12" fill="#3B82F6" opacity="0.9" />
+                    <ellipse cx="140" cy="80" rx="30" ry="7" fill="#4B5563" opacity="0.9" />
+                    {/* Water drop */}
+                    <circle cx="140" cy="30" r="5" fill="#4B5563" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -729,7 +877,7 @@ export default function AssessmentReportPage() {
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
 
-            {/* Horizontal Bar Chart */}
+            {/* Horizontal Bar Chart matching PDF */}
             <div className="h-bar-chart">
               <div className="h-bar-grid-header">
                 <span>0</span>
@@ -783,7 +931,9 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header green">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">PERSONALITY</span>
             </div>
 
@@ -794,27 +944,27 @@ export default function AssessmentReportPage() {
               For example, conscientious individuals may excel in structured roles, while those high in openness may thrive in creative or innovative environments. Understanding your personality helps you choose careers that align with your natural style and identify areas for growth, making it easier to collaborate effectively and feel at ease in your work.
             </p>
 
-            {/* 5-Layer Stacked Steps Diagram */}
-            <div className="my-8 max-w-md mx-auto space-y-2">
-              <div className="flex items-center rounded-xl bg-[#67E8F9] p-3 text-[#155E75] font-extrabold text-sm shadow-sm">
-                <span className="w-12 text-lg">05</span>
-                <span>EMOTIONAL STABILITY</span>
+            {/* 5-Tier Inverted Trapezoid Pyramid Stack matching PDF Page 8 */}
+            <div className="my-8 max-w-md mx-auto space-y-2 text-center">
+              <div className="flex items-center justify-between rounded-xl bg-[#A7E8EE] px-6 py-3.5 text-[#134E4A] font-extrabold text-sm shadow-xs">
+                <span className="text-lg">05</span>
+                <span className="tracking-wide">EMOTIONAL STABILITY</span>
               </div>
-              <div className="flex items-center rounded-xl bg-[#7DD3FC] p-3 text-[#0369A1] font-extrabold text-sm shadow-sm">
-                <span className="w-12 text-lg">04</span>
-                <span>AGREEABLENESS</span>
+              <div className="flex items-center justify-between rounded-xl bg-[#A8E0F7] px-8 py-3.5 text-[#0369A1] font-extrabold text-sm shadow-xs mx-3">
+                <span className="text-lg">04</span>
+                <span className="tracking-wide">AGREEABLENESS</span>
               </div>
-              <div className="flex items-center rounded-xl bg-[#5EEAD4] p-3 text-[#115E59] font-extrabold text-sm shadow-sm">
-                <span className="w-12 text-lg">03</span>
-                <span>EXTRAVERSION</span>
+              <div className="flex items-center justify-between rounded-xl bg-[#9FE8D0] px-10 py-3.5 text-[#065F46] font-extrabold text-sm shadow-xs mx-6">
+                <span className="text-lg">03</span>
+                <span className="tracking-wide">EXTRAVERSION</span>
               </div>
-              <div className="flex items-center rounded-xl bg-[#FDE68A] p-3 text-[#854D0E] font-extrabold text-sm shadow-sm">
-                <span className="w-12 text-lg">02</span>
-                <span>CONSCIENTIOUSNESS</span>
+              <div className="flex items-center justify-between rounded-xl bg-[#FFE899] px-12 py-3.5 text-[#854D0E] font-extrabold text-sm shadow-xs mx-9">
+                <span className="text-lg">02</span>
+                <span className="tracking-wide">CONSCIENTIOUSNESS</span>
               </div>
-              <div className="flex items-center rounded-xl bg-[#FDBA74] p-3 text-[#9A3412] font-extrabold text-sm shadow-sm">
-                <span className="w-12 text-lg">01</span>
-                <span>OPENNESS</span>
+              <div className="flex items-center justify-between rounded-xl bg-[#FFC685] px-14 py-3.5 text-[#9A3412] font-extrabold text-sm shadow-xs mx-12">
+                <span className="text-lg">01</span>
+                <span className="tracking-wide">OPENNESS</span>
               </div>
             </div>
           </div>
@@ -837,12 +987,14 @@ export default function AssessmentReportPage() {
               { num: "05", name: "AGREEABLENESS", band: "MODERATE", text: "You cooperate well while still holding your own views — a healthy balance for teamwork and fair decisions." },
             ].map((item) => (
               <div key={item.num} className="detail-card-row">
-                <div className="detail-card-left-badge green flex-col items-start justify-center">
+                <div className="detail-card-left-badge green flex flex-col items-start justify-between">
                   <div className="flex items-center gap-2">
                     <span className="detail-card-num-circle">{item.num}</span>
-                    <span className="text-xs">{item.name}</span>
+                    <span className="text-[11px] font-extrabold leading-tight">{item.name}</span>
                   </div>
-                  <span className="mt-2 text-[10px] bg-white text-[#4D6D47] px-2 py-0.5 rounded-full font-bold self-end">
+                  <span className={`mt-2 text-[10px] px-2 py-0.5 rounded-full font-bold self-end ${
+                    item.band === "HIGH" ? "bg-white text-[#9C2A1F]" : "bg-white text-[#4D6D47]"
+                  }`}>
                     {item.band}
                   </span>
                 </div>
@@ -867,7 +1019,7 @@ export default function AssessmentReportPage() {
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
 
-            {/* Horizontal Green Bar Chart */}
+            {/* Horizontal Green Bar Chart matching PDF */}
             <div className="h-bar-chart">
               <div className="h-bar-grid-header">
                 <span>0</span>
@@ -875,7 +1027,6 @@ export default function AssessmentReportPage() {
                 <span>40</span>
                 <span>60</span>
                 <span>80</span>
-                <span>100</span>
               </div>
 
               {[
@@ -897,7 +1048,7 @@ export default function AssessmentReportPage() {
 
             {/* Footnote Box */}
             <div className="mt-8 p-4 rounded-xl bg-[#EDF4EC] border border-[#D5E5D3] text-xs text-[#2D5A27] leading-relaxed">
-              <strong>Note:</strong> Emotional Stability is the positive side of the Neuroticism scale — a higher score means you stay calmer under pressure.
+              Emotional Stability is the positive side of the Neuroticism scale — a higher score means you stay calmer under pressure.
             </div>
           </div>
 
@@ -911,8 +1062,10 @@ export default function AssessmentReportPage() {
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="my-auto">
-            <div className="title-pill-header" style={{ background: "#4B5563" }}>
-              <div className="title-pill-icon-circle"></div>
+            <div className="title-pill-header lavender">
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">LEARNING STYLE</span>
             </div>
 
@@ -920,30 +1073,39 @@ export default function AssessmentReportPage() {
               Everyone has a preferred way of learning, and knowing your style can make studying, training, and working much more effective. The VARK model highlights four main preferences: Visual learners understand best through charts, diagrams, and images; Auditory learners grasp information by listening, discussing, and explaining; Reading/Writing learners prefer text, lists, and notes; and Kinesthetic learners learn by doing, experiencing, and applying knowledge practically.
             </p>
             <p className="page-lead-text">
-              While everyone can learn in all ways, most people have one or two stronger preferences. Recognizing your learning style helps you study smarter, prepare better for exams, and even choose careers that align with how you absorb and process information.
+              While everyone can learn in all ways, most people have one or two stronger preferences. Recognizing your learning style helps you study smarter, prepare better for exams, and even choose careers that align with how you absorb and process information. For instance, a kinesthetic learner may feel more comfortable in hands-on professions, while a visual learner may enjoy design or engineering. Knowing your learning style empowers you to adapt your strategies in school and at work, making learning feel more natural and less stressful.
             </p>
 
-            {/* Target Archery Diagram */}
-            <div className="my-8 flex items-center justify-center gap-10">
-              <div className="w-40 h-40 rounded-full border-8 border-[#EF4444] bg-white flex items-center justify-center shadow-lg">
-                <div className="w-28 h-28 rounded-full border-8 border-[#F87171] flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-[#EF4444] flex items-center justify-center text-white font-black text-xl">
-                    🎯
+            {/* Target Archery Diagram + 4 Pills matching PDF Page 11 */}
+            <div className="my-8 flex items-center justify-center gap-12">
+              <div className="relative flex flex-col items-center">
+                {/* 3D Round Target */}
+                <div className="w-36 h-36 rounded-full border-8 border-[#DC2626] bg-white flex items-center justify-center shadow-lg">
+                  <div className="w-24 h-24 rounded-full border-8 border-[#EF4444] bg-white flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-[#DC2626] flex items-center justify-center text-white font-black text-lg">
+                      🎯
+                    </div>
                   </div>
+                </div>
+                {/* Wooden Tripod Stand */}
+                <div className="flex gap-4 -mt-2">
+                  <div className="w-2.5 h-12 bg-[#D97706] transform -rotate-12 rounded-b"></div>
+                  <div className="w-2.5 h-12 bg-[#B45309] rounded-b"></div>
+                  <div className="w-2.5 h-12 bg-[#D97706] transform rotate-12 rounded-b"></div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="bg-[#EF4444] text-white px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider">
+                <div className="bg-[#B91C1C] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
                   VISUAL LEARNER
                 </div>
-                <div className="bg-[#EC4899] text-white px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider">
+                <div className="bg-[#E11D48] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
                   AUDITORY LEARNER
                 </div>
-                <div className="bg-[#F97316] text-white px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider">
+                <div className="bg-[#EA580C] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
                   READING/WRITING LEARNER
                 </div>
-                <div className="bg-[#EAB308] text-white px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider">
+                <div className="bg-[#EAB308] text-white px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider text-center shadow-xs border border-white/40">
                   KINAESTHETIC LEARNER
                 </div>
               </div>
@@ -961,7 +1123,7 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto space-y-6">
             <div className="detail-card-row">
-              <div className="detail-card-left-badge">
+              <div className="detail-card-left-badge lavender">
                 <span className="detail-card-num-circle">01</span>
                 <span>VISUAL</span>
               </div>
@@ -971,20 +1133,20 @@ export default function AssessmentReportPage() {
                 </div>
                 <div className="detail-card-meta-row"><strong>Key Traits:</strong> Grasping spatial or structural relationships; memory aided by imagery; organising information visually.</div>
                 <div className="detail-card-meta-row"><strong>Enjoys:</strong> Using flowcharts, infographics, videos, colorcoded notes, visual organizers, and symbolic representations to study or plan.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Learning spaces that use visual aids, presentations, digital whiteboards, concept maps, and multimedia tools.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Learning spaces that use visual aids, presentations, digital whiteboards, concept maps, and multimedia tools — classrooms or workplaces where design, structure, and visual clarity are valued.</div>
               </div>
             </div>
 
             <div className="detail-card-row">
-              <div className="detail-card-left-badge">
+              <div className="detail-card-left-badge lavender">
                 <span className="detail-card-num-circle">02</span>
                 <span>AUDITORY</span>
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You learn through listening and speaking. Explaining ideas aloud helps you process them deeply. You benefit from discussions, storytelling, and audio recordings.
+                  You learn through listening and speaking. Explaining ideas aloud helps you process them deeply. You benefit from discussions, storytelling, and audio recordings. You thrive in environments where oral communication is valued — such as teaching, counselling, performing, or team collaboration.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Expressive, articulate, and sensitive to tone and rhythm. You learn best through listening, discussion, and verbal explanation.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Expressive, articulate, and sensitive to tone and rhythm. You learn best through listening, discussion, and verbal explanation. You may remember information better when it’s heard rather than read.</div>
                 <div className="detail-card-meta-row"><strong>Enjoys:</strong> Participating in group discussions, lectures, podcasts, debates, or reading aloud. You often recall not just what was said, but how it was said.</div>
                 <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Interactive classrooms, seminars, or workplaces that encourage open conversation, brainstorming, and verbal feedback.</div>
               </div>
@@ -1002,32 +1164,32 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto space-y-6">
             <div className="detail-card-row">
-              <div className="detail-card-left-badge">
+              <div className="detail-card-left-badge lavender">
                 <span className="detail-card-num-circle">03</span>
-                <span>READING / WRITING</span>
+                <span>READING/WRITING</span>
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You learn best through written words, reading textbooks, taking notes, and creating summaries.
+                  You learn best through written words, reading textbooks, taking notes, and creating summaries. You prefer books, articles, written instructions, and text-based research to absorb information deeply.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong comprehension, articulate written expression, organized note-making.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Reading comprehensive texts, writing essays, creating glossaries, reviewing written notes.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Quiet study halls, libraries, research spaces, text-oriented environments.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong comprehension, articulate expression, attention to written details, and organized text structuring.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Reading in-depth material, writing notes, creating glossaries, reviewing written summaries, and essay writing.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Libraries, quiet study halls, research institutions, and text-oriented environments.</div>
               </div>
             </div>
 
             <div className="detail-card-row">
-              <div className="detail-card-left-badge">
+              <div className="detail-card-left-badge lavender">
                 <span className="detail-card-num-circle">04</span>
                 <span>KINAESTHETIC</span>
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You learn through experience. Abstract ideas make sense when you can do something with them. You thrive when allowed to experiment, observe, and apply.
+                  You learn through experience. Abstract ideas make sense when you can do something with them. You thrive when allowed to experiment, observe, and apply. This learning style supports success in applied fields like engineering, design, healthcare, sports, and performing arts anywhere learning connects mind and body.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Hands-on, practical, and experiential. You grasp concepts through physical movement and real-life examples.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Experiments, demonstrations, simulations, field visits, role plays, or building and testing ideas.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Interactive, activity-based settings, workshops, labs, studios, or outdoor spaces.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Hands-on, practical, and experiential. You grasp concepts through physical movement, real-life examples, and direct engagement. You like “learning by doing” rather than only reading or listening.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Experiments, demonstrations, simulations, field visits, role plays, or building and testing ideas. You prefer tactile engagement and movement during learning.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Interactive, activity-based settings workshops, labs, studios, or outdoor spaces - where theory connects directly with practice.</div>
               </div>
             </div>
           </div>
@@ -1042,46 +1204,67 @@ export default function AssessmentReportPage() {
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="my-auto">
-            <div className="score-rep-banner">
+            <div className="score-rep-banner lavender">
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
 
-            {/* 4 Donut Gauges */}
-            <div className="grid grid-cols-2 gap-8 my-8 max-w-lg mx-auto text-center">
+            {/* 4 Donut Gauges matching PDF Page 14 */}
+            <div className="grid grid-cols-2 gap-8 my-8 max-w-md mx-auto text-center">
               <div>
-                <div className="w-28 h-28 mx-auto rounded-full border-8 border-[#3B82F6] flex items-center justify-center font-black text-2xl text-[#1E3A8A]">
-                  100%
+                <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path className="text-slate-100" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path stroke="#436CB3" strokeDasharray="100, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute font-black text-xl text-[#1E3A8A]">100%</div>
                 </div>
-                <div className="mt-2 font-bold text-xs uppercase tracking-wider text-slate-700">VISUAL</div>
+                <div className="mt-2 font-extrabold text-xs uppercase tracking-wider text-slate-800">VISUAL</div>
               </div>
+
               <div>
-                <div className="w-28 h-28 mx-auto rounded-full border-8 border-[#10B981] flex items-center justify-center font-black text-2xl text-[#064E3B]">
-                  75%
+                <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path className="text-slate-100" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path stroke="#4E7B44" strokeDasharray="75, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute font-black text-xl text-[#14532D]">75%</div>
                 </div>
-                <div className="mt-2 font-bold text-xs uppercase tracking-wider text-slate-700">AUDITORY</div>
+                <div className="mt-2 font-extrabold text-xs uppercase tracking-wider text-slate-800">AUDITORY</div>
               </div>
+
               <div>
-                <div className="w-28 h-28 mx-auto rounded-full border-8 border-[#F59E0B] flex items-center justify-center font-black text-2xl text-[#78350F]">
-                  85%
+                <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path className="text-slate-100" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path stroke="#9A8025" strokeDasharray="85, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute font-black text-xl text-[#78350F]">85%</div>
                 </div>
-                <div className="mt-2 font-bold text-xs uppercase tracking-wider text-slate-700">READING</div>
+                <div className="mt-2 font-extrabold text-xs uppercase tracking-wider text-slate-800">READING</div>
               </div>
+
               <div>
-                <div className="w-28 h-28 mx-auto rounded-full border-8 border-[#EF4444] flex items-center justify-center font-black text-2xl text-[#7F1D1D]">
-                  60%
+                <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path className="text-slate-100" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path stroke="#914545" strokeDasharray="60, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute font-black text-xl text-[#7F1D1D]">60%</div>
                 </div>
-                <div className="mt-2 font-bold text-xs uppercase tracking-wider text-slate-700">KINESTHETIC</div>
+                <div className="mt-2 font-extrabold text-xs uppercase tracking-wider text-slate-800">KINESTHETIC</div>
               </div>
             </div>
 
             <div className="top-interests-box">
-              <div className="score-rep-banner" style={{ fontSize: "0.95rem" }}>
+              <div className="score-rep-banner lavender" style={{ fontSize: "0.95rem" }}>
                 Your Best Learning Styles are
               </div>
               <div className="flex justify-center gap-4">
-                <div className="top-interest-pill" style={{ flex: 1 }}>VISUAL</div>
-                <div className="top-interest-pill" style={{ flex: 1 }}>READING</div>
-                <div className="top-interest-pill" style={{ flex: 1 }}>AUDITORY</div>
+                <div className="top-interest-pill lavender flex-1">VISUAL</div>
+                <div className="top-interest-pill lavender flex-1">READING</div>
+              </div>
+              <div className="max-w-xs mx-auto mt-3">
+                <div className="top-interest-pill lavender">AUDITORY</div>
               </div>
             </div>
           </div>
@@ -1097,38 +1280,71 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header green">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">WORK VALUES</span>
             </div>
 
             <p className="page-lead-text">
-              "Work values are the core principles and priorities that define what matters most to you in a professional environment. They reflect what you seek from your career — whether that is achievement, recognition, security, autonomy, relationships, or making a meaningful impact. Unlike interests (what you enjoy) or personality (how you behave), work values reveal why certain careers feel more fulfilling than others."
+              "Work values are the core principles and priorities that define what matters most to you in a professional environment. They reflect what you seek from your career — whether that is achievement, recognition, security, autonomy, relationships, or making a meaningful impact. Unlike interests (what you enjoy) or personality (how you behave), work values reveal why certain careers feel more fulfilling than others.
             </p>
             <p className="page-lead-text">
-              "Understanding your work values helps you evaluate job opportunities beyond salary and title. When your work aligns with your values, you feel more motivated, satisfied, and committed. Identifying your core values early helps you make career choices that bring long-term fulfilment."
+              Understanding your work values helps you evaluate job opportunities beyond salary and title. When your work aligns with your values, you feel more motivated, satisfied, and committed. When it does not, even a well-paying or prestigious role can feel empty. Identifying your core values early helps you make career choices that bring long-term fulfilment."
             </p>
 
-            {/* Central Schwartz Diamond Diagram */}
-            <div className="my-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl max-w-lg mx-auto">
-              <div className="grid grid-cols-2 gap-6 text-center">
-                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                  <div className="font-bold text-[#4A607A]">Conservation</div>
-                  <div className="text-xs text-slate-500">Security & Stability</div>
+            {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
+            <div className="my-6 p-6 bg-[#FAFCF9] border border-[#D5E5D3] rounded-2xl max-w-lg mx-auto">
+              <div className="grid grid-cols-2 gap-4 text-center items-center">
+                {/* Conservation */}
+                <div className="p-3 bg-white rounded-xl border border-purple-200 shadow-xs flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 text-purple-700 font-bold text-xs">
+                    <span>🏢</span>
+                    <span>Conservation</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">security</div>
                 </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                  <div className="font-bold text-[#D97706]">Openness to Change</div>
-                  <div className="text-xs text-slate-500">Autonomy & Freedom</div>
+
+                {/* Openness to Change */}
+                <div className="p-3 bg-white rounded-xl border border-amber-200 shadow-xs flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs">
+                    <span>⚡</span>
+                    <span>Openness to Change</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">autonomy</div>
                 </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                  <div className="font-bold text-[#4D6D47]">Self-Transcendence</div>
-                  <div className="text-xs text-slate-500">Relationships & Impact</div>
+
+                {/* Central Diamond Label */}
+                <div className="col-span-2 flex justify-center items-center py-2">
+                  <div className="p-2.5 bg-white rounded-xl border-2 border-slate-700 shadow-sm flex items-center gap-2">
+                    <span>💎</span>
+                    <span className="font-extrabold text-xs text-slate-900 uppercase">Schwartz Values</span>
+                  </div>
                 </div>
-                <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
-                  <div className="font-bold text-[#9C2A1F]">Self-Enhancement</div>
-                  <div className="text-xs text-slate-500">Achievement & Recognition</div>
+
+                {/* Self-Transcendence */}
+                <div className="p-3 bg-white rounded-xl border border-pink-200 shadow-xs flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 text-pink-700 font-bold text-xs">
+                    <span>🤝</span>
+                    <span>Self-Transcendence</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">relationships<br/>meaningful impact</div>
+                </div>
+
+                {/* Self-Enhancement */}
+                <div className="p-3 bg-white rounded-xl border border-rose-200 shadow-xs flex flex-col items-center">
+                  <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs">
+                    <span>🏆</span>
+                    <span>Self-Enhancement</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1">achievement<br/>recognition</div>
                 </div>
               </div>
             </div>
+
+            <p className="page-lead-text text-xs text-slate-600">
+              Each trait brings strengths, and different careers suit different combinations. For example, highly conscientious individuals may excel in structured roles, while those high in openness may thrive in creative or innovative environments. Understanding your personality helps you choose careers that fit your natural style, identify areas for growth, and work more effectively with others.
+            </p>
           </div>
 
           <PageFooter pageNum={15} />
@@ -1142,7 +1358,9 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto space-y-4">
             <div className="title-pill-header green">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">HERE ARE THE SUGGESTIONS AS PER VALUES</span>
             </div>
 
@@ -1153,12 +1371,14 @@ export default function AssessmentReportPage() {
               { num: "04", name: "CONSERVATION", band: "MODERATE", text: "You value a reasonable amount of stability and order while staying flexible when things shift." },
             ].map((item) => (
               <div key={item.num} className="detail-card-row">
-                <div className="detail-card-left-badge green flex-col items-start justify-center">
+                <div className="detail-card-left-badge green flex flex-col items-start justify-between">
                   <div className="flex items-center gap-2">
                     <span className="detail-card-num-circle">{item.num}</span>
-                    <span className="text-xs">{item.name}</span>
+                    <span className="text-[11px] font-extrabold leading-tight">{item.name}</span>
                   </div>
-                  <span className="mt-2 text-[10px] bg-white text-[#4D6D47] px-2 py-0.5 rounded-full font-bold self-end">
+                  <span className={`mt-2 text-[10px] px-2 py-0.5 rounded-full font-bold self-end ${
+                    item.band === "HIGH" ? "bg-white text-[#9C2A1F]" : "bg-white text-[#4D6D47]"
+                  }`}>
                     {item.band}
                   </span>
                 </div>
@@ -1185,17 +1405,17 @@ export default function AssessmentReportPage() {
 
             <div className="space-y-6 my-8 max-w-lg mx-auto">
               {[
-                { label: "OPENNESS TO CHANGE", val: valScoreMap.OC, color: "#3B5E38" },
-                { label: "SELF-ENHANCEMENT", val: valScoreMap.SE, color: "#3B82F6" },
-                { label: "SELF-TRANSCENDENCE", val: valScoreMap.ST, color: "#818CF8" },
-                { label: "CONSERVATION", val: valScoreMap.CO, color: "#CA8A04" },
+                { label: "OPENNESS TO CHANGE", val: valScoreMap.OC, color: "#4B6640" },
+                { label: "SELF-ENHANCEMENT", val: valScoreMap.SE, color: "#5687BF" },
+                { label: "SELF-TRANSCENDENCE", val: valScoreMap.ST, color: "#7584C4" },
+                { label: "CONSERVATION", val: valScoreMap.CO, color: "#9B7C23" },
               ].map((item) => (
                 <div key={item.label}>
-                  <div className="flex justify-between font-bold text-xs uppercase text-slate-700 mb-1.5">
+                  <div className="flex justify-between font-bold text-xs uppercase text-slate-800 mb-1.5">
                     <span>{item.label}</span>
                     <span>{item.val}%</span>
                   </div>
-                  <div className="h-6 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-6 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
                     <div className="h-full rounded-full" style={{ width: `${item.val}%`, backgroundColor: item.color }}></div>
                   </div>
                 </div>
@@ -1224,12 +1444,17 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header gold">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">GOAL ORIENTATION</span>
             </div>
 
             <p className="page-lead-text">
               Goals guide your direction in studies, work, and personal growth. Your goal orientation reflects how you view success and what motivates you to achieve it. Some people focus on short-term goals—completing tasks, gaining quick skills, or achieving immediate results—while others are driven by long-term goals, such as building expertise, reaching leadership roles, or creating lasting impact. Both are important: short-term goals keep you motivated daily, while long-term goals provide vision and persistence.
+            </p>
+            <p className="page-lead-text">
+              Understanding your orientation helps you balance present actions with future ambitions. Those with strong long-term focus may need to break goals into smaller steps, while short-term–focused individuals may benefit from planning for bigger aspirations. Knowing your goal orientation helps you use your energy effectively and stay aligned with your personal and career goals.
             </p>
 
             <div className="detail-card-row mt-8">
@@ -1241,9 +1466,9 @@ export default function AssessmentReportPage() {
                 <div className="detail-card-desc">
                   You are oriented toward goals that can be achieved in the relatively near future, often within months to a year. You seek more immediate feedback, micromilestones, and concrete progress.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Action-oriented, results-focused, responsive, task-driven.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Completing tasks quickly, achieving daily or weekly targets, gaining visible results.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Fast-paced workplaces with clear, measurable short-cycle goals.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Action-oriented, results-focused, responsive, task-driven, motivated by immediate feedback.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Completing tasks quickly, achieving daily or weekly targets, gaining visible and prompt results.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Fast-paced workplaces with clear, measurable short-cycle goals and regular performance check-ins.</div>
               </div>
             </div>
           </div>
@@ -1268,19 +1493,19 @@ export default function AssessmentReportPage() {
                   You are oriented toward broader, strategic, future-oriented outcomes that may take several years to achieve and often involve many steps. You hold a vision and work progressively toward it.
                 </div>
                 <div className="detail-card-meta-row"><strong>Key Traits:</strong> Vision, persistence, planning, stability, commitment.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Career ambition, major life objectives, mastering a field, long projects.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Long-range planning, supportive structure, milestone expectations.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Career ambition, major life objectives, mastering a field, long projects, cumulative growth.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Long-range planning, supportive structure, milestone expectations, clarity of desired destination.</div>
               </div>
             </div>
 
-            {/* Comparison Strategy Cards */}
+            {/* Comparison Strategy Cards matching PDF Page 19 */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-                <strong className="block text-sm mb-1">SHORT TERM</strong>
+              <div className="p-4 rounded-xl bg-[#FDF8EE] border border-[#E8D39E] text-xs text-[#78540B] leading-relaxed">
+                <strong className="block text-sm mb-1 uppercase text-[#4D370A] font-extrabold">SHORT TERM</strong>
                 Aim for short milestones and rewards. Match with roles needing daily targets.
               </div>
-              <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 leading-relaxed">
-                <strong className="block text-sm mb-1">LONG TERM</strong>
+              <div className="p-4 rounded-xl bg-[#FDF8EE] border border-[#E8D39E] text-xs text-[#78540B] leading-relaxed">
+                <strong className="block text-sm mb-1 uppercase text-[#4D370A] font-extrabold">LONG TERM</strong>
                 Use Vision boards, planning tools, long-term mentorship. Ideal for research, entrepreneurship, civil services.
               </div>
             </div>
@@ -1290,22 +1515,28 @@ export default function AssessmentReportPage() {
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
 
-            <div className="flex justify-center gap-12 text-center">
+            <div className="flex justify-center gap-16 text-center">
               <div>
-                <div className="w-24 h-24 mx-auto rounded-full border-8 border-[#B48425] flex items-center justify-center font-black text-xl text-[#78540B]">
-                  100%
+                <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path className="text-slate-100" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path stroke="#8A701E" strokeDasharray="100, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute font-black text-lg text-[#78540B]">100%</div>
                 </div>
-                <div className="mt-2 font-bold text-xs text-slate-700">SHORT TERM</div>
               </div>
               <div>
-                <div className="w-24 h-24 mx-auto rounded-full border-8 border-[#F59E0B] flex items-center justify-center font-black text-xl text-[#B45309]">
-                  80%
+                <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path className="text-slate-100" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path stroke="#B89635" strokeDasharray="80, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div className="absolute font-black text-lg text-[#B45309]">80%</div>
                 </div>
-                <div className="mt-2 font-bold text-xs text-slate-700">LONG TERM</div>
               </div>
             </div>
 
-            <div className="p-3 bg-[#9C6D1F] text-white rounded-xl text-center font-bold text-sm uppercase tracking-wider">
+            <div className="p-3.5 bg-[#966B1D] text-white rounded-xl text-center font-extrabold text-sm uppercase tracking-wider shadow-xs">
               Most Inclined towards : SHORT TERM
             </div>
           </div>
@@ -1321,41 +1552,63 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header red">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">APTITUDE</span>
             </div>
 
             <p className="page-lead-text">
-              Your aptitude reflects your natural ability to learn, understand, and apply different skills. While interests show what you enjoy, aptitudes indicate what you can do well with practice. In this test, we assess six types of aptitudes:
+              Your aptitude reflects your natural ability to learn, understand, and apply different skills. While interests show what you enjoy, aptitudes indicate what you can do well with practice. They are not fixed and can improve with training, but knowing your strongest aptitudes helps you identify areas where success may come more easily. Aptitude plays a key role in choosing a career because it shows which tasks, problem-solving styles, and skills will feel more comfortable and rewarding.
             </p>
-
-            {/* 6 Hanging Clip Badges */}
-            <div className="grid grid-cols-3 gap-3 my-6 text-center text-xs font-bold text-slate-800">
-              <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-300">MECHANICAL</div>
-              <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-300">LOGICAL</div>
-              <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-300">VERBAL</div>
-              <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-300">VOCABULARY</div>
-              <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-300">NUMERICAL</div>
-              <div className="p-2.5 bg-slate-100 rounded-lg border border-slate-300">SPATIAL</div>
+            <div className="font-bold text-sm text-[#111827] mb-3">
+              In this test, we assess six types of aptitudes:
             </div>
 
-            {/* 4 Summary Cards */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-[#FDF2F1] border border-[#F5C2BE] rounded-xl text-xs leading-relaxed text-[#7A1F16]">
-                <strong className="block text-sm mb-1 uppercase font-extrabold">MECHANICAL APTITUDE</strong>
-                This shows how easily you understand machines, tools, and physical systems.
+            {/* 6 Hanging Clip Badges matching PDF Page 20 */}
+            <div className="grid grid-cols-6 gap-2 my-4 text-center">
+              {[
+                { name: "MECHANICAL", color: "bg-[#D1FAE5] border-emerald-300 text-emerald-900" },
+                { name: "LOGICAL", color: "bg-[#D1FAE5] border-emerald-300 text-emerald-900" },
+                { name: "VERBAL", color: "bg-[#FEF3C7] border-amber-300 text-amber-900" },
+                { name: "VOCABULARY", color: "bg-[#CCFBF1] border-teal-300 text-teal-900" },
+                { name: "NUMERICAL", color: "bg-[#D1FAE5] border-emerald-300 text-emerald-900" },
+                { name: "SPATIAL", color: "bg-[#FEF3C7] border-amber-300 text-amber-900" },
+              ].map((c) => (
+                <div key={c.name} className="flex flex-col items-center">
+                  <div className="w-2.5 h-4 bg-slate-400 rounded-t-full -mb-1 z-10"></div>
+                  <div className={`w-full py-2.5 px-1 rounded-lg border text-[10px] font-black uppercase leading-tight shadow-xs ${c.color}`}>
+                    {c.name}<br/>APTITUDE
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 4 Summary Cards matching PDF */}
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
+                <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">MECHANICAL APTITUDE</div>
+                <div className="p-3 text-xs leading-relaxed text-[#374151] bg-[#FDF2F1]">
+                  This shows how easily you understand machines, tools, and physical systems. If strong here, you may enjoy careers in engineering, mechanics, or technology where practical problem-solving is needed.
+                </div>
               </div>
-              <div className="p-4 bg-[#FDF2F1] border border-[#F5C2BE] rounded-xl text-xs leading-relaxed text-[#7A1F16]">
-                <strong className="block text-sm mb-1 uppercase font-extrabold">LOGICAL APTITUDE</strong>
-                This reflects your ability to think critically, recognize patterns, and solve problems.
+              <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
+                <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">LOGICAL APTITUDE</div>
+                <div className="p-3 text-xs leading-relaxed text-[#374151] bg-[#FDF2F1]">
+                  This reflects your ability to think critically, recognize patterns, and solve problems step by step. Strong logical reasoning is valuable in coding, mathematics, law, and research careers.
+                </div>
               </div>
-              <div className="p-4 bg-[#FDF2F1] border border-[#F5C2BE] rounded-xl text-xs leading-relaxed text-[#7A1F16]">
-                <strong className="block text-sm mb-1 uppercase font-extrabold">VERBAL APTITUDE</strong>
-                This measures how well you can express ideas, understand language, and communicate clearly.
+              <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
+                <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">VERBAL APTITUDE</div>
+                <div className="p-3 text-xs leading-relaxed text-[#374151] bg-[#FDF2F1]">
+                  This measures how well you can express ideas, understand language, and communicate clearly. Strong verbal skills are useful in teaching, law, media, and leadership roles.
+                </div>
               </div>
-              <div className="p-4 bg-[#FDF2F1] border border-[#F5C2BE] rounded-xl text-xs leading-relaxed text-[#7A1F16]">
-                <strong className="block text-sm mb-1 uppercase font-extrabold">VOCABULARY APTITUDE</strong>
-                This shows the strength of your word knowledge and ability to use language effectively.
+              <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
+                <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">VOCABULARY APTITUDE</div>
+                <div className="p-3 text-xs leading-relaxed text-[#374151] bg-[#FDF2F1]">
+                  This shows the strength of your word knowledge and ability to use language effectively. It supports careers that rely on reading, writing, public speaking, or persuasion.
+                </div>
               </div>
             </div>
           </div>
@@ -1371,18 +1624,22 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-[#FDF2F1] border border-[#F5C2BE] rounded-xl text-xs leading-relaxed text-[#7A1F16]">
-                <strong className="block text-sm mb-1 uppercase font-extrabold">NUMERICAL APTITUDE</strong>
-                This measures comfort with numbers, calculations, and quantitative reasoning.
+              <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
+                <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">NUMERICAL APTITUDE</div>
+                <div className="p-3 text-xs leading-relaxed text-[#374151] bg-[#FDF2F1]">
+                  This measures comfort with numbers, calculations, and quantitative reasoning. It is crucial in careers related to finance, data science, economics, and technology.
+                </div>
               </div>
-              <div className="p-4 bg-[#FDF2F1] border border-[#F5C2BE] rounded-xl text-xs leading-relaxed text-[#7A1F16]">
-                <strong className="block text-sm mb-1 uppercase font-extrabold">SPATIAL APTITUDE</strong>
-                This reflects your ability to imagine shapes, designs, and objects in space.
+              <div className="rounded-xl border border-[#9C2A1F] overflow-hidden">
+                <div className="bg-[#9C2A1F] text-white p-2 text-center text-xs font-black uppercase">SPATIAL APTITUDE</div>
+                <div className="p-3 text-xs leading-relaxed text-[#374151] bg-[#FDF2F1]">
+                  This reflects your ability to imagine shapes, designs, and objects in space. Strong spatial skills are important for architecture, design, surgery, engineering, and visual arts.
+                </div>
               </div>
             </div>
 
             <p className="page-lead-text text-xs">
-              By identifying your aptitudes, you can better understand where your natural strengths lie and how to build on them. A career that matches both your interests and aptitudes allows you to learn faster, perform better, and feel more confident.
+              By identifying your aptitudes, you can better understand where your natural strengths lie and how to build on them. A career that matches both your interests and aptitudes allows you to learn faster, perform better, and feel more confident in your abilities.
             </p>
 
             {/* 01 NUMERICAL */}
@@ -1393,11 +1650,11 @@ export default function AssessmentReportPage() {
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You think in structured, analytical ways and are comfortable dealing with quantities, formulas, and logic. You enjoy the clarity that numbers provide and are skilled at identifying relationships and trends in data.
+                  You think in structured, analytical ways and are comfortable dealing with quantities, formulas, and logic. You enjoy the clarity that numbers provide and are skilled at identifying relationships and trends in data. This aptitude helps you excel in problem-solving and evidence-based decision-making.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Logical, detail-oriented, and comfortable working with numbers.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Working with statistics, solving quantitative problems, budgeting, coding.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Finance, data analysis, research, science, engineering.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Logical, detail-oriented, and comfortable working with numbers and quantitative data. Strong in mathematical reasoning, pattern recognition, and data interpretation.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Working with statistics, solving quantitative problems, budgeting, coding, logical puzzles, or analyzing data.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Finance, data analysis, research, science, engineering, or technology-driven spaces that rely on precision and logic.</div>
               </div>
             </div>
           </div>
@@ -1419,11 +1676,11 @@ export default function AssessmentReportPage() {
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You have a natural ability to think clearly, reason objectively, and identify the most logical pathway to a solution. You approach challenges methodically.
+                  You have a natural ability to think clearly, reason objectively, and identify the most logical pathway to a solution. You approach challenges methodically, preferring to understand why and how something works rather than just what happens.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Analytical, systematic, and conceptually clear thinker.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Decoding clues, troubleshooting systems, analyzing relationships.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Research, analytics, data science, technology, law, mathematics.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Analytical, systematic, and conceptually clear thinker. You are skilled at recognizing patterns, making inferences, and drawing conclusions from abstract or structured information.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> You enjoy situations where reasoning matters more than rote learning — for example, decoding clues, troubleshooting systems, or analyzing cause-and-effect relationships.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> You thrive in spaces that reward rational thought — such as research, analytics, data science, technology, law, mathematics, or strategic planning.</div>
               </div>
             </div>
 
@@ -1434,11 +1691,11 @@ export default function AssessmentReportPage() {
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You have a strong ability to understand, interpret, and communicate ideas through language. You are comfortable processing written information and expressing thoughts clearly.
+                  You have a strong ability to understand, interpret, and communicate ideas through language. You are comfortable processing written information and expressing thoughts clearly. This aptitude helps you analyze complex texts, articulate arguments effectively, and communicate ideas in a structured and meaningful way.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong comprehension, articulate expression, attention to language details.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Reading, writing, debating ideas, storytelling, presenting ideas.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Media, journalism, education, law, marketing, public relations.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong comprehension, articulate expression, attention to language details, and the ability to interpret written information accurately. Skilled in reasoning with words and explaining concepts clearly.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Reading, writing, debating ideas, storytelling, analyzing written material, presenting ideas, or communicating information clearly to others.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Communication-focused fields such as media, journalism, education, law, marketing, public relations, and roles that involve presenting, writing, or explaining ideas.</div>
               </div>
             </div>
           </div>
@@ -1460,11 +1717,11 @@ export default function AssessmentReportPage() {
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You demonstrate a strong understanding of word meanings, language nuances, and how words can be used effectively in different contexts.
+                  You demonstrate a strong understanding of word meanings, language nuances, and how words can be used effectively in different contexts. This aptitude helps you grasp complex ideas through language and communicate with clarity and precision.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong word knowledge, language awareness, comprehension of subtle differences.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Learning new words, reading diverse material, writing, editing content.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Publishing, media, education, writing, communication strategy.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong word knowledge, language awareness, comprehension of subtle differences in meaning, and the ability to use language effectively.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Learning new words, reading diverse material, writing, language-based quizzes or puzzles, editing content, and refining communication.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Language-rich environments such as publishing, media, education, writing, communication strategy, and roles that require strong language and articulation skills.</div>
               </div>
             </div>
 
@@ -1475,11 +1732,11 @@ export default function AssessmentReportPage() {
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You are able to understand how physical systems, machines, and mechanical processes work. You tend to think in practical and functional ways.
+                  You are able to understand how physical systems, machines, and mechanical processes work. You tend to think in practical and functional ways, recognizing how components interact and how systems operate in real-world environments.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Practical thinker, strong problem-solving ability, understanding of mechanical systems.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Building, fixing, assembling, experimenting with tools or devices.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Engineering workshops, manufacturing, robotics, automotive fields.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Practical thinker, strong problem-solving ability, understanding of mechanical systems, and an interest in how machines or tools function.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Building, fixing, assembling, experimenting with tools or devices, understanding how machines operate, and solving practical technical problems.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Engineering workshops, manufacturing, technical industries, robotics, automotive environments, or hands-on technical fields that involve machinery and systems.</div>
               </div>
             </div>
           </div>
@@ -1501,11 +1758,11 @@ export default function AssessmentReportPage() {
               </div>
               <div className="detail-card-right-body">
                 <div className="detail-card-desc">
-                  You have the ability to visualize objects, shapes, and structures in three-dimensional space. You can mentally manipulate visual information, understand patterns, and imagine how different components fit together.
+                  You have the ability to visualize objects, shapes, and structures in three-dimensional space. You can mentally manipulate visual information, understand patterns, and imagine how different components fit together. This aptitude supports creativity, design thinking, and structural understanding.
                 </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong visual imagination, pattern recognition, spatial awareness.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Decoding clues, troubleshooting systems, spatial visual puzzles.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Design, architecture, engineering, animation, product design.</div>
+                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Strong visual imagination, pattern recognition, spatial awareness, and the ability to mentally rotate or visualize objects.</div>
+                <div className="detail-card-meta-row"><strong>Enjoys:</strong> You enjoy situations where reasoning matters more than rote learning — for example, decoding clues, troubleshooting systems, or analyzing cause-and-effect relationships.</div>
+                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Design, architecture, engineering, animation, product design, construction planning, and fields that require visual thinking and spatial planning.</div>
               </div>
             </div>
           </div>
@@ -1524,17 +1781,27 @@ export default function AssessmentReportPage() {
               VISUAL REPRESENTATION OF YOUR SCORE
             </div>
 
-            {/* Vertical Column Bar Chart */}
-            <div className="my-10 p-6 bg-slate-50 border border-slate-200 rounded-2xl max-w-lg mx-auto">
-              <div className="h-56 flex items-end justify-between gap-4 border-b-2 border-slate-300 pb-2">
+            {/* Vertical Column Bar Chart matching PDF Page 25 */}
+            <div className="my-10 p-6 bg-white border border-slate-200 rounded-2xl max-w-lg mx-auto">
+              <div className="h-64 flex items-end justify-between gap-4 border-b-2 border-slate-300 pb-2 relative">
+                {/* Y-Axis Guidelines at 0, 10, 20, 30, 40, 50 */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] text-slate-400 font-mono">
+                  <div className="border-b border-slate-100 w-full text-left">50</div>
+                  <div className="border-b border-slate-100 w-full text-left">40</div>
+                  <div className="border-b border-slate-100 w-full text-left">30</div>
+                  <div className="border-b border-slate-100 w-full text-left">20</div>
+                  <div className="border-b border-slate-100 w-full text-left">10</div>
+                  <div className="text-left">0</div>
+                </div>
+
                 {aptList.map((item) => (
-                  <div key={item.key} className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs font-bold text-[#9C2A1F]">{item.val}%</span>
+                  <div key={item.key} className="flex-1 flex flex-col items-center gap-2 z-10">
+                    <span className="text-xs font-bold text-slate-800">{item.val}%</span>
                     <div
-                      className="w-full bg-[#9C2A1F] rounded-t-md transition-all"
-                      style={{ height: `${item.val * 3.5}px` }}
+                      className="w-full max-w-[36px] bg-[#933D3D] rounded-t-sm transition-all"
+                      style={{ height: `${item.val * 3.8}px` }}
                     ></div>
-                    <span className="text-[11px] font-bold text-slate-600 truncate">{item.label}</span>
+                    <span className="text-[11px] font-bold text-slate-700 truncate">{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -1561,16 +1828,46 @@ export default function AssessmentReportPage() {
 
           <div className="my-auto">
             <div className="title-pill-header gold">
-              <div className="title-pill-icon-circle"></div>
+              <div className="title-pill-icon-circle">
+                <div className="w-2 h-2 rounded-full bg-white"></div>
+              </div>
               <span className="title-pill-text">INTEGRATED ANALYSIS</span>
             </div>
 
-            <div className="text-2xl font-black text-[#1E232A] uppercase tracking-tight">
+            <div className="text-xl font-black text-[#1E232A] uppercase tracking-tight">
               YOUR TOP CLUSTERS
             </div>
-            <p className="text-xs text-[#6B7280] mb-6">
+            <p className="text-xs text-[#6B7280] mb-4">
               Each card shows what the field involves, why it suits you, how to get there, and list of careers
             </p>
+
+            {/* Counsellor + 5 Node Map Graphic matching PDF Page 26 */}
+            <div className="my-4 p-4 bg-[#F8FAFC] border border-slate-200 rounded-2xl flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="text-4xl">👩‍💼</div>
+                <div className="bg-[#5C768D] text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider">
+                  YOUR<br/>TOP<br/>CLUSTERS
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-1.5 text-right">
+                <div className="inline-block bg-white border border-emerald-500 text-emerald-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                  BUSINESS & ENTREPRENEURSHIP
+                </div><br/>
+                <div className="inline-block bg-white border border-blue-500 text-blue-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                  HOSPITALITY
+                </div><br/>
+                <div className="inline-block bg-white border border-purple-500 text-purple-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                  SPORTS & ATHLETICS
+                </div><br/>
+                <div className="inline-block bg-white border border-amber-500 text-amber-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                  GOVERNMENT, LAW & PUBLIC POLICY
+                </div><br/>
+                <div className="inline-block bg-white border border-teal-500 text-teal-800 text-[10px] font-black px-3 py-1 rounded-full uppercase">
+                  PERSONAL SERVICES & FREELANCE
+                </div>
+              </div>
+            </div>
 
             {/* Top 1 Cluster Card */}
             <div className="cluster-match-card">
@@ -1581,12 +1878,12 @@ export default function AssessmentReportPage() {
               <div className="cluster-match-card-body">
                 <p className="mb-2 font-medium">{top5Clusters[0].description}</p>
                 <p className="mb-2 text-slate-600">{top5Clusters[0].why_fit}</p>
-                <div className="mt-3 text-xs">
+                <div className="mt-2 text-xs">
                   <strong>Pathway in India:</strong> {top5Clusters[0].streams_and_pathways_india}
                 </div>
 
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[0].careers || []).slice(0, 9).map((c, i) => (
+                  {(top5Clusters[0].careers || []).slice(0, 10).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot"></span>
                       <span>{c}</span>
@@ -1619,7 +1916,7 @@ export default function AssessmentReportPage() {
                   <strong>Pathway in India:</strong> {top5Clusters[1].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[1].careers || []).slice(0, 9).map((c, i) => (
+                  {(top5Clusters[1].careers || []).slice(0, 11).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot rose"></span>
                       <span>{c}</span>
@@ -1641,7 +1938,7 @@ export default function AssessmentReportPage() {
                   <strong>Pathway in India:</strong> {top5Clusters[2].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[2].careers || []).slice(0, 9).map((c, i) => (
+                  {(top5Clusters[2].careers || []).slice(0, 10).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot blue"></span>
                       <span>{c}</span>
@@ -1674,7 +1971,7 @@ export default function AssessmentReportPage() {
                   <strong>Pathway in India:</strong> {top5Clusters[3].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[3].careers || []).slice(0, 9).map((c, i) => (
+                  {(top5Clusters[3].careers || []).slice(0, 10).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot green"></span>
                       <span>{c}</span>
@@ -1696,7 +1993,7 @@ export default function AssessmentReportPage() {
                   <strong>Pathway in India:</strong> {top5Clusters[4].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[4].careers || []).slice(0, 9).map((c, i) => (
+                  {(top5Clusters[4].careers || []).slice(0, 10).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot gold"></span>
                       <span>{c}</span>
@@ -1717,7 +2014,7 @@ export default function AssessmentReportPage() {
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="my-auto">
-            <div className="score-rep-banner gold" style={{ fontSize: "1.1rem" }}>
+            <div className="score-rep-banner gold" style={{ fontSize: "1.05rem" }}>
               YOUR DIRECTION: STUDY & PATHWAY ADVICE
             </div>
             <p className="text-xs text-slate-600 mb-4">
@@ -1753,7 +2050,7 @@ export default function AssessmentReportPage() {
               </div>
             </div>
 
-            {/* 6-Lightbulb Study Roadmap */}
+            {/* 6-Lightbulb Study Roadmap matching PDF Page 29 */}
             <div className="mt-8">
               <strong className="block text-sm font-bold text-slate-900 mb-4">
                 A general route from where you are now
@@ -1765,7 +2062,7 @@ export default function AssessmentReportPage() {
                   <div className="roadmap-sub">Build basics</div>
                 </div>
                 <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon">💡</div>
+                  <div className="roadmap-bulb-icon bg-amber-100 border-amber-400">💡</div>
                   <div className="roadmap-title">Stream Choice</div>
                   <div className="roadmap-sub">Class 11 onward</div>
                 </div>
@@ -1775,12 +2072,12 @@ export default function AssessmentReportPage() {
                   <div className="roadmap-sub">If required</div>
                 </div>
                 <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon">💡</div>
+                  <div className="roadmap-bulb-icon bg-amber-100 border-amber-400">💡</div>
                   <div className="roadmap-title">Degree / Course</div>
                   <div className="roadmap-sub">College years</div>
                 </div>
                 <div className="roadmap-stop">
-                  <div className="roadmap-bulb-icon">💡</div>
+                  <div className="roadmap-bulb-icon bg-amber-100 border-amber-400">💡</div>
                   <div className="roadmap-title">Internship</div>
                   <div className="roadmap-sub">Real experience</div>
                 </div>
@@ -1818,36 +2115,36 @@ export default function AssessmentReportPage() {
               {studentName}
             </div>
 
-            {/* 6 Summary Metric Cards */}
+            {/* 6 Summary Metric Cards matching PDF Page 30 */}
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-[10px] font-bold uppercase text-slate-500">HOLLAND CODE</div>
                 <div className="text-base font-extrabold text-[#9C2A1F]">{hollandCode}</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-[10px] font-bold uppercase text-slate-500">TOP CLUSTER</div>
-                <div className="text-sm font-extrabold text-slate-900 truncate">{top5Clusters[0].name} ({top5Clusters[0].matchPercentage}%)</div>
+                <div className="text-sm font-extrabold text-slate-900 truncate">Business & Entrepreneurship <span className="text-[#9C2A1F] font-black">67%</span></div>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-[10px] font-bold uppercase text-slate-500">TOP VALUE</div>
                 <div className="text-sm font-extrabold text-slate-900 truncate">Openness to Change</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-[10px] font-bold uppercase text-slate-500">TOP TRAIT</div>
                 <div className="text-sm font-extrabold text-slate-900 truncate">Emotional Stability</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-[10px] font-bold uppercase text-slate-500">LEARNING STYLE</div>
                 <div className="text-sm font-extrabold text-slate-900 truncate">Visual</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-[10px] font-bold uppercase text-slate-500">GOAL ORIENTATION</div>
                 <div className="text-sm font-extrabold text-slate-900 truncate">Balanced Planner</div>
               </div>
             </div>
 
             <p className="text-xs leading-relaxed text-slate-700 mb-6">
-              {studentName} shows an {hollandCode} interest pattern, which combined with emotional stability and a strong pull toward openness to change points most clearly toward {top5Clusters[0].name} ({top5Clusters[0].matchPercentage}% match). Aptitude-wise, {studentName}’s strongest results are in Verbal Reasoning and Logical Reasoning, which support that direction. As a visual learner with a balanced planner approach to the path ahead, the study tips and route in Section 3 are the most relevant starting point.
+              {studentName} shows an {hollandCode} interest pattern, which combined with emotional stability and a strong pull toward openness to change points most clearly toward Business & Entrepreneurship (67% match). Aptitude-wise, {studentName}’s strongest results are in Verbal Reasoning and Logical Reasoning, which support that direction. As a visual learner with a balanced planner approach to the path ahead, the study tips and route in Section 3 are the most relevant starting point.
             </p>
 
             {/* What to do next checklist */}
@@ -1871,13 +2168,27 @@ export default function AssessmentReportPage() {
             PAGE 31: ABOUT CAREER MAP (BACK COVER)
         ============================================================ */}
         <div className="pdf-page" id="page-31">
-          <PageHeader studentFirstName={studentFirstName} />
+          {/* Header with Logo */}
+          <div className="flex justify-end pt-1 pr-1 mb-4">
+            <div className="flex items-center gap-2">
+              <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                <circle cx="21" cy="7" r="3" fill="#9C2A1F" />
+                <path d="M19 12C16 13 14 16 13 20L10 28" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M16 14L22 17L26 15" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M14 19L19 23L23 29" stroke="#9C2A1F" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+              <div className="font-extrabold text-xs tracking-wider text-[#9C2A1F] leading-tight">CAREER<br/>MAP</div>
+            </div>
+          </div>
 
-          <div className="my-auto space-y-6">
-            <div>
-              <h2 className="text-2xl font-black text-[#9C2A1F] uppercase leading-tight">
-                DISCOVER YOUR DIRECTION.<br/>DESIGN YOUR FUTURE.
+          <div className="my-auto space-y-5">
+            <div className="relative">
+              <h2 className="text-2xl font-black text-slate-900 uppercase leading-tight">
+                DISCOVER YOUR DIRECTION.<br/>
+                <span className="text-[#9C2A1F]">DESIGN YOUR FUTURE.</span>
               </h2>
+              {/* Paper airplane curve */}
+              <div className="absolute top-0 right-4 text-3xl">✈️</div>
             </div>
 
             <div>
@@ -1894,12 +2205,30 @@ export default function AssessmentReportPage() {
                 WHY CAREER MAP?
               </div>
               <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-800">
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">PSYCHOMETRIC-BASED COUNSELLING</div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">CAREER COUNSELING CELL</div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">ONE-TO-ONE CAREER COUNSELLING</div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">BEHAVIORAL & PSYCHOLOGICAL COUNSELLING</div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">MULTIDIMENSIONAL STUDENT MENTORSHIP</div>
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">INFORMATION DASHBOARD & APP</div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                  <span>📊</span>
+                  <span>PSYCHOMETRIC-BASED COUNSELLING</span>
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                  <span>🏛️</span>
+                  <span>CAREER COUNSELING CELL</span>
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                  <span>👥</span>
+                  <span>ONE-TO-ONE CAREER COUNSELLING</span>
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                  <span>🧠</span>
+                  <span>BEHAVIORAL & PSYCHOLOGICAL COUNSELLING</span>
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                  <span>🎓</span>
+                  <span>MULTIDIMENSIONAL STUDENT MENTORSHIP</span>
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                  <span>📱</span>
+                  <span>INFORMATION DASHBOARD & APP</span>
+                </div>
               </div>
             </div>
 
@@ -1907,7 +2236,7 @@ export default function AssessmentReportPage() {
               Career Guidance Partner to the Government of Odisha, in association with UNICEF, OSEPA & DHSE. Present across 10,000+ students in CBSE, ICSE & residential schools — including with Knowledge Partnerships spanning and other leading institutions.
             </div>
 
-            <div className="p-4 bg-[#9C2A1F] text-white rounded-2xl text-center">
+            <div className="p-4 bg-[#9C2A1F] text-white rounded-2xl text-center shadow-md">
               <div className="font-extrabold text-sm mb-1">Your Future Deserves More Than a Guess.</div>
               <div className="text-xs text-rose-100">Schedule your counselling session today.</div>
               <div className="mt-3 text-xs flex justify-center gap-6 text-amber-200 font-semibold">
