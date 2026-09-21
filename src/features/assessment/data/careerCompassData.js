@@ -1329,6 +1329,7 @@ export const SEM_SUB = [
       "Voc": 1
     },
     "signature": "Investigation in service of justice: meticulous protocol (Conscientiousness, Conservation) with strong Logical + Verbal reasoning."
+  }
 ];
 
 export const CLUSTER_MAP = CLUSTERS.reduce((acc, c) => {
