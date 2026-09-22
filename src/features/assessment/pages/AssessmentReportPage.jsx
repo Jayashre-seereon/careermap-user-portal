@@ -235,7 +235,46 @@ export default function AssessmentReportPage() {
   const aptScaleMax = maxAptScore > 50 ? 100 : 50;
   const aptYAxisPoints = aptScaleMax === 100 ? [100, 80, 60, 40, 20, 0] : [50, 40, 30, 20, 10, 0];
 
-  const topAptName = "VERBAL APTITUDE";
+  // Report summaries must always reflect the scores returned for this attempt.
+  // API items include `name`, `facet`, and either `percentage` or `score`.
+  const scoreFor = (item) => Number(item?.percentage ?? pct(item?.score) ?? 0);
+  const rankedDomains = (items, fallbackItems, limit, labels = {}) => {
+    const source = Array.isArray(items) && items.length ? items : fallbackItems;
+    return source
+      .map((item) => ({ ...item, name: item?.name || labels[item?.facet] }))
+      .filter((item) => item.name)
+      .sort((a, b) => scoreFor(b) - scoreFor(a))
+      .slice(0, limit);
+  };
+
+  const topCareerInterests = rankedDomains(domainInterests, [
+    { name: "Enterprising", percentage: interestScoreMap.E },
+    { name: "Conventional", percentage: interestScoreMap.C },
+    { name: "Social", percentage: interestScoreMap.S },
+    { name: "Realistic", percentage: interestScoreMap.R },
+    { name: "Investigative", percentage: interestScoreMap.I },
+    { name: "Artistic", percentage: interestScoreMap.A },
+  ], 4, { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" });
+  const topLearningStyles = rankedDomains(domainVark, [
+    { name: "Visual", percentage: varkScoreMap.V },
+    { name: "Reading/Writing", percentage: varkScoreMap.Rd },
+    { name: "Auditory", percentage: varkScoreMap.A },
+    { name: "Kinesthetic", percentage: varkScoreMap.K },
+  ], 3, { V: "Visual", A: "Auditory", Rd: "Reading/Writing", K: "Kinesthetic" });
+  const topWorkValues = rankedDomains(domainValues, [
+    { name: "Openness to Change", percentage: valScoreMap.OC },
+    { name: "Self-Enhancement", percentage: valScoreMap.SE },
+    { name: "Self-Transcendence", percentage: valScoreMap.ST },
+    { name: "Conservation", percentage: valScoreMap.CO },
+  ], 2, { OC: "Openness to Change", SE: "Self-Enhancement", ST: "Self-Transcendence", CO: "Conservation" });
+  const topAptitudes = rankedDomains(domainApt, [
+    { name: "Verbal Aptitude", percentage: aptScoreMap.Verb },
+    { name: "Logical Aptitude", percentage: aptScoreMap.Log },
+    { name: "Vocabulary Aptitude", percentage: aptScoreMap.Voc },
+    { name: "Mechanical Aptitude", percentage: aptScoreMap.Mech },
+    { name: "Spatial Aptitude", percentage: aptScoreMap.Spat },
+    { name: "Numerical Aptitude", percentage: aptScoreMap.Num },
+  ], 3, { Num: "Numerical Aptitude", Log: "Logical Aptitude", Verb: "Verbal Aptitude", Voc: "Vocabulary Aptitude", Mech: "Mechanical Aptitude", Spat: "Spatial Aptitude" });
 
   // 5 Top Default fallback clusters matching the PDF
   const defaultTop5 = [
@@ -795,10 +834,11 @@ export default function AssessmentReportPage() {
                 <span>YOUR TOP CAREER INTERESTS ARE</span>
               </div>
               <div className="top-interests-pills-grid">
-                <div className="top-interest-pill">ENTERPRISING</div>
-                <div className="top-interest-pill">CONVENTIONAL</div>
-                <div className="top-interest-pill">SOCIAL</div>
-                <div className="top-interest-pill">REALISTIC</div>
+                {topCareerInterests.map((interest) => (
+                  <div key={interest.facet || interest.name} className="top-interest-pill">
+                    {interest.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1112,12 +1152,12 @@ export default function AssessmentReportPage() {
                 <div className="score-rep-banner-circle"></div>
                 <span>Your Best Learning Styles are</span>
               </div>
-              <div className="flex justify-center gap-4 max-w-md mx-auto">
-                <div className="top-interest-pill lavender flex-1">VISUAL</div>
-                <div className="top-interest-pill lavender flex-1">READING</div>
-              </div>
-              <div className="max-w-[210px] mx-auto mt-3">
-                <div className="top-interest-pill lavender">AUDITORY</div>
+              <div className="top-interests-pills-grid max-w-md">
+                {topLearningStyles.map((style) => (
+                  <div key={style.facet || style.name} className="top-interest-pill lavender">
+                    {style.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1245,8 +1285,11 @@ export default function AssessmentReportPage() {
                 <span>Your Best Work Value Fit into</span>
               </div>
               <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-                <div className="top-interest-pill green">OPENNESS TO CHANGE</div>
-                <div className="top-interest-pill green">SELF-ENHANCEMENT</div>
+                {topWorkValues.map((value) => (
+                  <div key={value.facet || value.name} className="top-interest-pill green">
+                    {value.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1622,10 +1665,14 @@ export default function AssessmentReportPage() {
             <div className="top-interests-box mt-10">
               <div className="score-rep-banner red">
                 <div className="w-6 h-6 rounded-md bg-[#8C1814] flex-shrink-0"></div>
-                <span>Your Top Aptitude are</span>
+                <span>Your Top Aptitudes Are</span>
               </div>
-              <div className="max-w-xs mx-auto mt-4">
-                <div className="top-interest-pill red">{topAptName}</div>
+              <div className="top-interests-pills-grid max-w-md">
+                {topAptitudes.map((aptitude) => (
+                  <div key={aptitude.facet || aptitude.name} className="top-interest-pill red">
+                    {aptitude.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
