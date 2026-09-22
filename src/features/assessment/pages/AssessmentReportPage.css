@@ -48,20 +48,13 @@ body {
 
 .report-app-container {
   min-height: 100vh;
-  background-color: var(--cm-page-bg);
   padding-bottom: 60px;
 }
 
 /* Floating Action Bar (Hidden in Print) */
 .report-action-bar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--cm-line);
-  padding: 12px 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+ 
+
 }
 
 .report-action-bar-inner {
@@ -823,11 +816,11 @@ body {
     border-radius: 0 !important;
     margin: 0 !important;
     padding: 36px 48px 24px !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    min-height: 100vh !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    min-height: 297mm !important;
     page-break-after: always !important;
     page-break-inside: avoid !important;
     break-after: page !important;

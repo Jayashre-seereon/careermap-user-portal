@@ -414,9 +414,9 @@ export default function AssessmentReportPage() {
   const topCluster = top5Clusters[0];
 
   return (
-    <div className="">
+    <div className="report-app-container">
       {/* Floating Action Bar (Hidden on Print) */}
-      <div className="">
+      <div className="report-action-bar">
         <div className="report-action-bar-inner">
           <div className="flex items-center gap-3">
             <Button
@@ -544,8 +544,7 @@ export default function AssessmentReportPage() {
             <div className="space-y-1.5 text-[14.5px] text-[#2D3748] leading-normal">
               <div><span className="font-normal text-[#374151]">Name:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentName}</span></div>
               <div><span className="font-normal text-[#374151]">Class:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentClass}</span></div>
-              <div><span className="font-normal text-[#374151]">School Name:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentSchool}</span></div>
-              <div><span className="font-normal text-[#374151]">Date:</span> <span className="font-semibold text-[#111827] ml-1.5">{formattedDate}</span></div>
+               <div><span className="font-normal text-[#374151]">Date:</span> <span className="font-semibold text-[#111827] ml-1.5">{formattedDate}</span></div>
               <div><span className="font-normal text-[#374151]">Email Id:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentEmail}</span></div>
               <div><span className="font-normal text-[#374151]">Phone No:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentPhone}</span></div>
             </div>
@@ -2112,7 +2111,7 @@ export default function AssessmentReportPage() {
               <div className="w-full py-2.5 bg-[#8C1814] text-white rounded-xl font-bold text-base tracking-wide shadow-sm mb-2">
                 Your Future Deserves More Than a Guess.
               </div>
-              <div className="text-xs font-semibold text-[#4B5563] mb-2.5">
+              <div className="text-xs font-semibold text-[#4B5563] mb-2 mt-5">
                 Schedule your counselling session today.
               </div>
               <div className="flex justify-center items-center gap-8 text-xs text-[#1E232A] font-semibold mb-2">
