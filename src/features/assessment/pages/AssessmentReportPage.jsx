@@ -124,27 +124,7 @@ export default function AssessmentReportPage() {
     window.print();
   }
 
-  function handleDownloadJSON() {
-    try {
-      const payload = {
-        student: { name: studentName, class: studentClass, school: studentSchool },
-        completedAt: completedDate,
-        hollandCode,
-        topCluster,
-        top5Clusters,
-        scores,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `career-compass-${(studentName || "report").replace(/\s+/g, "_")}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      message.error("Could not download report JSON");
-    }
-  }
+
 
   function scrollToPage(pageId) {
     const el = document.getElementById(pageId);
@@ -1162,11 +1142,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
-            <div className="my-auto py-2 flex justify-center items-center">
+                      {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
+            <div className="my-2 py-2 flex justify-center items-center overflow-hidden h-[380px]">
               <img
                 src={ReportImg5}
                 alt="Schwartz Values"
-                className="max-h-[300px] w-full max-w-[500px] mx-auto object-contain"
+                className="w-full object-contain scale-10"
               />
             </div>
 
@@ -1394,11 +1375,12 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6 Hanging Clip Badges matching PDF Page 20 */}
-            <div className="my-2 flex justify-center items-center">
+                        {/* 6 Hanging Clip Badges matching PDF Page 20 */}
+                       <div className="my-2 flex justify-center items-center overflow-hidden">
               <img
                 src={ReportImg6}
                 alt="Aptitude Categories"
-                className="max-h-[140px] w-full max-w-[560px] mx-auto object-contain"
+                className="w-full object-contain scale-100 max-w-[540px] mx-auto"
               />
             </div>
 
@@ -1864,11 +1846,11 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6-Lightbulb Study Roadmap matching PDF Page 29 */}
-            <div className="my-2 flex justify-center items-center">
+                              <div className="my-2 flex justify-center items-center overflow-hidden">
               <img
                 src={ReportImg8}
                 alt="Study & Pathway Roadmap"
-                className="max-h-[180px] w-full max-w-xl mx-auto object-contain"
+                className="w-full object-contain scale-100 max-w-[540px] mx-auto"
               />
             </div>
 
