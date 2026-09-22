@@ -1,7 +1,7 @@
 import { PhoneOutlined } from "@ant-design/icons";
 import { Alert, Button, Input, Space } from "antd";
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams,useLocation } from "react-router-dom";
 import { getApiErrorMessage, sendOtp, verifyOtp } from "../../../api/authApi";
 import { useAppState } from "../../../state/AppStateContext";
 import { useAuthStore } from "../../../store/authStore";
@@ -10,9 +10,12 @@ import { AuthShell } from "../components/AuthShell";
 import { authPrimaryButtonStyle } from "../components/authShared";
 
 export default function OtpVerifyPage() {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
   const { saveUserProfile, setProfileIncomplete } = useAppState();
   const [params] = useSearchParams();
+  // TEMP-DEBUG: remove before production
+  const location = useLocation();
+  const initialDevOtp = location.state?.devOtp;
   const signupForm = useAuthStore((state) => state.signupForm);
   const setTempToken = useAuthStore((state) => state.setTempToken);
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
@@ -78,8 +81,17 @@ export default function OtpVerifyPage() {
     try {
       setIsResending(true);
       setStatus(null);
-      const response = await sendOtp(mobileNumber, flowType);
-      setStatus({ type: "success", message: response.message || "OTP resent successfully." });
+      // const response = await sendOtp(mobileNumber, flowType);
+      // setStatus({ type: "success", message: response.message || "OTP resent successfully." });
+            const response = await sendOtp(mobileNumber, flowType);
+      // TEMP-DEBUG: remove this before production — shows OTP on screen for testing
+      const devOtp = response.otp || response.data?.otp;
+      setStatus({
+        type: "success",
+        message: devOtp
+          ? `${response.message || "OTP resent successfully."} (OTP: ${devOtp})`
+          : response.message || "OTP resent successfully.",
+      });
     } catch (error) {
       setStatus({
         type: "error",
@@ -93,7 +105,7 @@ export default function OtpVerifyPage() {
   return (
     <AuthShell title="Verify OTP" subtitle={`Enter the 6-digit code sent to ${mobileNumber || "your phone"}.`} backTo="/login">
       <Space orientation="vertical" size="large" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div
+               <div
           style={{
             borderRadius: "16px",
             padding: "16px 24px",
@@ -108,6 +120,13 @@ export default function OtpVerifyPage() {
           </div>
           <div style={{ fontSize: "13px", color: "#888" }}>OTP sent to</div>
           <div style={{ fontSize: "15px", fontWeight: "800", color: "#9a2119" }}>{mobileNumber || "your phone"}</div>
+
+          {/* TEMP-DEBUG: remove before production */}
+          {initialDevOtp ? (
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#9a2119", marginTop: "8px" }}>
+              OTP: {initialDevOtp}
+            </div>
+          ) : null}
         </div>
         <div className="cm-otp" style={{ display: "flex", justifyContent: "center" }}>
           <Input.OTP length={6} value={otp} onChange={setOtp} />
