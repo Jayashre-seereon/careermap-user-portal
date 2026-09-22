@@ -386,7 +386,11 @@ export default function AssessmentReportPage() {
     },
   ];
 
-  const rawTop5 = report.careerClusters?.top5 || rawData.top5Clusters || [];
+  const rawTop5 =
+    report.careerClusters?.top5 ||
+    rawData.careerClusters?.top5 ||
+    rawData.top5Clusters ||
+    [];
 
   const clusterMap = (CLUSTERS || []).reduce((acc, c) => {
     acc[c.cluster_id] = c;
@@ -1695,13 +1699,35 @@ export default function AssessmentReportPage() {
               Each card shows what the field involves, why it suits you, how to get there, and list of careers
             </p>
 
-            {/* Counsellor + 5 Clusters Graphic matching PDF Page 26 */}
-            <div className="my-1 flex justify-center items-center">
-              <img
-                src={ReportImg7}
-                alt="Top Clusters Map"
-                className="max-h-[260px] w-full max-w-[500px] mx-auto object-contain drop-shadow-sm"
-              />
+            {/* Dynamic counsellor + top-five cluster map */}
+            <div className="cluster-map" aria-label="Your five top career clusters">
+              <div className="cluster-map-illustration">
+                <img src={ReportImg7} alt="Career counsellor" />
+              </div>
+              <svg
+                className="cluster-map-connectors"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {[9, 29.5, 50, 70.5, 91].map((endY) => (
+                  <line key={endY} x1="39" y1="50" x2="49" y2={endY} />
+                ))}
+                <circle cx="39" cy="50" r="1.35" />
+              </svg>
+              <div className="cluster-map-labels">
+                {top5Clusters.slice(0, 5).map((cluster, index) => (
+                  <div
+                    className={`cluster-map-label cluster-map-label-${index + 1}`}
+                    key={`${cluster.code}-${index}`}
+                    style={{ "--cluster-color": ["#70b86b", "#4d95d7", "#9a76ca", "#dc984f", "#47b9b9"][index] }}
+                  >
+                    <span className="cluster-map-rank">{index + 1}</span>
+                    <span className="cluster-map-name">{cluster.name}</span>
+                    <span className="cluster-map-match">{cluster.matchPercentage}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Top 1 Cluster Card */}

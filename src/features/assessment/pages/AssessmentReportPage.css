@@ -665,6 +665,127 @@ body {
 }
 
 /* Cluster Match Cards */
+.cluster-map {
+  --cluster-map-navy: #102a54;
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 260px;
+  max-width: 640px;
+  margin: 2px auto 10px;
+  overflow: visible;
+}
+
+.cluster-map-illustration {
+  width: 49%;
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  z-index: 1;
+}
+
+.cluster-map-illustration img {
+  width: 100%;
+  max-height: 258px;
+  object-fit: contain;
+  object-position: left bottom;
+}
+
+.cluster-map-connectors {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.cluster-map-connectors line {
+  stroke: #6c7890;
+  stroke-width: 0.42;
+  stroke-dasharray: 1.5 1.2;
+}
+
+.cluster-map-connectors circle {
+  fill: #17467f;
+  stroke: #e9f3ff;
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 1px rgba(23, 70, 127, 0.35));
+}
+
+.cluster-map-labels {
+  position: relative;
+  z-index: 3;
+  width: 51%;
+  display: grid;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.cluster-map-label {
+  --cluster-color: #4d95d7;
+  position: relative;
+  min-height: 39px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  border: 2px solid var(--cluster-color);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--cluster-map-navy);
+  box-shadow: 0 2px 5px rgba(16, 42, 84, 0.1);
+  font-size: 0.63rem;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0.015em;
+}
+
+.cluster-map-rank {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--cluster-color);
+  color: #fff;
+  font-size: 0.59rem;
+}
+
+.cluster-map-name {
+  flex: 1;
+  text-transform: uppercase;
+}
+
+.cluster-map-match {
+  color: var(--cluster-color);
+  font-size: 0.6rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .cluster-map {
+    display: block;
+    min-height: 0;
+  }
+
+  .cluster-map-illustration {
+    width: 68%;
+    height: 190px;
+    margin: 0 auto -16px;
+  }
+
+  .cluster-map-illustration img { max-height: 190px; }
+  .cluster-map-connectors { display: none; }
+  .cluster-map-labels { width: 100%; gap: 7px; }
+  .cluster-map-label { font-size: 0.68rem; min-height: 36px; }
+}
+
 .cluster-match-card {
   border: 1px solid var(--cm-line);
   border-radius: 16px;
