@@ -629,16 +629,17 @@ export default function AssessmentTestPage() {
         onCancel={() => setIsSubmitModalVisible(false)}
         footer={[
           <Button key="back" onClick={() => setIsSubmitModalVisible(false)} className="rounded-xl">
-            Continue Answering
+           Review
           </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            onClick={handleSubmitTest}
-            className="rounded-xl border-none bg-[#9a2119] font-bold hover:bg-[#801812]"
-          >
-            {unansweredQuestions.length > 0 ? "Submit Anyway" : "Confirm & View Report"}
-          </Button>,
+         <Button
+  key="submit"
+  type="primary"
+  disabled={unansweredQuestions.length > 0}
+  onClick={handleSubmitTest}
+  className="rounded-xl border-none bg-[#9a2119] font-bold hover:bg-[#801812]"
+>
+  Submit
+</Button>,
         ]}
       >
         <div className="py-2">

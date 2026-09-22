@@ -124,27 +124,7 @@ export default function AssessmentReportPage() {
     window.print();
   }
 
-  function handleDownloadJSON() {
-    try {
-      const payload = {
-        student: { name: studentName, class: studentClass, school: studentSchool },
-        completedAt: completedDate,
-        hollandCode,
-        topCluster,
-        top5Clusters,
-        scores,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `career-compass-${(studentName || "report").replace(/\s+/g, "_")}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      message.error("Could not download report JSON");
-    }
-  }
+
 
   function scrollToPage(pageId) {
     const el = document.getElementById(pageId);
@@ -255,7 +235,46 @@ export default function AssessmentReportPage() {
   const aptScaleMax = maxAptScore > 50 ? 100 : 50;
   const aptYAxisPoints = aptScaleMax === 100 ? [100, 80, 60, 40, 20, 0] : [50, 40, 30, 20, 10, 0];
 
-  const topAptName = "VERBAL APTITUDE";
+  // Report summaries must always reflect the scores returned for this attempt.
+  // API items include `name`, `facet`, and either `percentage` or `score`.
+  const scoreFor = (item) => Number(item?.percentage ?? pct(item?.score) ?? 0);
+  const rankedDomains = (items, fallbackItems, limit, labels = {}) => {
+    const source = Array.isArray(items) && items.length ? items : fallbackItems;
+    return source
+      .map((item) => ({ ...item, name: item?.name || labels[item?.facet] }))
+      .filter((item) => item.name)
+      .sort((a, b) => scoreFor(b) - scoreFor(a))
+      .slice(0, limit);
+  };
+
+  const topCareerInterests = rankedDomains(domainInterests, [
+    { name: "Enterprising", percentage: interestScoreMap.E },
+    { name: "Conventional", percentage: interestScoreMap.C },
+    { name: "Social", percentage: interestScoreMap.S },
+    { name: "Realistic", percentage: interestScoreMap.R },
+    { name: "Investigative", percentage: interestScoreMap.I },
+    { name: "Artistic", percentage: interestScoreMap.A },
+  ], 4, { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" });
+  const topLearningStyles = rankedDomains(domainVark, [
+    { name: "Visual", percentage: varkScoreMap.V },
+    { name: "Reading/Writing", percentage: varkScoreMap.Rd },
+    { name: "Auditory", percentage: varkScoreMap.A },
+    { name: "Kinesthetic", percentage: varkScoreMap.K },
+  ], 3, { V: "Visual", A: "Auditory", Rd: "Reading/Writing", K: "Kinesthetic" });
+  const topWorkValues = rankedDomains(domainValues, [
+    { name: "Openness to Change", percentage: valScoreMap.OC },
+    { name: "Self-Enhancement", percentage: valScoreMap.SE },
+    { name: "Self-Transcendence", percentage: valScoreMap.ST },
+    { name: "Conservation", percentage: valScoreMap.CO },
+  ], 2, { OC: "Openness to Change", SE: "Self-Enhancement", ST: "Self-Transcendence", CO: "Conservation" });
+  const topAptitudes = rankedDomains(domainApt, [
+    { name: "Verbal Aptitude", percentage: aptScoreMap.Verb },
+    { name: "Logical Aptitude", percentage: aptScoreMap.Log },
+    { name: "Vocabulary Aptitude", percentage: aptScoreMap.Voc },
+    { name: "Mechanical Aptitude", percentage: aptScoreMap.Mech },
+    { name: "Spatial Aptitude", percentage: aptScoreMap.Spat },
+    { name: "Numerical Aptitude", percentage: aptScoreMap.Num },
+  ], 3, { Num: "Numerical Aptitude", Log: "Logical Aptitude", Verb: "Verbal Aptitude", Voc: "Vocabulary Aptitude", Mech: "Mechanical Aptitude", Spat: "Spatial Aptitude" });
 
   // 5 Top Default fallback clusters matching the PDF
   const defaultTop5 = [
@@ -367,7 +386,11 @@ export default function AssessmentReportPage() {
     },
   ];
 
-  const rawTop5 = report.careerClusters?.top5 || rawData.top5Clusters || [];
+  const rawTop5 =
+    report.careerClusters?.top5 ||
+    rawData.careerClusters?.top5 ||
+    rawData.top5Clusters ||
+    [];
 
   const clusterMap = (CLUSTERS || []).reduce((acc, c) => {
     acc[c.cluster_id] = c;
@@ -395,9 +418,9 @@ export default function AssessmentReportPage() {
   const topCluster = top5Clusters[0];
 
   return (
-    <div className="">
+    <div className="report-app-container">
       {/* Floating Action Bar (Hidden on Print) */}
-      <div className="">
+      <div className="report-action-bar">
         <div className="report-action-bar-inner">
           <div className="flex items-center gap-3">
             <Button
@@ -525,8 +548,7 @@ export default function AssessmentReportPage() {
             <div className="space-y-1.5 text-[14.5px] text-[#2D3748] leading-normal">
               <div><span className="font-normal text-[#374151]">Name:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentName}</span></div>
               <div><span className="font-normal text-[#374151]">Class:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentClass}</span></div>
-              <div><span className="font-normal text-[#374151]">School Name:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentSchool}</span></div>
-              <div><span className="font-normal text-[#374151]">Date:</span> <span className="font-semibold text-[#111827] ml-1.5">{formattedDate}</span></div>
+               <div><span className="font-normal text-[#374151]">Date:</span> <span className="font-semibold text-[#111827] ml-1.5">{formattedDate}</span></div>
               <div><span className="font-normal text-[#374151]">Email Id:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentEmail}</span></div>
               <div><span className="font-normal text-[#374151]">Phone No:</span> <span className="font-semibold text-[#111827] ml-1.5">{studentPhone}</span></div>
             </div>
@@ -815,10 +837,11 @@ export default function AssessmentReportPage() {
                 <span>YOUR TOP CAREER INTERESTS ARE</span>
               </div>
               <div className="top-interests-pills-grid">
-                <div className="top-interest-pill">ENTERPRISING</div>
-                <div className="top-interest-pill">CONVENTIONAL</div>
-                <div className="top-interest-pill">SOCIAL</div>
-                <div className="top-interest-pill">REALISTIC</div>
+                {topCareerInterests.map((interest) => (
+                  <div key={interest.facet || interest.name} className="top-interest-pill">
+                    {interest.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1132,12 +1155,12 @@ export default function AssessmentReportPage() {
                 <div className="score-rep-banner-circle"></div>
                 <span>Your Best Learning Styles are</span>
               </div>
-              <div className="flex justify-center gap-4 max-w-md mx-auto">
-                <div className="top-interest-pill lavender flex-1">VISUAL</div>
-                <div className="top-interest-pill lavender flex-1">READING</div>
-              </div>
-              <div className="max-w-[210px] mx-auto mt-3">
-                <div className="top-interest-pill lavender">AUDITORY</div>
+              <div className="top-interests-pills-grid max-w-md">
+                {topLearningStyles.map((style) => (
+                  <div key={style.facet || style.name} className="top-interest-pill lavender">
+                    {style.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1162,11 +1185,12 @@ export default function AssessmentReportPage() {
             </p>
 
             {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
-            <div className="my-auto py-2 flex justify-center items-center">
+                      {/* Schwartz Values Diamond Diagram matching PDF Page 15 */}
+            <div className="my-2 py-2 flex justify-center items-center overflow-hidden h-[380px]">
               <img
                 src={ReportImg5}
                 alt="Schwartz Values"
-                className="max-h-[300px] w-full max-w-[500px] mx-auto object-contain"
+                className="w-full object-contain scale-10"
               />
             </div>
 
@@ -1264,8 +1288,11 @@ export default function AssessmentReportPage() {
                 <span>Your Best Work Value Fit into</span>
               </div>
               <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-                <div className="top-interest-pill green">OPENNESS TO CHANGE</div>
-                <div className="top-interest-pill green">SELF-ENHANCEMENT</div>
+                {topWorkValues.map((value) => (
+                  <div key={value.facet || value.name} className="top-interest-pill green">
+                    {value.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1394,11 +1421,12 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6 Hanging Clip Badges matching PDF Page 20 */}
-            <div className="my-2 flex justify-center items-center">
+                        {/* 6 Hanging Clip Badges matching PDF Page 20 */}
+                       <div className="my-2 flex justify-center items-center overflow-hidden">
               <img
                 src={ReportImg6}
                 alt="Aptitude Categories"
-                className="max-h-[140px] w-full max-w-[560px] mx-auto object-contain"
+                className="w-full object-contain scale-100 max-w-[540px] mx-auto"
               />
             </div>
 
@@ -1640,10 +1668,14 @@ export default function AssessmentReportPage() {
             <div className="top-interests-box mt-10">
               <div className="score-rep-banner red">
                 <div className="w-6 h-6 rounded-md bg-[#8C1814] flex-shrink-0"></div>
-                <span>Your Top Aptitude are</span>
+                <span>Your Top Aptitudes Are</span>
               </div>
-              <div className="max-w-xs mx-auto mt-4">
-                <div className="top-interest-pill red">{topAptName}</div>
+              <div className="top-interests-pills-grid max-w-md">
+                {topAptitudes.map((aptitude) => (
+                  <div key={aptitude.facet || aptitude.name} className="top-interest-pill red">
+                    {aptitude.name}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1667,13 +1699,35 @@ export default function AssessmentReportPage() {
               Each card shows what the field involves, why it suits you, how to get there, and list of careers
             </p>
 
-            {/* Counsellor + 5 Clusters Graphic matching PDF Page 26 */}
-            <div className="my-1 flex justify-center items-center">
-              <img
-                src={ReportImg7}
-                alt="Top Clusters Map"
-                className="max-h-[260px] w-full max-w-[500px] mx-auto object-contain drop-shadow-sm"
-              />
+            {/* Dynamic counsellor + top-five cluster map */}
+            <div className="cluster-map" aria-label="Your five top career clusters">
+              <div className="cluster-map-illustration">
+                <img src={ReportImg7} alt="Career counsellor" />
+              </div>
+              <svg
+                className="cluster-map-connectors"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {[9, 29.5, 50, 70.5, 91].map((endY) => (
+                  <line key={endY} x1="39" y1="50" x2="49" y2={endY} />
+                ))}
+                <circle cx="39" cy="50" r="1.35" />
+              </svg>
+              <div className="cluster-map-labels">
+                {top5Clusters.slice(0, 5).map((cluster, index) => (
+                  <div
+                    className={`cluster-map-label cluster-map-label-${index + 1}`}
+                    key={`${cluster.code}-${index}`}
+                    style={{ "--cluster-color": ["#70b86b", "#4d95d7", "#9a76ca", "#dc984f", "#47b9b9"][index] }}
+                  >
+                    <span className="cluster-map-rank">{index + 1}</span>
+                    <span className="cluster-map-name">{cluster.name}</span>
+                    <span className="cluster-map-match">{cluster.matchPercentage}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Top 1 Cluster Card */}
@@ -1864,11 +1918,11 @@ export default function AssessmentReportPage() {
             </div>
 
             {/* 6-Lightbulb Study Roadmap matching PDF Page 29 */}
-            <div className="my-2 flex justify-center items-center">
+                              <div className="my-2 flex justify-center items-center overflow-hidden">
               <img
                 src={ReportImg8}
                 alt="Study & Pathway Roadmap"
-                className="max-h-[180px] w-full max-w-xl mx-auto object-contain"
+                className="w-full object-contain scale-100 max-w-[540px] mx-auto"
               />
             </div>
 
@@ -2083,7 +2137,7 @@ export default function AssessmentReportPage() {
               <div className="w-full py-2.5 bg-[#8C1814] text-white rounded-xl font-bold text-base tracking-wide shadow-sm mb-2">
                 Your Future Deserves More Than a Guess.
               </div>
-              <div className="text-xs font-semibold text-[#4B5563] mb-2.5">
+              <div className="text-xs font-semibold text-[#4B5563] mb-2 mt-5">
                 Schedule your counselling session today.
               </div>
               <div className="flex justify-center items-center gap-8 text-xs text-[#1E232A] font-semibold mb-2">

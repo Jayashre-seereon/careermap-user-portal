@@ -78,20 +78,41 @@ export default function LoginPage() {
       setIsSendingOtp(true);
       setStatus(null);
 
-      if (isExistingUser) {
-        await sendOtp(formattedMobile, "login");
+      // if (isExistingUser) {
+      //   await sendOtp(formattedMobile, "login");
+      //   navigate(
+      //     `/otp-verify?next=${encodeURIComponent("/app/dashboard")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`
+      //   );
+      //   return;
+      // }
+
+      // await sendOtp(formattedMobile, "signup");
+      // setOnboardingData(onboarding);
+      // setSignupForm({ mobile: normalizedMobile });
+      // navigate(
+      //   `/otp-verify?next=${encodeURIComponent("/profile-setup")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=signup`
+      // );
+          if (isExistingUser) {
+        const loginOtpResponse = await sendOtp(formattedMobile, "login");
+        // TEMP-DEBUG: remove before production — passes OTP to next screen for testing
+        const devOtp = loginOtpResponse?.otp || loginOtpResponse?.data?.otp;
         navigate(
-          `/otp-verify?next=${encodeURIComponent("/app/dashboard")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`
+          `/otp-verify?next=${encodeURIComponent("/app/dashboard")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`,
+          { state: { devOtp } }
         );
         return;
       }
 
-      await sendOtp(formattedMobile, "signup");
+      const signupOtpResponse = await sendOtp(formattedMobile, "signup");
+      // TEMP-DEBUG: remove before production — passes OTP to next screen for testing
+      const devOtpSignup = signupOtpResponse?.otp || signupOtpResponse?.data?.otp;
       setOnboardingData(onboarding);
       setSignupForm({ mobile: normalizedMobile });
       navigate(
-        `/otp-verify?next=${encodeURIComponent("/profile-setup")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=signup`
+        `/otp-verify?next=${encodeURIComponent("/profile-setup")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=signup`,
+        { state: { devOtp: devOtpSignup } }
       );
+    
     } catch (error) {
       setStatus({
         type: "error",
