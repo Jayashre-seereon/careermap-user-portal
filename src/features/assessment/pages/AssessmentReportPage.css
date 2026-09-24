@@ -923,7 +923,13 @@ body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-
+.top-interest-pill {
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  text-align: center;
+}
   .pdf-pages-wrapper {
     max-width: none !important;
     margin: 0 !important;

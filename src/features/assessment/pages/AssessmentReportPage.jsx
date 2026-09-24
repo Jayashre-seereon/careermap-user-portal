@@ -32,7 +32,6 @@ import FeatureCell from "../../../asset/report/feature_cell.jpg";
 import FeatureBehavioral from "../../../asset/report/feature_behavioral.jpg";
 import FeatureDashboard from "../../../asset/report/feature_dashboard.jpg";
 import "./AssessmentReportPage.css";
-
 // Common Header Component for Pages 2 to 31 matching PDF
 function PageHeader({ studentFirstName }) {
   return (
@@ -275,7 +274,9 @@ export default function AssessmentReportPage() {
     { name: "Spatial Aptitude", percentage: aptScoreMap.Spat },
     { name: "Numerical Aptitude", percentage: aptScoreMap.Num },
   ], 3, { Num: "Numerical Aptitude", Log: "Logical Aptitude", Verb: "Verbal Aptitude", Voc: "Vocabulary Aptitude", Mech: "Mechanical Aptitude", Spat: "Spatial Aptitude" });
-
+const goalOrientationLabel = longPct >= shortPct ? "LONG TERM" : "SHORT TERM";
+const topPersonalityTrait = [...domainPerson].sort((a, b) => scoreFor(b) - scoreFor(a))[0];
+const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Planner" : (longPct > shortPct ? "Long-Term Visionary" : "Short-Term Achiever");
   // 5 Top Default fallback clusters matching the PDF
   const defaultTop5 = [
     {
@@ -870,7 +871,7 @@ export default function AssessmentReportPage() {
               <img
                 src={ReportImg3}
                 alt="Big Five Personality"
-                className="max-h-[380px] w-full max-w-[540px] mx-auto object-contain"
+                className="max-h-[380px] w-full max-w-[600px] mx-auto object-contain"
               />
             </div>
           </div>
@@ -885,28 +886,33 @@ export default function AssessmentReportPage() {
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3">
-            {[
-              { num: "01", name: "EMOTIONAL STABILITY", band: "HIGH", text: "You stay calm and steady under pressure a major asset for high-stakes fields like defence, medicine, aviation and competitive exams." },
-              { num: "02", name: "OPENNESS", band: "MODERATE", text: "You balance curiosity with practicality open to new ideas, while valuing what already works." },
-              { num: "03", name: "CONSCIENTIOUSNESS", band: "MODERATE", text: "You're reasonably organised and dependable, finishing what matters even if some tasks slip." },
-              { num: "04", name: "EXTRAVERSION", band: "MODERATE", text: "You're an ambivert — comfortable both in groups and working alone, adapting to what the situation needs." },
-              { num: "05", name: "AGREEABLENESS", band: "MODERATE", text: "You cooperate well while still holding your own views — a healthy balance for teamwork and fair decisions." },
-            ].map((item) => (
-              <div key={item.num} className="trait-card-row">
-                <div className="trait-card-left">
-                  <div className="trait-card-badge">
-                    <span className="detail-card-num-circle">{item.num}</span>
-                    <span>{item.name}</span>
-                  </div>
-                  <div className={`trait-card-band ${item.band === "HIGH" ? "high" : "moderate"}`}>
-                    {item.band}
-                  </div>
-                </div>
-                <div className="trait-card-right-body">
-                  <div>{item.text}</div>
-                </div>
-              </div>
-            ))}
+           {[
+  { facet: "ES", num: "01", name: "EMOTIONAL STABILITY", text: "You stay calm and steady under pressure — a major asset for high-stakes fields like defence, medicine, aviation and competitive exams.", devText: "Pressure situations tend to affect you more than most — building calming routines before high-stakes moments (exams, interviews) can help a lot." },
+  { facet: "O", num: "02", name: "OPENNESS", text: "You balance curiosity with practicality — open to new ideas, while valuing what already works." },
+  { facet: "Cn", num: "03", name: "CONSCIENTIOUSNESS", text: "You're reasonably organised and dependable, finishing what matters even if some tasks slip." },
+  { facet: "Ex", num: "04", name: "EXTRAVERSION", text: "You're an ambivert — comfortable both in groups and working alone, adapting to what the situation needs.", devText: "You tend to recharge better alone or in small groups than in large social settings — that's a strength in focused, independent work." },
+  { facet: "Ag", num: "05", name: "AGREEABLENESS", text: "You cooperate well while still holding your own views — a healthy balance for teamwork and fair decisions." },
+].map((item) => {
+  const d = domainPerson.find((x) => x.facet === item.facet);
+  const bandLabel = (d?.bandLabel || "Moderate").toUpperCase();
+  const displayText = bandLabel === "DEVELOPING" && item.devText ? item.devText : item.text;
+  return (
+    <div key={item.num} className="trait-card-row">
+      <div className="trait-card-left">
+        <div className="trait-card-badge">
+          <span className="detail-card-num-circle">{item.num}</span>
+          <span>{item.name}</span>
+        </div>
+        <div className={`trait-card-band ${bandLabel === "HIGH" ? "high" : bandLabel === "DEVELOPING" ? "developing" : "moderate"}`}>
+          {bandLabel}
+        </div>
+      </div>
+      <div className="trait-card-right-body">
+        <div>{displayText}</div>
+      </div>
+    </div>
+  );
+})}
           </div>
 
           <PageFooter pageNum={9} />
@@ -997,7 +1003,7 @@ export default function AssessmentReportPage() {
               <img
                 src={ReportImg4}
                 alt="Learning Styles VARK"
-                className="max-h-[380px] w-full max-w-[540px] mx-auto object-contain"
+                className="max-h-[380px] w-full max-w-[590px] mx-auto object-contain"
               />
             </div>
           </div>
@@ -1090,83 +1096,72 @@ export default function AssessmentReportPage() {
         {/* ============================================================
             PAGE 14: VISUAL REPRESENTATION (LEARNING STYLES)
         ============================================================ */}
-        <div className="pdf-page" id="page-14">
-          <PageHeader studentFirstName={studentFirstName} />
+       {/* ============================================================
+    PAGE 14: VISUAL REPRESENTATION (LEARNING STYLES)
+============================================================ */}
+<div className="pdf-page" id="page-14">
+  <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="pdf-page-body">
-            <div className="score-rep-banner lavender">
-              <div className="score-rep-banner-circle"></div>
-              <span>VISUAL REPRESENTATION OF YOUR SCORE</span>
-            </div>
+  <div className="pdf-page-body">
+    <div className="score-rep-banner lavender">
+      <div className="score-rep-banner-circle"></div>
+      <span>VISUAL REPRESENTATION OF YOUR SCORE</span>
+    </div>
 
-            {/* 4 Donut Gauges matching PDF Page 14 */}
-            <div className="grid grid-cols-2 gap-y-8 gap-x-12 my-6 max-w-md mx-auto text-center">
-              {/* VISUAL 100% */}
-              <div>
-                <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path stroke="#DDE7F3" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path stroke="#466CA3" strokeDasharray="100, 100" strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className="absolute font-black text-2xl text-[#1E3A8A]">100%</div>
-                </div>
-                <div className="mt-3 font-extrabold text-sm uppercase tracking-wider text-slate-900">VISUAL</div>
-              </div>
-
-              {/* AUDITORY 75% */}
-              <div>
-                <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path stroke="#E2EBE0" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path stroke="#4D6D47" strokeDasharray="75, 100" strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className="absolute font-black text-2xl text-[#154512]">75%</div>
-                </div>
-                <div className="mt-3 font-extrabold text-sm uppercase tracking-wider text-slate-900">AUDITORY</div>
-              </div>
-
-              {/* READING 85% */}
-              <div>
-                <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path stroke="#F3EDE0" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path stroke="#B58E2E" strokeDasharray="85, 100" strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className="absolute font-black text-2xl text-[#5C450A]">85%</div>
-                </div>
-                <div className="mt-3 font-extrabold text-sm uppercase tracking-wider text-slate-900">READING</div>
-              </div>
-
-              {/* KINESTHETIC 60% */}
-              <div>
-                <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path stroke="#F6E7E5" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path stroke="#9A4235" strokeDasharray="60, 100" strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className="absolute font-black text-2xl text-[#691811]">60%</div>
-                </div>
-                <div className="mt-3 font-extrabold text-sm uppercase tracking-wider text-slate-900">KINESTHETIC</div>
-              </div>
-            </div>
-
-            <div className="top-interests-box">
-              <div className="score-rep-banner lavender">
-                <div className="score-rep-banner-circle"></div>
-                <span>Your Best Learning Styles are</span>
-              </div>
-              <div className="top-interests-pills-grid max-w-md">
-                {topLearningStyles.map((style) => (
-                  <div key={style.facet || style.name} className="top-interest-pill lavender">
-                    {style.name}
-                  </div>
-                ))}
-              </div>
+    {/* 2x2 Donut Grid matching target layout */}
+    <div className="grid grid-cols-2 gap-x-10 gap-y-10 my-8 max-w-md mx-auto">
+      {[
+        { key: "V", label: "VISUAL", val: varkScoreMap.V, ring: "#DDE7F3", fill: "#466CA3", text: "#1E3A8A" },
+        { key: "A", label: "AUDITORY", val: varkScoreMap.A, ring: "#E2EBE0", fill: "#4D6D47", text: "#154512" },
+        { key: "Rd", label: "READING", val: varkScoreMap.Rd, ring: "#F3EDE0", fill: "#B58E2E", text: "#5C450A" },
+        { key: "K", label: "KINESTHETIC", val: varkScoreMap.K, ring: "#F6E7E5", fill: "#9A4235", text: "#691811" },
+      ].map((item) => (
+        <div key={item.key} className="flex flex-col items-center">
+          <div className="relative w-32 h-32 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+              <path
+                stroke={item.ring}
+                strokeWidth="5"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                stroke={item.fill}
+                strokeDasharray={`${item.val}, 100`}
+                strokeWidth="5"
+                strokeLinecap="round"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <div className="absolute font-black text-2xl" style={{ color: item.text }}>
+              {item.val}%
             </div>
           </div>
-
-          <PageFooter pageNum={14} />
+          <div className="mt-3 font-extrabold text-sm uppercase tracking-wider text-slate-900">
+            {item.label}
+          </div>
         </div>
+      ))}
+    </div>
+
+    <div className="top-interests-box">
+      <div className="score-rep-banner lavender">
+        <div className="score-rep-banner-circle"></div>
+        <span>Your Best Learning Styles are</span>
+      </div>
+      <div className="top-interests-pills-grid max-w-md">
+        {topLearningStyles.map((style) => (
+          <div key={style.facet || style.name} className="top-interest-pill lavender">
+            {style.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <PageFooter pageNum={14} />
+</div>
 
         {/* ============================================================
             PAGE 15: WORK VALUES OVERVIEW
@@ -1210,28 +1205,32 @@ export default function AssessmentReportPage() {
 
           <div className="pdf-page-body space-y-3.5">
             <TitlePill title="HERE ARE THE SUGGESTIONS AS PER VALUES" colorClass="dark-green" />
-
-            {[
-              { num: "01", name: "OPENNESS TO CHANGE", band: "HIGH", text: "Freedom, creativity and new experiences drive you — you'll thrive where you can decide how you work and what you explore." },
-              { num: "02", name: "SELF-ENHANCEMENT", band: "HIGH", text: "Achievement, success and recognition strongly drive you — you'll thrive with clear goals, competition, growth ladders and visible results." },
-              { num: "03", name: "SELF-TRANSCENDENCE", band: "MODERATE", text: "You care about fairness and helping others as part of a balanced set of motivations." },
-              { num: "04", name: "CONSERVATION", band: "MODERATE", text: "You value a reasonable amount of stability and order while staying flexible when things shift." },
-            ].map((item) => (
-              <div key={item.num} className="trait-card-row">
-                <div className="trait-card-left">
-                  <div className="trait-card-badge">
-                    <span className="detail-card-num-circle">{item.num}</span>
-                    <span>{item.name}</span>
-                  </div>
-                  <div className={`trait-card-band ${item.band === "HIGH" ? "high" : "moderate"}`}>
-                    {item.band}
-                  </div>
-                </div>
-                <div className="trait-card-right-body">
-                  <div>{item.text}</div>
-                </div>
-              </div>
-            ))}
+{[
+  { facet: "OC", num: "01", name: "OPENNESS TO CHANGE", highText: "Freedom, creativity and new experiences drive you — you'll thrive where you can decide how you work and what you explore.", modText: "You appreciate some freedom and variety in how you work, while still valuing a degree of structure." },
+  { facet: "SE", num: "02", name: "SELF-ENHANCEMENT", highText: "Achievement, success and recognition strongly drive you — you'll thrive with clear goals, competition, growth ladders and visible results.", modText: "Achievement and recognition matter to you, alongside other motivations like stability or purpose." },
+  { facet: "ST", num: "03", name: "SELF-TRANSCENDENCE", modText: "You care about fairness and helping others as part of a balanced set of motivations." },
+  { facet: "CO", num: "04", name: "CONSERVATION", modText: "You value a reasonable amount of stability and order while staying flexible when things shift.", devText: "Stability and predictability aren't your main drivers — you're comfortable with change and less tied to fixed routines." },
+].map((item) => {
+  const d = domainValues.find((x) => x.facet === item.facet);
+  const bandLabel = (d?.bandLabel || "Moderate").toUpperCase();
+  const text = bandLabel === "HIGH" && item.highText ? item.highText
+    : bandLabel === "DEVELOPING" && item.devText ? item.devText
+    : item.modText;
+  return (
+    <div key={item.num} className="trait-card-row">
+      <div className="trait-card-left">
+        <div className="trait-card-badge">
+          <span className="detail-card-num-circle">{item.num}</span>
+          <span>{item.name}</span>
+        </div>
+        <div className={`trait-card-band ${bandLabel === "HIGH" ? "high" : bandLabel === "DEVELOPING" ? "developing" : "moderate"}`}>
+          {bandLabel}
+        </div>
+      </div>
+      <div className="trait-card-right-body"><div>{text}</div></div>
+    </div>
+  );
+})}
           </div>
 
           <PageFooter pageNum={16} />
@@ -1330,80 +1329,85 @@ export default function AssessmentReportPage() {
                 <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Fast-paced workplaces with clear, measurable short-cycle goals and regular performance check-ins.</div>
               </div>
             </div>
+             
           </div>
 
           <PageFooter pageNum={18} />
         </div>
 
-        {/* ============================================================
-            PAGE 19: GOAL ORIENTATION (LONG TERM & VISUAL REPRESENTATION)
-        ============================================================ */}
-        <div className="pdf-page" id="page-19">
-          <PageHeader studentFirstName={studentFirstName} />
+      
+     {/* ============================================================
+    PAGE 19: GOAL ORIENTATION (LONG TERM & VISUAL REPRESENTATION)
+============================================================ */}
+{/* ============================================================
+    PAGE 19: GOAL ORIENTATION (LONG TERM & VISUAL REPRESENTATION)
+============================================================ */}
+<div className="pdf-page" id="page-19">
+  <PageHeader studentFirstName={studentFirstName} />
 
-          <div className="pdf-page-body space-y-3.5">
-            <div className="detail-card-row">
-              <div className="detail-card-left-badge gold">
-                <span className="detail-card-num-circle">02</span>
-                <span>LONG TERM</span>
-              </div>
-              <div className="detail-card-right-body gold">
-                <div className="detail-card-desc">
-                  You are oriented toward broader, strategic, future-oriented outcomes that may take several years to achieve and often involve many steps. You hold a vision and work progressively toward it.
-                </div>
-                <div className="detail-card-meta-row"><strong>Key Traits:</strong> Vision, persistence, planning, stability, commitment.</div>
-                <div className="detail-card-meta-row"><strong>Enjoys:</strong> Career ambition, major life objectives, mastering a field, long projects, cumulative growth.</div>
-                <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Long-range planning, supportive structure, milestone expectations, clarity of desired destination.</div>
-              </div>
-            </div>
+  <div className="pdf-page-body space-y-6">
 
-            {/* Comparison Strategy Cards matching PDF Page 19 */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-3.5 rounded-xl bg-[#FDF8EE] border border-[#E8D39E] text-xs text-[#78540B] leading-relaxed">
-                <div className="inline-block px-3 py-1 bg-[#F5E6C3] rounded-md font-black text-xs uppercase text-[#4D370A] mb-1.5">SHORT TERM</div>
-                <p>Aim for short milestones and rewards. Match with roles needing daily targets.</p>
-              </div>
-              <div className="p-3.5 rounded-xl bg-[#FDF8EE] border border-[#E8D39E] text-xs text-[#78540B] leading-relaxed">
-                <div className="inline-block px-3 py-1 bg-[#F5E6C3] rounded-md font-black text-xs uppercase text-[#4D370A] mb-1.5">LONG TERM</div>
-                <p>Use Vision boards, planning tools, long-term mentorship. Ideal for research, entrepreneurship, civil services.</p>
-              </div>
-            </div>
-
-            {/* Donut Gauges */}
-            <div className="score-rep-banner gold">
-              <div className="score-rep-banner-circle"></div>
-              <span>VISUAL REPRESENTATION OF YOUR SCORE</span>
-            </div>
-
-            <div className="flex justify-center gap-16 text-center py-1">
-              <div>
-                <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path stroke="#F3EDE0" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path stroke="#94751E" strokeDasharray="100, 100" strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className="absolute font-black text-xl text-[#5C450A]">100%</div>
-                </div>
-              </div>
-              <div>
-                <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path stroke="#F3EDE0" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path stroke="#94751E" strokeDasharray="80, 100" strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  </svg>
-                  <div className="absolute font-black text-xl text-[#5C450A]">80%</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 bg-[#94721C] text-white rounded-xl text-center font-extrabold text-sm uppercase tracking-wider shadow-xs">
-              Most Inclined towards : SHORT TERM
-            </div>
-          </div>
-
-          <PageFooter pageNum={19} />
+    <div className="detail-card-row">
+      <div className="detail-card-left-badge gold">
+        <span className="detail-card-num-circle">02</span>
+        <span>LONG TERM</span>
+      </div>
+      <div className="detail-card-right-body gold">
+        <div className="detail-card-desc">
+          You are oriented toward broader, strategic, future-oriented outcomes that may take several years to achieve and often involve many steps. You hold a vision and work progressively toward it.
         </div>
+        <div className="detail-card-meta-row"><strong>Key Traits:</strong> Vision, persistence, planning, stability, commitment.</div>
+        <div className="detail-card-meta-row"><strong>Enjoys:</strong> Career ambition, major life objectives, mastering a field, long projects, cumulative growth.</div>
+        <div className="detail-card-meta-row"><strong>Ideal Environments:</strong> Long-range planning, supportive structure, milestone expectations, clarity of desired destination.</div>
+      </div>
+    </div>
 
+    <div className="grid grid-cols-2 gap-4">
+      <div className="p-3.5 rounded-xl bg-[#FDF8EE] border border-[#E8D39E] text-xs text-[#78540B] leading-relaxed">
+        <div className="inline-block px-3 py-1 bg-[#F5E6C3] rounded-md font-black text-xs uppercase text-[#4D370A] mb-1.5">SHORT TERM</div>
+        <p>Aim for short milestones and rewards. Match with roles needing daily targets.</p>
+      </div>
+      <div className="p-3.5 rounded-xl bg-[#FDF8EE] border border-[#E8D39E] text-xs text-[#78540B] leading-relaxed">
+        <div className="inline-block px-3 py-1 bg-[#F5E6C3] rounded-md font-black text-xs uppercase text-[#4D370A] mb-1.5">LONG TERM</div>
+        <p>Use Vision boards, planning tools, long-term mentorship. Ideal for research, entrepreneurship, civil services.</p>
+      </div>
+    </div>
+
+    <div className="score-rep-banner gold">
+      <div className="score-rep-banner-circle"></div>
+      <span>VISUAL REPRESENTATION OF YOUR SCORE</span>
+    </div>
+
+    <div className="flex justify-center gap-16 text-center py-2">
+      <div>
+        <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path stroke="#F3EDE0" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path stroke="#94751E" strokeDasharray={`${shortPct}, 100`} strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div className="absolute font-black text-xl text-[#5C450A]">{shortPct}%</div>
+        </div>
+        <div className="mt-2 text-[10px] font-bold uppercase text-slate-600">Short Term</div>
+      </div>
+      <div>
+        <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path stroke="#F3EDE0" strokeWidth="5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            <path stroke="#94751E" strokeDasharray={`${longPct}, 100`} strokeWidth="5" strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          </svg>
+          <div className="absolute font-black text-xl text-[#5C450A]">{longPct}%</div>
+        </div>
+        <div className="mt-2 text-[10px] font-bold uppercase text-slate-600">Long Term</div>
+      </div>
+    </div>
+
+    <div className="p-3 bg-[#94721C] text-white rounded-xl text-center font-extrabold text-sm uppercase tracking-wider shadow-xs">
+      Most Inclined towards : {goalOrientationLabel}
+    </div>
+  </div>
+
+  <PageFooter pageNum={19} />
+</div>
         {/* ============================================================
             PAGE 20: APTITUDE (OVERVIEW)
         ============================================================ */}
@@ -1426,7 +1430,7 @@ export default function AssessmentReportPage() {
               <img
                 src={ReportImg6}
                 alt="Aptitude Categories"
-                className="w-full object-contain scale-100 max-w-[540px] mx-auto"
+                className="w-full object-contain scale-100 max-w-[550px] mx-auto"
               />
             </div>
 
@@ -1884,10 +1888,15 @@ export default function AssessmentReportPage() {
               </p>
             </div>
 
-            <div className="flex gap-6 text-sm font-semibold text-slate-800 mb-3 pb-2 border-b border-slate-200">
-              <div>Learning style: <strong className="text-[#1E232A]">Visual</strong></div>
-              <div>Goal orientation: <strong className="text-[#1E232A]">Balanced Planner</strong></div>
-            </div>
+           <div className="flex flex-col gap-2 text-sm font-semibold text-slate-800 mb-3 pb-2 border-b border-slate-200">
+  <div>
+    Learning style: <strong className="text-[#1E232A]">Visual</strong>
+  </div>
+
+  <div>
+    Goal orientation: <strong className="text-[#1E232A]">Balanced Planner</strong>
+  </div>
+</div>
 
             <div className="space-y-3 text-xs leading-relaxed text-slate-700">
               <div>
@@ -1922,7 +1931,7 @@ export default function AssessmentReportPage() {
               <img
                 src={ReportImg8}
                 alt="Study & Pathway Roadmap"
-                className="w-full object-contain scale-100 max-w-[540px] mx-auto"
+                className="w-full object-contain scale-100 max-w-[560px] mx-auto"
               />
             </div>
 
@@ -1958,31 +1967,33 @@ export default function AssessmentReportPage() {
                 <div className="text-[10px] font-bold uppercase text-slate-500">HOLLAND CODE</div>
                 <div className="text-base font-extrabold text-slate-900">{hollandCode}</div>
               </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="text-[10px] font-bold uppercase text-slate-500">TOP CLUSTER <span className="text-[#8C1814] font-black">67%</span></div>
-                <div className="text-xs font-extrabold text-slate-900 leading-snug">Business & Entrepreneurship</div>
-              </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="text-[10px] font-bold uppercase text-slate-500">TOP VALUE</div>
-                <div className="text-xs font-extrabold text-slate-900 leading-snug">Openness to Change</div>
-              </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="text-[10px] font-bold uppercase text-slate-500">TOP TRAIT</div>
-                <div className="text-xs font-extrabold text-slate-900 leading-snug">Emotional Stability</div>
-              </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="text-[10px] font-bold uppercase text-slate-500">LEARNING STYLE</div>
-                <div className="text-xs font-extrabold text-slate-900 leading-snug">Visual</div>
-              </div>
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="text-[10px] font-bold uppercase text-slate-500">GOAL ORIENTATION</div>
-                <div className="text-xs font-extrabold text-slate-900 leading-snug">Balanced Planner</div>
-              </div>
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+  <div className="text-[10px] font-bold uppercase text-slate-500">
+    TOP CLUSTER <span className="text-[#8C1814] font-black">{topCluster.matchPercentage}%</span>
+  </div>
+  <div className="text-xs font-extrabold text-slate-900 leading-snug">{topCluster.name}</div>
+</div>
+<div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+  <div className="text-[10px] font-bold uppercase text-slate-500">TOP VALUE</div>
+  <div className="text-xs font-extrabold text-slate-900 leading-snug">{topWorkValues[0]?.name}</div>
+</div>
+<div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+  <div className="text-[10px] font-bold uppercase text-slate-500">TOP TRAIT</div>
+  <div className="text-xs font-extrabold text-slate-900 leading-snug">{topPersonalityTrait?.name}</div>
+</div>
+<div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+  <div className="text-[10px] font-bold uppercase text-slate-500">LEARNING STYLE</div>
+  <div className="text-xs font-extrabold text-slate-900 leading-snug">{topLearningStyles[0]?.name}</div>
+</div>
+<div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+  <div className="text-[10px] font-bold uppercase text-slate-500">GOAL ORIENTATION</div>
+  <div className="text-xs font-extrabold text-slate-900 leading-snug">{goalOrientationSummary}</div>
+</div>
             </div>
 
-            <p className="text-xs leading-relaxed text-slate-700 mb-4">
-              {studentName} shows an {hollandCode} interest pattern, which combined with emotional stability and a strong pull toward openness to change points most clearly toward Business & Entrepreneurship (67% match). Aptitude-wise, {studentName}’s strongest results are in Verbal Reasoning and Logical Reasoning, which support that direction. As a visual learner with a balanced planner approach to the path ahead, the study tips and route in Section 3 are the most relevant starting point.
-            </p>
+          <p className="text-xs leading-relaxed text-slate-700 mb-4">
+  {studentName} shows an {hollandCode} interest pattern, which combined with {topPersonalityTrait?.name?.toLowerCase()} and a strong pull toward {topWorkValues[0]?.name?.toLowerCase()} points most clearly toward {topCluster.name} ({topCluster.matchPercentage}% match). Aptitude-wise, {studentName}'s strongest results are in {topAptitudes[0]?.name} and {topAptitudes[1]?.name}, which support that direction. As a {topLearningStyles[0]?.name?.toLowerCase()} learner with a {goalOrientationSummary.toLowerCase()} approach to the path ahead, the study tips and route in Section 3 are the most relevant starting point.
+</p>
 
             {/* What to do next checklist matching PDF Page 30 */}
             <div className="p-3.5 bg-[#E6EFF6] border border-[#D2DFEB] rounded-xl text-xs space-y-1 mb-3">
