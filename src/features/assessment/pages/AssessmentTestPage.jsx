@@ -107,7 +107,26 @@ export default function AssessmentTestPage() {
       setSections(loadedSections);
       setAnswers(initialAnswers);
     } catch (err) {
-      console.warn("Could not fetch remote questions, initializing question engine:", err?.message);
+      console.warn("Could not fetch remote questions:", err?.message);
+      const data = err.response?.data;
+      if (data?.requiresNewPlan || err.response?.status === 403 || data?.reason === "ALREADY_COMPLETED" || data?.reason === "NO_ACTIVE_PLAN") {
+        Modal.confirm({
+          title: "Assessment Plan Required",
+          content: data?.message || "You have already completed your assessment under your current plan or need a subscription.",
+          okText: data?.reason === "ALREADY_COMPLETED" ? "View Report" : "View Plans",
+          cancelText: "Back to Assessment",
+          okButtonProps: { style: { background: "#9a2119", borderColor: "#9a2119" } },
+          onOk: () => {
+            if (data?.reason === "ALREADY_COMPLETED") {
+              navigate(`/app/assessment/attempt/${attemptId}/result`);
+            } else {
+              navigate("/app/subscription");
+            }
+          },
+          onCancel: () => navigate("/app/assessment"),
+        });
+        return;
+      }
       setSections(FALLBACK_SECTIONS);
     } finally {
       setLoading(false);
