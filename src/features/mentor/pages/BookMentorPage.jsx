@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRightOutlined, TrophyOutlined ,StarOutlined, StarFilled,LockOutlined,UnlockOutlined,FileTextOutlined} from "@ant-design/icons";
 import { Modal,Rate,Button ,Select} from "antd";
 import { useSearchParams, useLocation } from "react-router-dom";
@@ -395,17 +395,24 @@ export default function BookMentorPage() {
   }, []);
 
   useEffect(() => {
-    const mentorParam = params.get("mentorId") || params.get("mentor");
+    const mentorParam =
+      params.get("mentorId") ||
+      params.get("mentor") ||
+      pageLocation.state?.searchItem?.id ||
+      pageLocation.state?.searchItem?.title;
+
     if (!mentorParam) return;
     let active = true;
+
     async function resolveMentor() {
-      const numericId = /^\d+$/.test(mentorParam);
+      const numericId = /^\d+$/.test(String(mentorParam));
       if (numericId) {
         try {
           const mentor = await getMentorById(mentorParam);
           if (active && mentor) {
             setSelectedMentor(mentor);
             setSelectedMentorId(String(mentor.id));
+            setShowBookingPanel(true);
             return;
           }
         } catch {
@@ -413,16 +420,19 @@ export default function BookMentorPage() {
         }
       }
       const mentor = mentorList.find(
-        (item) => String(item.id) === String(mentorParam) || item.name === mentorParam
+        (item) =>
+          String(item.id) === String(mentorParam) ||
+          item.name?.toLowerCase() === String(mentorParam).toLowerCase()
       );
       if (active && mentor) {
         setSelectedMentor(mentor);
         setSelectedMentorId(String(mentor.id || mentor.name));
+        setShowBookingPanel(true);
       }
     }
     resolveMentor();
     return () => { active = false; };
-  }, [mentorList, params]);
+  }, [mentorList, params, pageLocation.state]);
 
   useEffect(() => {
     if (!activeMentor) {
