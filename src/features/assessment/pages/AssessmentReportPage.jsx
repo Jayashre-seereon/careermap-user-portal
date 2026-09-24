@@ -237,35 +237,38 @@ export default function AssessmentReportPage() {
   // Report summaries must always reflect the scores returned for this attempt.
   // API items include `name`, `facet`, and either `percentage` or `score`.
   const scoreFor = (item) => Number(item?.percentage ?? pct(item?.score) ?? 0);
-  const rankedDomains = (items, fallbackItems, limit, labels = {}) => {
-    const source = Array.isArray(items) && items.length ? items : fallbackItems;
-    return source
-      .map((item) => ({ ...item, name: item?.name || labels[item?.facet] }))
-      .filter((item) => item.name)
-      .sort((a, b) => scoreFor(b) - scoreFor(a))
-      .slice(0, limit);
-  };
+const rankedDomains = (items, fallbackItems, minScore = 45, labels = {}) => {
+  const source = Array.isArray(items) && items.length ? items : fallbackItems;
+  return source
+    .map((item) => ({ ...item, name: item?.name || labels[item?.facet] }))
+    .filter((item) => item.name)
+    .filter((item) => scoreFor(item) > minScore)
+    .sort((a, b) => scoreFor(b) - scoreFor(a));
+};
 
-  const topCareerInterests = rankedDomains(domainInterests, [
+ const topCareerInterests = rankedDomains(domainInterests, [
     { name: "Enterprising", percentage: interestScoreMap.E },
     { name: "Conventional", percentage: interestScoreMap.C },
     { name: "Social", percentage: interestScoreMap.S },
     { name: "Realistic", percentage: interestScoreMap.R },
     { name: "Investigative", percentage: interestScoreMap.I },
     { name: "Artistic", percentage: interestScoreMap.A },
-  ], 4, { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" });
+  ], 45, { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" });
+
   const topLearningStyles = rankedDomains(domainVark, [
     { name: "Visual", percentage: varkScoreMap.V },
     { name: "Reading/Writing", percentage: varkScoreMap.Rd },
     { name: "Auditory", percentage: varkScoreMap.A },
     { name: "Kinesthetic", percentage: varkScoreMap.K },
-  ], 3, { V: "Visual", A: "Auditory", Rd: "Reading/Writing", K: "Kinesthetic" });
+  ], 45, { V: "Visual", A: "Auditory", Rd: "Reading/Writing", K: "Kinesthetic" });
+
   const topWorkValues = rankedDomains(domainValues, [
     { name: "Openness to Change", percentage: valScoreMap.OC },
     { name: "Self-Enhancement", percentage: valScoreMap.SE },
     { name: "Self-Transcendence", percentage: valScoreMap.ST },
     { name: "Conservation", percentage: valScoreMap.CO },
-  ], 2, { OC: "Openness to Change", SE: "Self-Enhancement", ST: "Self-Transcendence", CO: "Conservation" });
+  ], 45, { OC: "Openness to Change", SE: "Self-Enhancement", ST: "Self-Transcendence", CO: "Conservation" });
+
   const topAptitudes = rankedDomains(domainApt, [
     { name: "Verbal Aptitude", percentage: aptScoreMap.Verb },
     { name: "Logical Aptitude", percentage: aptScoreMap.Log },
@@ -273,8 +276,8 @@ export default function AssessmentReportPage() {
     { name: "Mechanical Aptitude", percentage: aptScoreMap.Mech },
     { name: "Spatial Aptitude", percentage: aptScoreMap.Spat },
     { name: "Numerical Aptitude", percentage: aptScoreMap.Num },
-  ], 3, { Num: "Numerical Aptitude", Log: "Logical Aptitude", Verb: "Verbal Aptitude", Voc: "Vocabulary Aptitude", Mech: "Mechanical Aptitude", Spat: "Spatial Aptitude" });
-const goalOrientationLabel = longPct >= shortPct ? "LONG TERM" : "SHORT TERM";
+  ], 45, { Num: "Numerical Aptitude", Log: "Logical Aptitude", Verb: "Verbal Aptitude", Voc: "Vocabulary Aptitude", Mech: "Mechanical Aptitude", Spat: "Spatial Aptitude" });
+  const goalOrientationLabel = longPct >= shortPct ? "LONG TERM" : "SHORT TERM";
 const topPersonalityTrait = [...domainPerson].sort((a, b) => scoreFor(b) - scoreFor(a))[0];
 const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Planner" : (longPct > shortPct ? "Long-Term Visionary" : "Short-Term Achiever");
   // 5 Top Default fallback clusters matching the PDF
@@ -971,9 +974,19 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
 
             {/* Bottom Callout Box matching PDF */}
-            <div className="mt-8 p-4 bg-[#CFE0CB] border border-[#BAD0B5] rounded-xl text-sm leading-relaxed text-[#1E232A]">
-              Emotional Stability is the positive side of the Neuroticism scale — a higher score means you stay calmer under pressure.
-            </div>
+           {/* Bottom Callout Box matching PDF - now dynamic based on top trait */}
+<div className="mt-8 p-4 bg-[#CFE0CB] border border-[#BAD0B5] rounded-xl text-sm leading-relaxed text-[#1E232A]">
+  {topPersonalityTrait?.facet === "ES" &&
+    "Emotional Stability is the positive side of the Neuroticism scale — a higher score means you stay calmer under pressure."}
+  {topPersonalityTrait?.facet === "O" &&
+    "Openness reflects your curiosity and appetite for new ideas — a higher score means you enjoy exploring novel approaches and perspectives."}
+  {topPersonalityTrait?.facet === "Cn" &&
+    "Conscientiousness reflects discipline and reliability — a higher score means you're organised, dependable, and follow through on commitments."}
+  {topPersonalityTrait?.facet === "Ex" &&
+    "Extraversion reflects your energy in social settings — a higher score means you gain energy from being around people and enjoy interaction."}
+  {topPersonalityTrait?.facet === "Ag" &&
+    "Agreeableness reflects cooperation and empathy — a higher score means you value harmony and consider others' feelings in decisions."}
+</div>
           </div>
 
           <PageFooter pageNum={10} />
