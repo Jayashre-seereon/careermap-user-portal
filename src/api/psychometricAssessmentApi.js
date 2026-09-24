@@ -129,3 +129,26 @@ export async function getMyAttempts() {
     return [];
   }
 }
+
+/**
+ * 10. Get User Assessment Access Status
+ * GET /api/psychometric-assessment/assessment/user/access-status
+ * Responses:
+ * - Allowed: { allowed: true, subscriptionId, planTitle }
+ * - Already Completed (1-Plan = 1-Attempt Lock): { allowed: false, reason: "ALREADY_COMPLETED", requiresNewPlan: true, completedAttemptId, completedAt, message }
+ * - No Active Plan: { allowed: false, reason: "NO_ACTIVE_PLAN", requiresNewPlan: true, message }
+ */
+export async function getAssessmentAccessStatus() {
+  try {
+    const response = await api.get("/psychometric-assessment/assessment/user/access-status");
+    return extractData(response);
+  } catch (error) {
+    console.warn("getAssessmentAccessStatus error:", error?.message);
+    const data = error.response?.data;
+    if (data) return extractData(data);
+    throw error;
+  }
+}
+
+export const getUserAssessmentAccessStatus = getAssessmentAccessStatus;
+

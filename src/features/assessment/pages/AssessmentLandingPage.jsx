@@ -8,14 +8,17 @@ import {
   FileTextOutlined,
   HistoryOutlined,
   LoadingOutlined,
+  LockOutlined,
   PlayCircleOutlined,
   RedoOutlined,
   RocketOutlined,
   SafetyCertificateOutlined,
   TrophyOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
-import { Button, Card, Empty, Modal, Progress, Spin, Tag, message } from "antd";
+import { Button, Card, Empty, Modal, Progress, Spin, Tag, Tooltip, message } from "antd";
 import {
+  getAssessmentAccessStatus,
   getMyAttempts,
   getPublishedAssessments,
   startAssessmentAttempt,
@@ -33,6 +36,7 @@ export default function AssessmentLandingPage() {
 
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [accessStatus, setAccessStatus] = useState(null);
   const [publishedAssessments, setPublishedAssessments] = useState([]);
   const [myAttempts, setMyAttempts] = useState([]);
   const [activeAttempt, setActiveAttempt] = useState(null);
@@ -45,19 +49,28 @@ export default function AssessmentLandingPage() {
   async function loadData() {
     setLoading(true);
     try {
-      const [assessmentsRes, attemptsRes] = await Promise.allSettled([
+      const [accessRes, assessmentsRes, attemptsRes] = await Promise.allSettled([
+        getAssessmentAccessStatus(),
         getPublishedAssessments(),
         getMyAttempts(),
       ]);
 
-      const assessments = assessmentsRes.status === "fulfilled" && Array.isArray(assessmentsRes.value)
-        ? assessmentsRes.value
-        : [];
+      if (accessRes.status === "fulfilled" && accessRes.value) {
+        setAccessStatus(accessRes.value);
+      } else {
+        setAccessStatus(null);
+      }
+
+      const assessments =
+        assessmentsRes.status === "fulfilled" && Array.isArray(assessmentsRes.value)
+          ? assessmentsRes.value
+          : [];
       setPublishedAssessments(assessments);
 
-      const attempts = attemptsRes.status === "fulfilled" && Array.isArray(attemptsRes.value)
-        ? attemptsRes.value
-        : [];
+      const attempts =
+        attemptsRes.status === "fulfilled" && Array.isArray(attemptsRes.value)
+          ? attemptsRes.value
+          : [];
       setMyAttempts(attempts);
 
       // Find in-progress attempt if any
@@ -80,54 +93,149 @@ export default function AssessmentLandingPage() {
     }
   }
 
-  async function handleStartTest(forceNew = false) {
+  function showPlanRequiredModal(customMessage) {
+    Modal.confirm({
+      title: (
+        <div className="flex items-center gap-2 text-base font-bold text-slate-900">
+          <LockOutlined className="text-[#8C1814]" />
+          <span>Assessment Plan Required</span>
+        </div>
+      ),
+      content: (
+        <div className="py-2 text-sm text-slate-700 leading-relaxed space-y-2">
+          <p>
+            {customMessage ||
+              "You have already completed your Psychometric Assessment and generated your 31-page Career Compass Report under your current plan. To retake the assessment and track your new score, please subscribe to an assessment plan."}
+          </p>
+          <p className="text-xs text-slate-500 font-medium">
+            Each subscription plan unlocks a fresh comprehensive evaluation and an updated Career Compass Report.
+          </p>
+        </div>
+      ),
+      okText: "View Plans & Pricing",
+      cancelText: "Cancel",
+      okButtonProps: {
+        className: "!bg-[#8C1814] hover:!bg-[#72120F] !border-none !rounded-xl !font-bold !h-10 !px-5",
+      },
+      cancelButtonProps: {
+        className: "!rounded-xl !h-10",
+      },
+      onOk: () => navigate("/app/subscription"),
+    });
+  }
+
+  async function handleStartAssessment(forceNew = false) {
+    // If in-progress test exists and not forcing new: resume directly
     if (activeAttempt && !forceNew) {
       const attemptId = activeAttempt.id || activeAttempt.attemptId || activeAttempt._id;
       navigate(`/app/assessment/attempt/${attemptId}`);
       return;
     }
 
+    // If accessStatus specifically marks user as blocked:
+    if (accessStatus && accessStatus.allowed === false) {
+      if (accessStatus.reason === "ALREADY_COMPLETED") {
+        showPlanRequiredModal(
+          accessStatus.message ||
+            "You have already completed your assessment under your current plan. Please subscribe to a new assessment plan to retake the test."
+        );
+      } else {
+        showPlanRequiredModal(
+          accessStatus.message || "Assessment is locked. Please purchase an assessment plan to unlock access."
+        );
+      }
+      return;
+    }
+
     try {
       setStarting(true);
       const defaultAssessment = publishedAssessments[0] || {};
-      const assessmentId = defaultAssessment.id || defaultAssessment._id || defaultAssessment.assessmentId || "1";
+      const assessmentId =
+        defaultAssessment.id || defaultAssessment._id || defaultAssessment.assessmentId || "default";
 
       const res = await startAssessmentAttempt(assessmentId);
-      const attemptId = res?.attemptId || res?.id || res?.data?.attemptId || res?.data?.id || `att_${Date.now()}`;
+      const attemptId =
+        res?.attemptId || res?.id || res?.data?.attemptId || res?.data?.id || `att_${Date.now()}`;
 
       message.success("Assessment initialized! Best of luck.");
       navigate(`/app/assessment/attempt/${attemptId}`);
-    } catch (err) {
-      console.error("Start assessment error:", err);
-      // Fallback attempt ID to ensure seamless flow
-      const fallbackId = `att_${Date.now()}`;
-      navigate(`/app/assessment/attempt/${fallbackId}`);
+    } catch (error) {
+      console.error("Start assessment error:", error);
+      const data = error.response?.data;
+      if (
+        data?.requiresNewPlan ||
+        error.response?.status === 403 ||
+        data?.reason === "ALREADY_COMPLETED" ||
+        data?.reason === "NO_ACTIVE_PLAN"
+      ) {
+        showPlanRequiredModal(
+          data?.message || "Please purchase an assessment plan to take or retake the assessment."
+        );
+        loadData();
+      } else {
+        message.error(data?.message || error?.message || "Could not start assessment. Please try again.");
+      }
     } finally {
       setStarting(false);
     }
   }
 
-  function handleRetakeConfirm() {
+  function handleRetakeClick() {
+    if (accessStatus && accessStatus.allowed === false) {
+      showPlanRequiredModal(
+        accessStatus.reason === "ALREADY_COMPLETED"
+          ? "You have already completed your Psychometric Assessment and generated your 31-page Career Compass Report. To retake the assessment and track your new score, please subscribe to an assessment plan."
+          : (accessStatus.message || "Please purchase a plan to retake the assessment.")
+      );
+      return;
+    }
+
     Modal.confirm({
-      title: "Start a New Assessment Attempt?",
-      content: "Starting a new attempt will begin a fresh assessment session. Your past reports will remain preserved in your history.",
+      title: "Start a Fresh Assessment Attempt?",
+      content:
+        "Starting a new attempt will begin a fresh assessment session. Your past reports will remain preserved in your history.",
       okText: "Yes, Start Fresh Test",
       cancelText: "Cancel",
-      okButtonProps: { style: { background: "#9a2119", borderColor: "#9a2119" } },
-      onOk: () => handleStartTest(true),
+      okButtonProps: {
+        className: "!bg-[#8C1814] hover:!bg-[#72120F] !border-none !rounded-xl !font-bold",
+      },
+      cancelButtonProps: {
+        className: "!rounded-xl",
+      },
+      onOk: () => handleStartAssessment(true),
     });
   }
 
-  const inProgressProgress = activeAttempt
-    ? Math.round(
-        ((activeAttempt.answeredCount || activeAttempt.answeredQuestions || 0) /
-          (activeAttempt.totalQuestions || TOTAL_ASSESSMENT_QUESTIONS)) *
-          100
-      ) || 0
-    : 0;
+  // Determine current access and completion state
+  const isAllowed = accessStatus
+    ? accessStatus.allowed === true
+    : !latestCompletedAttempt || !!activeAttempt;
+
+  const isAlreadyCompleted = accessStatus
+    ? accessStatus.allowed === false &&
+      (accessStatus.reason === "ALREADY_COMPLETED" || !!accessStatus.completedAttemptId)
+    : Boolean(latestCompletedAttempt) && !activeAttempt;
+
+  const isNoActivePlan = accessStatus
+    ? accessStatus.allowed === false && accessStatus.reason === "NO_ACTIVE_PLAN"
+    : false;
+
+  const completedAttemptId =
+    accessStatus?.completedAttemptId ||
+    latestCompletedAttempt?.id ||
+    latestCompletedAttempt?.attemptId ||
+    latestCompletedAttempt?._id ||
+    "latest";
+
+  const formattedCompletedDate =
+    accessStatus?.completedAt || latestCompletedAttempt?.completedAt
+      ? new Date(
+          accessStatus?.completedAt || latestCompletedAttempt?.completedAt
+        ).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+      : "Recently";
 
   return (
-    <div className="min-h-screen  pb-16 pt-4 text-slate-800 antialiased">
+    <div className="min-h-screen pb-16 pt-4 text-slate-800 antialiased">
       {/* Container */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Top Hero Section */}
@@ -139,13 +247,13 @@ export default function AssessmentLandingPage() {
           <div className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-8">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold tracking-wide uppercase text-amber-200 backdrop-blur-md">
-                <SafetyCertificateOutlined /> 6-Domain Evaluation
+                <SafetyCertificateOutlined /> 6-Domain Evaluation • 1-Plan = 1-Attempt
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
-                 Psychometric Career Assessment
+                Psychometric Career Assessment
               </h1>
               <p className="mt-4 max-w-2xl text-base font-normal leading-relaxed text-rose-100 sm:text-lg">
-               Discover your interests, strengths, learning style, and career preferences to unlock your top 5 best-match career pathways.
+                Discover your interests, personality strengths, learning style, work values, and cognitive aptitudes to unlock your top 5 best-fit career pathways in a 31-page Career Compass Report.
               </p>
 
               {/* Key Meta Badges */}
@@ -156,89 +264,110 @@ export default function AssessmentLandingPage() {
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                   <ClockCircleOutlined className="text-amber-300" />
-                  <span>~{ESTIMATED_DURATION_MINS} Minutes Estimated</span>
+                  <span>~{ESTIMATED_DURATION_MINS} Minutes</span>
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                   <TrophyOutlined className="text-amber-300" />
-                  <span>6 Domains 21 Facets & 18 Career Clusters</span>
+                  <span>6 Domains & 18 Clusters</span>
                 </div>
               </div>
             </div>
 
-            {/* Action Card / Quick Status Box */}
+            {/* Action Card / Dynamic 3-State Quick Status Box */}
             <div className="lg:col-span-4">
               <div className="rounded-2xl border border-white/20 bg-white/10 p-6 text-center backdrop-blur-md shadow-lg">
                 {loading ? (
                   <div className="py-8">
                     <Spin indicator={<LoadingOutlined style={{ fontSize: 32, color: "#fff" }} spin />} />
-                    <div className="mt-3 text-xs text-rose-200">Loading your profile...</div>
+                    <div className="mt-3 text-xs text-rose-200">Checking assessment access...</div>
                   </div>
                 ) : activeAttempt ? (
+                  /* STATE 1A: In-Progress Attempt Found */
                   <div>
                     <span className="inline-block rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">
-                      In-Progress Test Found
+                      <ClockCircleOutlined className="mr-1" /> In-Progress Test Found
                     </span>
                     <h3 className="mt-2 text-xl font-bold text-white">Continue Your Assessment</h3>
+                    <p className="mt-1 text-xs text-rose-100">
+                      Your answers are auto-saved. Resume right where you left off.
+                    </p>
 
                     <Button
                       type="primary"
-                      size="small"
+                      size="large"
                       loading={starting}
-                      onClick={() => handleStartTest(false)}
-                      className="h-10 w-full rounded-md border-none bg-white font-bold text-slate-900 shadow-lg hover:bg-amber-300 focus:bg-amber-300 mt-2"
+                      onClick={() => handleStartAssessment(false)}
+                      className="mt-4 h-11 w-full rounded-xl border-none bg-amber-400 text-sm font-bold text-slate-900 shadow-md hover:bg-amber-300"
                     >
                       ▶️ Resume Assessment
                     </Button>
                     <button
-                      onClick={handleRetakeConfirm}
+                      onClick={handleRetakeClick}
                       className="mt-3 text-xs text-rose-200 underline hover:text-white"
                     >
                       Or start a fresh attempt
                     </button>
                   </div>
-                ) : latestCompletedAttempt ? (
+                ) : isAlreadyCompleted ? (
+                  /* STATE 2: Test Completed (Locked for Retake under 1-Plan = 1-Attempt Rule) */
                   <div>
                     <span className="inline-block rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-200">
                       <CheckCircleFilled className="mr-1" /> Assessment Completed
                     </span>
                     <h3 className="mt-2 text-xl font-bold text-white">
-                      Top Match: {latestCompletedAttempt.topCareerCluster || "IT & Computers"}
+                      Career Compass Ready
                     </h3>
                     <p className="mt-1 text-xs text-rose-100">
-                      Holland Code: <span className="font-bold text-amber-300">{latestCompletedAttempt.hollandCode || "ICR"}</span>
+                      Completed on: <span className="font-semibold text-white">{formattedCompletedDate}</span>
                     </p>
                     <div className="mt-5 flex flex-col gap-2.5">
                       <Button
                         type="primary"
                         size="large"
-                        onClick={() => {
-                          const attemptId =
-                            latestCompletedAttempt.id ||
-                            latestCompletedAttempt.attemptId ||
-                            latestCompletedAttempt._id ||
-                            "latest";
-                          navigate(`/app/assessment/attempt/${attemptId}/result`);
-                        }}
-                        className="h-11 w-full rounded-xl border-none bg-amber-400 font-bold text-slate-900 shadow-md hover:bg-amber-300"
+                        onClick={() => navigate(`/app/assessment/attempt/${completedAttemptId}/result`)}
+                        className="h-11 w-full rounded-xl border-none bg-emerald-400 font-extrabold text-slate-900 shadow-md hover:bg-emerald-300"
                       >
-                        📊 View Career Compass Report
+                        📄 View Career Compass Report
                       </Button>
                       <Button
                         ghost
                         size="middle"
-                        onClick={handleRetakeConfirm}
-                        className="h-10 w-full rounded-xl border-white/50 text-white hover:border-white hover:bg-white/10"
+                        onClick={handleRetakeClick}
+                        className="h-10 w-full rounded-xl border-amber-300/60 text-amber-200 font-bold hover:border-amber-300 hover:bg-amber-400/10"
                       >
-                        <RedoOutlined /> Retake Assessment
+                        <LockOutlined /> Retake Test (Subscribe Plan)
                       </Button>
                     </div>
                   </div>
-                ) : (
+                ) : isNoActivePlan ? (
+                  /* STATE 3: No Active Plan (Locked) */
                   <div>
-                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 text-3xl">
+                    <span className="inline-block rounded-full bg-rose-400/20 px-3 py-1 text-xs font-bold text-rose-200">
+                      <LockOutlined className="mr-1" /> Assessment Locked
+                    </span>
+                    <h3 className="mt-2 text-xl font-bold text-white">Assessment Plan Required</h3>
+                    <p className="mt-1 text-xs text-rose-100">
+                      {accessStatus?.message || "Subscribe to an assessment plan to unlock your evaluation and 31-page report."}
+                    </p>
+                    <Button
+                      type="primary"
+                      size="large"
+                      onClick={() => navigate("/app/subscription")}
+                      className="mt-5 h-12 w-full rounded-xl border-none bg-amber-400 text-base font-extrabold text-slate-900 shadow-lg hover:bg-amber-300"
+                    >
+                      🔒 Unlock Assessment (View Plans)
+                    </Button>
+                  </div>
+                ) : (
+                  /* STATE 1B: Allowed & Ready for New Attempt */
+                  <div>
+                    <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-2xl">
                       🚀
                     </div>
-                    <h3 className="text-xl font-bold text-white">Ready to Discover Your Future?</h3>
+                    <span className="inline-block rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-200">
+                      <UnlockOutlined className="mr-1" /> {accessStatus?.planTitle || "Assessment Unlocked"}
+                    </span>
+                    <h3 className="mt-2 text-xl font-bold text-white">Ready to Discover Your Future?</h3>
                     <p className="mt-1 text-xs text-rose-100">
                       Takes ~35-45 mins. Your answers auto-save at every step.
                     </p>
@@ -246,8 +375,8 @@ export default function AssessmentLandingPage() {
                       type="primary"
                       size="large"
                       loading={starting}
-                      onClick={() => handleStartTest(false)}
-                      className="mt-5 h-12 w-full rounded-xl border-none bg-amber-400 text-base font-bold text-slate-900 shadow-lg hover:bg-amber-300"
+                      onClick={() => handleStartAssessment(false)}
+                      className="mt-4 h-12 w-full rounded-xl border-none bg-amber-400 text-base font-bold text-slate-900 shadow-lg hover:bg-amber-300"
                     >
                       🚀 Start Assessment Now
                     </Button>
@@ -319,25 +448,25 @@ export default function AssessmentLandingPage() {
             <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4">
               <div className="font-bold text-slate-900">1. Answer Honestly</div>
               <p className="mt-1 text-xs text-slate-800 leading-relaxed">
-                There are no right or wrong answers in the personality and interest sections. Choose what truly represents you.
+                There are no right or wrong answers in personality & interest sections. Choose what naturally reflects you.
               </p>
             </div>
             <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4">
               <div className="font-bold text-slate-900">2. Auto-Saved Progress</div>
               <p className="mt-1 text-xs text-slate-800 leading-relaxed">
-                Every response is automatically saved. You can safely close or pause and resume anytime.
+                Every response is automatically saved. You can safely pause and resume anytime.
               </p>
             </div>
             <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4">
               <div className="font-bold text-slate-900">3. Aptitude Reasoning</div>
               <p className="mt-1 text-xs text-slate-800 leading-relaxed">
-                Section 6 features 39 multiple choice questions. Keep a scrap paper handy for quick calculations.
+                Section 6 has 39 multiple choice questions. Keep scrap paper handy for calculations.
               </p>
             </div>
             <div className="rounded-xl border border-slate-200/60 bg-white/80 p-4">
-              <div className="font-bold text-slate-900">4. Comprehensive Report</div>
+              <div className="font-bold text-slate-900">4. 31-Page Report</div>
               <p className="mt-1 text-xs text-slate-800 leading-relaxed">
-                Receive instant career matches, Holland code radar, and personalized study & stream recommendations.
+                Receive top career clusters, Holland Code, VARK style, and custom Indian educational pathways.
               </p>
             </div>
           </div>
@@ -345,7 +474,7 @@ export default function AssessmentLandingPage() {
 
         {/* Past Attempts History Table */}
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-[#9a2119]">
                 <HistoryOutlined className="text-xl" />
@@ -355,14 +484,24 @@ export default function AssessmentLandingPage() {
                 <p className="text-xs text-slate-700">Track and review past assessment results and career compass reports</p>
               </div>
             </div>
+
             {myAttempts.length > 0 && (
-              <Button
-                onClick={handleRetakeConfirm}
-                type="primary"
-                className="rounded-xl bg-[#9a2119] hover:bg-[#801812]"
-              >
-                Start New Attempt
-              </Button>
+              isAllowed ? (
+                <Button
+                  onClick={handleRetakeClick}
+                  type="primary"
+                  className="rounded-xl bg-[#9a2119] hover:bg-[#801812] font-bold"
+                >
+                  Start New Attempt
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleRetakeClick}
+                  className="rounded-xl border-amber-500 text-amber-700 hover:bg-amber-50 font-bold"
+                >
+                  <LockOutlined /> Retake Test (Plan Required)
+                </Button>
+              )
             )}
           </div>
 
@@ -374,24 +513,23 @@ export default function AssessmentLandingPage() {
           ) : myAttempts.length === 0 ? (
             <div className="py-10 text-center">
               <Empty
-                description="No past assessment attempts yet. Start your first evaluation to generate your Career Compass Report."
+                description="No past assessment attempts yet. Start your evaluation to generate your Career Compass Report."
               />
               <Button
                 type="primary"
                 size="large"
-                onClick={() => handleStartTest(false)}
+                onClick={() => handleStartAssessment(false)}
                 className="mt-4 rounded-xl bg-[#9a2119] px-6 font-bold hover:bg-[#801812]"
               >
-                🚀 Start Your First Assessment
+                {isNoActivePlan ? "🔒 Unlock Assessment Plan" : "🚀 Start Your First Assessment"}
               </Button>
             </div>
           ) : (
-            <div className="max-h-[600px]  overflow-y-auto overflow-x-auto">
+            <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-700">
                     <th className="pb-3 pl-2">Attempt Date</th>
-                   
                     <th className="pb-3">Status</th>
                     <th className="pb-3 text-right pr-2">Action</th>
                   </tr>
@@ -399,7 +537,8 @@ export default function AssessmentLandingPage() {
                 <tbody className="divide-y divide-slate-100">
                   {myAttempts.map((attempt, index) => {
                     const attemptId = attempt.id || attempt.attemptId || attempt._id || `att_${index}`;
-                    const isDone = attempt.status === "completed" || attempt.status === "COMPLETED" || attempt.isCompleted;
+                    const isDone =
+                      attempt.status === "completed" || attempt.status === "COMPLETED" || attempt.isCompleted;
                     const dateStr = attempt.completedAt || attempt.createdAt || attempt.updatedAt;
                     const formattedDate = dateStr
                       ? new Date(dateStr).toLocaleDateString("en-IN", {
@@ -412,9 +551,6 @@ export default function AssessmentLandingPage() {
                     return (
                       <tr key={attemptId} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-4 pl-2 font-medium text-slate-800">{formattedDate}</td>
-                       
-                       
-                        
                         <td className="py-4">
                           {isDone ? (
                             <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
@@ -458,3 +594,4 @@ export default function AssessmentLandingPage() {
     </div>
   );
 }
+
