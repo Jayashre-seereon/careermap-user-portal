@@ -171,23 +171,32 @@ const unlocked =
     if (nextSortBy) setSortBy(nextSortBy);
   }, [params]);
 
- const filtered = useMemo(
-  () =>
-    [...items]
-      .filter((item) => videoType === "All" || item.videoType === videoType)
-      .sort((a, b) => {
-        if (sortBy === "az") return a.title.localeCompare(b.title);
-        if (sortBy === "za") return b.title.localeCompare(a.title);
-        if (sortBy === "newest") {
-          if (a.createdAt && b.createdAt) {
-            return new Date(b.createdAt) - new Date(a.createdAt);
+  const filtered = useMemo(
+    () => {
+      const q = (params.get("search") || params.get("video") || params.get("q") || "").toLowerCase().trim();
+      const targetId = params.get("videoId");
+
+      return [...items]
+        .filter((item) => {
+          if (targetId && String(item.id) === String(targetId)) return true;
+          const matchesType = videoType === "All" || item.videoType === videoType;
+          const matchesSearch = !q || item.title?.toLowerCase().includes(q) || item.videoType?.toLowerCase().includes(q);
+          return matchesType && matchesSearch;
+        })
+        .sort((a, b) => {
+          if (sortBy === "az") return a.title.localeCompare(b.title);
+          if (sortBy === "za") return b.title.localeCompare(a.title);
+          if (sortBy === "newest") {
+            if (a.createdAt && b.createdAt) {
+              return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+            return Number(b.id) - Number(a.id); // fallback if no createdAt
           }
-          return Number(b.id) - Number(a.id); // fallback if no createdAt
-        }
-        return b.views - a.views; // popular
-      }),
-  [items, sortBy, videoType]
-);
+          return b.views - a.views; // popular
+        });
+    },
+    [items, params, sortBy, videoType]
+  );
 
   const videoTypeOptions = useMemo(
     () => ["All", ...Array.from(new Set(items.map((item) => item.videoType)))],

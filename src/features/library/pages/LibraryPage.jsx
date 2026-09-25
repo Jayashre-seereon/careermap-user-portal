@@ -1034,6 +1034,182 @@ useEffect(() => {
 
     loadAccess();
   }, []);
+
+  // Handle deep-linking from Global Search or direct URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(pageLocation.search);
+    const searchItem = pageLocation.state?.searchItem;
+
+    const type = searchParams.get("type") || searchItem?.type || "";
+    const id =
+      searchParams.get("id") ||
+      searchParams.get("subCategoryId") ||
+      searchParams.get("secondCategoryId") ||
+      searchParams.get("categoryId") ||
+      searchParams.get("streamId") ||
+      searchItem?.id ||
+      "";
+    const title =
+      searchParams.get("title") ||
+      searchParams.get("career") ||
+      searchParams.get("search") ||
+      searchItem?.title ||
+      "";
+    const streamId = searchParams.get("streamId") || searchItem?.streamId || "";
+    const categoryId = searchParams.get("categoryId") || searchItem?.categoryId || "";
+    const secondCategoryId = searchParams.get("secondCategoryId") || searchItem?.secondCategoryId || "";
+
+    if (!type && !id && !title) return;
+
+    let active = true;
+
+    async function handleDeepLink() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const normalizedType = String(type).toLowerCase();
+
+        // 1. Subcategory / Career Detail (Direct inner detail view)
+        if (
+          normalizedType === "subcategory" ||
+          normalizedType === "sub" ||
+          normalizedType === "career" ||
+          normalizedType === "careerpath" ||
+          searchParams.get("subCategoryId") ||
+          searchParams.get("career")
+        ) {
+          const targetId = id || searchParams.get("subCategoryId");
+          let detailData = null;
+
+          if (targetId) {
+            try {
+              const res = await getCareerLibraryDetails(targetId, CAREER_LIBRARY_MODULE_ID);
+              detailData = res?.data || res;
+            } catch (e) {
+              console.warn("Direct getCareerLibraryDetails error, fallback to general:", e);
+            }
+          }
+
+          if (!active) return;
+
+          const sourceObj = searchItem || { id: targetId || title, title, name: title };
+          const normalizedDetails = normalizeDetailItems(
+            Array.isArray(detailData) ? detailData : detailData ? [detailData] : [],
+            sourceObj
+          );
+
+          setSelectedDetailSource(sourceObj);
+          setDetails(normalizedDetails);
+          setDetailReturnLevel("streams");
+          setCurrentLevel("details");
+          return;
+        }
+
+        // 2. Second Category
+        if (
+          normalizedType === "secondcategory" ||
+          normalizedType === "second" ||
+          searchParams.get("secondCategoryId")
+        ) {
+          const targetId = id || searchParams.get("secondCategoryId");
+          const nextRes = await getCareerLibraryNext("second", targetId, CAREER_LIBRARY_MODULE_ID);
+          if (!active) return;
+
+          const data = nextRes ?? {};
+          const items = Array.isArray(data?.data) ? data.data : [];
+
+          if (data?.type === "details") {
+            const sourceObj = searchItem || { id: targetId, name: title, title };
+            setSelectedDetailSource(sourceObj);
+            setDetails(normalizeDetailItems(items, sourceObj));
+            setDetailReturnLevel("streams");
+            setCurrentLevel("details");
+          } else {
+            setSelectedSecondCategory({ id: targetId, name: title, title });
+            setSubCategories(normalizeStepItems(items, "sub"));
+            setCurrentLevel("subcategory");
+            setDetailReturnLevel("streams");
+          }
+          return;
+        }
+
+        // 3. Category
+        if (
+          normalizedType === "category" ||
+          searchParams.get("categoryId")
+        ) {
+          const targetId = id || searchParams.get("categoryId");
+          const nextRes = await getCareerLibraryNext("category", targetId, CAREER_LIBRARY_MODULE_ID);
+          if (!active) return;
+
+          const data = nextRes ?? {};
+          const items = Array.isArray(data?.data) ? data.data : [];
+
+          if (data?.type === "details") {
+            const sourceObj = searchItem || { id: targetId, name: title, title };
+            setSelectedDetailSource(sourceObj);
+            setDetails(normalizeDetailItems(items, sourceObj));
+            setDetailReturnLevel("streams");
+            setCurrentLevel("details");
+          } else if (data?.type === "secondcategory") {
+            setSelectedCategory({ id: targetId, name: title, title });
+            setSecondCategories(normalizeStepItems(items, "second"));
+            setCurrentLevel("secondcategory");
+            setDetailReturnLevel("streams");
+          }
+          return;
+        }
+
+        // 4. Stream
+        if (
+          normalizedType === "stream" ||
+          searchParams.get("streamId") ||
+          searchParams.get("stream")
+        ) {
+          const targetId = id || searchParams.get("streamId");
+          const streamObj = { id: targetId, name: title || "Stream", title };
+          setSelectedStream(streamObj);
+
+          if (targetId) {
+            const catRes = await getCareerLibraryCategoriesByStream(targetId, CAREER_LIBRARY_MODULE_ID);
+            if (!active) return;
+            const items = Array.isArray(catRes?.data) ? catRes.data : [];
+            setCategories(normalizeStepItems(items, "category"));
+            setCurrentLevel("categories");
+            setDetailReturnLevel("streams");
+          }
+          return;
+        }
+
+        // Fallback: If generic search with ID, try fetching detail first
+        if (id) {
+          try {
+            const res = await getCareerLibraryDetails(id, CAREER_LIBRARY_MODULE_ID);
+            if (active && res?.data) {
+              const sourceObj = searchItem || { id, title, name: title };
+              setSelectedDetailSource(sourceObj);
+              setDetails(normalizeDetailItems(Array.isArray(res.data) ? res.data : [res.data], sourceObj));
+              setDetailReturnLevel("streams");
+              setCurrentLevel("details");
+              return;
+            }
+          } catch {}
+        }
+      } catch (err) {
+        console.warn("Deep link handling error:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    handleDeepLink();
+
+    return () => {
+      active = false;
+    };
+  }, [pageLocation.search, pageLocation.state]);
+
   const detailUnlocked = hasSubscriptionAccess || moduleStatus !== "locked";
 
   const pageTitle = useMemo(() => {

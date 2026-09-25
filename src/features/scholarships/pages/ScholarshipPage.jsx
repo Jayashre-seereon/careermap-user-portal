@@ -125,6 +125,37 @@ useEffect(() => {
     };
   }, [SCHOLARSHIP_MODULE_ID, accessStatus]);
 
+  // Auto-open scholarship detail when navigated from Global Search or URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const scholarshipId = searchParams.get("scholarshipId") || location.state?.searchItem?.id;
+    const scholarshipName =
+      searchParams.get("item") ||
+      searchParams.get("search") ||
+      location.state?.searchItem?.title;
+
+    if (!scholarshipId && !scholarshipName) return;
+
+    if (items.length > 0) {
+      const found = items.find(
+        (item) =>
+          (scholarshipId && String(item.id) === String(scholarshipId)) ||
+          (scholarshipName &&
+            (item.name?.toLowerCase() === scholarshipName.toLowerCase() ||
+              item.title?.toLowerCase() === scholarshipName.toLowerCase()))
+      );
+
+      if (found) {
+        setSelectedItem(found);
+      } else if (scholarshipName) {
+        const partialMatch = items.find((item) =>
+          item.name?.toLowerCase().includes(scholarshipName.toLowerCase())
+        );
+        if (partialMatch) setSelectedItem(partialMatch);
+      }
+    }
+  }, [items, location.search, location.state]);
+
   useEffect(() => {
   if (!previewSessionId || previewExpired) return;
 

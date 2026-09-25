@@ -79,8 +79,23 @@ export const useAuthStore = create(
           tempToken: "",
         })),
 
-      logout: () =>
-        set(() => ({
+      logout: () => {
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.removeItem("careermap-auth-store");
+            window.localStorage.removeItem("careermap-userportal-state");
+            window.localStorage.removeItem("careermap-reviewed-mentor-bookings");
+            window.localStorage.removeItem("userPortalData");
+            window.localStorage.removeItem("token");
+            window.localStorage.removeItem("user");
+            window.localStorage.removeItem("accessToken");
+            window.localStorage.removeItem("refreshToken");
+            window.sessionStorage.clear();
+          } catch (e) {
+            console.error("Storage clear error on authStore logout:", e);
+          }
+        }
+        return set(() => ({
           signupForm: initialSignupForm,
           onboardingData: initialOnboardingData,
           pendingInstituteOnboarding: false,
@@ -88,7 +103,8 @@ export const useAuthStore = create(
           accessToken: "",
           refreshToken: "",
           user: null,
-        })),
+        }));
+      },
     }),
     {
       name: "careermap-auth-store",
