@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Divider, List, Typography } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { ArrowRightOutlined, CheckCircleOutlined, LockOutlined } from "@ant-design/icons";
-import { subscriptions } from "../../../data/careermapData";
+import { subscriptions as staticSubscriptions } from "../../../data/careermapData";
+import { getPlans } from "../../../api/subscriptionApi";
 import { ModuleScreen } from "../../../components/ui";
 import { useAppState } from "../../../state/AppStateContext";
 import { usePortalNavigation } from "../../portal/components/portalPageShared";
@@ -10,13 +11,41 @@ import { usePortalNavigation } from "../../portal/components/portalPageShared";
 const { Text } = Typography;
 
 export default function PaymentSuccessPage() {
-  const { activatePlan, activePlanId } = useAppState();
+  const { activatePlan, activePlanId, refreshUserData, subscriptionRecords } = useAppState();
   const { navigate } = usePortalNavigation();
   const [params] = useSearchParams();
   const planId = params.get("planId");
   const returnTo = params.get("returnTo");
   const transactionId = params.get("transactionId");
-  const plan = subscriptions.find((item) => item.id === planId) || subscriptions[0];
+
+  const [apiPlans, setApiPlans] = useState([]);
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const plans = await getPlans();
+        if (Array.isArray(plans)) setApiPlans(plans);
+      } catch {}
+
+      if (typeof refreshUserData === "function") {
+        await refreshUserData();
+      }
+    }
+    init();
+  }, []);
+
+  const plan = useMemo(() => {
+    const foundApi = apiPlans.find((p) => String(p.id) === String(planId));
+    if (foundApi) return foundApi;
+
+    const foundRecord = (subscriptionRecords || []).find((r) => String(r.planId) === String(planId));
+    if (foundRecord) return { name: foundRecord.planName || foundRecord.subscriptionName, price: foundRecord.price || foundRecord.amount };
+
+    const foundStatic = staticSubscriptions.find((item) => String(item.id) === String(planId));
+    if (foundStatic) return foundStatic;
+
+    return { name: "Career Plan", price: "₹3,000" };
+  }, [apiPlans, planId, subscriptionRecords]);
   const accessUntil = useMemo(() => {
     const nextYear = new Date();
     nextYear.setFullYear(nextYear.getFullYear() + 1);
@@ -27,10 +56,10 @@ export default function PaymentSuccessPage() {
   }, []);
 
   useEffect(() => {
-    if (activePlanId !== plan.id) {
+    if (plan?.id && activePlanId !== plan.id) {
       activatePlan(plan.id);
     }
-  }, [activePlanId, activatePlan, plan.id]);
+  }, [activePlanId, activatePlan, plan?.id]);
 
   function resolveReturnPath(path) {
     if (!path) {
