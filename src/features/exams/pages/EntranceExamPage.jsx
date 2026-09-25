@@ -135,6 +135,37 @@ useEffect(() => {
     };
   }, [accessStatus, location.state?.moduleId]);
 
+  // Auto-open exam details when navigated from Global Search or URL params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const examId = searchParams.get("examId") || location.state?.searchItem?.id;
+    const examName =
+      searchParams.get("exam") ||
+      searchParams.get("search") ||
+      location.state?.searchItem?.title;
+
+    if (!examId && !examName) return;
+
+    if (items.length > 0) {
+      const found = items.find(
+        (item) =>
+          (examId && String(item.id) === String(examId)) ||
+          (examName &&
+            (item.name?.toLowerCase() === examName.toLowerCase() ||
+              item.title?.toLowerCase() === examName.toLowerCase()))
+      );
+
+      if (found) {
+        setSelectedExam(found);
+      } else if (examName) {
+        const partialMatch = items.find((item) =>
+          item.name?.toLowerCase().includes(examName.toLowerCase())
+        );
+        if (partialMatch) setSelectedExam(partialMatch);
+      }
+    }
+  }, [items, location.search, location.state]);
+
 
   const examOptions = useMemo(
   () => items.map((item) => ({ value: String(item.id), label: item.name })),

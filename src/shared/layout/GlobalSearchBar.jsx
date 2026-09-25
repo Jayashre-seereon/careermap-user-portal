@@ -146,8 +146,27 @@ function resolveNavigationTarget(item) {
     rawUrl.includes("secondcategory") ||
     rawUrl.includes("subcategory")
   ) {
-    const queryPart = rawUrl.includes("?") ? `?${rawUrl.split("?")[1]}` : "";
-    return `/app/library${queryPart}`;
+    const params = new URLSearchParams();
+    if (type) params.set("type", type);
+    if (id) params.set("id", String(id));
+    if (item.title) params.set("title", item.title);
+    if (item.streamId) params.set("streamId", String(item.streamId));
+    if (item.categoryId) params.set("categoryId", String(item.categoryId));
+    if (item.secondCategoryId) params.set("secondCategoryId", String(item.secondCategoryId));
+    if (item.subCategoryId) params.set("subCategoryId", String(item.subCategoryId));
+    if (type === "subcategory" || type === "careerpath" || type === "career") {
+      params.set("career", item.title || "");
+    }
+
+    if (rawUrl.includes("?")) {
+      const rawParams = new URLSearchParams(rawUrl.split("?")[1]);
+      rawParams.forEach((val, key) => {
+        if (!params.has(key)) params.set(key, val);
+      });
+    }
+
+    const queryStr = params.toString();
+    return queryStr ? `/app/library?${queryStr}` : `/app/library`;
   }
 
   // 2. Institutions / Colleges
@@ -159,7 +178,9 @@ function resolveNavigationTarget(item) {
     rawUrl.includes("institute") ||
     rawUrl.includes("college")
   ) {
-    return `/app/institutes?search=${title}`;
+    return id
+      ? `/app/institutes?instituteId=${encodeURIComponent(id)}&search=${title}`
+      : `/app/institutes?search=${title}`;
   }
 
   // 3. Entrance Exams
@@ -171,7 +192,9 @@ function resolveNavigationTarget(item) {
     rawUrl.includes("entrance-exam") ||
     rawUrl.includes("exam")
   ) {
-    return `/app/entrance-exam?search=${title}`;
+    return id
+      ? `/app/entrance-exam?examId=${encodeURIComponent(id)}&exam=${title}&search=${title}`
+      : `/app/entrance-exam?exam=${title}&search=${title}`;
   }
 
   // 4. Mentors
@@ -180,7 +203,9 @@ function resolveNavigationTarget(item) {
     ["mentor", "mentors"].includes(type) ||
     rawUrl.includes("mentor")
   ) {
-    return id ? `/app/book-mentor?mentorId=${encodeURIComponent(id)}` : `/app/book-mentor?mentor=${title}`;
+    return id
+      ? `/app/book-mentor?mentorId=${encodeURIComponent(id)}&mentor=${title}`
+      : `/app/book-mentor?mentor=${title}`;
   }
 
   // 5. Scholarships
@@ -189,7 +214,9 @@ function resolveNavigationTarget(item) {
     ["scholarship", "scholarships"].includes(type) ||
     rawUrl.includes("scholarship")
   ) {
-    return `/app/scholarships?item=${title}`;
+    return id
+      ? `/app/scholarships?scholarshipId=${encodeURIComponent(id)}&item=${title}&search=${title}`
+      : `/app/scholarships?item=${title}&search=${title}`;
   }
 
   // 6. Study Abroad
@@ -201,7 +228,9 @@ function resolveNavigationTarget(item) {
     rawUrl.includes("abroad") ||
     rawUrl.includes("studyabroad")
   ) {
-    return "/app/abroad";
+    return id
+      ? `/app/abroad?countryId=${encodeURIComponent(id)}&country=${title}`
+      : `/app/abroad?country=${title}`;
   }
 
   // 7. Masterclasses / Learn
@@ -213,7 +242,9 @@ function resolveNavigationTarget(item) {
     rawUrl.includes("masterclass") ||
     rawUrl.includes("learn")
   ) {
-    return `/app/learn?search=${title}`;
+    return id
+      ? `/app/learn?videoId=${encodeURIComponent(id)}&video=${title}&search=${title}`
+      : `/app/learn?search=${title}&video=${title}`;
   }
 
   // 8. Quizzes
@@ -223,7 +254,7 @@ function resolveNavigationTarget(item) {
     ["quiz", "quizzes"].includes(type) ||
     rawUrl.includes("quiz")
   ) {
-    return "/app/quiz";
+    return id ? `/app/quiz?quizId=${encodeURIComponent(id)}&quiz=${title}` : `/app/quiz`;
   }
 
   // 9. Newsletters
@@ -233,7 +264,7 @@ function resolveNavigationTarget(item) {
     ["newsletter", "newsletters"].includes(type) ||
     rawUrl.includes("newsletter")
   ) {
-    return "/app/newsletter";
+    return id ? `/app/newsletter?newsletterId=${encodeURIComponent(id)}&title=${title}` : `/app/newsletter`;
   }
 
   // 10. Assessment
@@ -447,7 +478,7 @@ export default function GlobalSearchBar({ className = "" }) {
     if (/^https?:\/\//i.test(targetUrl)) {
       window.location.href = targetUrl;
     } else {
-      navigate(targetUrl);
+      navigate(targetUrl, { state: { searchItem: item } });
     }
   }
 

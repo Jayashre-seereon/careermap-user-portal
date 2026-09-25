@@ -88,6 +88,7 @@ export const router = createBrowserRouter([
               { path: "entrance-exam", element: <EntranceExamPage /> },
               { path: "abroad", element: <AbroadPage /> },
               { path: "subscription", element: <SubscriptionPage /> },
+              { path: "payment-success", element: <PaymentSuccessPage /> },
               { path: "plans", element: <Navigate to="/app/subscription" replace /> },
               { path: "pricing", element: <Navigate to="/app/subscription" replace /> },
               { path: "notifications", element: <NotificationsPage /> },

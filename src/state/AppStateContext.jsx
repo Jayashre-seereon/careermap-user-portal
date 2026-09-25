@@ -84,8 +84,8 @@ const AppStateContext = createContext(null);
 function readInitialState() {
   const isAuthenticated = Boolean(useAuthStore.getState().accessToken);
 
-  if (typeof window === "undefined") {
-    return { ...initialState, authenticated: isAuthenticated };
+  if (!isAuthenticated || typeof window === "undefined") {
+    return { ...initialState, authenticated: false };
   }
 
   try {
@@ -105,13 +105,10 @@ function readInitialState() {
       ...parsed,
       profileEditRequestKey: 0,
       authenticated: isAuthenticated,
-      userProfile:
-        !isAuthenticated && parsed?.userProfile?.email === LEGACY_DEMO_EMAIL
-          ? emptyUserProfile
-          : {
-              ...emptyUserProfile,
-              ...(parsed.userProfile || {}),
-            },
+      userProfile: {
+        ...emptyUserProfile,
+        ...(parsed.userProfile || {}),
+      },
       activePlanIds: migratedPlanIds,
       activePlanId: parsed.activePlanId ?? migratedPlanIds[migratedPlanIds.length - 1] ?? null,
     };
@@ -361,12 +358,15 @@ export function AppStateProvider({ children }) {
 
   useEffect(() => {
     if (!accessToken) {
-      setState((current) => ({
-        ...current,
-        testHistory: initialState.testHistory,
-        bookings: initialState.bookings,
-        subscriptionRecords: initialState.subscriptionRecords,
+      setState(() => ({
+        ...initialState,
+        authenticated: false,
       }));
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.removeItem(STORAGE_KEY);
+        } catch {}
+      }
       return undefined;
     }
 
@@ -388,29 +388,41 @@ export function AppStateProvider({ children }) {
         const bookingItems = extractResponseItems(bookingResponse);
         const subscriptionItems = extractResponseItems(subscriptionResponse);
 
-        setState((current) => {
-          const nextState = { ...current };
+        const currentUser = useAuthStore.getState().user;
+        const currentUserId = currentUser?.id ?? currentUser?._id;
 
-          nextState.testHistory = testItems.length > 0 ? normalizeTestHistoryItems(testItems) : initialState.testHistory;
-          nextState.bookings = bookingItems.length > 0 ? normalizeBookingItems(bookingItems) : initialState.bookings;
-
-          if (subscriptionItems.length > 0) {
-            nextState.subscriptionRecords = normalizeSubscriptionItems(subscriptionItems);
-
-            const activeSubscriptionIndex = subscriptionItems.findIndex((item) => String(item?.status || "").toLowerCase() === "active");
-            const activeSubscription = activeSubscriptionIndex >= 0 ? subscriptionItems[activeSubscriptionIndex] : subscriptionItems[0];
-            const derivedPlanId = getPlanIdFromSubscription(activeSubscription);
-
-            if (derivedPlanId) {
-              nextState.activePlanId = derivedPlanId;
-              nextState.activePlanIds = current.activePlanIds?.length
-                ? Array.from(new Set([...current.activePlanIds.map(String), derivedPlanId]))
-                : [derivedPlanId];
-            }
+        const userSubscriptions = subscriptionItems.filter((item) => {
+          if (!item) return false;
+          const itemUserId = item.userId ?? item.user_id ?? item.user?.id ?? item.user?._id;
+          if (currentUserId && itemUserId && String(itemUserId) !== String(currentUserId)) {
+            return false;
           }
-
-          return nextState;
+          return true;
         });
+
+        const activeSubscriptions = userSubscriptions.filter(
+          (item) => String(item?.status || "").toLowerCase() === "active"
+        );
+
+        const freshActivePlanIds = Array.from(
+          new Set(
+            activeSubscriptions
+              .flatMap((item) => {
+                const idFromFn = getPlanIdFromSubscription(item);
+                const rawPlanId = item?.planId ?? item?.plan_id ?? item?.plan?.id;
+                return [idFromFn, rawPlanId != null ? String(rawPlanId) : null].filter(Boolean);
+              })
+          )
+        );
+
+        setState((current) => ({
+          ...current,
+          testHistory: testItems.length > 0 ? normalizeTestHistoryItems(testItems) : initialState.testHistory,
+          bookings: bookingItems.length > 0 ? normalizeBookingItems(bookingItems) : initialState.bookings,
+          subscriptionRecords: normalizeSubscriptionItems(userSubscriptions),
+          activePlanIds: freshActivePlanIds,
+          activePlanId: freshActivePlanIds[0] || null,
+        }));
       } catch {
         if (!active) {
           return;
@@ -421,6 +433,8 @@ export function AppStateProvider({ children }) {
           testHistory: initialState.testHistory,
           bookings: initialState.bookings,
           subscriptionRecords: initialState.subscriptionRecords,
+          activePlanIds: [],
+          activePlanId: null,
         }));
       }
     }
@@ -432,17 +446,26 @@ export function AppStateProvider({ children }) {
   }, [accessToken]);
 
   useEffect(() => {
-    const { profileEditRequestKey, ...persistedState } = state;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
+    if (state.authenticated) {
+      const { profileEditRequestKey, ...persistedState } = state;
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
+    } else if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+    }
   }, [state]);
 
   useEffect(() => {
     const syncAuthentication = ({ accessToken }) => {
-      setState((current) =>
-        current.authenticated === Boolean(accessToken)
-          ? current
-          : { ...current, authenticated: Boolean(accessToken) }
-      );
+      setState((current) => {
+        const isAuth = Boolean(accessToken);
+        if (current.authenticated === isAuth) return current;
+        if (!isAuth) {
+          return { ...initialState, authenticated: false };
+        }
+        return { ...current, authenticated: true };
+      });
     };
 
     syncAuthentication(useAuthStore.getState());
@@ -493,8 +516,75 @@ export function AppStateProvider({ children }) {
         setState((current) => ({ ...current, authenticated: true }));
       },
       logout() {
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.removeItem(STORAGE_KEY);
+            window.localStorage.removeItem("careermap-auth-store");
+            window.localStorage.removeItem("careermap-reviewed-mentor-bookings");
+            window.localStorage.removeItem("userPortalData");
+            window.localStorage.removeItem("token");
+            window.localStorage.removeItem("user");
+            window.localStorage.removeItem("accessToken");
+            window.localStorage.removeItem("refreshToken");
+            window.sessionStorage.clear();
+          } catch (e) {
+            console.error("Storage clear error on logout:", e);
+          }
+        }
         useAuthStore.getState().logout();
-        setState((current) => ({ ...current, authenticated: false }));
+        setState(() => ({ ...initialState, authenticated: false }));
+      },
+      async refreshUserData() {
+        try {
+          const [testResponse, bookingResponse, subscriptionResponse, dashboardResponse] = await Promise.all([
+            getTestHistory().catch(() => null),
+            getMentorBookings().catch(() => null),
+            getSubscriptions().catch(() => null),
+            getDashboard().catch(() => null),
+          ]);
+
+          const testItems = extractResponseItems(testResponse);
+          const bookingItems = extractResponseItems(bookingResponse);
+          const subscriptionItems = extractResponseItems(subscriptionResponse);
+          const currentUser = useAuthStore.getState().user;
+          const currentUserId = currentUser?.id ?? currentUser?._id;
+
+          const userSubscriptions = subscriptionItems.filter((item) => {
+            if (!item) return false;
+            const itemUserId = item.userId ?? item.user_id ?? item.user?.id ?? item.user?._id;
+            if (currentUserId && itemUserId && String(itemUserId) !== String(currentUserId)) {
+              return false;
+            }
+            return true;
+          });
+
+          const activeSubscriptions = userSubscriptions.filter(
+            (item) => String(item?.status || "").toLowerCase() === "active"
+          );
+
+          const freshActivePlanIds = Array.from(
+            new Set(
+              activeSubscriptions
+                .flatMap((item) => {
+                  const idFromFn = getPlanIdFromSubscription(item);
+                  const rawPlanId = item?.planId ?? item?.plan_id ?? item?.plan?.id;
+                  return [idFromFn, rawPlanId != null ? String(rawPlanId) : null].filter(Boolean);
+                })
+            )
+          );
+
+          setState((current) => ({
+            ...current,
+            dashboardData: dashboardResponse?.success ? dashboardResponse.data : current.dashboardData,
+            testHistory: testItems.length > 0 ? normalizeTestHistoryItems(testItems) : current.testHistory,
+            bookings: bookingItems.length > 0 ? normalizeBookingItems(bookingItems) : current.bookings,
+            subscriptionRecords: normalizeSubscriptionItems(userSubscriptions),
+            activePlanIds: freshActivePlanIds,
+            activePlanId: freshActivePlanIds[0] || null,
+          }));
+        } catch (err) {
+          console.warn("refreshUserData error:", err);
+        }
       },
       showPromoMessage(message) {
         setState((current) => ({ ...current, promoMessage: message }));
