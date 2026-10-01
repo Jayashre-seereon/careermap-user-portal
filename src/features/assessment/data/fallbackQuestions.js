@@ -1,18 +1,71 @@
 /**
- * Complete Fallback Question Bank covering all 163 questions across 6 sections:
- * 1. Interest (RIASEC) - 30 questions
- * 2. Personality (Big Five / OCEAN) - 30 questions
- * 3. Learning Styles (VARK) - 20 questions
- * 4. Work Values (Schwartz) - 37 questions
- * 5. Goal Orientation - 7 questions
- * 6. Aptitude & Cognitive Reasoning - 39 MCQs
+ * Complete Fallback Question Bank covering all 179 questions across 7 sections:
+ * 1. Career Planning Track / Personal Profiling - 16 questions (15 Likert + 1 Single Choice)
+ * 2. Interest (RIASEC) - 30 questions
+ * 3. Personality (Big Five / OCEAN) - 30 questions
+ * 4. Learning Styles (VARK) - 20 questions
+ * 5. Work Values (Schwartz) - 37 questions
+ * 6. Goal Orientation - 7 questions
+ * 7. Aptitude & Cognitive Reasoning - 39 MCQs
  */
 
 export const FALLBACK_SECTIONS = [
   {
-    id: "interest",
+    id: "profiling",
     sectionIndex: 0,
+    key: "profiling",
+    code: "profiling",
+    order: 1,
+    title: "Career Planning Track / Personal Profiling",
+    model: "Personal Profiling & Career Readiness",
+    type: "profiling",
+    description: "Rate the following statements about your thoughts on career planning, self-awareness, and readiness.",
+    questions: [
+      // Self-Awareness (SA) - 3 questions
+      { id: "sa_1", code: "SA1", text: "I know what subjects and topics I really enjoy studying.", facet: "SA", domain: "profiling", type: "likert5" },
+      { id: "sa_2", code: "SA2", text: "I know what I am good at (my natural strengths and skills).", facet: "SA", domain: "profiling", type: "likert5" },
+      { id: "sa_3", code: "SA3", text: "I have thought about the kind of work lifestyle and environment I want in the future.", facet: "SA", domain: "profiling", type: "likert5" },
+      // Career Exploration (CE) - 3 questions
+      { id: "ce_1", code: "CE1", text: "I have looked up information about at least 2–3 different career options.", facet: "CE", domain: "profiling", type: "likert5" },
+      { id: "ce_2", code: "CE2", text: "I know what kind of daily work is done in the careers I am interested in.", facet: "CE", domain: "profiling", type: "likert5" },
+      { id: "ce_3", code: "CE3", text: "I have talked to parents, teachers, seniors, or professionals about careers.", facet: "CE", domain: "profiling", type: "likert5" },
+      // Decision Making (DC) - 3 questions
+      { id: "dc_1", code: "DC1", text: "I have a clear idea of which career path or field I want to pursue.", facet: "DC", domain: "profiling", type: "likert5" },
+      { id: "dc_2", code: "DC2", text: "I feel confident about my career choice and do not easily change my mind.", facet: "DC", domain: "profiling", type: "likert5" },
+      { id: "dc_3", code: "DC3", text: "My career choice matches my personal interests and strengths.", facet: "DC", domain: "profiling", type: "likert5" },
+      // Planning & Preparation (PP) - 3 questions
+      { id: "pp_1", code: "PP1", text: "I know which subjects / stream / course I need to take after my current class.", facet: "PP", domain: "profiling", type: "likert5" },
+      { id: "pp_2", code: "PP2", text: "I know which entrance exams, colleges, or qualifications are needed for my chosen career.", facet: "PP", domain: "profiling", type: "likert5" },
+      { id: "pp_3", code: "PP3", text: "I have a step-by-step plan for the next 1–2 years to move toward my career goal.", facet: "PP", domain: "profiling", type: "likert5" },
+      // Commitment & Confidence (CO) - 3 questions
+      { id: "co_1", code: "CO1", text: "I am actively working on building skills or knowledge for my future career.", facet: "CO", domain: "profiling", type: "likert5" },
+      { id: "co_2", code: "CO2", text: "I feel prepared and excited about my career journey ahead.", facet: "CO", domain: "profiling", type: "likert5" },
+      { id: "co_3", code: "CO3", text: "I am confident that I can overcome obstacles and achieve my career goals.", facet: "CO", domain: "profiling", type: "likert5" },
+      // Stage Preference (SP) - 16th Single Choice question
+      {
+        id: "sp_1",
+        code: "SP",
+        text: "Pick the one sentence that fits you best:",
+        title: "Pick the one sentence that fits you best:",
+        facet: "SP",
+        domain: "profiling",
+        type: "single_choice",
+        options: [
+          { id: "SP_A", key: "A", optionKey: "A", text: "I have not really thought about my career yet.", optionText: "I have not really thought about my career yet." },
+          { id: "SP_B", key: "B", optionKey: "B", text: "I have thought about it, but I feel confused.", optionText: "I have thought about it, but I feel confused." },
+          { id: "SP_C", key: "C", optionKey: "C", text: "I am looking at a few options and learning more about them.", optionText: "I am looking at a few options and learning more about them." },
+          { id: "SP_D", key: "D", optionKey: "D", text: "I know what I want, but I don't know the full path yet.", optionText: "I know what I want, but I don't know the full path yet." },
+          { id: "SP_E", key: "E", optionKey: "E", text: "I know what I want, and I have already started working towards it.", optionText: "I know what I want, and I have already started working towards it." },
+        ],
+      },
+    ],
+  },
+  {
+    id: "interest",
+    sectionIndex: 1,
     key: "interest",
+    code: "interest",
+    order: 2,
     title: "Interest Assessment",
     model: "Holland RIASEC Model",
     type: "likert",
@@ -58,8 +111,10 @@ export const FALLBACK_SECTIONS = [
   },
   {
     id: "personality",
-    sectionIndex: 1,
+    sectionIndex: 2,
     key: "personality",
+    code: "personality",
+    order: 3,
     title: "Personality Assessment",
     model: "Big Five / OCEAN Model",
     type: "likert",
@@ -104,8 +159,10 @@ export const FALLBACK_SECTIONS = [
   },
   {
     id: "learningStyles",
-    sectionIndex: 2,
+    sectionIndex: 3,
     key: "learningStyles",
+    code: "learningStyles",
+    order: 4,
     title: "Learning Styles",
     model: "VARK Modality Model",
     type: "likert",
@@ -139,8 +196,10 @@ export const FALLBACK_SECTIONS = [
   },
   {
     id: "values",
-    sectionIndex: 3,
+    sectionIndex: 4,
     key: "values",
+    code: "values",
+    order: 5,
     title: "Work Values",
     model: "Schwartz Value Theory",
     type: "likert",
@@ -191,8 +250,10 @@ export const FALLBACK_SECTIONS = [
   },
   {
     id: "goalOrientation",
-    sectionIndex: 4,
+    sectionIndex: 5,
     key: "goalOrientation",
+    code: "goalOrientation",
+    order: 6,
     title: "Goal Orientation",
     model: "Achievement & Focus",
     type: "likert",
@@ -209,8 +270,10 @@ export const FALLBACK_SECTIONS = [
   },
   {
     id: "aptitude",
-    sectionIndex: 5,
+    sectionIndex: 6,
     key: "aptitude",
+    code: "aptitude",
+    order: 7,
     title: "Aptitude & Cognitive Reasoning",
     model: "6 Cognitive Facets",
     type: "mcq",

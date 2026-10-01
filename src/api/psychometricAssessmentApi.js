@@ -64,14 +64,15 @@ export async function getAttemptStatus(attemptId) {
 /**
  * 5. Save Single Answer (Auto-save)
  * POST /api/psychometric-assessment/assessment/attempt/:attemptId/answer
- * Payload: { questionId, likertValue?, selectedOptionId? }
+ * Payload: { questionId, likertValue?, selectedOptionId?, optionKey? }
  */
-export async function saveAttemptAnswer(attemptId, { questionId, likertValue, selectedOptionId }) {
+export async function saveAttemptAnswer(attemptId, { questionId, likertValue, selectedOptionId, optionKey }) {
   if (!attemptId) throw new Error("Attempt ID is required");
   const payload = {
     questionId,
     ...(likertValue !== undefined && likertValue !== null ? { likertValue: Number(likertValue) } : {}),
     ...(selectedOptionId !== undefined && selectedOptionId !== null ? { selectedOptionId } : {}),
+    ...(optionKey !== undefined && optionKey !== null ? { optionKey } : {}),
   };
   const response = await api.post(`/psychometric-assessment/assessment/attempt/${attemptId}/answer`, payload);
   return extractData(response);
