@@ -45,7 +45,7 @@ import {
 } from "../data/assessmentConstants";
 import { FALLBACK_SECTIONS } from "../data/fallbackQuestions";
 
-const APTITUDE_TIME_LIMIT_SECONDS = 40 * 60;
+const APTITUDE_TIME_LIMIT_SECONDS = 15 * 60;
 
 function isAptitudeSection(section, index) {
   const key = String(section?.code || section?.id || section?.key || section?.domain || "").toLowerCase();
