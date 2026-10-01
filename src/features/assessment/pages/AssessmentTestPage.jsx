@@ -68,13 +68,13 @@ export default function AssessmentTestPage() {
   const [isSubmitModalVisible, setIsSubmitModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitStepText, setSubmitStepText] = useState("");
-  const [aptitudeTimeLeft, setAptitudeTimeLeft] = useState(APTITUDE_TIME_LIMIT_SECONDS);
-  const [aptitudeExpired, setAptitudeExpired] = useState(false);
-  const [aptitudeStarted, setAptitudeStarted] = useState(false);
+  // const [aptitudeTimeLeft, setAptitudeTimeLeft] = useState(APTITUDE_TIME_LIMIT_SECONDS);
+  // const [aptitudeExpired, setAptitudeExpired] = useState(false);
+  // const [aptitudeStarted, setAptitudeStarted] = useState(false);
 
   const pendingSavesRef = useRef({});
   const saveTimeoutRef = useRef(null);
-  const aptitudeTimerKey = `assessment:${attemptId}:aptitude-started-at`;
+  // const aptitudeTimerKey = `assessment:${attemptId}:aptitude-started-at`;
 
   useEffect(() => {
     loadTestQuestions();
@@ -148,23 +148,24 @@ export default function AssessmentTestPage() {
     }
   }
 
-  useEffect(() => {
-    if (loading || !sections.some((section, index) => isAptitudeSection(section, index))) return;
-    let startedAt = Number(window.localStorage.getItem(aptitudeTimerKey));
-    if (!startedAt) {
-      startedAt = Date.now();
-      window.localStorage.setItem(aptitudeTimerKey, String(startedAt));
-    }
-    setAptitudeStarted(true);
-    const updateTime = () => {
-      const remaining = Math.max(0, APTITUDE_TIME_LIMIT_SECONDS - Math.floor((Date.now() - startedAt) / 1000));
-      setAptitudeTimeLeft(remaining);
-      if (remaining === 0) setAptitudeExpired(true);
-    };
-    updateTime();
-    const timer = window.setInterval(updateTime, 1000);
-    return () => window.clearInterval(timer);
-  }, [sections, aptitudeTimerKey, loading]);
+  // Temporarily disabled: 15-minute aptitude timer.
+  // useEffect(() => {
+  //   if (loading || !sections.some((section, index) => isAptitudeSection(section, index))) return;
+  //   let startedAt = Number(window.localStorage.getItem(aptitudeTimerKey));
+  //   if (!startedAt) {
+  //     startedAt = Date.now();
+  //     window.localStorage.setItem(aptitudeTimerKey, String(startedAt));
+  //   }
+  //   setAptitudeStarted(true);
+  //   const updateTime = () => {
+  //     const remaining = Math.max(0, APTITUDE_TIME_LIMIT_SECONDS - Math.floor((Date.now() - startedAt) / 1000));
+  //     setAptitudeTimeLeft(remaining);
+  //     if (remaining === 0) setAptitudeExpired(true);
+  //   };
+  //   updateTime();
+  //   const timer = window.setInterval(updateTime, 1000);
+  //   return () => window.clearInterval(timer);
+  // }, [sections, aptitudeTimerKey, loading]);
 
   // Current active section
   const activeSection = useMemo(() => {
@@ -217,7 +218,7 @@ export default function AssessmentTestPage() {
 
   // Auto-save handler for individual question
   function handleSelectAnswer(questionId, { likertValue, selectedOptionId, optionKey }) {
-    if (isAptitudeSection(activeSection, currentSectionIndex) && aptitudeExpired) return;
+    // if (isAptitudeSection(activeSection, currentSectionIndex) && aptitudeExpired) return;
     setSaveStatus("saving");
 
     const updatedAnswers = {
@@ -375,7 +376,7 @@ export default function AssessmentTestPage() {
   const isLastSection = currentSectionIndex === sections.length - 1;
   const currentSectionQuestions = activeSection?.questions || [];
   const isAptitudeActive = isAptitudeSection(activeSection, currentSectionIndex);
-  const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart(2, "0")}:${String(aptitudeTimeLeft % 60).padStart(2, "0")}`;
+  // const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart(2, "0")}:${String(aptitudeTimeLeft % 60).padStart(2, "0")}`;
 
   return (
     <div className="assessment-test min-h-screen text-slate-800 antialiased">
@@ -454,11 +455,13 @@ export default function AssessmentTestPage() {
                   {totalAnsweredCount} / {totalQuestionsCount} ({overallPercent}%)
                 </span>
               </div>
+              {/* Temporarily disabled: aptitude countdown badge.
               {isAptitudeActive && aptitudeStarted && (
                 <Tag color={aptitudeTimeLeft <= 300 ? "red" : "cyan"} className="m-0 rounded-lg font-bold tabular-nums">
                   <ClockCircleOutlined className="mr-1" /> {aptitudeExpired ? "Time expired" : aptitudeTimerLabel}
                 </Tag>
               )}
+              */}
             </div>
           </div>
 
@@ -594,7 +597,7 @@ export default function AssessmentTestPage() {
                           <button
                             key={opt.value}
                             type="button"
-                            disabled={isAptitudeActive && aptitudeExpired}
+                            disabled={false /* disabled={isAptitudeActive && aptitudeExpired} */}
                             onClick={() =>
                               handleSelectAnswer(question.id, { likertValue: opt.value })
                             }
@@ -637,7 +640,7 @@ export default function AssessmentTestPage() {
                           <button
                             key={opt.id || opt.key || optIndex}
                             type="button"
-                            disabled={isAptitudeActive && aptitudeExpired}
+                            disabled={false /* disabled={isAptitudeActive && aptitudeExpired} */}
                             onClick={() =>
                               handleSelectAnswer(question.id, {
                                 selectedOptionId: opt.id || optionLetter,
@@ -687,7 +690,7 @@ export default function AssessmentTestPage() {
                           <button
                             key={opt.id || optIndex}
                             type="button"
-                            disabled={isAptitudeActive && aptitudeExpired}
+                            disabled={false /* disabled={isAptitudeActive && aptitudeExpired} */}
                             onClick={() =>
                               handleSelectAnswer(question.id, {
                                 selectedOptionId: opt.id || optionLetter,
