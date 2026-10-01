@@ -420,9 +420,7 @@ export default function AssessmentLandingPage() {
                   <h3 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-[#9a2119]">
                     {domain.title}
                   </h3>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-700">
-                    {domain.subtitle}
-                  </div>
+                 
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-800">
                     {domain.description}

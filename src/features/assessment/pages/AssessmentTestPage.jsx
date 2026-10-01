@@ -346,7 +346,7 @@ export default function AssessmentTestPage() {
   const currentSectionQuestions = activeSection?.questions || [];
 
   return (
-    <div className="min-h-screen pb-32 text-slate-800 antialiased">
+    <div className="assessment-test min-h-screen text-slate-800 antialiased">
       {/* Sticky Top Header with Progress & Auto-save status */}
       <div className="sticky top-16 z-30 -mx-9 border-b backdrop-blur-md shadow-sm">
         <div className="w-full px-8 py-2">
@@ -696,8 +696,8 @@ export default function AssessmentTestPage() {
       </div>
 
       {/* Sticky Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3.5 backdrop-blur-md shadow-sm bg-white/95 border-t border-slate-200">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+      <div className="mt-8  ">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
           <Button
             size="small"
             disabled={currentSectionIndex === 0}
