@@ -41,6 +41,7 @@ import {
   PROFILING_LIKERT_OPTIONS,
   PROFILING_SP_OPTIONS,
   TOTAL_ASSESSMENT_QUESTIONS,
+  getDomainMeta,
 } from "../data/assessmentConstants";
 import { FALLBACK_SECTIONS } from "../data/fallbackQuestions";
 
@@ -143,18 +144,7 @@ export default function AssessmentTestPage() {
   }, [sections, currentSectionIndex]);
 
   const activeDomainMeta = useMemo(() => {
-    if (!activeSection) return ASSESSMENT_DOMAINS[0];
-    return (
-      ASSESSMENT_DOMAINS.find(
-        (d) =>
-          d.code === activeSection.code ||
-          d.id === activeSection.id ||
-          d.id === activeSection.key ||
-          d.code === activeSection.key
-      ) ||
-      ASSESSMENT_DOMAINS[currentSectionIndex] ||
-      ASSESSMENT_DOMAINS[0]
-    );
+    return getDomainMeta(activeSection, currentSectionIndex);
   }, [activeSection, currentSectionIndex]);
 
   // Overall progress statistics
@@ -379,16 +369,7 @@ export default function AssessmentTestPage() {
               {sections.map((sec, idx) => {
                 const stat = sectionStats[idx] || { answered: 0, total: 0, isComplete: false };
                 const isCurrent = idx === currentSectionIndex;
-                const domainMeta =
-                  ASSESSMENT_DOMAINS.find(
-                    (d) =>
-                      d.code === sec.code ||
-                      d.id === sec.id ||
-                      d.id === sec.key ||
-                      d.code === sec.key
-                  ) ||
-                  ASSESSMENT_DOMAINS[idx] ||
-                  ASSESSMENT_DOMAINS[0];
+                const domainMeta = getDomainMeta(sec, idx);
 
                 return (
                   <button
@@ -488,11 +469,19 @@ export default function AssessmentTestPage() {
             const questionNumber = qIdx + 1;
             const currentAnswer = answers[question.id] || {};
 
-            // Determine if question is Single Choice (SP or Aptitude MCQ) vs Likert
+            // Determine if question belongs specifically to Section 1 (Personal Profiling / CRI)
+            const isProfilingQuestion =
+              activeSection?.code === "profiling" ||
+              activeSection?.id === "profiling" ||
+              activeSection?.key === "profiling" ||
+              ["SA", "CE", "DC", "PP", "CO", "SP"].includes(question.facet) ||
+              (typeof question.code === "string" && /^(SA|CE|DC|PP|CO|SP)\d*/i.test(question.code));
+
+            // Section 1 Question 16 is single choice SP
             const isSP =
               question.code === "SP" ||
               question.facet === "SP" ||
-              (activeSection?.code === "profiling" && (questionNumber === 16 || question.type === "single_choice"));
+              (isProfilingQuestion && (questionNumber === 16 || question.type === "single_choice"));
 
             const isSingleChoice =
               isSP ||
@@ -503,14 +492,9 @@ export default function AssessmentTestPage() {
                 question.type !== "likert" &&
                 question.type !== "likert5");
 
-            const isProfilingLikert =
-              !isSingleChoice &&
-              (activeSection?.code === "profiling" ||
-                activeSection?.id === "profiling" ||
-                activeSection?.key === "profiling" ||
-                question.type === "likert5" ||
-                ["SA", "CE", "DC", "PP", "CO"].includes(question.facet));
-
+            // ONLY Section 1 Likert items use "Not true at all" -> "Very true"
+            // Sections 2 to 6 (RIASEC, OCEAN, VARK, Values, Goals) use "Strongly Disagree" -> "Strongly Agree"
+            const isProfilingLikert = !isSingleChoice && isProfilingQuestion;
             const currentLikertOptions = isProfilingLikert ? PROFILING_LIKERT_OPTIONS : LIKERT_OPTIONS;
 
             const questionOptions =

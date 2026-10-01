@@ -178,6 +178,52 @@ export const TOTAL_ASSESSMENT_QUESTIONS = 179;
 export const ESTIMATED_DURATION_MINS = "40-50";
 
 /**
+ * Robust helper to resolve Domain Metadata regardless of backend key casing/naming
+ */
+export function getDomainMeta(section = {}, index = 0) {
+  if (!section && index !== undefined) {
+    return ASSESSMENT_DOMAINS[index] || ASSESSMENT_DOMAINS[0];
+  }
+
+  const rawKey = String(section?.code || section?.id || section?.key || section?.domain || "").toLowerCase();
+
+  if (rawKey.includes("profil") || rawKey.includes("cri") || rawKey.includes("track")) {
+    return ASSESSMENT_DOMAINS[0]; // profiling
+  }
+  if (rawKey.includes("interest") || rawKey.includes("riasec")) {
+    return ASSESSMENT_DOMAINS[1]; // interest
+  }
+  if (rawKey.includes("person") || rawKey.includes("ocean") || rawKey.includes("bigfive")) {
+    return ASSESSMENT_DOMAINS[2]; // personality
+  }
+  if (rawKey.includes("learn") || rawKey.includes("vark") || rawKey.includes("style")) {
+    return ASSESSMENT_DOMAINS[3]; // learningStyles
+  }
+  if (rawKey.includes("val") || rawKey.includes("schwartz")) {
+    return ASSESSMENT_DOMAINS[4]; // values
+  }
+  if (rawKey.includes("goal")) {
+    return ASSESSMENT_DOMAINS[5]; // goalOrientation
+  }
+  if (rawKey.includes("apt") || rawKey.includes("cognit")) {
+    return ASSESSMENT_DOMAINS[6]; // aptitude
+  }
+
+  // Fallback by direct search or index
+  return (
+    ASSESSMENT_DOMAINS.find(
+      (d) =>
+        d.code === section?.code ||
+        d.id === section?.id ||
+        d.id === section?.key ||
+        d.code === section?.key
+    ) ||
+    ASSESSMENT_DOMAINS[index] ||
+    ASSESSMENT_DOMAINS[0]
+  );
+}
+
+/**
  * Section 1: Profiling 5-Point Likert Options (Not true at all -> Very true)
  */
 export const PROFILING_LIKERT_OPTIONS = [
