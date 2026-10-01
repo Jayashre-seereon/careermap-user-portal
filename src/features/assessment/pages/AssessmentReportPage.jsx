@@ -494,7 +494,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
         </div>
       </div>
 
-      {/* Main Document: Exactly 31 Pages */}
+      {/* Main Document: Exactly 32 Pages */}
       <div className="pdf-pages-wrapper">
         {/* ============================================================
             PAGE 1: COVER PAGE
@@ -612,9 +612,21 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
         </div>
 
         {/* ============================================================
-            PAGE 3: INTRODUCTION (WHEEL / BULB DIAGRAM)
+            PAGE 3: YOUR PROFILING (PERSONAL PROFILING)
         ============================================================ */}
-        <div className="pdf-page" id="page-3">
+        <YourProfilingReport
+          profilingData={yourProfiling}
+          studentFirstName={studentFirstName}
+          PageHeader={PageHeader}
+          PageFooter={PageFooter}
+          TitlePill={TitlePill}
+          pageNum={3}
+        />
+
+        {/* ============================================================
+            PAGE 4: INTRODUCTION (WHEEL / BULB DIAGRAM)
+        ============================================================ */}
+        <div className="pdf-page" id="page-4">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -634,13 +646,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={3} />
+          <PageFooter pageNum={4} />
         </div>
 
         {/* ============================================================
-            PAGE 4: INTEREST OVERVIEW (CONCENTRIC RIASEC MODEL)
+            PAGE 5: INTEREST OVERVIEW (CONCENTRIC RIASEC MODEL)
         ============================================================ */}
-        <div className="pdf-page" id="page-4">
+        <div className="pdf-page" id="page-5">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -664,13 +676,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={4} />
+          <PageFooter pageNum={5} />
         </div>
 
         {/* ============================================================
-            PAGE 5: INTEREST DETAILS (01 - 03)
+            PAGE 6: INTEREST DETAILS (01 - 03)
         ============================================================ */}
-        <div className="pdf-page" id="page-5">
+        <div className="pdf-page" id="page-6">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3.5">
@@ -723,13 +735,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={5} />
+          <PageFooter pageNum={6} />
         </div>
 
         {/* ============================================================
-            PAGE 6: INTEREST DETAILS (04 - 06)
+            PAGE 7: INTEREST DETAILS (04 - 06)
         ============================================================ */}
-        <div className="pdf-page" id="page-6">
+        <div className="pdf-page" id="page-7">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3.5">
@@ -782,13 +794,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={6} />
+          <PageFooter pageNum={7} />
         </div>
 
         {/* ============================================================
-            PAGE 7: VISUAL REPRESENTATION (INTERESTS)
+            PAGE 8: VISUAL REPRESENTATION (INTERESTS)
         ============================================================ */}
-        <div className="pdf-page" id="page-7">
+        <div className="pdf-page" id="page-8">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -856,13 +868,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={7} />
+          <PageFooter pageNum={8} />
         </div>
 
         {/* ============================================================
-            PAGE 8: PERSONALITY OVERVIEW (STACKED STEPS DIAGRAM)
+            PAGE 9: PERSONALITY OVERVIEW (STACKED STEPS DIAGRAM)
         ============================================================ */}
-        <div className="pdf-page" id="page-8">
+        <div className="pdf-page" id="page-9">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -885,13 +897,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={8} />
+          <PageFooter pageNum={9} />
         </div>
 
         {/* ============================================================
-            PAGE 9: PERSONALITY SUGGESTIONS
+            PAGE 10: PERSONALITY SUGGESTIONS
         ============================================================ */}
-        <div className="pdf-page" id="page-9">
+        <div className="pdf-page" id="page-10">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3">
@@ -924,13 +936,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
 })}
           </div>
 
-          <PageFooter pageNum={9} />
+          <PageFooter pageNum={10} />
         </div>
 
         {/* ============================================================
-            PAGE 10: VISUAL REPRESENTATION (PERSONALITY)
+            PAGE 11: VISUAL REPRESENTATION (PERSONALITY)
         ============================================================ */}
-        <div className="pdf-page" id="page-10">
+        <div className="pdf-page" id="page-11">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -995,13 +1007,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
 </div>
           </div>
 
-          <PageFooter pageNum={10} />
+          <PageFooter pageNum={11} />
         </div>
 
         {/* ============================================================
-            PAGE 11: LEARNING STYLE OVERVIEW
+            PAGE 12: LEARNING STYLE OVERVIEW
         ============================================================ */}
-        <div className="pdf-page" id="page-11">
+        <div className="pdf-page" id="page-12">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1027,13 +1039,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={11} />
+          <PageFooter pageNum={12} />
         </div>
 
         {/* ============================================================
-            PAGE 12: LEARNING STYLE DETAILS (01 - 02)
+            PAGE 13: LEARNING STYLE DETAILS (01 - 02)
         ============================================================ */}
-        <div className="pdf-page" id="page-12">
+        <div className="pdf-page" id="page-13">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-4">
@@ -1068,13 +1080,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={12} />
+          <PageFooter pageNum={13} />
         </div>
 
         {/* ============================================================
-            PAGE 13: LEARNING STYLE DETAILS (03 - 04)
+            PAGE 14: LEARNING STYLE DETAILS (03 - 04)
         ============================================================ */}
-        <div className="pdf-page" id="page-13">
+        <div className="pdf-page" id="page-14">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-4">
@@ -1109,16 +1121,16 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={13} />
+          <PageFooter pageNum={14} />
         </div>
 
         {/* ============================================================
             PAGE 14: VISUAL REPRESENTATION (LEARNING STYLES)
         ============================================================ */}
-       {/* ============================================================
-    PAGE 14: VISUAL REPRESENTATION (LEARNING STYLES)
-============================================================ */}
-<div className="pdf-page" id="page-14">
+        {/* ============================================================
+            PAGE 15: VISUAL REPRESENTATION (LEARNING STYLES)
+        ============================================================ */}
+        <div className="pdf-page" id="page-15">
   <PageHeader studentFirstName={studentFirstName} />
 
   <div className="pdf-page-body">
@@ -1179,13 +1191,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
     </div>
   </div>
 
-  <PageFooter pageNum={14} />
-</div>
+          <PageFooter pageNum={15} />
+        </div>
 
         {/* ============================================================
-            PAGE 15: WORK VALUES OVERVIEW
+            PAGE 16: WORK VALUES OVERVIEW
         ============================================================ */}
-        <div className="pdf-page" id="page-15">
+        <div className="pdf-page" id="page-16">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1213,13 +1225,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </p>
           </div>
 
-          <PageFooter pageNum={15} />
+          <PageFooter pageNum={16} />
         </div>
 
         {/* ============================================================
-            PAGE 16: WORK VALUES SUGGESTIONS
+            PAGE 17: WORK VALUES SUGGESTIONS
         ============================================================ */}
-        <div className="pdf-page" id="page-16">
+        <div className="pdf-page" id="page-17">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3.5">
@@ -1252,13 +1264,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
 })}
           </div>
 
-          <PageFooter pageNum={16} />
+          <PageFooter pageNum={17} />
         </div>
 
         {/* ============================================================
-            PAGE 17: VISUAL REPRESENTATION (WORK VALUES)
+            PAGE 18: VISUAL REPRESENTATION (WORK VALUES)
         ============================================================ */}
-        <div className="pdf-page" id="page-17">
+        <div className="pdf-page" id="page-18">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1315,13 +1327,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={17} />
+          <PageFooter pageNum={18} />
         </div>
 
         {/* ============================================================
-            PAGE 18: GOAL ORIENTATION (OVERVIEW & SHORT TERM)
+            PAGE 19: GOAL ORIENTATION (OVERVIEW & SHORT TERM)
         ============================================================ */}
-        <div className="pdf-page" id="page-18">
+        <div className="pdf-page" id="page-19">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1351,17 +1363,14 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
              
           </div>
 
-          <PageFooter pageNum={18} />
+          <PageFooter pageNum={19} />
         </div>
 
       
-     {/* ============================================================
-    PAGE 19: GOAL ORIENTATION (LONG TERM & VISUAL REPRESENTATION)
-============================================================ */}
-{/* ============================================================
-    PAGE 19: GOAL ORIENTATION (LONG TERM & VISUAL REPRESENTATION)
-============================================================ */}
-<div className="pdf-page" id="page-19">
+        {/* ============================================================
+            PAGE 20: GOAL ORIENTATION (LONG TERM & VISUAL REPRESENTATION)
+        ============================================================ */}
+        <div className="pdf-page" id="page-20">
   <PageHeader studentFirstName={studentFirstName} />
 
   <div className="pdf-page-body space-y-6">
@@ -1425,12 +1434,12 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
     </div>
   </div>
 
-  <PageFooter pageNum={19} />
-</div>
+          <PageFooter pageNum={20} />
+        </div>
         {/* ============================================================
-            PAGE 20: APTITUDE (OVERVIEW)
+            PAGE 21: APTITUDE (OVERVIEW)
         ============================================================ */}
-        <div className="pdf-page" id="page-20">
+        <div className="pdf-page" id="page-21">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1482,13 +1491,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={20} />
+          <PageFooter pageNum={21} />
         </div>
 
         {/* ============================================================
-            PAGE 21: APTITUDE (NUMERICAL & SPATIAL + DETAILS)
+            PAGE 22: APTITUDE (NUMERICAL & SPATIAL + DETAILS)
         ============================================================ */}
-        <div className="pdf-page" id="page-21">
+        <div className="pdf-page" id="page-22">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-4">
@@ -1525,13 +1534,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={21} />
+          <PageFooter pageNum={22} />
         </div>
 
         {/* ============================================================
-            PAGE 22: APTITUDE DETAILS (LOGICAL & VERBAL)
+            PAGE 23: APTITUDE DETAILS (LOGICAL & VERBAL)
         ============================================================ */}
-        <div className="pdf-page" id="page-22">
+        <div className="pdf-page" id="page-23">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-4">
@@ -1566,13 +1575,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={22} />
+          <PageFooter pageNum={23} />
         </div>
 
         {/* ============================================================
-            PAGE 23: APTITUDE DETAILS (VOCABULARY & MECHANICAL)
+            PAGE 24: APTITUDE DETAILS (VOCABULARY & MECHANICAL)
         ============================================================ */}
-        <div className="pdf-page" id="page-23">
+        <div className="pdf-page" id="page-24">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-4">
@@ -1607,13 +1616,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={23} />
+          <PageFooter pageNum={24} />
         </div>
 
         {/* ============================================================
-            PAGE 24: APTITUDE DETAILS (SPATIAL)
+            PAGE 25: APTITUDE DETAILS (SPATIAL)
         ============================================================ */}
-        <div className="pdf-page" id="page-24">
+        <div className="pdf-page" id="page-25">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1633,13 +1642,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={24} />
+          <PageFooter pageNum={25} />
         </div>
 
         {/* ============================================================
-            PAGE 25: VISUAL REPRESENTATION (APTITUDE COLUMN CHART)
+            PAGE 26: VISUAL REPRESENTATION (APTITUDE COLUMN CHART)
         ============================================================ */}
-        <div className="pdf-page" id="page-25">
+        <div className="pdf-page" id="page-26">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1703,13 +1712,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={25} />
+          <PageFooter pageNum={26} />
         </div>
 
         {/* ============================================================
-            PAGE 26: INTEGRATED ANALYSIS & CLUSTER #1
+            PAGE 27: INTEGRATED ANALYSIS & CLUSTER #1
         ============================================================ */}
-        <div className="pdf-page" id="page-26">
+        <div className="pdf-page" id="page-27">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1778,13 +1787,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={26} />
+          <PageFooter pageNum={27} />
         </div>
 
         {/* ============================================================
-            PAGE 27: CLUSTERS #2 & #3
+            PAGE 28: CLUSTERS #2 & #3
         ============================================================ */}
-        <div className="pdf-page" id="page-27">
+        <div className="pdf-page" id="page-28">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3.5">
@@ -1833,13 +1842,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={27} />
+          <PageFooter pageNum={28} />
         </div>
 
         {/* ============================================================
-            PAGE 28: CLUSTERS #4 & #5
+            PAGE 29: CLUSTERS #4 & #5
         ============================================================ */}
-        <div className="pdf-page" id="page-28">
+        <div className="pdf-page" id="page-29">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body space-y-3.5">
@@ -1888,13 +1897,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={28} />
+          <PageFooter pageNum={29} />
         </div>
 
         {/* ============================================================
-            PAGE 29: YOUR DIRECTION: STUDY & PATHWAY ADVICE
+            PAGE 30: YOUR DIRECTION: STUDY & PATHWAY ADVICE
         ============================================================ */}
-        <div className="pdf-page" id="page-29">
+        <div className="pdf-page" id="page-30">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -1959,13 +1968,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={29} />
+          <PageFooter pageNum={30} />
         </div>
 
         {/* ============================================================
-            PAGE 30: YOUR COMPLETE CAREER MAP (SUMMARY)
+            PAGE 31: YOUR COMPLETE CAREER MAP (SUMMARY)
         ============================================================ */}
-        <div className="pdf-page" id="page-30">
+        <div className="pdf-page" id="page-31">
           <PageHeader studentFirstName={studentFirstName} />
 
           <div className="pdf-page-body">
@@ -2028,13 +2037,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </p>
           </div>
 
-          <PageFooter pageNum={30} />
+          <PageFooter pageNum={31} />
         </div>
 
         {/* ============================================================
-            PAGE 31: ABOUT CAREER MAP (BACK COVER)
+            PAGE 32: ABOUT CAREER MAP (BACK COVER)
         ============================================================ */}
-        <div className="pdf-page" id="page-31">
+        <div className="pdf-page" id="page-32">
           {/* Header with Logo */}
           <div className="flex justify-end pt-1 pr-1 mb-2">
             <img
@@ -2184,7 +2193,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             </div>
           </div>
 
-          <PageFooter pageNum={31} />
+          <PageFooter pageNum={32} />
         </div>
       </div>
     </div>
