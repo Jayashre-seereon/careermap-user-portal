@@ -45,6 +45,13 @@ import {
 } from "../data/assessmentConstants";
 import { FALLBACK_SECTIONS } from "../data/fallbackQuestions";
 
+const APTITUDE_TIME_LIMIT_SECONDS = 40 * 60;
+
+function isAptitudeSection(section, index) {
+  const key = String(section?.code || section?.id || section?.key || section?.domain || "").toLowerCase();
+  return key.includes("apt") || key.includes("cognit") || getDomainMeta(section, index)?.id === "aptitude";
+}
+
 export default function AssessmentTestPage() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
@@ -61,9 +68,13 @@ export default function AssessmentTestPage() {
   const [isSubmitModalVisible, setIsSubmitModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitStepText, setSubmitStepText] = useState("");
+  const [aptitudeTimeLeft, setAptitudeTimeLeft] = useState(APTITUDE_TIME_LIMIT_SECONDS);
+  const [aptitudeExpired, setAptitudeExpired] = useState(false);
+  const [aptitudeStarted, setAptitudeStarted] = useState(false);
 
   const pendingSavesRef = useRef({});
   const saveTimeoutRef = useRef(null);
+  const aptitudeTimerKey = `assessment:${attemptId}:aptitude-started-at`;
 
   useEffect(() => {
     loadTestQuestions();
@@ -137,6 +148,24 @@ export default function AssessmentTestPage() {
     }
   }
 
+  useEffect(() => {
+    if (loading || !sections.some((section, index) => isAptitudeSection(section, index))) return;
+    let startedAt = Number(window.localStorage.getItem(aptitudeTimerKey));
+    if (!startedAt) {
+      startedAt = Date.now();
+      window.localStorage.setItem(aptitudeTimerKey, String(startedAt));
+    }
+    setAptitudeStarted(true);
+    const updateTime = () => {
+      const remaining = Math.max(0, APTITUDE_TIME_LIMIT_SECONDS - Math.floor((Date.now() - startedAt) / 1000));
+      setAptitudeTimeLeft(remaining);
+      if (remaining === 0) setAptitudeExpired(true);
+    };
+    updateTime();
+    const timer = window.setInterval(updateTime, 1000);
+    return () => window.clearInterval(timer);
+  }, [sections, aptitudeTimerKey, loading]);
+
   // Current active section
   const activeSection = useMemo(() => {
     if (!sections || sections.length === 0) return null;
@@ -188,6 +217,7 @@ export default function AssessmentTestPage() {
 
   // Auto-save handler for individual question
   function handleSelectAnswer(questionId, { likertValue, selectedOptionId, optionKey }) {
+    if (isAptitudeSection(activeSection, currentSectionIndex) && aptitudeExpired) return;
     setSaveStatus("saving");
 
     const updatedAnswers = {
@@ -344,6 +374,8 @@ export default function AssessmentTestPage() {
 
   const isLastSection = currentSectionIndex === sections.length - 1;
   const currentSectionQuestions = activeSection?.questions || [];
+  const isAptitudeActive = isAptitudeSection(activeSection, currentSectionIndex);
+  const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart(2, "0")}:${String(aptitudeTimeLeft % 60).padStart(2, "0")}`;
 
   return (
     <div className="assessment-test min-h-screen text-slate-800 antialiased">
@@ -422,6 +454,11 @@ export default function AssessmentTestPage() {
                   {totalAnsweredCount} / {totalQuestionsCount} ({overallPercent}%)
                 </span>
               </div>
+              {isAptitudeActive && aptitudeStarted && (
+                <Tag color={aptitudeTimeLeft <= 300 ? "red" : "cyan"} className="m-0 rounded-lg font-bold tabular-nums">
+                  <ClockCircleOutlined className="mr-1" /> {aptitudeExpired ? "Time expired" : aptitudeTimerLabel}
+                </Tag>
+              )}
             </div>
           </div>
 
@@ -557,6 +594,7 @@ export default function AssessmentTestPage() {
                           <button
                             key={opt.value}
                             type="button"
+                            disabled={isAptitudeActive && aptitudeExpired}
                             onClick={() =>
                               handleSelectAnswer(question.id, { likertValue: opt.value })
                             }
@@ -599,6 +637,7 @@ export default function AssessmentTestPage() {
                           <button
                             key={opt.id || opt.key || optIndex}
                             type="button"
+                            disabled={isAptitudeActive && aptitudeExpired}
                             onClick={() =>
                               handleSelectAnswer(question.id, {
                                 selectedOptionId: opt.id || optionLetter,
@@ -648,13 +687,14 @@ export default function AssessmentTestPage() {
                           <button
                             key={opt.id || optIndex}
                             type="button"
+                            disabled={isAptitudeActive && aptitudeExpired}
                             onClick={() =>
                               handleSelectAnswer(question.id, {
                                 selectedOptionId: opt.id || optionLetter,
                                 optionKey: optionLetter,
                               })
                             }
-                            className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all ${
+                            className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                               isSelected
                                 ? "border-cyan-500 bg-cyan-50/80 text-cyan-900 ring-2 ring-cyan-300"
                                 : "border-slate-200 bg-slate-50/40 text-slate-700 hover:border-cyan-300 hover:bg-cyan-50/30"
@@ -759,7 +799,7 @@ export default function AssessmentTestPage() {
           <Button
             key="submit"
             type="primary"
-            disabled={unansweredQuestions.length > 0}
+            // disabled={unansweredQuestions.length > 0}
             onClick={handleSubmitTest}
             className="rounded-xl border-none bg-[#9a2119] font-bold hover:bg-[#801812]"
           >

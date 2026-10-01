@@ -398,11 +398,7 @@ export const SAMPLE_PROFILING_REPORT = {
   },
   whatItMeans:
     "You know what you want to do. Now you need a clear path: which subjects, which exams, and which skills.",
-  yourNextSteps: [
-    'Read the "How to Get There" section for your career cluster.',
-    "Note down entrance exam dates, eligibility, and how much time you need to prepare.",
-    "Start learning one useful skill this term.",
-  ],
+
   your5Areas: [
     {
       domainCode: "SA",

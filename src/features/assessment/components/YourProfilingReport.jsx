@@ -121,14 +121,7 @@ export default function YourProfilingReport({
     pData.whatItMeans ||
     "You know what you want to do. Now you need a clear path: which subjects, which exams, and which skills.";
 
-  const yourNextSteps =
-    Array.isArray(pData.yourNextSteps) && pData.yourNextSteps.length > 0
-      ? pData.yourNextSteps
-      : [
-          'Read the "How to Get There" section for your career cluster.',
-          "Note down entrance exam dates, eligibility, and how much time you need to prepare.",
-          "Start learning one useful skill this term.",
-        ];
+
 
   // 5. Your 5 Areas
   const your5Areas =
@@ -325,7 +318,7 @@ export default function YourProfilingReport({
         {/* ============================================================
             BLOCK 4: "WHAT IT MEANS" & "YOUR NEXT STEPS" (2-Col Card Grid)
         ============================================================ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           {/* What it means Card */}
           <div className="rounded-xl border border-[#E9ECEF] bg-[#FFFFFF] p-3 shadow-2xs flex flex-col justify-between">
             <div>
@@ -343,25 +336,7 @@ export default function YourProfilingReport({
             </div>
           </div>
 
-          {/* Your Next Steps Card */}
-          <div className="rounded-xl border border-[#D1E7DD] bg-[#F7FCFA] p-3 shadow-2xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5 text-xs font-black uppercase tracking-wider text-[#0f5132]">
-                <span>🚀</span>
-                <span>Your Next Steps</span>
-              </div>
-              <ul className="space-y-1 text-[11.5px] text-[#212529]">
-                {yourNextSteps.map((step, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5 leading-tight">
-                    <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#198754] text-white text-[9px] font-bold mt-0.5">
-                      {idx + 1}
-                    </span>
-                    <span className="font-medium">{step}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+         
         </div>
 
         {/* ============================================================
