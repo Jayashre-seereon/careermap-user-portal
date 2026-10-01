@@ -38,9 +38,19 @@ import {
 import {
   ASSESSMENT_DOMAINS,
   LIKERT_OPTIONS,
+  PROFILING_LIKERT_OPTIONS,
+  PROFILING_SP_OPTIONS,
   TOTAL_ASSESSMENT_QUESTIONS,
+  getDomainMeta,
 } from "../data/assessmentConstants";
 import { FALLBACK_SECTIONS } from "../data/fallbackQuestions";
+
+const APTITUDE_TIME_LIMIT_SECONDS = 15 * 60;
+
+function isAptitudeSection(section, index) {
+  const key = String(section?.code || section?.id || section?.key || section?.domain || "").toLowerCase();
+  return key.includes("apt") || key.includes("cognit") || getDomainMeta(section, index)?.id === "aptitude";
+}
 
 export default function AssessmentTestPage() {
   const { attemptId } = useParams();
@@ -50,7 +60,7 @@ export default function AssessmentTestPage() {
   const [sections, setSections] = useState([]);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
-  // Map of answers: { [questionId]: { likertValue?: number, selectedOptionId?: string } }
+  // Map of answers: { [questionId]: { likertValue?: number, selectedOptionId?: string|number, optionKey?: string } }
   const [answers, setAnswers] = useState({});
   const [saveStatus, setSaveStatus] = useState("saved"); // 'saving' | 'saved' | 'error'
 
@@ -58,9 +68,13 @@ export default function AssessmentTestPage() {
   const [isSubmitModalVisible, setIsSubmitModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitStepText, setSubmitStepText] = useState("");
+  const [aptitudeTimeLeft, setAptitudeTimeLeft] = useState(APTITUDE_TIME_LIMIT_SECONDS);
+  const [aptitudeExpired, setAptitudeExpired] = useState(false);
+  const [aptitudeStarted, setAptitudeStarted] = useState(false);
 
   const pendingSavesRef = useRef({});
   const saveTimeoutRef = useRef(null);
+  const aptitudeTimerKey = `assessment:${attemptId}:aptitude-started-at`;
 
   useEffect(() => {
     loadTestQuestions();
@@ -80,7 +94,7 @@ export default function AssessmentTestPage() {
       } else if (Array.isArray(data) && data.length > 0) {
         loadedSections = data;
       } else {
-        // Use comprehensive 163-question fallback dataset
+        // Use comprehensive fallback dataset
         loadedSections = FALLBACK_SECTIONS;
       }
 
@@ -92,12 +106,13 @@ export default function AssessmentTestPage() {
               initialAnswers[q.id] = {
                 likertValue: q.userAnswer.likertValue ?? q.userAnswer.value ?? null,
                 selectedOptionId: q.userAnswer.selectedOptionId ?? q.userAnswer.optionId ?? null,
+                optionKey: q.userAnswer.optionKey ?? q.userAnswer.key ?? null,
               };
             } else if (q.answer !== undefined && q.answer !== null) {
               if (typeof q.answer === "number") {
                 initialAnswers[q.id] = { likertValue: q.answer };
               } else if (typeof q.answer === "string") {
-                initialAnswers[q.id] = { selectedOptionId: q.answer };
+                initialAnswers[q.id] = { selectedOptionId: q.answer, optionKey: q.answer };
               }
             }
           });
@@ -133,6 +148,24 @@ export default function AssessmentTestPage() {
     }
   }
 
+  useEffect(() => {
+    if (loading || !sections.some((section, index) => isAptitudeSection(section, index))) return;
+    let startedAt = Number(window.localStorage.getItem(aptitudeTimerKey));
+    if (!startedAt) {
+      startedAt = Date.now();
+      window.localStorage.setItem(aptitudeTimerKey, String(startedAt));
+    }
+    setAptitudeStarted(true);
+    const updateTime = () => {
+      const remaining = Math.max(0, APTITUDE_TIME_LIMIT_SECONDS - Math.floor((Date.now() - startedAt) / 1000));
+      setAptitudeTimeLeft(remaining);
+      if (remaining === 0) setAptitudeExpired(true);
+    };
+    updateTime();
+    const timer = window.setInterval(updateTime, 1000);
+    return () => window.clearInterval(timer);
+  }, [sections, aptitudeTimerKey, loading]);
+
   // Current active section
   const activeSection = useMemo(() => {
     if (!sections || sections.length === 0) return null;
@@ -140,8 +173,8 @@ export default function AssessmentTestPage() {
   }, [sections, currentSectionIndex]);
 
   const activeDomainMeta = useMemo(() => {
-    return ASSESSMENT_DOMAINS[currentSectionIndex] || ASSESSMENT_DOMAINS[0];
-  }, [currentSectionIndex]);
+    return getDomainMeta(activeSection, currentSectionIndex);
+  }, [activeSection, currentSectionIndex]);
 
   // Overall progress statistics
   const totalQuestionsCount = useMemo(() => {
@@ -153,7 +186,8 @@ export default function AssessmentTestPage() {
     return Object.values(answers).filter(
       (a) =>
         (a && a.likertValue !== undefined && a.likertValue !== null) ||
-        (a && a.selectedOptionId !== undefined && a.selectedOptionId !== null)
+        (a && a.selectedOptionId !== undefined && a.selectedOptionId !== null) ||
+        (a && a.optionKey !== undefined && a.optionKey !== null)
     ).length;
   }, [answers]);
 
@@ -166,8 +200,9 @@ export default function AssessmentTestPage() {
       const totalInSec = qList.length;
       const answeredInSec = qList.filter(
         (q) =>
-          answers[q.id]?.likertValue !== undefined && answers[q.id]?.likertValue !== null ||
-          answers[q.id]?.selectedOptionId !== undefined && answers[q.id]?.selectedOptionId !== null
+          (answers[q.id]?.likertValue !== undefined && answers[q.id]?.likertValue !== null) ||
+          (answers[q.id]?.selectedOptionId !== undefined && answers[q.id]?.selectedOptionId !== null) ||
+          (answers[q.id]?.optionKey !== undefined && answers[q.id]?.optionKey !== null)
       ).length;
       const isComplete = totalInSec > 0 && answeredInSec === totalInSec;
       return {
@@ -181,7 +216,8 @@ export default function AssessmentTestPage() {
   }, [sections, answers]);
 
   // Auto-save handler for individual question
-  function handleSelectAnswer(questionId, { likertValue, selectedOptionId }) {
+  function handleSelectAnswer(questionId, { likertValue, selectedOptionId, optionKey }) {
+    if (isAptitudeSection(activeSection, currentSectionIndex) && aptitudeExpired) return;
     setSaveStatus("saving");
 
     const updatedAnswers = {
@@ -189,6 +225,7 @@ export default function AssessmentTestPage() {
       [questionId]: {
         ...(likertValue !== undefined ? { likertValue } : {}),
         ...(selectedOptionId !== undefined ? { selectedOptionId } : {}),
+        ...(optionKey !== undefined ? { optionKey } : {}),
       },
     };
     setAnswers(updatedAnswers);
@@ -198,6 +235,7 @@ export default function AssessmentTestPage() {
       questionId,
       likertValue,
       selectedOptionId,
+      optionKey,
     };
 
     if (saveTimeoutRef.current) {
@@ -210,6 +248,7 @@ export default function AssessmentTestPage() {
           questionId,
           likertValue,
           selectedOptionId,
+          optionKey,
         });
         setSaveStatus("saved");
       } catch (e) {
@@ -226,8 +265,9 @@ export default function AssessmentTestPage() {
     // Batch save answers in background on section navigation
     const batchList = Object.entries(answers).map(([qId, ans]) => ({
       questionId: qId,
-      likertValue: ans.likertValue,
-      selectedOptionId: ans.selectedOptionId,
+      ...(ans.likertValue !== undefined && ans.likertValue !== null ? { likertValue: ans.likertValue } : {}),
+      ...(ans.selectedOptionId !== undefined && ans.selectedOptionId !== null ? { selectedOptionId: ans.selectedOptionId } : {}),
+      ...(ans.optionKey !== undefined && ans.optionKey !== null ? { optionKey: ans.optionKey } : {}),
     }));
 
     if (batchList.length > 0) {
@@ -248,7 +288,8 @@ export default function AssessmentTestPage() {
       qList.forEach((q, qIdx) => {
         const isAnswered =
           (answers[q.id]?.likertValue !== undefined && answers[q.id]?.likertValue !== null) ||
-          (answers[q.id]?.selectedOptionId !== undefined && answers[q.id]?.selectedOptionId !== null);
+          (answers[q.id]?.selectedOptionId !== undefined && answers[q.id]?.selectedOptionId !== null) ||
+          (answers[q.id]?.optionKey !== undefined && answers[q.id]?.optionKey !== null);
         if (!isAnswered) {
           list.push({
             sectionIndex: sIdx,
@@ -269,22 +310,26 @@ export default function AssessmentTestPage() {
     setSubmitting(true);
 
     try {
-      setSubmitStepText("Saving all 163 responses...");
+      setSubmitStepText(`Saving all ${totalQuestionsCount} responses...`);
       const batchList = Object.entries(answers).map(([qId, ans]) => ({
         questionId: qId,
-        likertValue: ans.likertValue,
-        selectedOptionId: ans.selectedOptionId,
+        ...(ans.likertValue !== undefined && ans.likertValue !== null ? { likertValue: ans.likertValue } : {}),
+        ...(ans.selectedOptionId !== undefined && ans.selectedOptionId !== null ? { selectedOptionId: ans.selectedOptionId } : {}),
+        ...(ans.optionKey !== undefined && ans.optionKey !== null ? { optionKey: ans.optionKey } : {}),
       }));
       await saveBatchAttemptAnswers(attemptId, batchList).catch(() => {});
 
-      setSubmitStepText("Evaluating 21 facets & psychometric dimensions...");
-      await new Promise((r) => setTimeout(r, 600));
+      setSubmitStepText("Evaluating Personal Profiling & Career Planning Track...");
+      await new Promise((r) => setTimeout(r, 400));
 
-      setSubmitStepText("Calculating 18 Career Clusters match percentages...");
-      const submitRes = await submitAssessmentAttempt(attemptId);
+      setSubmitStepText("Evaluating RIASEC, OCEAN, VARK & Cognitive Reasoning...");
+      await new Promise((r) => setTimeout(r, 500));
+
+      setSubmitStepText("Calculating Career Clusters & Readiness Score...");
+      await submitAssessmentAttempt(attemptId);
 
       setSubmitStepText("Generating your Career Compass Report...");
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 400));
 
       message.success("Assessment submitted successfully!");
       navigate(`/app/assessment/attempt/${attemptId}/result`);
@@ -320,7 +365,7 @@ export default function AssessmentTestPage() {
           <p className="mt-3 text-base text-rose-100">{submitStepText}</p>
 
           <div className="mt-8 rounded-2xl bg-white/10 p-4 backdrop-blur-sm text-xs text-rose-200">
-            Evaluating Holland RIASEC, Big Five Traits, VARK Learning Modalities, and 6 Cognitive Reasoning Facets...
+            Evaluating Career Planning Track (CRI), Holland RIASEC, Big Five Traits, VARK Learning Modalities, and Cognitive Aptitudes...
           </div>
         </div>
       </div>
@@ -329,13 +374,16 @@ export default function AssessmentTestPage() {
 
   const isLastSection = currentSectionIndex === sections.length - 1;
   const currentSectionQuestions = activeSection?.questions || [];
+  const isAptitudeActive = isAptitudeSection(activeSection, currentSectionIndex);
+  const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart(2, "0")}:${String(aptitudeTimeLeft % 60).padStart(2, "0")}`;
 
   return (
-    <div className="min-h-screen  pb-32 text-slate-800 antialiased">
+    <div className="assessment-test min-h-screen text-slate-800 antialiased">
       {/* Sticky Top Header with Progress & Auto-save status */}
-      <div className="sticky top-16 z-30 -mx-9 border-b backdrop-blur-md shadow-sm">  
-        <div className="w-full px-8 py-2"> 
-          <div className="flex flex-nowrap items-center justify-between gap-3">   {/* Left: Test Info & Breadcrumb */}
+      <div className="sticky top-16 z-30 -mx-9 border-b backdrop-blur-md shadow-sm">
+        <div className="w-full px-8 py-2">
+          <div className="flex flex-nowrap items-center justify-between gap-3">
+            {/* Left: Exit button */}
             <div className="flex items-center gap-3">
               <Button
                 size="small"
@@ -346,39 +394,45 @@ export default function AssessmentTestPage() {
                 Exit Test
               </Button>
               <div className="hidden h-5 w-px bg-slate-200 sm:block" />
-             
             </div>
-  <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 scrollbar-none">    {sections.map((sec, idx) => {
-              const stat = sectionStats[idx];
-              const isCurrent = idx === currentSectionIndex;
-              return (
-                <button
-                  key={sec.id || idx}
-                  onClick={() => handleSwitchSection(idx)}
-                className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-2 py-1 text-[10px]font-bold transition-all ${     isCurrent
-                      ? "bg-[#9a2119] text-white shadow-sm"
-                      : stat.isComplete
-                      ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100/70"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200/70"
-                  }`}
-                >
-                  <span>{ASSESSMENT_DOMAINS[idx]?.icon || `${idx + 1}.`}</span>
-                  <span>{ASSESSMENT_DOMAINS[idx]?.shortCode || `Sec ${idx + 1}`}</span>
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+
+            {/* Middle: Section Pills Bar */}
+            <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {sections.map((sec, idx) => {
+                const stat = sectionStats[idx] || { answered: 0, total: 0, isComplete: false };
+                const isCurrent = idx === currentSectionIndex;
+                const domainMeta = getDomainMeta(sec, idx);
+
+                return (
+                  <button
+                    key={sec.id || idx}
+                    onClick={() => handleSwitchSection(idx)}
+                    className={`flex flex-shrink-0 items-center gap-2 rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${
                       isCurrent
-                        ? "bg-white/20 text-white"
+                        ? "bg-[#9a2119] text-white shadow-sm"
                         : stat.isComplete
-                        ? "bg-emerald-200 text-emerald-900"
-                        : "bg-slate-200 text-slate-700"
+                        ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100/70 border border-emerald-200"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200"
                     }`}
                   >
-                    {stat.answered}/{stat.total}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                    <span>{domainMeta?.icon || `${idx + 1}.`}</span>
+                    <span>{domainMeta?.shortCode || `Sec ${idx + 1}`}</span>
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+                        isCurrent
+                          ? "bg-white/20 text-white"
+                          : stat.isComplete
+                          ? "bg-emerald-200 text-emerald-900"
+                          : "bg-slate-200 text-slate-700"
+                      }`}
+                    >
+                      {stat.answered}/{stat.total}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Right: Auto-Save Badge & Total Progress */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
@@ -390,7 +444,7 @@ export default function AssessmentTestPage() {
                 ) : (
                   <>
                     <CheckCircleFilled className="text-emerald-500" />
-                   
+                    <span className="text-slate-600">Saved</span>
                   </>
                 )}
               </div>
@@ -400,20 +454,24 @@ export default function AssessmentTestPage() {
                   {totalAnsweredCount} / {totalQuestionsCount} ({overallPercent}%)
                 </span>
               </div>
+              {isAptitudeActive && aptitudeStarted && (
+                <Tag color={aptitudeTimeLeft <= 300 ? "red" : "cyan"} className="m-0 rounded-lg font-bold tabular-nums">
+                  <ClockCircleOutlined className="mr-1" /> {aptitudeExpired ? "Time expired" : aptitudeTimerLabel}
+                </Tag>
+              )}
             </div>
           </div>
 
           {/* Sticky Progress Bar */}
-       <div className="mt-1.5">
-             <Progress
+          <div className="mt-1.5">
+            <Progress
               percent={overallPercent}
               showInfo={false}
-              strokeColor={{ "0%": "#9a2119", "100%": "#2d8c83" }}
+              strokeColor={{ "0%": "#9a2119", "50%": "#0f766e", "100%": "#16a34a" }}
               trailColor="#e2e8f0"
               size={["100%", 6]}
             />
           </div>
-                
         </div>
       </div>
 
@@ -429,7 +487,7 @@ export default function AssessmentTestPage() {
                   {activeDomainMeta.subtitle}
                 </span>
                 <h1 className="text-xl font-black text-slate-900 sm:text-2xl">
-                  {activeSection.title || activeDomainMeta.title}
+                  {activeSection?.title || activeDomainMeta.title}
                 </h1>
               </div>
             </div>
@@ -438,7 +496,7 @@ export default function AssessmentTestPage() {
             </Tag>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-slate-800">
-            {activeSection.description || activeDomainMeta.description}
+            {activeSection?.description || activeDomainMeta.description}
           </p>
         </div>
 
@@ -447,26 +505,69 @@ export default function AssessmentTestPage() {
           {currentSectionQuestions.map((question, qIdx) => {
             const questionNumber = qIdx + 1;
             const currentAnswer = answers[question.id] || {};
-            const isLikert = activeDomainMeta.type === "likert";
+
+            // Determine if question belongs specifically to Section 1 (Personal Profiling / CRI)
+            const isProfilingQuestion =
+              activeSection?.code === "profiling" ||
+              activeSection?.id === "profiling" ||
+              activeSection?.key === "profiling" ||
+              ["SA", "CE", "DC", "PP", "CO", "SP"].includes(question.facet) ||
+              (typeof question.code === "string" && /^(SA|CE|DC|PP|CO|SP)\d*/i.test(question.code));
+
+            // Section 1 Question 16 is single choice SP
+            const isSP =
+              question.code === "SP" ||
+              question.facet === "SP" ||
+              (isProfilingQuestion && (questionNumber === 16 || question.type === "single_choice"));
+
+            const isSingleChoice =
+              isSP ||
+              question.type === "single_choice" ||
+              question.type === "mcq" ||
+              (Array.isArray(question.options) &&
+                question.options.length > 0 &&
+                question.type !== "likert" &&
+                question.type !== "likert5");
+
+            // ONLY Section 1 Likert items use "Not true at all" -> "Very true"
+            // Sections 2 to 6 (RIASEC, OCEAN, VARK, Values, Goals) use "Strongly Disagree" -> "Strongly Agree"
+            const isProfilingLikert = !isSingleChoice && isProfilingQuestion;
+            const currentLikertOptions = isProfilingLikert ? PROFILING_LIKERT_OPTIONS : LIKERT_OPTIONS;
+
+            const questionOptions =
+              Array.isArray(question.options) && question.options.length > 0
+                ? question.options
+                : isSP
+                ? PROFILING_SP_OPTIONS
+                : [];
+
+            const isAnswered =
+              (currentAnswer.likertValue !== undefined && currentAnswer.likertValue !== null) ||
+              (currentAnswer.selectedOptionId !== undefined && currentAnswer.selectedOptionId !== null) ||
+              (currentAnswer.optionKey !== undefined && currentAnswer.optionKey !== null);
 
             return (
               <div
                 key={question.id || qIdx}
                 id={`q-${question.id}`}
                 className={`rounded-2xl border bg-white p-5 sm:p-6 shadow-sm transition-all duration-150 ${
-                  (isLikert && currentAnswer.likertValue) || (!isLikert && currentAnswer.selectedOptionId)
-                    ? "border-emerald-200 ring-1 ring-emerald-100"
+                  isAnswered
+                    ? "border-emerald-300 ring-1 ring-emerald-100 bg-emerald-50/10"
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
                 {/* Question Header */}
                 <div className="flex items-start gap-3.5">
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-xs font-extrabold text-slate-700">
-                    {questionNumber}
+                  <span
+                    className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs font-extrabold ${
+                      isAnswered ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {isAnswered ? <CheckOutlined /> : questionNumber}
                   </span>
                   <div className="flex-1">
                     <p className="text-base font-semibold leading-snug text-slate-900">
-                      {question.text || question.question || question.statement}
+                      {question.text || question.question || question.statement || question.title}
                     </p>
 
                     {/* Question Diagram/Image if present (for MCQ) */}
@@ -484,15 +585,16 @@ export default function AssessmentTestPage() {
 
                 {/* Option Selector */}
                 <div className="mt-5 pl-0 sm:pl-10">
-                  {isLikert ? (
-                    /* Likert 1-5 Scale Component */
+                  {!isSingleChoice ? (
+                    /* 5-Point Likert Scale Component */
                     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-                      {LIKERT_OPTIONS.map((opt) => {
+                      {currentLikertOptions.map((opt) => {
                         const isSelected = currentAnswer.likertValue === opt.value;
                         return (
                           <button
                             key={opt.value}
                             type="button"
+                            disabled={isAptitudeActive && aptitudeExpired}
                             onClick={() =>
                               handleSelectAnswer(question.id, { likertValue: opt.value })
                             }
@@ -519,67 +621,111 @@ export default function AssessmentTestPage() {
                         );
                       })}
                     </div>
+                  ) : isSP ? (
+                    /* Section 1 Item 16 (SP) Single Choice - Vertical List */
+                    <div className="space-y-2.5">
+                      {questionOptions.map((opt, optIndex) => {
+                        const optionLetter =
+                          opt.optionKey || opt.key || String.fromCharCode(65 + optIndex);
+                        const isSelected =
+                          currentAnswer.selectedOptionId === opt.id ||
+                          currentAnswer.selectedOptionId === opt.key ||
+                          currentAnswer.selectedOptionId === optionLetter ||
+                          currentAnswer.optionKey === optionLetter;
+
+                        return (
+                          <button
+                            key={opt.id || opt.key || optIndex}
+                            type="button"
+                            disabled={isAptitudeActive && aptitudeExpired}
+                            onClick={() =>
+                              handleSelectAnswer(question.id, {
+                                selectedOptionId: opt.id || optionLetter,
+                                optionKey: optionLetter,
+                              })
+                            }
+                            className={`flex w-full items-center gap-3.5 rounded-xl border p-4 text-left transition-all ${
+                              isSelected
+                                ? "border-teal-600 bg-teal-50/80 text-teal-950 ring-2 ring-teal-400/60 shadow-sm"
+                                : "border-slate-200 bg-slate-50/40 text-slate-800 hover:border-teal-400 hover:bg-teal-50/30"
+                            }`}
+                          >
+                            <span
+                              className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                                isSelected
+                                  ? "bg-teal-600 text-white shadow-xs"
+                                  : "bg-slate-200 text-slate-700"
+                              }`}
+                            >
+                              {optionLetter}
+                            </span>
+                            <span className="text-sm font-semibold leading-relaxed">
+                              {opt.text || opt.optionText || opt.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   ) : (
-                    /* MCQ 4-Option Component */
+                    /* Standard MCQ 4-Option Component (Aptitude) */
                     <div className="grid gap-2.5 sm:grid-cols-2">
-                   
-{(question.options || []).map((opt, optIndex) => {
-  const optionLetter = String.fromCharCode(65 + optIndex);
-  const isSelected = currentAnswer.selectedOptionId === opt.id;
+                      {questionOptions.map((opt, optIndex) => {
+                        const optionLetter = String.fromCharCode(65 + optIndex);
+                        const isSelected =
+                          currentAnswer.selectedOptionId === opt.id ||
+                          currentAnswer.selectedOptionId === opt.key ||
+                          currentAnswer.optionKey === optionLetter;
 
-  // Check if option has an image URL
-  const optionImage =
-    opt.image ||
-    (typeof opt.optionText === "string" &&
-    /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(opt.optionText)
-      ? opt.optionText
-      : null);
+                        const optionImage =
+                          opt.image ||
+                          (typeof opt.optionText === "string" &&
+                          /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(opt.optionText)
+                            ? opt.optionText
+                            : null);
 
-  return (
-    <button
-      key={opt.id || optIndex}
-      type="button"
-      onClick={() =>
-        handleSelectAnswer(question.id, {
-          selectedOptionId: opt.id,
-        })
-      }
-      className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all ${
-        isSelected
-          ? "border-cyan-500 bg-cyan-50/80 text-cyan-900 ring-2 ring-cyan-300"
-          : "border-slate-200 bg-slate-50/40 text-slate-700 hover:border-cyan-300 hover:bg-cyan-50/30"
-      }`}
-    >
-      {/* A / B / C / D */}
-      <span
-        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
-          isSelected
-            ? "bg-cyan-600 text-white"
-            : "bg-slate-200 text-slate-700"
-        }`}
-      >
-        {optionLetter}
-      </span>
+                        return (
+                          <button
+                            key={opt.id || optIndex}
+                            type="button"
+                            disabled={isAptitudeActive && aptitudeExpired}
+                            onClick={() =>
+                              handleSelectAnswer(question.id, {
+                                selectedOptionId: opt.id || optionLetter,
+                                optionKey: optionLetter,
+                              })
+                            }
+                            className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                              isSelected
+                                ? "border-cyan-500 bg-cyan-50/80 text-cyan-900 ring-2 ring-cyan-300"
+                                : "border-slate-200 bg-slate-50/40 text-slate-700 hover:border-cyan-300 hover:bg-cyan-50/30"
+                            }`}
+                          >
+                            <span
+                              className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                                isSelected
+                                  ? "bg-cyan-600 text-white"
+                                  : "bg-slate-200 text-slate-700"
+                              }`}
+                            >
+                              {optionLetter}
+                            </span>
 
-      {/* Option Image or Text */}
-      <div className="flex flex-1 items-center">
-        {optionImage ? (
-          <img
-            src={optionImage}
-            alt={`Option ${optionLetter}`}
-            className="max-h-40 max-w-full rounded-lg object-contain"
-          />
-        ) : (
-          <span className="text-sm font-medium leading-relaxed">
-            {opt.text || opt.optionText || opt.label}
-          </span>
-        )}
-      </div>
-    </button>
-  );
-})}
-
-
+                            <div className="flex flex-1 items-center">
+                              {optionImage ? (
+                                <img
+                                  src={optionImage}
+                                  alt={`Option ${optionLetter}`}
+                                  className="max-h-40 max-w-full rounded-lg object-contain"
+                                />
+                              ) : (
+                                <span className="text-sm font-medium leading-relaxed">
+                                  {opt.text || opt.optionText || opt.label}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -590,8 +736,8 @@ export default function AssessmentTestPage() {
       </div>
 
       {/* Sticky Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 px-4 py-3.5 backdrop-blur-md shadow-sm shadow-lg">
-        <div className="flex w-full items-center justify-between gap-4">
+      <div className="mt-8  ">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
           <Button
             size="small"
             disabled={currentSectionIndex === 0}
@@ -648,17 +794,17 @@ export default function AssessmentTestPage() {
         onCancel={() => setIsSubmitModalVisible(false)}
         footer={[
           <Button key="back" onClick={() => setIsSubmitModalVisible(false)} className="rounded-xl">
-           Review
+            Review
           </Button>,
-         <Button
-  key="submit"
-  type="primary"
-  disabled={unansweredQuestions.length > 0}
-  onClick={handleSubmitTest}
-  className="rounded-xl border-none bg-[#9a2119] font-bold hover:bg-[#801812]"
->
-  Submit
-</Button>,
+          <Button
+            key="submit"
+            type="primary"
+            // disabled={unansweredQuestions.length > 0}
+            onClick={handleSubmitTest}
+            className="rounded-xl border-none bg-[#9a2119] font-bold hover:bg-[#801812]"
+          >
+            Submit
+          </Button>,
         ]}
       >
         <div className="py-2">
@@ -705,7 +851,7 @@ export default function AssessmentTestPage() {
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-3xl text-emerald-600">
                 🎉
               </div>
-              <h4 className="text-base font-bold text-slate-900">All 163 Questions Answered!</h4>
+              <h4 className="text-base font-bold text-slate-900">All {totalQuestionsCount} Questions Answered!</h4>
               <p className="mt-1 text-sm text-slate-800">
                 Your responses are complete. Click submit to generate your comprehensive Career Compass Report.
               </p>

@@ -247,13 +247,13 @@ export default function AssessmentLandingPage() {
           <div className="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-8">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold tracking-wide uppercase text-amber-200 backdrop-blur-md">
-                <SafetyCertificateOutlined /> 6-Domain Evaluation • 1-Plan = 1-Attempt
+                <SafetyCertificateOutlined /> 7-Domain Evaluation • 1-Plan = 1-Attempt
               </div>
               <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
                 Psychometric Career Assessment
               </h1>
               <p className="mt-4 max-w-2xl text-base font-normal leading-relaxed text-rose-100 sm:text-lg">
-                Discover your interests, personality strengths, learning style, work values, and cognitive aptitudes to unlock your top 5 best-fit career pathways in a 31-page Career Compass Report.
+                Discover your personal profiling & career readiness, interests, personality strengths, learning style, work values, and cognitive aptitudes to unlock your top 5 best-fit career pathways in a 32-page Career Compass Report.
               </p>
 
               {/* Key Meta Badges */}
@@ -268,7 +268,7 @@ export default function AssessmentLandingPage() {
                 </div>
                 <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                   <TrophyOutlined className="text-amber-300" />
-                  <span>6 Domains & 18 Clusters</span>
+                  <span>7 Domains & 18 Clusters</span>
                 </div>
               </div>
             </div>
@@ -387,7 +387,7 @@ export default function AssessmentLandingPage() {
           </div>
         </div>
 
-        {/* 6 Assessment Domains Grid */}
+        {/* 7 Assessment Domains Grid */}
         <div className="mb-14">
           <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
             <div>
@@ -395,11 +395,11 @@ export default function AssessmentLandingPage() {
                 Structured Curriculum
               </span>
               <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">
-                The 6 Dimensions of the Career Compass
+                The 7 Dimensions of the Career Compass
               </h2>
             </div>
             <span className="text-sm font-medium text-slate-700">
-              Total: <strong className="text-slate-800">163 Questions</strong> across 6 Sections
+              Total: <strong className="text-slate-800">{TOTAL_ASSESSMENT_QUESTIONS} Questions</strong> across {ASSESSMENT_DOMAINS.length} Sections
             </span>
           </div>
 
@@ -413,16 +413,14 @@ export default function AssessmentLandingPage() {
                   <div className="flex items-start justify-between">
                     <span className="text-3xl">{domain.icon}</span>
                     <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
-                      Section {index + 1} / 6
+                      Section {index + 1} / {ASSESSMENT_DOMAINS.length}
                     </span>
                   </div>
 
                   <h3 className="mt-4 text-lg font-bold text-slate-900 group-hover:text-[#9a2119]">
                     {domain.title}
                   </h3>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-slate-700">
-                    {domain.subtitle}
-                  </div>
+                 
 
                   <p className="mt-3 text-sm leading-relaxed text-slate-800">
                     {domain.description}
