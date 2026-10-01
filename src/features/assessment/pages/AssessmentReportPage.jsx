@@ -15,6 +15,8 @@ import {
   pct,
   band,
 } from "../data/careerCompassData";
+import { SAMPLE_PROFILING_REPORT } from "../data/assessmentConstants";
+import YourProfilingReport from "../components/YourProfilingReport";
 import Logo from "../../../asset/logo_white.png";
 import ReportImg1 from "../../../asset/report/report_1.png";
 import ReportImg2 from "../../../asset/report/report_2.png";
@@ -32,7 +34,7 @@ import FeatureCell from "../../../asset/report/feature_cell.jpg";
 import FeatureBehavioral from "../../../asset/report/feature_behavioral.jpg";
 import FeatureDashboard from "../../../asset/report/feature_dashboard.jpg";
 import "./AssessmentReportPage.css";
-// Common Header Component for Pages 2 to 31 matching PDF
+// Common Header Component for Pages 2 to 32 matching PDF
 function PageHeader({ studentFirstName }) {
   return (
     <div className="pdf-header">
@@ -51,7 +53,7 @@ function PageHeader({ studentFirstName }) {
   );
 }
 
-// Common Footer Component for Pages 2 to 31 matching PDF
+// Common Footer Component for Pages 2 to 32 matching PDF
 function PageFooter({ pageNum }) {
   return (
     <div className="pdf-footer">
@@ -123,8 +125,6 @@ export default function AssessmentReportPage() {
     window.print();
   }
 
-
-
   function scrollToPage(pageId) {
     const el = document.getElementById(pageId);
     if (el) {
@@ -141,7 +141,7 @@ export default function AssessmentReportPage() {
             Generating Career Compass Report...
           </h2>
           <p className="mt-1 text-sm text-[#6B7280]">
-            Synthesizing 31 pages of RIASEC, OCEAN, Schwartz Values, Aptitudes, and Pathways
+            Synthesizing 32 pages of Personal Profiling, RIASEC, OCEAN, Schwartz Values, Aptitudes, and Pathways
           </p>
         </div>
       </div>
@@ -165,6 +165,12 @@ export default function AssessmentReportPage() {
     month: "long",
     year: "numeric",
   });
+
+  const yourProfiling =
+    report.yourProfiling ||
+    rawData.yourProfiling ||
+    rawData.report?.yourProfiling ||
+    SAMPLE_PROFILING_REPORT;
 
   const hollandCode = rawData.hollandCode || report.hollandProfile?.code || "ECS";
   const scores = rawData.scores || {};
@@ -441,35 +447,36 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
               options={[
                 { value: "page-1", label: "Page 1: Cover Page" },
                 { value: "page-2", label: "Page 2: Declaration" },
-                { value: "page-3", label: "Page 3: Introduction" },
-                { value: "page-4", label: "Page 4: Interest Overview" },
-                { value: "page-5", label: "Page 5: Interest Details (01-03)" },
-                { value: "page-6", label: "Page 6: Interest Details (04-06)" },
-                { value: "page-7", label: "Page 7: Interest Scores" },
-                { value: "page-8", label: "Page 8: Personality Overview" },
-                { value: "page-9", label: "Page 9: Personality Suggestions" },
-                { value: "page-10", label: "Page 10: Personality Scores" },
-                { value: "page-11", label: "Page 11: Learning Styles" },
-                { value: "page-12", label: "Page 12: Learning Details (01-02)" },
-                { value: "page-13", label: "Page 13: Learning Details (03-04)" },
-                { value: "page-14", label: "Page 14: Learning Style Scores" },
-                { value: "page-15", label: "Page 15: Work Values" },
-                { value: "page-16", label: "Page 16: Work Values Suggestions" },
-                { value: "page-17", label: "Page 17: Work Values Scores" },
-                { value: "page-18", label: "Page 18: Goal Orientation (Short)" },
-                { value: "page-19", label: "Page 19: Goal Orientation (Long)" },
-                { value: "page-20", label: "Page 20: Aptitude Overview" },
-                { value: "page-21", label: "Page 21: Aptitude (Numerical)" },
-                { value: "page-22", label: "Page 22: Aptitude (Logical/Verbal)" },
-                { value: "page-23", label: "Page 23: Aptitude (Voc/Mech)" },
-                { value: "page-24", label: "Page 24: Aptitude (Spatial)" },
-                { value: "page-25", label: "Page 25: Aptitude Scores" },
-                { value: "page-26", label: "Page 26: Top Cluster #1" },
-                { value: "page-27", label: "Page 27: Clusters #2 & #3" },
-                { value: "page-28", label: "Page 28: Clusters #4 & #5" },
-                { value: "page-29", label: "Page 29: Study & Pathway Advice" },
-                { value: "page-30", label: "Page 30: Complete Career Map" },
-                { value: "page-31", label: "Page 31: About Career Map" },
+                { value: "page-3", label: "Page 3: Your Profiling" },
+                { value: "page-4", label: "Page 4: Introduction" },
+                { value: "page-5", label: "Page 5: Interest Overview" },
+                { value: "page-6", label: "Page 6: Interest Details (01-03)" },
+                { value: "page-7", label: "Page 7: Interest Details (04-06)" },
+                { value: "page-8", label: "Page 8: Interest Scores" },
+                { value: "page-9", label: "Page 9: Personality Overview" },
+                { value: "page-10", label: "Page 10: Personality Suggestions" },
+                { value: "page-11", label: "Page 11: Personality Scores" },
+                { value: "page-12", label: "Page 12: Learning Styles" },
+                { value: "page-13", label: "Page 13: Learning Details (01-02)" },
+                { value: "page-14", label: "Page 14: Learning Details (03-04)" },
+                { value: "page-15", label: "Page 15: Learning Style Scores" },
+                { value: "page-16", label: "Page 16: Work Values" },
+                { value: "page-17", label: "Page 17: Work Values Suggestions" },
+                { value: "page-18", label: "Page 18: Work Values Scores" },
+                { value: "page-19", label: "Page 19: Goal Orientation (Short)" },
+                { value: "page-20", label: "Page 20: Goal Orientation (Long)" },
+                { value: "page-21", label: "Page 21: Aptitude Overview" },
+                { value: "page-22", label: "Page 22: Aptitude (Numerical)" },
+                { value: "page-23", label: "Page 23: Aptitude (Logical/Verbal)" },
+                { value: "page-24", label: "Page 24: Aptitude (Voc/Mech)" },
+                { value: "page-25", label: "Page 25: Aptitude (Spatial)" },
+                { value: "page-26", label: "Page 26: Aptitude Scores" },
+                { value: "page-27", label: "Page 27: Top Cluster #1" },
+                { value: "page-28", label: "Page 28: Clusters #2 & #3" },
+                { value: "page-29", label: "Page 29: Clusters #4 & #5" },
+                { value: "page-30", label: "Page 30: Study & Pathway Advice" },
+                { value: "page-31", label: "Page 31: Complete Career Map" },
+                { value: "page-32", label: "Page 32: About Career Map" },
               ]}
             />
           </div>
@@ -483,7 +490,6 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
             >
               Print / Save PDF
             </Button>
-           
           </div>
         </div>
       </div>

@@ -1,7 +1,34 @@
 export const ASSESSMENT_DOMAINS = [
   {
-    id: "interest",
+    id: "profiling",
     sectionIndex: 0,
+    code: "profiling",
+    title: "Career Planning Track / Personal Profiling",
+    subtitle: "Career Readiness & Personal Profiling",
+    shortCode: "PROFILING",
+    icon: "🎯",
+    questionCount: 16,
+    type: "profiling",
+    estimatedMinutes: 4,
+    color: "#0f766e",
+    gradient: "from-teal-600 to-emerald-700",
+    bgLight: "bg-teal-50",
+    borderLight: "border-teal-200",
+    textTone: "text-teal-700",
+    description: "Evaluates where you are on your career planning journey, your self-awareness, career exploration, and readiness.",
+    facets: [
+      { code: "SA", name: "About Me", description: "Self-awareness, understanding strengths, interests and preferences" },
+      { code: "CE", name: "Knowing About Careers", description: "Career exploration, research and discovering options" },
+      { code: "DC", name: "Making a Choice", description: "Decision making, clarity and consistency of career focus" },
+      { code: "PP", name: "Knowing the Path", description: "Planning and preparation, subjects, exams and milestones" },
+      { code: "CO", name: "Feeling Sure", description: "Commitment and confidence to pursue your goals" },
+      { code: "SP", name: "Where Am I Right Now?", description: "Single-choice career readiness stage selection" },
+    ],
+  },
+  {
+    id: "interest",
+    sectionIndex: 1,
+    code: "interest",
     title: "Interest Assessment",
     subtitle: "Holland RIASEC Model",
     shortCode: "RIASEC",
@@ -26,7 +53,8 @@ export const ASSESSMENT_DOMAINS = [
   },
   {
     id: "personality",
-    sectionIndex: 1,
+    sectionIndex: 2,
+    code: "personality",
     title: "Personality Assessment",
     subtitle: "Big Five / OCEAN Model",
     shortCode: "OCEAN",
@@ -50,7 +78,8 @@ export const ASSESSMENT_DOMAINS = [
   },
   {
     id: "learningStyles",
-    sectionIndex: 2,
+    sectionIndex: 3,
+    code: "learningStyles",
     title: "Learning Styles",
     subtitle: "VARK Modality Model",
     shortCode: "VARK",
@@ -73,7 +102,8 @@ export const ASSESSMENT_DOMAINS = [
   },
   {
     id: "values",
-    sectionIndex: 3,
+    sectionIndex: 4,
+    code: "values",
     title: "Work Values",
     subtitle: "Schwartz Value Theory",
     shortCode: "VALUES",
@@ -96,7 +126,8 @@ export const ASSESSMENT_DOMAINS = [
   },
   {
     id: "goalOrientation",
-    sectionIndex: 4,
+    sectionIndex: 5,
+    code: "goalOrientation",
     title: "Goal Orientation",
     subtitle: "Achievement & Focus",
     shortCode: "GOALS",
@@ -117,7 +148,8 @@ export const ASSESSMENT_DOMAINS = [
   },
   {
     id: "aptitude",
-    sectionIndex: 5,
+    sectionIndex: 6,
+    code: "aptitude",
     title: "Aptitude & Cognitive Reasoning",
     subtitle: "6 Core Cognitive Abilities",
     shortCode: "APTITUDE",
@@ -142,9 +174,104 @@ export const ASSESSMENT_DOMAINS = [
   },
 ];
 
-export const TOTAL_ASSESSMENT_QUESTIONS = 163;
-export const ESTIMATED_DURATION_MINS = "35-45";
+export const TOTAL_ASSESSMENT_QUESTIONS = 179;
+export const ESTIMATED_DURATION_MINS = "40-50";
 
+/**
+ * Section 1: Profiling 5-Point Likert Options (Not true at all -> Very true)
+ */
+export const PROFILING_LIKERT_OPTIONS = [
+  {
+    value: 1,
+    label: "Not true at all",
+    shortLabel: "Not true at all",
+    color: "#ef4444",
+    bgHover: "hover:border-rose-400 hover:bg-rose-50/70",
+    activeClass: "border-rose-500 bg-rose-50 text-rose-700 shadow-sm ring-2 ring-rose-300",
+  },
+  {
+    value: 2,
+    label: "Mostly not true",
+    shortLabel: "Mostly not true",
+    color: "#f97316",
+    bgHover: "hover:border-orange-400 hover:bg-orange-50/70",
+    activeClass: "border-orange-500 bg-orange-50 text-orange-700 shadow-sm ring-2 ring-orange-300",
+  },
+  {
+    value: 3,
+    label: "Not sure",
+    shortLabel: "Not sure",
+    color: "#64748b",
+    bgHover: "hover:border-slate-400 hover:bg-slate-50/70",
+    activeClass: "border-slate-500 bg-slate-100 text-slate-800 shadow-sm ring-2 ring-slate-300",
+  },
+  {
+    value: 4,
+    label: "Mostly true",
+    shortLabel: "Mostly true",
+    color: "#0d9488",
+    bgHover: "hover:border-teal-400 hover:bg-teal-50/70",
+    activeClass: "border-teal-500 bg-teal-50 text-teal-800 shadow-sm ring-2 ring-teal-300",
+  },
+  {
+    value: 5,
+    label: "Very true",
+    shortLabel: "Very true",
+    color: "#16a34a",
+    bgHover: "hover:border-emerald-400 hover:bg-emerald-50/70",
+    activeClass: "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm ring-2 ring-emerald-400",
+  },
+];
+
+/**
+ * Section 1: Item 16 (SP) Single Choice Options
+ */
+export const PROFILING_SP_OPTIONS = [
+  {
+    id: "SP_A",
+    key: "A",
+    optionKey: "A",
+    label: "A",
+    text: "I have not really thought about my career yet.",
+    optionText: "I have not really thought about my career yet.",
+  },
+  {
+    id: "SP_B",
+    key: "B",
+    optionKey: "B",
+    label: "B",
+    text: "I have thought about it, but I feel confused.",
+    optionText: "I have thought about it, but I feel confused.",
+  },
+  {
+    id: "SP_C",
+    key: "C",
+    optionKey: "C",
+    label: "C",
+    text: "I am looking at a few options and learning more about them.",
+    optionText: "I am looking at a few options and learning more about them.",
+  },
+  {
+    id: "SP_D",
+    key: "D",
+    optionKey: "D",
+    label: "D",
+    text: "I know what I want, but I don't know the full path yet.",
+    optionText: "I know what I want, but I don't know the full path yet.",
+  },
+  {
+    id: "SP_E",
+    key: "E",
+    optionKey: "E",
+    label: "E",
+    text: "I know what I want, and I have already started working towards it.",
+    optionText: "I know what I want, and I have already started working towards it.",
+  },
+];
+
+/**
+ * Standard 5-Point Likert Options (Sections 2-6)
+ */
 export const LIKERT_OPTIONS = [
   {
     value: 1,
@@ -197,6 +324,104 @@ export const HOLLAND_TRAIT_INFO = {
   C: { name: "Conventional", color: "#475569", label: "Organizers", description: "Systematic, detail-oriented planners who excel in structured processes, finance, data accuracy, and administration." },
 };
 
+export const SAMPLE_PROFILING_REPORT = {
+  heading: "YOUR PROFILING",
+  introParagraph:
+    "Personal profiling is the first step in career planning. It helps you understand where you are right now on your career journey and gives you a clear path forward.",
+  stageTrack: {
+    title: "Current Stage of Planning",
+    currentStageName: "Clarity",
+    currentStageCode: "CLARITY",
+    currentStageNo: 4,
+    stages: [
+      { stageNo: 1, stageCode: "UNAWARE", stageName: "Unaware", isCurrent: false },
+      { stageNo: 2, stageCode: "CONFUSED", stageName: "Confused", isCurrent: false },
+      { stageNo: 3, stageCode: "EXPLORING", stageName: "Exploring", isCurrent: false },
+      { stageNo: 4, stageCode: "CLARITY", stageName: "Clarity", isCurrent: true },
+      { stageNo: 5, stageCode: "FUTURE_READY", stageName: "Future-Ready", isCurrent: false },
+    ],
+  },
+  riskBadge: {
+    text: "Risk level: Low to Medium",
+    label: "Low to Medium",
+    level: 2,
+    colour: "Light green",
+    hexColor: "#4CAF50",
+    baseRiskLevel: 2,
+    isEscalated: false,
+  },
+  whatItMeans:
+    "You know what you want to do. Now you need a clear path: which subjects, which exams, and which skills.",
+  yourNextSteps: [
+    'Read the "How to Get There" section for your career cluster.',
+    "Note down entrance exam dates, eligibility, and how much time you need to prepare.",
+    "Start learning one useful skill this term.",
+  ],
+  your5Areas: [
+    {
+      domainCode: "SA",
+      domainStudentFacingName: "About Me",
+      score: 83,
+      stage: "Future-Ready",
+      stageNo: 5,
+      label: "About Me – Future-Ready",
+      meaning: "You know yourself very well and can use this to choose your career.",
+    },
+    {
+      domainCode: "CE",
+      domainStudentFacingName: "Knowing About Careers",
+      score: 58,
+      stage: "Exploring",
+      stageNo: 3,
+      label: "Knowing About Careers – Exploring",
+      meaning: "You are finding out about different careers.",
+    },
+    {
+      domainCode: "DC",
+      domainStudentFacingName: "Making a Choice",
+      score: 83,
+      stage: "Future-Ready",
+      stageNo: 5,
+      label: "Making a Choice – Future-Ready",
+      meaning: "You are sure about your choice and it stays steady.",
+    },
+    {
+      domainCode: "PP",
+      domainStudentFacingName: "Knowing the Path",
+      score: 50,
+      stage: "Exploring",
+      stageNo: 3,
+      label: "Knowing the Path – Exploring",
+      meaning: "You know some of the steps for the field you like.",
+    },
+    {
+      domainCode: "CO",
+      domainStudentFacingName: "Feeling Sure",
+      score: 75,
+      stage: "Clarity",
+      stageNo: 4,
+      label: "Feeling Sure – Clarity",
+      meaning: "You feel confident about choosing your career.",
+    },
+  ],
+  careerReadinessScore: {
+    cri: 70,
+    maxScore: 100,
+    displayText: "Career Readiness Score: 70/100",
+    criStageName: "Clarity",
+  },
+  notesForYou: {
+    hasNotes: true,
+    notes: [
+      {
+        flagId: "F1",
+        flagName: "Decided too early",
+        text: "You seem sure about your career, but you may not know enough about yourself or other options yet. Make sure this choice really matches what you like and what you are good at.",
+      },
+    ],
+  },
+};
+
 export const SAMPLE_FALLBACK_REPORT = {
   success: true,
   resultId: "sample-preview",
@@ -210,6 +435,7 @@ export const SAMPLE_FALLBACK_REPORT = {
       class: "12th Grade",
       completedAt: new Date().toISOString(),
     },
+    yourProfiling: SAMPLE_PROFILING_REPORT,
     hollandProfile: {
       code: "ICR",
       traits: [
