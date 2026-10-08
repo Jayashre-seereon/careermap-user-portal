@@ -343,14 +343,12 @@ export default function YourProfilingReport({
             BLOCK 5: "YOUR 5 AREAS"
         ============================================================ */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-black uppercase tracking-wider text-[#1E232A] flex items-center gap-1.5">
               <span>📊</span>
               <span>Your 5 Areas of Personal Profiling</span>
             </div>
-            <span className="text-[10.5px] font-semibold text-slate-700">
-              Stages: Unaware (1) • Confused (2) • Exploring (3) • Clarity (4) • Future-Ready (5)
-            </span>
+           
           </div>
 
           <div className="space-y-1.5">

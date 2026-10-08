@@ -564,11 +564,21 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
           </div>
 
           {/* Bottom Right Decorative Shapes matching Reference 2nd Image */}
-          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-[#FAF0EB] rounded-[70px] rotate-45 pointer-events-none z-0"></div>
-          <div className="absolute bottom-24 right-44 w-[85px] h-[85px] bg-[#D6DADC] rounded-2xl rotate-45 pointer-events-none z-10"></div>
-          <div className="absolute -bottom-4 right-20 w-[105px] h-[105px] border-[3.5px] border-[#EDA757] rounded-[28px] rotate-45 pointer-events-none z-10"></div>
-          <div className="absolute -bottom-14 -right-10 w-36 h-36 bg-[#8C1814] rounded-[36px] rotate-45 pointer-events-none z-10 shadow-sm"></div>
-        </div>
+{/* Page container must be `relative overflow-hidden` */}
+<div className="absolute bottom-0 right-0 w-[340px] h-[340px] overflow-hidden pointer-events-none">
+  {/* dark red square (corner) */}
+  <div className="absolute -right-[75px] -bottom-[75px] w-[190px] h-[190px] bg-[#8C1814] rounded-[40px] rotate-45 z-0" />
+
+  {/* soft pink square overlapping the red */}
+  <div className="absolute -right-[20px] bottom-[15px] w-[150px] h-[150px] bg-[#E8B4B0]/70 rounded-[40px] rotate-45 z-10" />
+
+  {/* grey square, closer to the pink one */}
+  <div className="absolute right-[135px] bottom-[40px] w-[90px] h-[90px] bg-[#D6DADC] rounded-2xl rotate-45 z-10" />
+
+  {/* orange outline, closer to the pink one */}
+  <div className="absolute right-[40px] bottom-[160px] w-[120px] h-[120px] border-[3.5px] border-[#EDA757] rounded-[28px] rotate-45 z-10" />
+</div>
+ </div>
 
         {/* ============================================================
             PAGE 2: DECLARATION
