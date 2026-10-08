@@ -483,12 +483,13 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
           </div>
 
           <div className="flex items-center gap-2.5">
-            <button 
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-2 shadow no-print cursor-pointer transition-colors"
-            >
-              🖨️ Download / Print Report (PDF)
-            </button>
+           <button
+  onClick={() => window.print()}
+  className="px-4 py-2 text-white rounded-lg font-semibold flex items-center gap-2 shadow no-print cursor-pointer transition-colors"
+  style={{ backgroundColor: "#9A2119" }}
+>
+  Print Report (PDF)
+</button>
           </div>
         </div>
       </div>
