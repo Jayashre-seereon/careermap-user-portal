@@ -374,16 +374,7 @@ export default function YourProfilingReport({
                       <span className="text-xs font-black text-[#1E232A]">
                         {domainName}
                       </span>
-                      <span
-                        className="rounded-md px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide border"
-                        style={{
-                          backgroundColor: `${cfg.color}15`,
-                          borderColor: `${cfg.color}40`,
-                          color: cfg.color,
-                        }}
-                      >
-                        {stageLabel}
-                      </span>
+                     
                     </div>
 
                     {/* 5-Step Mini-Progress Bar (1 to 5) */}
@@ -417,11 +408,7 @@ export default function YourProfilingReport({
                     </div>
 
                     {/* Score Badge if present */}
-                    {scoreVal !== null && (
-                      <div className="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                        {scoreVal}%
-                      </div>
-                    )}
+                  
                   </div>
 
                   {/* Bottom Row: Meaning text */}

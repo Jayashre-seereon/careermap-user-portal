@@ -536,7 +536,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
 
             {/* Full-width Warm Blush Beige Strip */}
             <div className="w-[calc(100%+96px)] -ml-12 mt-5 py-3.5 bg-[#F8ECE8] text-center text-[#2B2D33] text-lg font-normal leading-snug">
-              Discover Your True Strengths<br/>and Potential.
+              Discover Your True Strengths and Potential.
             </div>
           </div>
 
