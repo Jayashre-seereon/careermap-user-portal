@@ -818,7 +818,7 @@ const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart
               </p>
 
               <div className="mt-4 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-                {unansweredQuestions.slice(0, 15).map((u, i) => (
+                {unansweredQuestions.slice(0, 39).map((u, i) => (
                   <div
                     key={i}
                     className="flex items-center justify-between rounded-lg bg-white p-2.5 text-xs shadow-xs"
@@ -842,9 +842,9 @@ const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart
                     </button>
                   </div>
                 ))}
-                {unansweredQuestions.length > 15 && (
+                {unansweredQuestions.length > 39 && (
                   <div className="text-center text-xs text-slate-700 pt-1">
-                    ...and {unansweredQuestions.length - 15} more unanswered questions.
+                    ...and {unansweredQuestions.length - 39} more unanswered questions.
                   </div>
                 )}
               </div>
