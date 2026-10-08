@@ -58,10 +58,14 @@ export default function LoginPage() {
       saveUserProfile(profile);
     }
 
+    const destination = location.state?.from?.pathname
+      ? `${location.state.from.pathname}${location.state.from.search || ""}`
+      : "/app/dashboard";
+
     setProfileIncomplete(profileIncomplete);
     setPendingInstituteOnboarding(requiresInstituteOnboarding);
     clearAuthFlow();
-    navigate(requiresInstituteOnboarding ? "/onboarding" : "/app/dashboard", { replace: true });
+    navigate(requiresInstituteOnboarding ? "/onboarding" : destination, { replace: true });
   }
 
   async function handleSendOtp() {
@@ -78,26 +82,16 @@ export default function LoginPage() {
       setIsSendingOtp(true);
       setStatus(null);
 
-      // if (isExistingUser) {
-      //   await sendOtp(formattedMobile, "login");
-      //   navigate(
-      //     `/otp-verify?next=${encodeURIComponent("/app/dashboard")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`
-      //   );
-      //   return;
-      // }
+      const destination = location.state?.from?.pathname
+        ? `${location.state.from.pathname}${location.state.from.search || ""}`
+        : "/app/dashboard";
 
-      // await sendOtp(formattedMobile, "signup");
-      // setOnboardingData(onboarding);
-      // setSignupForm({ mobile: normalizedMobile });
-      // navigate(
-      //   `/otp-verify?next=${encodeURIComponent("/profile-setup")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=signup`
-      // );
-          if (isExistingUser) {
+      if (isExistingUser) {
         const loginOtpResponse = await sendOtp(formattedMobile, "login");
         // TEMP-DEBUG: remove before production — passes OTP to next screen for testing
         const devOtp = loginOtpResponse?.otp || loginOtpResponse?.data?.otp;
         navigate(
-          `/otp-verify?next=${encodeURIComponent("/app/dashboard")}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`,
+          `/otp-verify?next=${encodeURIComponent(destination)}&identifier=${encodeURIComponent(formattedMobile)}&otpType=login`,
           { state: { devOtp } }
         );
         return;

@@ -94,6 +94,17 @@ body {
   break-after: page;
 }
 
+/* Tailwind text-size utilities are used throughout the report JSX. Override
+   their body copy sizes while leaving headings and compact data labels intact. */
+.pdf-page p,
+.pdf-page [class*="text-[0."],
+.pdf-page [class*="text-xs"],
+.pdf-page [class*="text-sm"] {
+  font-size: 1rem !important;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 /* Page Body Flex */
 .pdf-page-body {
   flex: 1;
@@ -102,6 +113,23 @@ body {
   justify-content: flex-start;
   width: 100%;
   padding-top: 2px;
+  font-size: 1rem;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Keep report prose readable and consistently justified across all pages. */
+.pdf-page p,
+.pdf-page .detail-card-right-body,
+.pdf-page .detail-card-desc,
+.pdf-page .detail-card-meta-row,
+.pdf-page .trait-card-right-body,
+.pdf-page .cluster-match-card-body,
+.pdf-page .cluster-career-chip,
+.pdf-page .page-lead-text {
+  font-size: 1rem;
+  text-align: justify;
+  text-justify: inter-word;
 }
 
 /* Page Header */
@@ -261,11 +289,11 @@ body {
 
 /* Page Lead Paragraph */
 .page-lead-text {
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.6;
   color: var(--cm-body);
   margin-bottom: 16px;
-  text-align: left;
+  text-align: justify;
 }
 
 /* Two-Part Detail Cards */
@@ -896,8 +924,10 @@ body {
   }
 
   /* Hide Website Navbar, Footer, and Action Bars */
-  header,
+  .no-print,
   nav,
+  header,
+  sidebar,
   footer,
   .ant-layout-header,
   .ant-layout-footer,
