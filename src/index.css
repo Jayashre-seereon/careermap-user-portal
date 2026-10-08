@@ -488,3 +488,20 @@ button.filter-pill-selected:active {
   }
 }
 
+@media print {
+  .no-print,
+  nav,
+  header,
+  sidebar,
+  footer,
+  .website-navbar,
+  .website-footer,
+  .report-action-bar {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+}
+

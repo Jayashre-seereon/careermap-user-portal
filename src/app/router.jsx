@@ -61,12 +61,20 @@ export const router = createBrowserRouter([
       { path: "/plans", element: <Navigate to="/app/subscription" replace /> },
       { path: "/pricing", element: <Navigate to="/app/subscription" replace /> },
       { path: "/assessment", element: <Navigate to="/app/assessment" replace /> },
-      { path: "/assessment/attempt/:attemptId", element: <Navigate to="/app/assessment/attempt/:attemptId" replace /> },
-      { path: "/assessment/attempt/:attemptId/result", element: <Navigate to="/app/assessment/attempt/:attemptId/result" replace /> },
-      { path: "/assessment/report/:attemptId", element: <Navigate to="/app/assessment/attempt/:attemptId/result" replace /> },
       {
         element: <RequireAuth />,
         children: [
+          // Direct student & assessment routes (email links & external URLs)
+          {
+            element: <WebsiteLayout />,
+            children: [
+              { path: "/student/assessment/report/:attemptId", element: <AssessmentReportPage /> },
+              { path: "/assessment/report/:attemptId", element: <AssessmentReportPage /> },
+              { path: "/assessment/attempt/:attemptId/result", element: <AssessmentReportPage /> },
+              { path: "/assessment/result/:attemptId", element: <AssessmentReportPage /> },
+              { path: "/assessment/attempt/:attemptId", element: <AssessmentTestPage /> },
+            ],
+          },
           {
             path: "/app",
             element: <WebsiteLayout />,
@@ -78,6 +86,7 @@ export const router = createBrowserRouter([
               { path: "assessment/attempt/:attemptId/result", element: <AssessmentReportPage /> },
               { path: "assessment/result/:attemptId", element: <AssessmentReportPage /> },
               { path: "assessment/report/:attemptId", element: <AssessmentReportPage /> },
+              { path: "student/assessment/report/:attemptId", element: <AssessmentReportPage /> },
               { path: "psychometric-test", element: <Navigate to="/app/assessment" replace /> },
               { path: "library", element: <LibraryPage /> },
               { path: "learn", element: <LearnPage /> },

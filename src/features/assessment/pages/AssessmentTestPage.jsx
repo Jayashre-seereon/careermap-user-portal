@@ -133,7 +133,7 @@ export default function AssessmentTestPage() {
           okButtonProps: { style: { background: "#9a2119", borderColor: "#9a2119" } },
           onOk: () => {
             if (data?.reason === "ALREADY_COMPLETED") {
-              navigate(`/app/assessment/attempt/${attemptId}/result`);
+              navigate(`/student/assessment/report/${attemptId}`);
             } else {
               navigate("/app/subscription");
             }
@@ -332,12 +332,13 @@ export default function AssessmentTestPage() {
       setSubmitStepText("Generating your Career Compass Report...");
       await new Promise((r) => setTimeout(r, 400));
 
-      message.success("Assessment submitted successfully!");
-      navigate(`/app/assessment/attempt/${attemptId}/result`);
+      message.success("Assessment submitted successfully! A copy of your report link has been sent to your registered email.");
+      navigate(`/student/assessment/report/${attemptId}`);
     } catch (err) {
       console.warn("Submit test API note:", err?.message);
       // Fallback: Proceed to report screen
-      navigate(`/app/assessment/attempt/${attemptId}/result`);
+      message.success("Assessment submitted successfully! A copy of your report link has been sent to your registered email.");
+      navigate(`/student/assessment/report/${attemptId}`);
     } finally {
       setSubmitting(false);
     }

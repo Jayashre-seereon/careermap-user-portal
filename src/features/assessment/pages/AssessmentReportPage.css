@@ -896,8 +896,10 @@ body {
   }
 
   /* Hide Website Navbar, Footer, and Action Bars */
-  header,
+  .no-print,
   nav,
+  header,
+  sidebar,
   footer,
   .ant-layout-header,
   .ant-layout-footer,

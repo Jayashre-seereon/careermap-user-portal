@@ -105,8 +105,9 @@ export default function AssessmentReportPage() {
     try {
       if (attemptId && attemptId !== "demo") {
         const data = await getAttemptResult(attemptId);
-        if (data && (data.report || data.data?.report || data.topCareerCluster || data.data?.topCareerCluster)) {
-          setReportData(data.data || data);
+        if (data) {
+          const payload = data.data || data;
+          setReportData(payload);
         } else {
           setReportData(null);
         }
@@ -151,14 +152,14 @@ export default function AssessmentReportPage() {
   // Normalize API data or use full high-fidelity default dataset matching the PDF
   const rawData = reportData || {};
   const report = rawData.report || {};
-  const student = report.student || {};
-  const studentName = student.name || rawData.studentName || user?.name || "Aryaman Singh";
+  const student = report.student || rawData.student || {};
+  const studentName = student.name || rawData.studentName || rawData.user?.name || user?.name || "Aryaman Singh";
   const studentFirstName = studentName.split(" ")[0] || "Aryaman";
-  const studentClass = student.class || rawData.className || user?.selectedClass || "10th";
+  const studentClass = student.class || rawData.className || rawData.class || user?.selectedClass || "10th";
   const studentSchool = student.school || rawData.school || user?.school || "DAV, Pokhariput, BBSR";
-  const studentEmail = student.email || rawData.email || user?.email || "aryaman1012@gmail.com";
-  const studentPhone = student.phone || rawData.phone || user?.mobile || "+91-88958 12485";
-  const completedDate = student.completedAt || rawData.completedAt || "2025-11-26T10:00:00.000Z";
+  const studentEmail = student.email || rawData.email || rawData.user?.email || user?.email || "aryaman1012@gmail.com";
+  const studentPhone = student.phone || rawData.phone || rawData.user?.mobile || user?.mobile || "+91-88958 12485";
+  const completedDate = student.completedAt || rawData.completedAt || rawData.createdAt || "2025-11-26T10:00:00.000Z";
 
   const formattedDate = new Date(completedDate).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -172,9 +173,9 @@ export default function AssessmentReportPage() {
     rawData.report?.yourProfiling ||
     SAMPLE_PROFILING_REPORT;
 
-  const hollandCode = rawData.hollandCode || report.hollandProfile?.code || "ECS";
-  const scores = rawData.scores || {};
-  const domains = report.domains || {};
+  const hollandCode = rawData.hollandCode || report.hollandProfile?.code || report.hollandCode || "ECS";
+  const scores = rawData.scores || report.scores || {};
+  const domains = report.domains || rawData.domains || {};
 
   // Goal Orientation
   const goalObj = domains.goalOrientation || {};
@@ -430,7 +431,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
   return (
     <div className="report-app-container">
       {/* Floating Action Bar (Hidden on Print) */}
-      <div className="report-action-bar">
+      <div className="report-action-bar no-print">
         <div className="report-action-bar-inner">
           <div className="flex items-center gap-3">
             <Button
@@ -482,14 +483,12 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Button
-              type="primary"
-              icon={<PrinterOutlined />}
-              onClick={handlePrint}
-              className="rounded-full border-none bg-[#8C1814] font-bold text-white hover:bg-[#72120F]"
+            <button 
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-2 shadow no-print cursor-pointer transition-colors"
             >
-              Print / Save PDF
-            </Button>
+              🖨️ Download / Print Report (PDF)
+            </button>
           </div>
         </div>
       </div>
