@@ -45,7 +45,7 @@ import {
 } from "../data/assessmentConstants";
 import { FALLBACK_SECTIONS } from "../data/fallbackQuestions";
 
-const APTITUDE_TIME_LIMIT_SECONDS = 39 * 60;
+const APTITUDE_TIME_LIMIT_SECONDS = 30 * 60;
 
 function isAptitudeSection(section, index) {
   const key = String(section?.code || section?.id || section?.key || section?.domain || "").toLowerCase();
@@ -133,7 +133,7 @@ export default function AssessmentTestPage() {
           okButtonProps: { style: { background: "#9a2119", borderColor: "#9a2119" } },
           onOk: () => {
             if (data?.reason === "ALREADY_COMPLETED") {
-              navigate(`/app/assessment/attempt/${attemptId}/result`);
+              navigate(`/student/assessment/report/${attemptId}`);
             } else {
               navigate("/app/subscription");
             }
@@ -148,7 +148,7 @@ export default function AssessmentTestPage() {
     }
   }
 
-  // Temporarily disabled: 39-minute aptitude timer.
+  // Temporarily disabled: 30-minute aptitude timer.
   useEffect(() => {
     if (loading || !sections.some((section, index) => isAptitudeSection(section, index))) return;
     let startedAt = Number(window.localStorage.getItem(aptitudeTimerKey));
@@ -332,12 +332,13 @@ export default function AssessmentTestPage() {
       setSubmitStepText("Generating your Career Compass Report...");
       await new Promise((r) => setTimeout(r, 400));
 
-      message.success("Assessment submitted successfully!");
-      navigate(`/app/assessment/attempt/${attemptId}/result`);
+      message.success("Assessment submitted successfully! A copy of your report link has been sent to your registered email.");
+      navigate(`/student/assessment/report/${attemptId}`);
     } catch (err) {
       console.warn("Submit test API note:", err?.message);
       // Fallback: Proceed to report screen
-      navigate(`/app/assessment/attempt/${attemptId}/result`);
+      message.success("Assessment submitted successfully! A copy of your report link has been sent to your registered email.");
+      navigate(`/student/assessment/report/${attemptId}`);
     } finally {
       setSubmitting(false);
     }
@@ -818,7 +819,7 @@ const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart
               </p>
 
               <div className="mt-4 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-                {unansweredQuestions.slice(0, 39).map((u, i) => (
+                {unansweredQuestions.slice(0, 30).map((u, i) => (
                   <div
                     key={i}
                     className="flex items-center justify-between rounded-lg bg-white p-2.5 text-xs shadow-xs"
@@ -842,9 +843,9 @@ const aptitudeTimerLabel = `${String(Math.floor(aptitudeTimeLeft / 60)).padStart
                     </button>
                   </div>
                 ))}
-                {unansweredQuestions.length > 39 && (
+                {unansweredQuestions.length > 30 && (
                   <div className="text-center text-xs text-slate-700 pt-1">
-                    ...and {unansweredQuestions.length - 39} more unanswered questions.
+                    ...and {unansweredQuestions.length - 30} more unanswered questions.
                   </div>
                 )}
               </div>

@@ -8,7 +8,7 @@ export function RequireAuth() {
   const location = useLocation();
 
   if (!authenticated) {
-    return <Navigate to="/auth-entry" replace />;
+    return <Navigate to="/auth-entry" state={{ from: location }} replace />;
   }
 
   if (pendingInstituteOnboarding && location.pathname !== "/onboarding") {

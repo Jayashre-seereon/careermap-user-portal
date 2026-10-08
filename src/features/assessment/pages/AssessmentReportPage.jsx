@@ -105,8 +105,9 @@ export default function AssessmentReportPage() {
     try {
       if (attemptId && attemptId !== "demo") {
         const data = await getAttemptResult(attemptId);
-        if (data && (data.report || data.data?.report || data.topCareerCluster || data.data?.topCareerCluster)) {
-          setReportData(data.data || data);
+        if (data) {
+          const payload = data.data || data;
+          setReportData(payload);
         } else {
           setReportData(null);
         }
@@ -151,14 +152,14 @@ export default function AssessmentReportPage() {
   // Normalize API data or use full high-fidelity default dataset matching the PDF
   const rawData = reportData || {};
   const report = rawData.report || {};
-  const student = report.student || {};
-  const studentName = student.name || rawData.studentName || user?.name || "Aryaman Singh";
+  const student = report.student || rawData.student || {};
+  const studentName = student.name || rawData.studentName || rawData.user?.name || user?.name || "Aryaman Singh";
   const studentFirstName = studentName.split(" ")[0] || "Aryaman";
-  const studentClass = student.class || rawData.className || user?.selectedClass || "10th";
+  const studentClass = student.class || rawData.className || rawData.class || user?.selectedClass || "10th";
   const studentSchool = student.school || rawData.school || user?.school || "DAV, Pokhariput, BBSR";
-  const studentEmail = student.email || rawData.email || user?.email || "aryaman1012@gmail.com";
-  const studentPhone = student.phone || rawData.phone || user?.mobile || "+91-88958 12485";
-  const completedDate = student.completedAt || rawData.completedAt || "2025-11-26T10:00:00.000Z";
+  const studentEmail = student.email || rawData.email || rawData.user?.email || user?.email || "aryaman1012@gmail.com";
+  const studentPhone = student.phone || rawData.phone || rawData.user?.mobile || user?.mobile || "+91-88958 12485";
+  const completedDate = student.completedAt || rawData.completedAt || rawData.createdAt || "2025-11-26T10:00:00.000Z";
 
   const formattedDate = new Date(completedDate).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -172,9 +173,9 @@ export default function AssessmentReportPage() {
     rawData.report?.yourProfiling ||
     SAMPLE_PROFILING_REPORT;
 
-  const hollandCode = rawData.hollandCode || report.hollandProfile?.code || "ECS";
-  const scores = rawData.scores || {};
-  const domains = report.domains || {};
+  const hollandCode = rawData.hollandCode || report.hollandProfile?.code || report.hollandCode || "ECS";
+  const scores = rawData.scores || report.scores || {};
+  const domains = report.domains || rawData.domains || {};
 
   // Goal Orientation
   const goalObj = domains.goalOrientation || {};
@@ -430,7 +431,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
   return (
     <div className="report-app-container">
       {/* Floating Action Bar (Hidden on Print) */}
-      <div className="report-action-bar">
+      <div className="report-action-bar no-print">
         <div className="report-action-bar-inner">
           <div className="flex items-center gap-3">
             <Button
@@ -482,14 +483,12 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Button
-              type="primary"
-              icon={<PrinterOutlined />}
-              onClick={handlePrint}
-              className="rounded-full border-none bg-[#8C1814] font-bold text-white hover:bg-[#72120F]"
+            <button 
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-2 shadow no-print cursor-pointer transition-colors"
             >
-              Print / Save PDF
-            </Button>
+              🖨️ Download / Print Report (PDF)
+            </button>
           </div>
         </div>
       </div>
@@ -537,7 +536,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
 
             {/* Full-width Warm Blush Beige Strip */}
             <div className="w-[calc(100%+96px)] -ml-12 mt-5 py-3.5 bg-[#F8ECE8] text-center text-[#2B2D33] text-lg font-normal leading-snug">
-              Discover Your True Strengths<br/>and Potential.
+              Discover Your True Strengths and Potential.
             </div>
           </div>
 
@@ -565,11 +564,21 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
           </div>
 
           {/* Bottom Right Decorative Shapes matching Reference 2nd Image */}
-          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-[#FAF0EB] rounded-[70px] rotate-45 pointer-events-none z-0"></div>
-          <div className="absolute bottom-24 right-44 w-[85px] h-[85px] bg-[#D6DADC] rounded-2xl rotate-45 pointer-events-none z-10"></div>
-          <div className="absolute -bottom-4 right-20 w-[105px] h-[105px] border-[3.5px] border-[#EDA757] rounded-[28px] rotate-45 pointer-events-none z-10"></div>
-          <div className="absolute -bottom-14 -right-10 w-36 h-36 bg-[#8C1814] rounded-[36px] rotate-45 pointer-events-none z-10 shadow-sm"></div>
-        </div>
+{/* Page container must be `relative overflow-hidden` */}
+<div className="absolute bottom-0 right-0 w-[340px] h-[340px] overflow-hidden pointer-events-none">
+  {/* dark red square (corner) */}
+  <div className="absolute -right-[75px] -bottom-[75px] w-[190px] h-[190px] bg-[#8C1814] rounded-[40px] rotate-45 z-0" />
+
+  {/* soft pink square overlapping the red */}
+  <div className="absolute -right-[20px] bottom-[15px] w-[150px] h-[150px] bg-[#E8B4B0]/70 rounded-[40px] rotate-45 z-10" />
+
+  {/* grey square, closer to the pink one */}
+  <div className="absolute right-[135px] bottom-[40px] w-[90px] h-[90px] bg-[#D6DADC] rounded-2xl rotate-45 z-10" />
+
+  {/* orange outline, closer to the pink one */}
+  <div className="absolute right-[40px] bottom-[160px] w-[120px] h-[120px] border-[3.5px] border-[#EDA757] rounded-[28px] rotate-45 z-10" />
+</div>
+ </div>
 
         {/* ============================================================
             PAGE 2: DECLARATION

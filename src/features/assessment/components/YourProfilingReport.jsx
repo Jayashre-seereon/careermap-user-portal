@@ -343,14 +343,12 @@ export default function YourProfilingReport({
             BLOCK 5: "YOUR 5 AREAS"
         ============================================================ */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-black uppercase tracking-wider text-[#1E232A] flex items-center gap-1.5">
               <span>📊</span>
               <span>Your 5 Areas of Personal Profiling</span>
             </div>
-            <span className="text-[10.5px] font-semibold text-slate-700">
-              Stages: Unaware (1) • Confused (2) • Exploring (3) • Clarity (4) • Future-Ready (5)
-            </span>
+           
           </div>
 
           <div className="space-y-1.5">
@@ -374,16 +372,7 @@ export default function YourProfilingReport({
                       <span className="text-xs font-black text-[#1E232A]">
                         {domainName}
                       </span>
-                      <span
-                        className="rounded-md px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide border"
-                        style={{
-                          backgroundColor: `${cfg.color}15`,
-                          borderColor: `${cfg.color}40`,
-                          color: cfg.color,
-                        }}
-                      >
-                        {stageLabel}
-                      </span>
+                     
                     </div>
 
                     {/* 5-Step Mini-Progress Bar (1 to 5) */}
@@ -417,11 +406,7 @@ export default function YourProfilingReport({
                     </div>
 
                     {/* Score Badge if present */}
-                    {scoreVal !== null && (
-                      <div className="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                        {scoreVal}%
-                      </div>
-                    )}
+                  
                   </div>
 
                   {/* Bottom Row: Meaning text */}
