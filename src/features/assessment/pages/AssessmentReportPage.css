@@ -125,7 +125,6 @@ body {
 .pdf-page .detail-card-meta-row,
 .pdf-page .trait-card-right-body,
 .pdf-page .cluster-match-card-body,
-.pdf-page .cluster-career-chip,
 .pdf-page .page-lead-text {
   font-size: 1rem;
   text-align: justify;
@@ -862,9 +861,9 @@ body {
 }
 
 .cluster-match-card-body {
-  padding: 14px 20px;
+  padding: 10px 16px;
   font-size: 0.85rem;
-  line-height: 1.5;
+  line-height: 1.45;
   background: #F4F8FB;
 }
 
@@ -885,25 +884,33 @@ body {
 }
 
 .cluster-careers-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px 14px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .cluster-career-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
+  gap: 6px;
+  font-size: 0.78rem !important;
+  line-height: 1.35;
   color: #1E232A;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-weight: 600;
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .cluster-career-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #688CAE;
   flex-shrink: 0;
