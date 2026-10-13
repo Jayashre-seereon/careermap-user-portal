@@ -299,15 +299,27 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
       streams_and_pathways_india: "Commerce or any stream. Pathways: BBA (IPMAT/CUET), B.Com, entrepreneurship cells & competitions in school/college, MBA later.",
       careers: [
         "Marketing Manager",
-        "Operations Manager",
         "Sales Manager",
-        "Supply Chain Manager",
-        "E-commerce Manager",
-        "Retail Manager",
-        "Office Administrator/HR Admin",
-        "Business Analyst",
-        "Import-Export Manager",
         "Human Resource (HR) Manager",
+        "Office Administrator/HR Admin",
+        "Operations Manager",
+        "Supply Chain Manager",
+        "Retail Manager",
+        "E-commerce Manager",
+        "Import-Export Manager",
+        "Business Analyst",
+        "Entrepreneur",
+        "Market Research Analyst",
+        "Customer Relationship Manager",
+        "Real Estate Professional",
+        "Brand Consultant/Strategist",
+        "Startup Program/Ecosystem Manager",
+        "International Business Executive",
+        "Advertising/PR Account Executive",
+        "Procurement Specialist",
+        "Corporate Social Responsibility Officer",
+        "Risk Management Analyst",
+        "Franchise Operations Manager",
       ],
     },
     {
@@ -320,16 +332,27 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
       streams_and_pathways_india: "Any stream. Pathways: NCHM JEE for hotel management, culinary institutes, aviation/cabin crew training after Class 12, event management degrees.",
       careers: [
         "Hotel/Resort Manager",
-        "Tour/Travel Consultant",
-        "Baker",
-        "Human Resource (HR) Manager",
-        "Bartender",
-        "Butler",
-        "Cabin Crew (Air Hostess/Flight Steward)",
-        "Tour Guide",
-        "Cruise Manager",
         "Front Office/Guest Relations/Housekeeping Manager",
         "Restaurant/Cloud Kitchen /Catering Manager",
+        "Chef/Culinary Specialist",
+        "Baker",
+        "Bartender",
+        "Butler",
+        "Event/Wedding Planner",
+        "Tour/Travel Consultant",
+        "Tour Guide",
+        "Cruise Manager",
+        "Cabin Crew (Air Hostess/Flight Steward)",
+        "Airline Ground Staff / Airport Operations Staff",
+        "Sommelier",
+        "Hospitality Sales/Revenue Manager",
+        "Theme Park/Attraction Manager",
+        "Club/Recreation Manager",
+        "Spa Operations Manager",
+        "Food and Beverage Director",
+        "Adventure Tourism Coordinator",
+        "Travel Blogger/Content Creator",
+        "Ecotourism Developer",
       ],
     },
     {
@@ -343,14 +366,24 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
       careers: [
         "Professional Athlete & Coach",
         "Professional Player",
-        "Sports Nutritionist",
+        "Sports Coach/Trainer",
         "Physical Education Teacher",
         "Sports Physiotherapist",
-        "Armed Forces Sports Instructor",
+        "Sports Nutritionist",
         "Sports Psychologist",
-        "Umpire",
+        "Sports Management / Administrator",
+        "Sports Analyst/Data Scout",
         "Referee",
-        "Sports Coach/Trainer",
+        "Umpire",
+        "Sports Journalist/Broadcaster",
+        "Fitness/Strength & Conditioning Coach",
+        "Sports Equipment Manager",
+        "Sports Event Coordinator",
+        "Armed Forces Sports Instructor",
+        "Outdoor Adventure Instructor",
+        "Esports Coach/Player",
+        "Rehabilitation Specialist",
+        "Sports Marketing Manager",
       ],
     },
     {
@@ -362,16 +395,28 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
       why_fit: "You're disciplined and dutiful, strong in language and reasoning, and you respect systems — with the ambition to serve and lead within them.",
       streams_and_pathways_india: "Any stream. Pathways: sports quotas and academies, B.P.Ed / physical education, sports science degrees, SAI schemes; for sports media/analytics combine with mass comm or data skills.",
       careers: [
-        "Rural Development Officer",
-        "Banker",
-        "BMC Officer",
+        "Civil Servant (IAS, IPS, IFS) / Bureaucrat",
+        "Public Policy Analyst",
+        "Lawyer/Advocate (Litigation, Corporate, IP, Cyber)",
+        "Judge/Judicial Magistrate",
+        "Diplomat / Foreign Affairs Officer",
+        "Legislative Assistant",
+        "Defence/Armed Forces Officer (Army, Navy, Air Force)",
+        "Paramilitary/Police Officer (CAPF)",
+        "Intelligence/Security Analyst",
+        "Legal Consultant / Corporate Counsel",
+        "Municipal / Urban Governance Officer",
+        "Tax/Revenue Officer",
+        "Customs and Excise Officer",
         "Passport Officer",
         "BDO",
         "Tahasildar",
-        "Food Safety Officer",
+        "BMC Officer",
         "DEO",
+        "Food Safety Officer",
         "Cyber Crime Officer",
-        "Civil Servant (IAS, IPS, IFS) / Bureaucrat",
+        "Banker",
+        "Rural Development Officer",
       ],
     },
     {
@@ -383,16 +428,26 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
       why_fit: "You connect easily one-on-one, you have a sense of style or wellbeing you love sharing, and independence matters to you.",
       streams_and_pathways_india: "Any stream. Pathways: certified courses (fitness, cosmetology, yoga — e.g., YCB), apprenticeships with professionals, building a client portfolio early.",
       careers: [
+        "Cosmetologist (Hair stylist/Makeup Artist/Nail Artist)",
         "Fashion Stylist",
         "Image Consultant",
-        "Life Coach",
+        "Personal Shopper/Wardrobe Consultant",
         "Fitness/Personal Trainer",
         "Yoga/Zumba/Aerobics Instructor",
         "Nutrition Coach",
+        "Life Coach",
         "Career Coach",
         "Personal Assistant/Executive",
+        "Private Concierge",
+        "Event Emcee/Host",
+        "Voice Artist",
+        "Pet Groomer/Trainer",
+        "Tattoo/Body Piercing Artist",
         "Spa/Massage Therapist",
-        "Cosmetologist (Hair stylist/Makeup Artist/Nail Artist)",
+        "Celebrity Manager",
+        "Home Organizer/Declutter Consultant",
+        "Freelance Photographer/Videographer",
+        "Wedding Planner",
       ],
     },
   ];
@@ -403,30 +458,79 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
     rawData.top5Clusters ||
     [];
 
+  const rawTopCluster =
+    report.careerClusters?.topCluster ||
+    rawData.careerClusters?.topCluster ||
+    rawData.topCluster ||
+    (rawTop5.length > 0 ? rawTop5[0] : null);
+
   const clusterMap = (CLUSTERS || []).reduce((acc, c) => {
-    acc[c.cluster_id] = c;
-    acc[c.name] = c;
+    if (c.cluster_id) acc[c.cluster_id.toUpperCase()] = c;
+    if (c.name) acc[c.name.toUpperCase()] = c;
+    if (c.mastersheet_name) acc[c.mastersheet_name.toUpperCase()] = c;
     return acc;
   }, {});
 
-  const top5Clusters = rawTop5.length >= 5
-    ? rawTop5.map((item, idx) => {
-        const code = item.code || item.cluster_id || item.clusterId || defaultTop5[idx].code;
-        const meta = clusterMap[code] || clusterMap[item.name || item.cluster] || CLUSTERS[idx % CLUSTERS.length] || {};
-        return {
-          rank: idx + 1,
-          code,
-          name: (item.name || item.cluster || meta.name || defaultTop5[idx].name).toUpperCase(),
-          matchPercentage: item.matchPercentage ?? item.match ?? defaultTop5[idx].matchPercentage,
-          description: item.description || meta.description || defaultTop5[idx].description,
-          why_fit: meta.why_fit || defaultTop5[idx].why_fit,
-          streams_and_pathways_india: meta.streams_and_pathways_india || defaultTop5[idx].streams_and_pathways_india,
-          careers: meta.careers && meta.careers.length > 0 ? meta.careers.slice(0, 10) : defaultTop5[idx].careers,
-        };
-      })
-    : defaultTop5;
+  const getClusterMeta = (codeOrName) => {
+    if (!codeOrName) return {};
+    const key = String(codeOrName).trim().toUpperCase();
+    return (
+      clusterMap[key] ||
+      (CLUSTERS || []).find(
+        (c) =>
+          c.cluster_id?.toUpperCase() === key ||
+          c.name?.toUpperCase() === key ||
+          c.mastersheet_name?.toUpperCase() === key
+      ) ||
+      {}
+    );
+  };
 
-  const topCluster = top5Clusters[0];
+  const mapClusterItem = (item, idx, defaultFallback) => {
+    const fallback = defaultFallback || defaultTop5[idx % defaultTop5.length];
+    const code = item?.code || item?.cluster_id || item?.clusterId || fallback?.code;
+    const meta = getClusterMeta(code) || getClusterMeta(item?.name || item?.cluster) || {};
+
+    let careersList = [];
+    if (Array.isArray(item?.careers) && item.careers.length > 0) {
+      careersList = item.careers;
+    } else if (Array.isArray(meta?.careers) && meta.careers.length > 0) {
+      careersList = meta.careers;
+    } else if (Array.isArray(fallback?.careers) && fallback.careers.length > 0) {
+      careersList = fallback.careers;
+    }
+
+    return {
+      rank: idx + 1,
+      code,
+      name: (item?.name || item?.cluster || meta?.name || fallback?.name || "").toUpperCase(),
+      matchPercentage: item?.matchPercentage ?? item?.match ?? fallback?.matchPercentage ?? 60,
+      description: item?.description || meta?.description || fallback?.description || "",
+      why_fit: item?.why_fit || item?.whyFit || meta?.why_fit || fallback?.why_fit || "",
+      streams_and_pathways_india:
+        item?.streams_and_pathways_india ||
+        item?.streamsAndPathwaysIndia ||
+        item?.pathways ||
+        meta?.streams_and_pathways_india ||
+        fallback?.streams_and_pathways_india ||
+        "",
+      careers: careersList,
+    };
+  };
+
+  const top5Clusters = (rawTop5.length > 0 ? rawTop5 : defaultTop5).slice(0, 5).map((item, idx) => {
+    return mapClusterItem(item, idx, defaultTop5[idx % defaultTop5.length]);
+  });
+
+  // Ensure top5Clusters always has at least 5 elements
+  while (top5Clusters.length < 5) {
+    const idx = top5Clusters.length;
+    top5Clusters.push(mapClusterItem(defaultTop5[idx], idx, defaultTop5[idx]));
+  }
+
+  const topCluster = rawTopCluster
+    ? mapClusterItem(rawTopCluster, 0, top5Clusters[0])
+    : top5Clusters[0];
 
   return (
     <div className="report-app-container">
@@ -1786,7 +1890,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
                 </div>
 
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[0].careers || []).slice(0, 10).map((c, i) => (
+                  {(top5Clusters[0].careers || []).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot"></span>
                       <span>{c}</span>
@@ -1819,7 +1923,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
                   <strong>Pathway in India:</strong> {top5Clusters[1].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[1].careers || []).slice(0, 11).map((c, i) => (
+                  {(top5Clusters[1].careers || []).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot salmon"></span>
                       <span>{c}</span>
@@ -1841,7 +1945,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
                   <strong>Pathway in India:</strong> {top5Clusters[2].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[2].careers || []).slice(0, 10).map((c, i) => (
+                  {(top5Clusters[2].careers || []).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot blue"></span>
                       <span>{c}</span>
@@ -1874,7 +1978,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
                   <strong>Pathway in India:</strong> {top5Clusters[3].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[3].careers || []).slice(0, 10).map((c, i) => (
+                  {(top5Clusters[3].careers || []).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot green"></span>
                       <span>{c}</span>
@@ -1896,7 +2000,7 @@ const goalOrientationSummary = Math.abs(longPct - shortPct) <= 10 ? "Balanced Pl
                   <strong>Pathway in India:</strong> {top5Clusters[4].streams_and_pathways_india}
                 </div>
                 <div className="cluster-careers-grid">
-                  {(top5Clusters[4].careers || []).slice(0, 10).map((c, i) => (
+                  {(top5Clusters[4].careers || []).map((c, i) => (
                     <div key={i} className="cluster-career-chip">
                       <span className="cluster-career-dot gold"></span>
                       <span>{c}</span>
