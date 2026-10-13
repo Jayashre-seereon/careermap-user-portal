@@ -13,12 +13,14 @@ import {
  * 5 Standard Planning Stages definition
  */
 const DEFAULT_STAGES = [
-  { stageNo: 1, stageCode: "UNAWARE", stageName: "Unaware" },
-  { stageNo: 2, stageCode: "CONFUSED", stageName: "Confused" },
-  { stageNo: 3, stageCode: "EXPLORING", stageName: "Exploring" },
-  { stageNo: 4, stageCode: "CLARITY", stageName: "Clarity" },
-  { stageNo: 5, stageCode: "FUTURE_READY", stageName: "Future-Ready" },
+  { stageNo: 1, stageCode: "LOW_AWARENESS", stageName: "Low awareness", description: "Limited awareness about career possibilities, personal strengths, or the factors that influence career choices." },
+  { stageNo: 2, stageCode: "UNCERTAIN", stageName: "Uncertain", description: "Aware of the need to make a career decision but uncertain about available options, suitability, or the right direction." },
+  { stageNo: 3, stageCode: "DISCOVERING", stageName: "Discovering", description: "Actively researching and evaluating different career pathways, courses, opportunities, and areas of interest." },
+  { stageNo: 4, stageCode: "DECISIVE", stageName: "Decisive", description: "Developing a clear understanding of career preferences, suitable pathways, and the steps required to achieve the desired goal." },
+  { stageNo: 5, stageCode: "CAREER_READINESS", stageName: "Career Readiness", description: "Well-prepared with a defined career direction, realistic goals, and a strategic action plan to confidently move forward." },
 ];
+
+const DEFAULT_INTRO = "The Current Career stage analysis is the foundation of effective career planning. It provides a clear understanding of where you currently stand in your career decision-making journey and helps identify the direction you need to take. Through this, we assess your present level of career preparedness, identify the challenges or risks that may influence your career decisions, and determine the appropriate steps for your growth and development.\n\nThe objective is to establish a clear career goal and create a structured roadmap that gradually moves you from your current stage of career planning towards an optimized, informed, and future-ready stage.";
 
 /**
  * Domain icons & accent colors for the 5 Areas
@@ -94,18 +96,20 @@ export default function YourProfilingReport({
 
   // 1. Header block
   const heading = pData.heading || "YOUR PROFILING";
-  const introParagraph =
-    pData.introParagraph ||
-    "Personal profiling is the first step in career planning. It helps you understand where you are right now on your career journey and gives you a clear path forward.";
+  const introParagraph = DEFAULT_INTRO;
 
   // 2. Stage Track
   const stageTrack = pData.stageTrack || {};
-  const currentStageNo = Number(stageTrack.currentStageNo || 4);
-  const currentStageName = stageTrack.currentStageName || "Clarity";
-  const stages =
-    Array.isArray(stageTrack.stages) && stageTrack.stages.length > 0
-      ? stageTrack.stages
-      : DEFAULT_STAGES;
+  const currentStageNo = Number(stageTrack.currentStageNo || 3);
+  const stages = DEFAULT_STAGES.map((stage, index) => ({
+    ...stage,
+    ...(stageTrack.stages?.[index] || {}),
+    stageNo: stage.stageNo,
+    stageCode: stage.stageCode,
+    stageName: stage.stageName,
+    description: stage.description,
+  }));
+  const currentStageName = stages[currentStageNo - 1]?.stageName || "Decisive";
 
   // 3. Risk Badge
   const riskBadge = pData.riskBadge || {
@@ -187,10 +191,10 @@ export default function YourProfilingReport({
   const notesList = hasNotes ? notesForYou.notes : [];
 
   return (
-    <div className="pdf-page" id={`page-${pageNum}`}>
+    <div className="pdf-page profiling-report-page" id={`page-${pageNum}`}>
       {PageHeader && <PageHeader studentFirstName={studentFirstName} />}
 
-      <div className="pdf-page-body flex flex-col justify-between py-1 space-y-3">
+      <div className="pdf-page-body flex flex-col justify-start py-1 space-y-2">
         {/* ============================================================
             BLOCK 1: HEADER BLOCK
         ============================================================ */}
@@ -206,7 +210,7 @@ export default function YourProfilingReport({
             </div>
           )}
 
-          <p className="page-lead-text !mb-2 text-[0.84rem] leading-relaxed text-[#374151]">
+          <p className="page-lead-text !mb-1 whitespace-pre-line text-[0.64rem] leading-tight text-[#374151]">
             {introParagraph}
           </p>
         </div>
@@ -214,7 +218,7 @@ export default function YourProfilingReport({
         {/* ============================================================
             BLOCK 2 & 3 & 6: STAGE TRACK + RISK BADGE + CRI SCORE
         ============================================================ */}
-        <div className="rounded-xl border border-[#E5E7EB] bg-gradient-to-br from-[#FAFCFD] to-[#F4F7FA] p-3 shadow-xs">
+        <div className="rounded-xl border border-[#E5E7EB] bg-gradient-to-br from-[#FAFCFD] to-[#F4F7FA] p-2 shadow-xs">
           {/* Top Row: Track Title & Badges */}
           <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#E5E7EB]">
             <div className="flex items-center gap-2">
@@ -222,7 +226,7 @@ export default function YourProfilingReport({
                 <ThunderboltFilled />
               </span>
               <span className="text-xs font-black uppercase tracking-wider text-[#1E232A]">
-                {stageTrack.title || "Current Stage of Planning"}
+                Your Current Career Stage
               </span>
             </div>
 
@@ -248,7 +252,6 @@ export default function YourProfilingReport({
               </div>
             </div>
           </div>
-
           {/* Visual 5-Step Horizontal Track */}
           <div className="pt-3 pb-1">
             <div className="relative flex items-center justify-between">
@@ -313,14 +316,22 @@ export default function YourProfilingReport({
               })}
             </div>
           </div>
+          <div className="profiling-stage-descriptions mt-1.5 grid grid-cols-1 gap-x-4 gap-y-1 border-t border-[#E5E7EB] pt-1.5 sm:grid-cols-2">
+            {stages.map((stage) => (
+              <div key={`${stage.stageNo}-description`} className="text-[8px] leading-[1.2] text-slate-600">
+                <strong className="mb-0.5 block text-[#1E232A]">{stage.stageNo}. {stage.stageName}</strong>
+                <span>{stage.description}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ============================================================
             BLOCK 4: "WHAT IT MEANS" & "YOUR NEXT STEPS" (2-Col Card Grid)
         ============================================================ */}
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-2">
           {/* What it means Card */}
-          <div className="rounded-xl border border-[#E9ECEF] bg-[#FFFFFF] p-3 shadow-2xs flex flex-col justify-between">
+          <div className="profiling-meaning-card rounded-xl border border-[#E9ECEF] bg-[#FFFFFF] p-2 shadow-2xs flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-1.5 mb-1.5 text-xs font-black uppercase tracking-wider text-[#8C1814]">
                 <span>💡</span>
@@ -343,7 +354,7 @@ export default function YourProfilingReport({
             BLOCK 5: "YOUR 5 AREAS"
         ============================================================ */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1.5">
             <div className="text-xs font-black uppercase tracking-wider text-[#1E232A] flex items-center gap-1.5">
               <span>📊</span>
               <span>Your 5 Areas of Personal Profiling</span>
@@ -351,19 +362,19 @@ export default function YourProfilingReport({
            
           </div>
 
-          <div className="space-y-1.5">
+          <div className="profiling-area-list space-y-1">
             {your5Areas.map((area, idx) => {
               const code = area.domainCode || Object.keys(DOMAIN_CONFIG)[idx] || "SA";
               const cfg = DOMAIN_CONFIG[code] || DOMAIN_CONFIG.SA;
               const domainName = area.domainStudentFacingName || cfg.defaultName;
               const stageNum = Number(area.stageNo || 3);
-              const stageLabel = area.stage || area.label || "Exploring";
+              const stageLabel = DEFAULT_STAGES[stageNum - 1]?.stageName || "Discovering";
               const scoreVal = area.score !== undefined ? area.score : null;
 
               return (
                 <div
                   key={code || idx}
-                  className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 shadow-2xs flex flex-col justify-between gap-1 transition-all hover:border-slate-300"
+                  className="rounded-lg border border-[#E5E7EB] bg-white px-2.5 py-1.5 shadow-2xs flex flex-col justify-between gap-0.5 transition-all hover:border-slate-300"
                 >
                   {/* Top Row: Icon + Name + Stage Badge + Score + 5-Step Mini Bar */}
                   <div className="flex items-center justify-between gap-2">
@@ -423,14 +434,14 @@ export default function YourProfilingReport({
             BLOCK 7: "NOTES FOR YOU" (FLAGS / GUIDANCE)
         ============================================================ */}
         {hasNotes && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50/70 p-2.5 shadow-2xs">
+          <div className="profiling-guidance rounded-xl border border-amber-300 bg-amber-50/70 p-2 shadow-2xs">
             <div className="flex items-center gap-2 mb-1 text-xs font-black uppercase tracking-wider text-amber-900">
               <WarningFilled className="text-amber-600 text-sm" />
               <span>Personalized Guidance & Key Observations</span>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               {notesList.map((n, i) => (
-                <div key={n.flagId || i} className="text-[11.5px] leading-snug text-amber-950 font-medium">
+                <div key={n.flagId || i} className="profiling-guidance-note text-[10px] leading-tight text-amber-950 font-medium">
                   {n.flagName && (
                     <span className="inline-block rounded bg-amber-200/90 text-amber-900 text-[10px] font-black px-1.5 py-0.2 mr-1.5 uppercase">
                       {n.flagName}

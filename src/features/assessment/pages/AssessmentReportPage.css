@@ -118,6 +118,36 @@ body {
   text-justify: inter-word;
 }
 
+/* Keep the detailed profiling guide compact so the notes and all five area
+   cards remain inside their fixed A4 page. The global report typography rule
+   otherwise expands these intentionally small labels and paragraphs. */
+.profiling-report-page .page-lead-text {
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+}
+
+.profiling-report-page .profiling-stage-descriptions,
+.profiling-report-page .profiling-stage-descriptions * {
+  font-size: 0.66rem !important;
+  line-height: 1.18 !important;
+  text-align: left !important;
+  text-justify: auto !important;
+}
+
+.profiling-report-page .profiling-meaning-card p,
+.profiling-report-page .profiling-area-list p,
+.profiling-report-page .profiling-guidance-note {
+  font-size: 0.72rem !important;
+  line-height: 1.22 !important;
+  text-align: left !important;
+  text-justify: auto !important;
+}
+
+.profiling-report-page .profiling-guidance {
+  padding: 6px 8px !important;
+}
+
 /* Keep report prose readable and consistently justified across all pages. */
 .pdf-page p,
 .pdf-page .detail-card-right-body,
