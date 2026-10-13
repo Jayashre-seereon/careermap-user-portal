@@ -148,6 +148,39 @@ body {
   padding: 6px 8px !important;
 }
 
+/* Page 21 has six category illustrations and four overview cards. Keep its
+   intentional compact typography so the full overview fits on one A4 page. */
+.aptitude-overview-page .pdf-page-body {
+  gap: 0.4rem;
+}
+
+.aptitude-overview-page .page-lead-text,
+.aptitude-overview-page .font-bold.text-sm {
+  font-size: 0.68rem !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+  text-justify: auto !important;
+}
+
+.aptitude-overview-page .aptitude-category-image {
+  height: 150px;
+  max-height: 150px;
+}
+
+.aptitude-overview-page .aptitude-summary-grid > div > div:first-child {
+  padding: 6px 8px !important;
+  font-size: 0.68rem !important;
+  line-height: 1.2 !important;
+}
+
+.aptitude-overview-page .aptitude-summary-grid > div > div:last-child {
+  padding: 8px 10px !important;
+  font-size: 0.68rem !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+  text-justify: auto !important;
+}
+
 /* Keep report prose readable and consistently justified across all pages. */
 .pdf-page p,
 .pdf-page .detail-card-right-body,
